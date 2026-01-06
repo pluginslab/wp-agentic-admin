@@ -12,90 +12,11 @@ import abilitiesApi from './abilities-api';
 
 /**
  * System prompt for the AI assistant
- * Optimized for small language models (Phi-3.5-mini)
- * 
- * Key principles for SLM prompts:
- * 1. Be explicit and structured
- * 2. Provide clear examples
- * 3. Use consistent formatting
- * 4. Keep instructions focused
+ * Ultra-minimal for SmolLM2-360M - the model is too small for complex instructions
+ * Tool selection is handled by keyword detection, model just provides conversational responses
  */
-const SYSTEM_PROMPT = `You are Neural Admin, a WordPress Site Reliability Engineer (SRE) assistant. You help administrators diagnose and fix WordPress issues.
-
-## Your Abilities
-
-You have 6 tools. To use a tool, output this exact format:
-
-<ability name="ABILITY_NAME">
-{"param": "value"}
-</ability>
-
-### Available Tools:
-
-1. **wp-neural-admin/error-log-read** - Read PHP error log
-   Parameters: {"lines": 50} (optional, default 50, max 500)
-   Use when: User reports errors, white screen, PHP problems
-
-2. **wp-neural-admin/site-health** - Get site information
-   Parameters: {}
-   Use when: Need WordPress version, PHP version, server info
-
-3. **wp-neural-admin/plugin-list** - List all plugins
-   Parameters: {}
-   Use when: Need to see installed plugins, check what's active
-
-4. **wp-neural-admin/cache-flush** - Clear object cache
-   Parameters: {}
-   Use when: User reports stale content, caching issues
-
-5. **wp-neural-admin/db-optimize** - Optimize database tables
-   Parameters: {}
-   Use when: Site is slow, database maintenance needed
-
-6. **wp-neural-admin/plugin-deactivate** - Deactivate a plugin (DESTRUCTIVE)
-   Parameters: {"plugin": "plugin-folder/plugin-file.php"}
-   Use when: Plugin is causing problems. ALWAYS warn user first!
-
-## Response Guidelines
-
-1. For diagnostic questions ("site is slow", "getting errors"):
-   - First use site-health or error-log-read to gather info
-   - Explain what you're checking and why
-
-2. For action requests ("clear cache", "optimize database"):
-   - Briefly explain what the action does
-   - Then use the appropriate ability
-
-3. After receiving results:
-   - Summarize key findings in plain language
-   - Suggest next steps if needed
-
-4. Be concise. WordPress admins are busy.
-
-## Examples
-
-User: "My site is showing a white screen"
-Response: Let me check the error log for PHP errors.
-
-<ability name="wp-neural-admin/error-log-read">
-{"lines": 100}
-</ability>
-
-User: "Clear my cache"
-Response: I'll flush the WordPress object cache now.
-
-<ability name="wp-neural-admin/cache-flush">
-{}
-</ability>
-
-User: "What plugins do I have?"
-Response: Let me get your plugin list.
-
-<ability name="wp-neural-admin/plugin-list">
-{}
-</ability>
-
-Remember: You run in the browser - all data stays private on the user's device.`;
+const SYSTEM_PROMPT = `You are a helpful WordPress assistant. Be brief and friendly.
+When given data, summarize it clearly. Do not make up information.`;
 
 /**
  * AIService class for managing AI chat interactions
@@ -136,6 +57,55 @@ class AIService {
     }
 
     /**
+     * Detect which ability should be used based on user message keywords
+     * This helps guide small models that struggle with tool selection
+     *
+     * @param {string} message - User message
+     * @return {string|null} Suggested ability ID or null
+     */
+    detectAbilityFromMessage(message) {
+        const lower = message.toLowerCase();
+        
+        // Plugin related
+        if (lower.includes('plugin') || lower.includes('installed') || lower.includes('extensions')) {
+            return 'wp-neural-admin/plugin-list';
+        }
+        
+        // Error related
+        if (lower.includes('error') || lower.includes('problem') || lower.includes('issue') || 
+            lower.includes('broken') || lower.includes('white screen') || lower.includes('crash') ||
+            lower.includes('not working') || lower.includes('bug') || lower.includes('log')) {
+            return 'wp-neural-admin/error-log-read';
+        }
+        
+        // Site health / info related
+        if (lower.includes('version') || lower.includes('php') || lower.includes('mysql') ||
+            lower.includes('health') || lower.includes('info') || lower.includes('status') ||
+            lower.includes('server')) {
+            return 'wp-neural-admin/site-health';
+        }
+        
+        // Cache related
+        if (lower.includes('cache') || lower.includes('flush') || lower.includes('clear') ||
+            lower.includes('purge') || lower.includes('refresh')) {
+            return 'wp-neural-admin/cache-flush';
+        }
+        
+        // Database related
+        if (lower.includes('database') || lower.includes('db') || lower.includes('optimize') ||
+            lower.includes('slow') || lower.includes('performance')) {
+            return 'wp-neural-admin/db-optimize';
+        }
+        
+        // Deactivate plugin
+        if (lower.includes('deactivate') || lower.includes('disable') || lower.includes('turn off')) {
+            return 'wp-neural-admin/plugin-deactivate';
+        }
+        
+        return null;
+    }
+
+    /**
      * Send a message and get a response with streaming
      *
      * @param {string} userMessage - The user's message
@@ -159,6 +129,11 @@ class AIService {
         this.isGenerating = true;
 
         try {
+            // Detect suggested ability from keywords
+            const suggestedAbility = this.detectAbilityFromMessage(userMessage);
+            console.log('[AIService] User message:', userMessage);
+            console.log('[AIService] Detected ability from keywords:', suggestedAbility);
+            
             // Add user message to history
             this.conversationHistory.push({
                 role: 'user',
@@ -166,8 +141,14 @@ class AIService {
             });
 
             // Build messages array with system prompt
+            // If we detected an ability, add a hint to guide the model
+            let systemContent = SYSTEM_PROMPT;
+            if (suggestedAbility) {
+                systemContent += `\n\nHINT: For this request, you should use: ${suggestedAbility}`;
+            }
+            
             const messages = [
-                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'system', content: systemContent },
                 ...this.conversationHistory,
             ];
 
@@ -175,11 +156,14 @@ class AIService {
             const abilitiesCalled = [];
 
             // Use streaming completion
+            // Low temperature (0.2) for more deterministic tool calling
+            // Short max_tokens (256) to prevent repetitive output
             const asyncChunkGenerator = await engine.chat.completions.create({
                 messages,
-                temperature: options.temperature || 0.7,
-                max_tokens: options.maxTokens || 1024,
+                temperature: options.temperature || 0.2,
+                max_tokens: options.maxTokens || 256,
                 stream: true,
+                stop: ['User:', 'USER:', '\n\nUser'],
             });
 
             // Process streaming chunks
@@ -199,31 +183,47 @@ class AIService {
                 content: fullResponse,
             });
 
-            // Parse for ability calls
-            const abilities = this.parseAbilityCalls(fullResponse);
+            // Parse for ability calls from model output
+            let abilities = this.parseAbilityCalls(fullResponse);
+            
+            // FALLBACK: If model didn't use a tool but we detected one should be used,
+            // auto-execute the suggested ability (helps tiny models)
+            if (abilities.length === 0 && suggestedAbility) {
+                console.log('[AIService] Model did not call ability, using fallback:', suggestedAbility);
+                abilities = [{ name: suggestedAbility, params: {} }];
+            }
             
             // Execute abilities if any were requested
+            console.log('[AIService] Abilities to execute:', abilities);
             for (const ability of abilities) {
+                // If no callback set, execute directly
+                let shouldExecute = true;
                 if (this.abilityCallback) {
-                    const shouldExecute = await this.abilityCallback(ability.name, ability.params);
-                    if (shouldExecute) {
-                        try {
-                            const result = await this.executeAbility(ability.name, ability.params);
-                            abilitiesCalled.push({
-                                ...ability,
-                                result,
-                                success: true,
-                            });
-                        } catch (err) {
-                            abilitiesCalled.push({
-                                ...ability,
-                                error: err.message,
-                                success: false,
-                            });
-                        }
+                    shouldExecute = await this.abilityCallback(ability.name, ability.params);
+                }
+                console.log('[AIService] Should execute', ability.name, ':', shouldExecute);
+                
+                if (shouldExecute) {
+                    try {
+                        console.log('[AIService] Executing ability:', ability.name);
+                        const result = await this.executeAbility(ability.name, ability.params);
+                        console.log('[AIService] Ability result:', result);
+                        abilitiesCalled.push({
+                            ...ability,
+                            result,
+                            success: true,
+                        });
+                    } catch (err) {
+                        console.error('[AIService] Ability error:', err);
+                        abilitiesCalled.push({
+                            ...ability,
+                            error: err.message,
+                            success: false,
+                        });
                     }
                 }
             }
+            console.log('[AIService] Final abilitiesCalled:', abilitiesCalled);
 
             return {
                 text: fullResponse,
