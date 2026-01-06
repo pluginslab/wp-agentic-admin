@@ -1,0 +1,6 @@
+.DS_Store
+node_modules/
+vendor/
+wp-neural-admin.zip
+*.pdf
+.distpackage

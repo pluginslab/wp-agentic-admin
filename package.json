@@ -1,0 +1,32 @@
+{
+  "name": "wp-neural-admin",
+  "version": "1.0.0",
+  "description": "A privacy-first AI Site Reliability Engineer running entirely in the browser via WebLLM and the WordPress Abilities API.",
+  "scripts": {
+    "build": "npm run build:extensions",
+    "build:extensions": "wp-scripts build src/extensions/index.js --output-path=build-extensions",
+    "watch": "wp-scripts start src/extensions/index.js --output-path=build-extensions",
+    "clean": "del-cli build-extensions wp-neural-admin.zip",
+    "dist": "npm run clean && npm run build && rm -f wp-neural-admin.zip && zip -r wp-neural-admin.zip -@ < .distpackage",
+    "lint:js": "wp-scripts lint-js src/",
+    "lint:css": "wp-scripts lint-style src/",
+    "lint": "npm run lint:js && npm run lint:css"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.0.0",
+    "del-cli": "^5.1.0"
+  },
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.80"
+  },
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "ai",
+    "webllm",
+    "webgpu",
+    "abilities-api"
+  ],
+  "author": "Pluginslab",
+  "license": "GPL-2.0-or-later"
+}
