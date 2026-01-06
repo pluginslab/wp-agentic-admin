@@ -250,40 +250,182 @@ The chat system uses a decoupled framework architecture designed to work reliabl
 └─────────────────────┘            └─────────────────────────┘
 ```
 
-### Adding a New Tool
+### Adding a New Ability (Complete Guide)
 
-To add a new WordPress ability/tool:
+Adding a new ability requires two parts: a PHP backend (the actual functionality) and a JavaScript frontend (chat integration). Here's a complete walkthrough.
 
-1. **Register the ability in PHP** (`includes/class-abilities.php`):
+#### Step 1: Create the PHP Ability
+
+Open `includes/class-abilities.php` and add two things:
+
+**A) Register the ability** (add a new method call in `register_abilities()`):
+
 ```php
-wp_register_ability('wp-neural-admin/my-new-tool', [
-    'label' => __('My New Tool', 'wp-neural-admin'),
-    'description' => __('Does something useful.', 'wp-neural-admin'),
-    'category' => 'sre-tools',
-    'callback' => [$this, 'execute_my_new_tool'],
-    'input_schema' => [...],
-    'output_schema' => [...],
-]);
+public function register_abilities(): void {
+    // ... existing abilities ...
+    $this->register_my_new_ability(); // Add this line
+}
 ```
 
-2. **Add the tool configuration in JavaScript** (`src/extensions/services/wp-tools.js`):
+**B) Create the registration and execution methods**:
+
+```php
+/**
+ * Register my-new-ability.
+ */
+private function register_my_new_ability(): void {
+    wp_register_ability(
+        'wp-neural-admin/my-new-ability',
+        array(
+            'label'               => __( 'My New Ability', 'wp-neural-admin' ),
+            'description'         => __( 'Does something useful for the site.', 'wp-neural-admin' ),
+            'category'            => 'sre-tools',
+            
+            // Define what input parameters the ability accepts
+            'input_schema'        => array(
+                'type'                 => 'object',
+                'properties'           => array(
+                    'limit' => array(
+                        'type'        => 'integer',
+                        'default'     => 10,
+                        'minimum'     => 1,
+                        'maximum'     => 100,
+                        'description' => __( 'Maximum items to return.', 'wp-neural-admin' ),
+                    ),
+                ),
+                'additionalProperties' => false,
+            ),
+            
+            // Define what the ability returns
+            'output_schema'       => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'items' => array(
+                        'type'        => 'array',
+                        'items'       => array( 'type' => 'object' ),
+                        'description' => __( 'The items found.', 'wp-neural-admin' ),
+                    ),
+                    'total' => array(
+                        'type'        => 'integer',
+                        'description' => __( 'Total count.', 'wp-neural-admin' ),
+                    ),
+                ),
+            ),
+            
+            // The function that does the actual work
+            'execute_callback'    => array( $this, 'execute_my_new_ability' ),
+            
+            // Who can use this ability (usually admin only)
+            'permission_callback' => function () {
+                return current_user_can( 'manage_options' );
+            },
+            
+            'meta'                => array(
+                'show_in_rest' => true,
+                'annotations'  => array(
+                    'readonly'    => true,   // true = doesn't modify data
+                    'destructive' => false,  // true = could cause data loss
+                    'idempotent'  => true,   // true = safe to call multiple times
+                ),
+            ),
+        )
+    );
+}
+
+/**
+ * Execute my-new-ability.
+ *
+ * @param array $input Input parameters from the schema.
+ * @return array Output matching the output_schema.
+ */
+public function execute_my_new_ability( array $input = array() ): array {
+    $limit = isset( $input['limit'] ) ? absint( $input['limit'] ) : 10;
+    
+    // Do your actual work here...
+    $items = array(); // Fetch your data
+    
+    return array(
+        'items' => $items,
+        'total' => count( $items ),
+    );
+}
+```
+
+#### Step 2: Create the JavaScript Tool Configuration
+
+Open `src/extensions/services/wp-tools.js` and add to the `wpTools` array:
+
 ```javascript
 {
-    id: 'wp-neural-admin/my-new-tool',
-    keywords: ['keyword1', 'keyword2', 'trigger phrase'],
-    initialMessage: "Working on your request...",
+    // Must match the PHP ability ID exactly
+    id: 'wp-neural-admin/my-new-ability',
+    
+    // Words/phrases that trigger this tool (lowercase)
+    // Longer phrases score higher, so "check items" beats "check"
+    keywords: [
+        'my ability', 
+        'check items', 
+        'find things',
+        'items',
+    ],
+    
+    // Shown immediately when tool is triggered (streamed with typewriter effect)
+    initialMessage: "Let me check that for you...",
+    
+    // Convert the API result into a human-readable response
+    // This is what the user sees after the tool runs
     summarize: (result) => {
-        // Generate human-readable summary from result
-        return `Completed! Found ${result.count} items.`;
+        if (result.total === 0) {
+            return "I didn't find any items.";
+        }
+        return `I found **${result.total} items**. Here's what I discovered:\n\n` +
+            result.items.map(item => `- ${item.name}`).join('\n');
     },
+    
+    // Execute the ability via REST API
     execute: async (params) => {
-        return abilitiesApi.executeAbilityById('wp-neural-admin/my-new-tool', params);
+        return abilitiesApi.executeAbilityById('wp-neural-admin/my-new-ability', params);
     },
-    requiresConfirmation: false, // Set true for destructive actions
+    
+    // Set to true for abilities that modify/delete data
+    // This shows a confirmation modal before executing
+    requiresConfirmation: false,
+    
+    // Optional: custom message for the confirmation modal
+    // confirmationMessage: 'This will modify your data. Continue?',
 },
 ```
 
-3. **Rebuild**: `npm run build`
+#### Step 3: Build and Test
+
+```bash
+npm run build
+```
+
+Then go to your WordPress admin, open Neural Admin, and try typing something with your keywords like "check items" or "find things".
+
+#### Tips for Good Abilities
+
+**Keywords:**
+- Include common variations ("plugin", "plugins", "extensions")
+- Longer phrases are more specific ("optimize database" vs just "database")
+- Think about how users naturally phrase requests
+
+**Summaries:**
+- Use markdown for formatting (`**bold**`, `\n\n` for paragraphs, `- ` for lists)
+- Keep it concise but informative
+- Handle edge cases (empty results, errors)
+
+**Destructive Actions:**
+- Set `requiresConfirmation: true` for anything that modifies data
+- Set `destructive: true` in PHP annotations
+- Provide a clear `confirmationMessage`
+
+#### Testing Your Ability
+
+1. **Test the PHP endpoint directly** using the Abilities tab in Neural Admin
+2. **Test keyword detection** by typing various phrases in chat
+3. **Verify the summary** looks good with real data
 
 ### Message Flow
 
