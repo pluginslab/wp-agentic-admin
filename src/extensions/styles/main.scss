@@ -805,6 +805,132 @@
     border-radius: 0 4px 4px 0;
     font-size: 13px;
     color: #646970;
+
+    &--cache {
+        background: #f0f6fc;
+        border-left-color: #00a32a;
+        color: #1d2327;
+    }
+}
+
+// Loading Card - Enhanced progress UI
+.wp-neural-admin-loading-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    &__icon {
+        font-size: 28px;
+        line-height: 1;
+        animation: neural-pulse 2s ease-in-out infinite;
+    }
+
+    &__title-wrap {
+        flex: 1;
+    }
+
+    &__title {
+        margin: 0 0 2px !important;
+        font-size: 16px !important;
+        font-weight: 600;
+        color: #1d2327;
+    }
+
+    &__subtitle {
+        font-size: 13px;
+        color: #2271b1;
+        font-weight: 500;
+    }
+
+    &__percent {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2271b1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &__progress {
+        height: 8px;
+        background: #e2e4e7;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    &__progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #2271b1, #135e96);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 100%
+            );
+            animation: neural-shimmer 1.5s infinite;
+        }
+    }
+
+    &__description {
+        margin: 0 0 8px !important;
+        font-size: 13px;
+        color: #50575e;
+        line-height: 1.5;
+    }
+
+    &__cache-note {
+        margin: 0 !important;
+        font-size: 12px;
+        color: #00a32a;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        &::before {
+            content: '✓';
+            font-weight: bold;
+        }
+    }
+}
+
+@keyframes neural-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes neural-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 // WebGPU Fallback
@@ -974,5 +1100,351 @@
     }
     50% {
         opacity: 0.5;
+    }
+}
+
+// =============================================================================
+// Perplexity-Style Chat UI
+// =============================================================================
+
+// Scope everything under the messages container for proper specificity
+.wp-neural-admin-messages {
+    // Base message container
+    .neural-message {
+        display: flex !important;
+        margin-bottom: 16px !important;
+        position: relative;
+        max-width: 100%;
+
+        // User message - right aligned bubble
+        &--user {
+            flex-direction: column !important;
+            align-items: flex-end !important;
+            padding-left: 60px;
+            margin-left: auto;
+
+            .neural-message__bubble {
+                background: #2271b1 !important;
+                color: #fff !important;
+                padding: 12px 18px !important;
+                border-radius: 20px 20px 4px 20px !important;
+                max-width: 85%;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+                p {
+                    margin: 0 !important;
+                    line-height: 1.5;
+                    font-size: 14px;
+                }
+            }
+
+            .neural-message__time {
+                font-size: 11px;
+                color: #8c8f94;
+                margin-top: 6px;
+                margin-right: 4px;
+            }
+        }
+
+        // Assistant message - with timeline
+        &--assistant {
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            gap: 12px;
+
+            .neural-message__content {
+                flex: 1;
+                padding-top: 2px;
+                background: #fff;
+                border-radius: 8px;
+                padding: 12px 16px;
+                border: 1px solid #e2e4e7;
+            }
+
+            .neural-message__text {
+                p {
+                    margin: 0 0 10px !important;
+                    line-height: 1.6;
+                    color: #1d2327;
+                    font-size: 14px;
+
+                    &:last-child {
+                        margin-bottom: 0 !important;
+                    }
+                }
+            }
+
+            .neural-message__time {
+                font-size: 11px;
+                color: #8c8f94;
+                margin-top: 10px;
+                border-top: 1px solid #f0f0f1;
+                padding-top: 8px;
+            }
+        }
+
+        // System message - welcome/intro
+        &--system {
+            flex-direction: column !important;
+            padding: 20px !important;
+            background: #fff !important;
+            border: 1px solid #c3c4c7 !important;
+            border-left: 4px solid #2271b1 !important;
+            border-radius: 0 8px 8px 0 !important;
+            margin-bottom: 24px !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+            .neural-message__content {
+                h3 {
+                    margin: 0 0 12px !important;
+                    font-size: 18px !important;
+                    font-weight: 600;
+                    color: #1d2327;
+                }
+
+                p {
+                    margin: 0 0 8px !important;
+                    color: #50575e;
+                    line-height: 1.6;
+                    font-size: 14px;
+
+                    &:last-child {
+                        margin-bottom: 0 !important;
+                    }
+                }
+
+                li {
+                    margin-bottom: 8px;
+                    color: #50575e;
+                    font-size: 14px;
+                    line-height: 1.5;
+
+                    &::marker {
+                        color: #2271b1;
+                    }
+                }
+
+                ul {
+                    margin: 12px 0 12px 24px !important;
+                    padding: 0;
+                    list-style-type: disc;
+                }
+            }
+
+            .neural-message__hint {
+                font-size: 13px;
+                color: #8c8f94;
+                font-style: italic;
+                margin-top: 8px;
+            }
+        }
+
+        // Tool message - compact with timeline
+        &--tool {
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            gap: 12px;
+        }
+
+        // Error message
+        &--error {
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            gap: 12px;
+        }
+    }
+
+    // Timeline elements
+    .neural-timeline {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        width: 28px;
+        flex-shrink: 0;
+        position: relative;
+        padding-top: 8px;
+
+        &__line {
+            position: absolute;
+            top: 24px;
+            bottom: -24px;
+            width: 2px;
+            background: linear-gradient(to bottom, #d0d5dd, #e8ebee);
+        }
+
+        &__dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #c3c4c7;
+            border: 3px solid #f6f7f7;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+
+            &--tool {
+                background: #2271b1;
+            }
+
+            &--success {
+                background: #00a32a;
+            }
+
+            &--error {
+                background: #d63638;
+            }
+        }
+    }
+
+    // Tool execution blocks
+    .neural-tool {
+        flex: 1;
+        background: #f8f9fa;
+        border: 1px solid #e2e4e7;
+        border-radius: 8px;
+        overflow: hidden;
+
+        &--success {
+            border-color: #b8e6bf;
+            background: #f7fcf8;
+        }
+
+        &--error {
+            border-color: #f5c6c7;
+            background: #fef7f7;
+        }
+
+        &__header {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #50575e;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: default;
+
+            &--clickable {
+                cursor: pointer;
+                transition: background 0.15s ease;
+
+                &:hover {
+                    background: rgba(0, 0, 0, 0.04);
+                }
+            }
+        }
+
+        &__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #646970;
+
+            .neural-tool--success & {
+                color: #00a32a;
+            }
+
+            .neural-tool--error & {
+                color: #d63638;
+            }
+        }
+
+        &__label {
+            flex: 1;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        &__status {
+            display: flex;
+            align-items: center;
+
+            &--pending {
+                color: #996800;
+            }
+        }
+
+        &__spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e4e7;
+            border-top-color: #2271b1;
+            border-radius: 50%;
+            animation: neural-spin 0.8s linear infinite;
+        }
+
+        &__expand {
+            display: flex;
+            align-items: center;
+            color: #8c8f94;
+            transition: transform 0.2s ease;
+
+            &--open {
+                transform: rotate(180deg);
+            }
+        }
+
+        &__result {
+            padding: 12px;
+            border-top: 1px solid #e2e4e7;
+            background: #fff;
+
+            pre {
+                margin: 0 !important;
+                padding: 12px !important;
+                background: #1d2327 !important;
+                color: #e2e4e7 !important;
+                border-radius: 6px;
+                font-size: 12px;
+                line-height: 1.5;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+        }
+    }
+
+    // Error message styling
+    .neural-error {
+        display: flex !important;
+        align-items: flex-start;
+        gap: 12px;
+        flex: 1;
+        padding: 14px 18px;
+        background: #fcf0f1;
+        border: 1px solid #f5c6c7;
+        border-radius: 8px;
+        color: #8a1c1f;
+
+        &__icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d63638;
+            flex-shrink: 0;
+        }
+
+        &__text {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    }
+
+    // Hide timeline line for last message in group
+    .neural-message:last-child {
+        .neural-timeline__line {
+            display: none;
+        }
+    }
+}
+
+// Spinner animation for tool execution
+@keyframes neural-spin {
+    to {
+        transform: rotate(360deg);
     }
 }

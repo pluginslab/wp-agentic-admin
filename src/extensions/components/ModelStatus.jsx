@@ -11,19 +11,103 @@ import { Button, Spinner } from '@wordpress/components';
 import modelLoader, { ModelLoader } from '../services/model-loader';
 
 /**
+ * Parse the loading stage from WebLLM progress message
+ *
+ * @param {string} message - Progress message from WebLLM
+ * @param {number} progress - Current progress percentage
+ * @return {Object} Stage info with icon, title, and description
+ */
+const getLoadingStage = (message, progress) => {
+    const lowerMsg = message.toLowerCase();
+
+    if (progress < 5 || lowerMsg.includes('webgpu')) {
+        return {
+            icon: '🔍',
+            title: 'Checking WebGPU',
+            description: 'Verifying your browser supports GPU acceleration...',
+        };
+    }
+
+    if (lowerMsg.includes('initializing') || lowerMsg.includes('engine')) {
+        return {
+            icon: '⚙️',
+            title: 'Initializing Engine',
+            description: 'Setting up the WebLLM inference engine...',
+        };
+    }
+
+    if (lowerMsg.includes('loading model') || lowerMsg.includes('fetching')) {
+        return {
+            icon: '📦',
+            title: 'Loading Model Weights',
+            description: 'Loading neural network weights from cache...',
+        };
+    }
+
+    if (lowerMsg.includes('shader') || lowerMsg.includes('compiling')) {
+        return {
+            icon: '🔧',
+            title: 'Compiling Shaders',
+            description: 'Compiling GPU shaders for your graphics card...',
+        };
+    }
+
+    if (lowerMsg.includes('tokenizer')) {
+        return {
+            icon: '📝',
+            title: 'Loading Tokenizer',
+            description: 'Loading the text tokenizer...',
+        };
+    }
+
+    if (progress >= 95) {
+        return {
+            icon: '✨',
+            title: 'Finalizing',
+            description: 'Almost ready! Final initialization...',
+        };
+    }
+
+    // Default / generic loading
+    return {
+        icon: '🧠',
+        title: 'Loading Model',
+        description: message || 'Preparing AI model...',
+    };
+};
+
+/**
  * ModelStatus component
  *
  * @param {Object} props - Component props
  * @param {Function} props.onModelReady - Callback when model is ready
  * @param {Function} props.onModelError - Callback when model loading fails
+ * @param {boolean} props.isAutoLoading - Whether model is currently auto-loading from cache
  */
-const ModelStatus = ({ onModelReady, onModelError }) => {
+const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
     const [status, setStatus] = useState('not-loaded'); // not-loaded, checking, loading, ready, error
     const [message, setMessage] = useState('AI model not loaded. Click "Load Model" to start.');
     const [progress, setProgress] = useState(0);
     const [selectedModel, setSelectedModel] = useState('SmolLM2-360M-Instruct-q4f16_1-MLC');
+    const [isFromCache, setIsFromCache] = useState(false);
+    const [rawMessage, setRawMessage] = useState('');
 
     const availableModels = ModelLoader.getAvailableModels();
+
+    // Track if we're in a loading state (loading or checking)
+    const isInLoadingState = status === 'loading' || status === 'checking' || isAutoLoading;
+
+    /**
+     * Update status when auto-loading starts - do this FIRST before callbacks
+     */
+    useEffect(() => {
+        if (isAutoLoading) {
+            setIsFromCache(true);
+            setStatus('loading');
+            setMessage('Loading AI model from cache...');
+            setRawMessage('Initializing...');
+        }
+    }, [isAutoLoading]);
 
     /**
      * Set up model loader callbacks
@@ -31,17 +115,21 @@ const ModelStatus = ({ onModelReady, onModelError }) => {
     useEffect(() => {
         modelLoader.onProgress((prog, msg) => {
             setProgress(prog);
+            setRawMessage(msg);
             setMessage(msg);
         });
 
         modelLoader.onStatus((stat, msg) => {
             setStatus(stat);
             setMessage(msg);
+            setRawMessage(msg);
 
             if (stat === 'ready' && onModelReady) {
                 onModelReady();
+                setIsFromCache(false);
             } else if (stat === 'error' && onModelError) {
                 onModelError(msg);
+                setIsFromCache(false);
             }
         });
 
@@ -71,6 +159,7 @@ const ModelStatus = ({ onModelReady, onModelError }) => {
     const handleUnloadModel = useCallback(async () => {
         await modelLoader.unload();
         setProgress(0);
+        setIsFromCache(false);
     }, []);
 
     /**
@@ -114,52 +203,83 @@ const ModelStatus = ({ onModelReady, onModelError }) => {
         return handleLoadModel;
     };
 
+    // Get current loading stage info
+    const loadingStage = getLoadingStage(rawMessage, progress);
+
     return (
         <div className="wp-neural-admin-model-status">
-            <div className="wp-neural-admin-status">
-                <span className={`wp-neural-admin-status__indicator ${getStatusClass()}`} />
-                <span className="wp-neural-admin-status__text">{message}</span>
+            {/* Loading State - Full Progress UI */}
+            {isInLoadingState && (
+                <div className="wp-neural-admin-loading-card">
+                    <div className="wp-neural-admin-loading-card__header">
+                        <span className="wp-neural-admin-loading-card__icon">{loadingStage.icon}</span>
+                        <div className="wp-neural-admin-loading-card__title-wrap">
+                            <h4 className="wp-neural-admin-loading-card__title">
+                                {isFromCache ? 'Loading from Cache' : 'Loading Model'}
+                            </h4>
+                            <span className="wp-neural-admin-loading-card__subtitle">
+                                {loadingStage.title}
+                            </span>
+                        </div>
+                        <span className="wp-neural-admin-loading-card__percent">{progress}%</span>
+                    </div>
 
-                {status === 'loading' && (
-                    <div className="wp-neural-admin-progress">
+                    <div className="wp-neural-admin-loading-card__progress">
                         <div
-                            className="wp-neural-admin-progress__bar"
+                            className="wp-neural-admin-loading-card__progress-bar"
                             style={{ width: `${progress}%` }}
                         />
-                        <span className="wp-neural-admin-progress__text">{progress}%</span>
                     </div>
-                )}
 
-                {status === 'checking' && <Spinner />}
+                    <p className="wp-neural-admin-loading-card__description">
+                        {loadingStage.description}
+                    </p>
 
-                {(status === 'not-loaded' || status === 'error' || status === 'ready') && (
-                    <div className="wp-neural-admin-status__controls">
-                        {status !== 'ready' && (
-                            <select
-                                className="wp-neural-admin-model-select"
-                                value={selectedModel}
-                                onChange={(e) => setSelectedModel(e.target.value)}
+                    {isFromCache && (
+                        <p className="wp-neural-admin-loading-card__cache-note">
+                            Model files are cached locally. No download needed!
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* Not Loading State - Standard Status Bar */}
+            {!isInLoadingState && (
+                <div className="wp-neural-admin-status">
+                    <span className={`wp-neural-admin-status__indicator ${getStatusClass()}`} />
+                    <span className="wp-neural-admin-status__text">{message}</span>
+
+                    {status === 'checking' && <Spinner />}
+
+                    {(status === 'not-loaded' || status === 'error' || status === 'ready') && (
+                        <div className="wp-neural-admin-status__controls">
+                            {status !== 'ready' && (
+                                <select
+                                    className="wp-neural-admin-model-select"
+                                    value={selectedModel}
+                                    onChange={(e) => setSelectedModel(e.target.value)}
+                                    disabled={status === 'loading' || status === 'checking'}
+                                >
+                                    {availableModels.map((model) => (
+                                        <option key={model.id} value={model.id}>
+                                            {model.name} ({model.size})
+                                            {model.recommended ? ' - Recommended' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            <Button
+                                variant={status === 'ready' ? 'secondary' : 'primary'}
+                                onClick={getButtonHandler()}
                                 disabled={status === 'loading' || status === 'checking'}
+                                className="wp-neural-admin-load-model"
                             >
-                                {availableModels.map((model) => (
-                                    <option key={model.id} value={model.id}>
-                                        {model.name} ({model.size})
-                                        {model.recommended ? ' - Recommended' : ''}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
-                        <Button
-                            variant={status === 'ready' ? 'secondary' : 'primary'}
-                            onClick={getButtonHandler()}
-                            disabled={status === 'loading' || status === 'checking'}
-                            className="wp-neural-admin-load-model"
-                        >
-                            {getButtonText()}
-                        </Button>
-                    </div>
-                )}
-            </div>
+                                {getButtonText()}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {status === 'not-loaded' && (
                 <p className="wp-neural-admin-model-info">

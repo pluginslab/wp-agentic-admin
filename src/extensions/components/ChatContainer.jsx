@@ -218,16 +218,14 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
         <div className="wp-neural-admin-chat-container">
             <div className="wp-neural-admin-chat-header">
                 <div className="wp-neural-admin-chat-header__actions">
-                    {messages.length > 1 && (
-                        <Button
-                            variant="tertiary"
-                            isDestructive
-                            onClick={clearHistory}
-                            disabled={isLoading || isStreaming}
-                        >
-                            Clear Chat
-                        </Button>
-                    )}
+                    <Button
+                        variant="tertiary"
+                        isDestructive
+                        onClick={clearHistory}
+                        disabled={messages.length <= 1 || isLoading || isStreaming}
+                    >
+                        Clear Chat
+                    </Button>
                 </div>
             </div>
 

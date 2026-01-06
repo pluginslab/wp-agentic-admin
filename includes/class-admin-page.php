@@ -82,11 +82,11 @@ class Admin_Page {
 		wp_enqueue_style( 'wp-components' );
 
 		// Enqueue our styles.
-		$css_file = WP_NEURAL_ADMIN_PLUGIN_DIR . 'build-extensions/style-index.css';
+		$css_file = WP_NEURAL_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
 		if ( file_exists( $css_file ) ) {
 			wp_enqueue_style(
 				'wp-neural-admin-style',
-				WP_NEURAL_ADMIN_PLUGIN_URL . 'build-extensions/style-index.css',
+				WP_NEURAL_ADMIN_PLUGIN_URL . 'build-extensions/index.css',
 				array( 'wp-components' ),
 				filemtime( $css_file )
 			);

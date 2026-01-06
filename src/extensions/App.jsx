@@ -18,6 +18,7 @@ const App = () => {
     const [modelReady, setModelReady] = useState(false);
     const [webGPUError, setWebGPUError] = useState(null);
     const [isExecuting, setIsExecuting] = useState(false);
+    const [isAutoLoading, setIsAutoLoading] = useState(false);
 
     const settings = window.wpNeuralAdmin || {};
     const { i18n = {}, hasPrettyPermalinks = true, permalinksUrl = '' } = settings;
@@ -45,25 +46,48 @@ const App = () => {
 
                 // Check if model is cached - if so, auto-load it
                 const isCached = await modelLoader.isModelCached();
+                
+                // Show the full UI now (with ModelStatus component)
+                setIsLoading(false);
+                
                 if (isCached) {
                     console.log('[App] Model is cached, auto-loading...');
+                    setIsAutoLoading(true);
                     try {
                         await modelLoader.load();
                         setModelReady(true);
                     } catch (loadErr) {
                         console.error('[App] Auto-load failed:', loadErr);
                         // Don't show error - user can manually load
+                    } finally {
+                        setIsAutoLoading(false);
                     }
                 }
             } catch (err) {
                 console.error('Initialization failed:', err);
-            } finally {
                 setIsLoading(false);
             }
         };
 
         initializeApp();
     }, []);
+
+    /**
+     * Warn user before leaving page if model is loaded
+     */
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (modelReady) {
+                const message = 'The AI model is loaded. Leaving this page will unload it and require re-initialization on return.';
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [modelReady]);
 
     /**
      * Handle model ready callback
@@ -194,6 +218,7 @@ const App = () => {
             <ModelStatus
                 onModelReady={handleModelReady}
                 onModelError={handleModelError}
+                isAutoLoading={isAutoLoading}
             />
         </div>
     );
