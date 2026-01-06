@@ -2,6 +2,23 @@
  * ChatContainer Component
  *
  * Main container for the chat interface using the ChatOrchestrator framework.
+ * This component:
+ * - Initializes the chat framework (tools, session, orchestrator) on mount
+ * - Manages React state for messages and streaming UI
+ * - Handles user input and routes to ChatOrchestrator
+ * - Displays messages via MessageList component
+ * - Shows confirmation modals for destructive actions
+ * 
+ * ARCHITECTURE:
+ * - ChatSession: Manages message history (persisted to localStorage)
+ * - ChatOrchestrator: Coordinates LLM + tools + streaming
+ * - registerWPTools(): Registers all WordPress tools with the ToolRegistry
+ * 
+ * The orchestrator uses callbacks to update React state:
+ * - onStreamStart/Chunk/End: For typewriter streaming effect
+ * - onToolStart/End: For loading spinner during tool execution
+ * - onMessageAdd: To update displayed messages
+ * - onStateChange: To sync isProcessing state
  *
  * @package WPNeuralAdmin
  */

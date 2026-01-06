@@ -4,6 +4,22 @@
  * Defines all WordPress-specific tools (abilities) for the chat system.
  * Each tool includes keywords for detection, messages, and execution handlers.
  * 
+ * HOW TO ADD A NEW TOOL:
+ * 1. Register the ability in PHP (includes/class-abilities.php)
+ * 2. Add a new tool object to the wpTools array below with:
+ *    - id: Must match the PHP ability ID (e.g., 'wp-neural-admin/my-tool')
+ *    - keywords: Array of words/phrases that trigger this tool
+ *    - initialMessage: Shown while tool executes (streamed with typewriter effect)
+ *    - summarize(result): Function that converts API result to human-readable text
+ *    - execute(params): Async function that calls the ability API
+ *    - requiresConfirmation: Set true for destructive actions (shows modal)
+ * 3. Run `npm run build` to rebuild
+ * 
+ * KEYWORD TIPS:
+ * - Longer keywords get higher scores (more specific = better match)
+ * - Include common variations and synonyms
+ * - Test with various phrasings to ensure reliable detection
+ * 
  * @package WPNeuralAdmin
  */
 

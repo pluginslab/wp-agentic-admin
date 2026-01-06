@@ -2,6 +2,38 @@
  * Services Index
  * 
  * Central export for all framework services.
+ * Import from here rather than individual files:
+ * 
+ * @example
+ * import { chatOrchestrator, ChatSession, registerWPTools } from '../services';
+ * 
+ * AVAILABLE EXPORTS:
+ * 
+ * Core Framework (chat-orchestrator.js, chat-session.js):
+ * - chatOrchestrator: Main coordinator singleton - handles message processing
+ * - ChatOrchestrator: Class for creating custom orchestrator instances
+ * - ChatSession: Class for message history management
+ * - createSession: Factory function for creating sessions
+ * - MessageType: Enum for message types (USER, ASSISTANT, TOOL_RESULT, etc.)
+ * 
+ * Tool System (tool-registry.js, tool-router.js, wp-tools.js):
+ * - toolRegistry: Singleton registry of all available tools
+ * - ToolRegistry: Class for creating custom registries
+ * - toolRouter: Singleton for keyword-based tool detection
+ * - ToolRouter: Class for custom routing logic
+ * - registerWPTools: Function to register all WordPress tools
+ * - wpTools: Array of WordPress tool configurations
+ * - getToolConfig: Get a specific tool by ID
+ * 
+ * Streaming (stream-simulator.js):
+ * - streamSimulator: Singleton for typewriter effects
+ * - StreamSimulator: Class for custom streaming instances
+ * 
+ * LLM (model-loader.js):
+ * - modelLoader: WebLLM model management (load, unload, status)
+ * 
+ * WordPress API (abilities-api.js):
+ * - abilitiesApi: REST client for WordPress Abilities API
  * 
  * @package WPNeuralAdmin
  */
@@ -20,5 +52,5 @@ export { default as modelLoader } from './model-loader';
 export { default as abilitiesApi } from './abilities-api';
 export { registerWPTools, wpTools, getToolConfig } from './wp-tools';
 
-// Legacy exports (for backwards compatibility during migration)
+// Legacy exports (kept for reference, not actively used)
 export { default as aiService } from './ai-service';
