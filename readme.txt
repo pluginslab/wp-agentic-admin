@@ -1,7 +1,7 @@
 === WP Neural Admin ===
 Contributors: pluginslab
 Tags: ai, sre, site reliability, webllm, abilities api
-Requires at least: 6.7
+Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
 Stable tag: 1.0.0
@@ -24,19 +24,17 @@ WP Neural Admin transforms your WordPress admin panel into an intelligent comman
 
 = Requirements =
 
-* WordPress 6.7+
+* WordPress 6.9+ (includes the Abilities API)
 * PHP 8.2+
 * Modern browser with WebGPU support (Chrome 113+, Edge 113+)
-* Abilities API plugin installed
 
 == Installation ==
 
-1. Install and activate the Abilities API plugin
-2. Upload the `wp-neural-admin` folder to the `/wp-content/plugins/` directory
-3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Navigate to "Neural Admin" in your WordPress admin menu
-5. Wait for the AI model to download (one-time, ~2.7GB)
-6. Start chatting!
+1. Upload the `wp-neural-admin` folder to the `/wp-content/plugins/` directory
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Navigate to "Neural Admin" in your WordPress admin menu
+4. Wait for the AI model to download (one-time, ~360MB)
+5. Start chatting!
 
 == Changelog ==
 

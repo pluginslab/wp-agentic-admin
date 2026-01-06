@@ -60,18 +60,16 @@ All of this happens **locally in your browser** - no data is sent to external se
 
 ## Requirements
 
-- WordPress 6.7+
+- WordPress 6.9+ (includes the Abilities API)
 - PHP 8.2+
 - Modern browser with WebGPU support (Chrome 113+, Edge 113+)
-- [Abilities API plugin](https://github.com/WordPress/abilities-api) installed
 
 ## Installation
 
-1. Install and activate the [Abilities API plugin](https://github.com/WordPress/abilities-api/releases/latest)
-2. Download and install WP-Neural-Admin
-3. Navigate to "Neural Admin" in your WordPress admin menu
-4. Wait for the AI model to download (one-time, ~360MB)
-5. Start chatting!
+1. Download and install WP-Neural-Admin
+2. Navigate to "Neural Admin" in your WordPress admin menu
+3. Wait for the AI model to download (one-time, ~360MB)
+4. Start chatting!
 
 ## Available Abilities
 

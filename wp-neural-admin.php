@@ -10,10 +10,9 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-neural-admin
  * Domain Path: /languages
- * Requires at least: 6.7
+ * Requires at least: 6.9
  * Requires PHP: 8.2
  * Tested up to: 6.9
- * Requires Plugins: abilities-api
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -66,16 +65,14 @@ if ( ! class_exists( 'WPNeuralAdmin' ) ) {
 		/**
 		 * Check for required dependencies.
 		 *
+		 * The Abilities API is built into WordPress 6.9+.
+		 *
 		 * @return bool
 		 */
 		private function check_dependencies(): bool {
-			if ( ! class_exists( 'WP_Ability' ) ) {
+			// Abilities API is built into WordPress 6.9+
+			if ( ! function_exists( 'wp_register_ability' ) ) {
 				add_action( 'admin_notices', array( $this, 'abilities_api_missing_notice' ) );
-				return false;
-			}
-
-			if ( defined( 'WP_ABILITIES_API_VERSION' ) && version_compare( WP_ABILITIES_API_VERSION, '0.1.0', '<' ) ) {
-				add_action( 'admin_notices', array( $this, 'abilities_api_version_notice' ) );
 				return false;
 			}
 
@@ -92,29 +89,7 @@ if ( ! class_exists( 'WPNeuralAdmin' ) ) {
 					<?php
 					printf(
 						/* translators: %s: Plugin name */
-						esc_html__( '%s requires the Abilities API plugin to be installed and activated.', 'wp-neural-admin' ),
-						'<strong>WP Neural Admin</strong>'
-					);
-					?>
-					<a href="https://github.com/WordPress/abilities-api/releases/latest" target="_blank">
-						<?php esc_html_e( 'Download Abilities API', 'wp-neural-admin' ); ?>
-					</a>
-				</p>
-			</div>
-			<?php
-		}
-
-		/**
-		 * Admin notice for outdated Abilities API version.
-		 */
-		public function abilities_api_version_notice(): void {
-			?>
-			<div class="notice notice-error">
-				<p>
-					<?php
-					printf(
-						/* translators: %s: Plugin name */
-						esc_html__( '%s requires Abilities API version 0.1.0 or higher. Please update the plugin.', 'wp-neural-admin' ),
+						esc_html__( '%s requires WordPress 6.9 or higher for the Abilities API.', 'wp-neural-admin' ),
 						'<strong>WP Neural Admin</strong>'
 					);
 					?>
