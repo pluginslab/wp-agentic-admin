@@ -8,7 +8,19 @@
  */
 
 import { useState } from '@wordpress/element';
-import { MessageType } from '../services/chat-history';
+
+/**
+ * Message type constants
+ * Using string literals for compatibility with converted messages
+ */
+const MessageType = {
+    USER: 'user',
+    ASSISTANT: 'assistant',
+    SYSTEM: 'system',
+    ABILITY_REQUEST: 'ability_request',
+    ABILITY_RESULT: 'ability_result',
+    ERROR: 'error',
+};
 
 /**
  * Format timestamp for display
