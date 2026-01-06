@@ -72,8 +72,17 @@ const getAbilityLabel = (abilityId) => {
  * @return {JSX.Element} Rendered message
  */
 const MessageItem = ({ message }) => {
-    const { type, content, timestamp, meta } = message;
+    const { type, content, timestamp } = message;
     const [isExpanded, setIsExpanded] = useState(false);
+    
+    // Handle both legacy meta-wrapped format and new flattened format
+    const meta = message.meta || {
+        abilityId: message.abilityName,
+        result: message.result,
+        success: message.success,
+        error: message.error,
+        params: message.input,
+    };
 
     // User message - simple bubble on the right
     if (type === MessageType.USER) {
