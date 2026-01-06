@@ -1039,9 +1039,13 @@
         border-bottom: 1px solid #c3c4c7;
     }
 
-    > p {
+    p {
+        margin: 0 0 12px 0;
         padding: 0 24px;
-        margin: 16px 0;
+        
+        &:first-of-type {
+            margin-top: 16px;
+        }
     }
 
     .wp-neural-admin-confirm-params {

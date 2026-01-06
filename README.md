@@ -374,7 +374,16 @@ Open `src/extensions/services/wp-tools.js` and add to the `wpTools` array:
     
     // Convert the API result into a human-readable response
     // This is what the user sees after the tool runs
-    summarize: (result) => {
+    // The optional userMessage parameter allows context-aware responses
+    summarize: (result, userMessage = '') => {
+        const msg = userMessage.toLowerCase();
+        
+        // Context-aware: respond specifically to what user asked
+        if (msg.includes('how many')) {
+            return `You have **${result.total} items**.`;
+        }
+        
+        // Default: full summary
         if (result.total === 0) {
             return "I didn't find any items.";
         }
@@ -383,8 +392,9 @@ Open `src/extensions/services/wp-tools.js` and add to the `wpTools` array:
     },
     
     // Execute the ability via REST API
-    execute: async (params) => {
-        return abilitiesApi.executeAbilityById('wp-neural-admin/my-new-ability', params);
+    // The execute function receives { userMessage } so you can extract parameters
+    execute: async ({ userMessage }) => {
+        return abilitiesApi.executeAbilityById('wp-neural-admin/my-new-ability', {});
     },
     
     // Set to true for abilities that modify/delete data
@@ -395,6 +405,80 @@ Open `src/extensions/services/wp-tools.js` and add to the `wpTools` array:
     // confirmationMessage: 'This will modify your data. Continue?',
 },
 ```
+
+#### Step 2b: Tools That Require Parameters (Important!)
+
+If your PHP ability requires input parameters (like a plugin name to deactivate), you need to **extract those parameters from the user's natural language message**. The orchestrator passes `{ userMessage }` to the `execute` function.
+
+**Example: Plugin Deactivate Tool**
+
+```javascript
+{
+    id: 'wp-neural-admin/plugin-deactivate',
+    keywords: ['deactivate', 'disable', 'turn off'],
+    initialMessage: "Deactivating the plugin...",
+    
+    // Helper function to extract parameters from natural language
+    extractParams: (userMessage) => {
+        const msg = userMessage.toLowerCase();
+        
+        // Map common names to actual plugin file paths
+        // IMPORTANT: The API expects the plugin FILE PATH, not just a slug!
+        // e.g., "hello.php" or "akismet/akismet.php"
+        const pluginMappings = {
+            'hello.php': ['hello dolly', 'hello-dolly'],
+            'akismet/akismet.php': ['akismet', 'anti-spam'],
+            'jetpack/jetpack.php': ['jetpack'],
+            // Add more mappings as needed
+        };
+        
+        // Try to match a known plugin
+        for (const [pluginPath, names] of Object.entries(pluginMappings)) {
+            if (names.some(name => msg.includes(name))) {
+                return { plugin: pluginPath };
+            }
+        }
+        
+        // Fallback: try to extract and guess the path
+        const match = msg.match(/deactivate\s+(?:the\s+)?(?:plugin\s+)?["']?([a-z0-9-_ ]+)["']?/i);
+        if (match && match[1]) {
+            const slug = match[1].trim().toLowerCase().replace(/\s+/g, '-');
+            return { plugin: `${slug}/${slug}.php` };
+        }
+        
+        return null;
+    },
+    
+    execute: async ({ userMessage }) => {
+        const tool = wpTools.find(t => t.id === 'wp-neural-admin/plugin-deactivate');
+        const params = tool.extractParams(userMessage);
+        
+        if (!params || !params.plugin) {
+            return { 
+                error: 'Could not determine which plugin to deactivate.' 
+            };
+        }
+        
+        // Pass extracted params to the API
+        return abilitiesApi.executeAbilityById('wp-neural-admin/plugin-deactivate', params);
+    },
+    
+    summarize: (result) => {
+        if (result.error) return `Failed: ${result.error}`;
+        return result.message || 'Plugin deactivated successfully.';
+    },
+    
+    requiresConfirmation: true,
+    confirmationMessage: 'Are you sure you want to deactivate this plugin?',
+},
+```
+
+**Key Points for Parameter Extraction:**
+
+1. **Check PHP schema first** - Look at `input_schema` in your PHP ability to see the exact parameter names and types expected
+2. **Map common names** - Users say "hello dolly" but the API needs `hello.php`
+3. **Handle failures gracefully** - Return a helpful error if you can't extract the required parameter
+4. **Use regex patterns** - Extract values from natural language patterns like "deactivate X" or "disable the X plugin"
 
 #### Step 3: Build and Test
 
@@ -415,11 +499,19 @@ Then go to your WordPress admin, open Neural Admin, and try typing something wit
 - Use markdown for formatting (`**bold**`, `\n\n` for paragraphs, `- ` for lists)
 - Keep it concise but informative
 - Handle edge cases (empty results, errors)
+- Use `userMessage` parameter for context-aware responses (e.g., "what's my PHP version?" returns just PHP, not full site health)
 
 **Destructive Actions:**
 - Set `requiresConfirmation: true` for anything that modifies data
 - Set `destructive: true` in PHP annotations
 - Provide a clear `confirmationMessage`
+
+**Parameter Extraction (for tools that need input):**
+- The `execute` function receives `{ userMessage }` - the user's original message
+- Check your PHP `input_schema` for exact parameter names (e.g., `plugin` not `plugin_slug`)
+- Create an `extractParams` helper to parse natural language into API parameters
+- Map common names to actual values (e.g., "hello dolly" → `hello.php`)
+- Always handle the case where extraction fails - return a helpful error message
 
 #### Testing Your Ability
 
@@ -461,7 +553,7 @@ User types: "what plugins are installed?"
 
 | Service | File | Purpose |
 |---------|------|---------|
-| `ChatOrchestrator` | `chat-orchestrator.js` | Main coordinator - handles message processing, routes to tools or LLM |
+| `ChatOrchestrator` | `chat-orchestrator.js` | Main coordinator - handles message processing, routes to tools or LLM, passes user message context to summarizers |
 | `ChatSession` | `chat-session.js` | Manages message history, provides localStorage persistence |
 | `ToolRegistry` | `tool-registry.js` | Central registry for all available tools |
 | `ToolRouter` | `tool-router.js` | Detects which tool to use based on keyword matching |

@@ -184,7 +184,8 @@ class ChatOrchestrator {
         let success = true;
 
         try {
-            result = await tool.execute({});
+            // Pass userMessage to execute so tools can extract parameters
+            result = await tool.execute({ userMessage });
             this.session.addToolResult(tool.id, result, true);
         } catch (error) {
             result = { error: error.message };
@@ -195,8 +196,9 @@ class ChatOrchestrator {
         this.callbacks.onToolEnd(tool.id, result, success);
 
         // 4. Generate and stream the summary
+        // Pass userMessage as context so summarize can tailor the response
         const summary = success 
-            ? tool.summarize(result)
+            ? tool.summarize(result, userMessage)
             : 'I encountered an error while trying to help.';
 
         this.callbacks.onStreamStart();

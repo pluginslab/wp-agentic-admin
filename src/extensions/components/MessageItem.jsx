@@ -34,6 +34,58 @@ const formatTime = (timestamp) => {
 };
 
 /**
+ * Parse simple markdown to React elements
+ * Supports: **bold**, `code`, and line breaks
+ *
+ * @param {string} text - Text with markdown
+ * @return {Array} Array of React elements
+ */
+const parseMarkdown = (text) => {
+    if (!text) return null;
+    
+    const parts = [];
+    let remaining = text;
+    let keyIndex = 0;
+    
+    // Process the text character by character looking for markdown patterns
+    while (remaining.length > 0) {
+        // Check for bold **text**
+        const boldMatch = remaining.match(/^\*\*(.+?)\*\*/);
+        if (boldMatch) {
+            parts.push(<strong key={keyIndex++}>{boldMatch[1]}</strong>);
+            remaining = remaining.slice(boldMatch[0].length);
+            continue;
+        }
+        
+        // Check for inline code `text`
+        const codeMatch = remaining.match(/^`(.+?)`/);
+        if (codeMatch) {
+            parts.push(<code key={keyIndex++}>{codeMatch[1]}</code>);
+            remaining = remaining.slice(codeMatch[0].length);
+            continue;
+        }
+        
+        // Find next special character or end of string
+        const nextSpecial = remaining.search(/\*\*|`/);
+        if (nextSpecial === -1) {
+            // No more markdown, add rest as text
+            parts.push(remaining);
+            break;
+        } else if (nextSpecial === 0) {
+            // Special char at start but didn't match pattern, treat as text
+            parts.push(remaining[0]);
+            remaining = remaining.slice(1);
+        } else {
+            // Add text before special char
+            parts.push(remaining.slice(0, nextSpecial));
+            remaining = remaining.slice(nextSpecial);
+        }
+    }
+    
+    return parts;
+};
+
+/**
  * Render ability result as formatted output
  *
  * @param {Object} result - Ability execution result
@@ -171,7 +223,7 @@ const MessageItem = ({ message }) => {
                         <div className="neural-message__text">
                             {displayContent.split('\n').map((line, index) => {
                                 if (line.trim() === '') return null;
-                                return <p key={index}>{line}</p>;
+                                return <p key={index}>{parseMarkdown(line)}</p>;
                             })}
                         </div>
                     )}
