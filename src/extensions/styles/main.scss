@@ -7,23 +7,18 @@
 .wp-neural-admin-app {
     max-width: 900px;
     margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    // Calculate height: viewport - admin bar (32px) - admin page header (~50px) - margins (40px) - model status (~80px)
+    // Using a reasonable estimate that leaves room for WP admin chrome
+    min-height: calc(100vh - 200px);
 }
 
-.wp-neural-admin-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #c3c4c7;
-
-    h2 {
-        margin: 0 0 8px;
-        font-size: 1.5em;
-        font-weight: 600;
-    }
-
-    .description {
-        margin: 0;
-        color: #646970;
-    }
+.wp-neural-admin-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; // Important for flex children to shrink properly
 }
 
 // Chat Container
@@ -32,15 +27,44 @@
     border: 1px solid #c3c4c7;
     border-radius: 4px;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; // Important for flex children to shrink properly
 }
 
 // Messages Area
 .wp-neural-admin-messages {
-    min-height: 300px;
-    max-height: 500px;
+    flex: 1;
+    min-height: 200px;
     overflow-y: auto;
     padding: 20px;
     background: #f6f7f7;
+}
+
+// Context Warning
+.wp-neural-admin-context-warning {
+    padding: 0 12px;
+    
+    .components-notice {
+        margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .components-notice__content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+
+    &__clear {
+        white-space: nowrap;
+        text-decoration: underline;
+    }
 }
 
 // Individual Message
@@ -255,9 +279,76 @@
         }
     }
 
-    &__text {
+    &__info {
+        display: flex;
+        flex-direction: column;
         flex: 1;
+        gap: 2px;
+    }
+
+    &__text {
+        color: #1d2327;
+        font-weight: 500;
+    }
+
+    &__model-details {
+        font-size: 11px;
         color: #646970;
+        font-weight: 400;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+
+    &__context {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+
+        .context__label {
+            color: #646970;
+        }
+
+        .context__bar {
+            width: 40px;
+            height: 6px;
+            background: #dcdcde;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .context__fill {
+            display: block;
+            height: 100%;
+            background: #2271b1;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .context__percent {
+            min-width: 28px;
+            text-align: right;
+        }
+
+        &.context--high {
+            .context__fill {
+                background: #dba617;
+            }
+            .context__percent {
+                color: #996800;
+            }
+        }
+
+        &.context--critical {
+            .context__fill {
+                background: #d63638;
+            }
+            .context__percent {
+                color: #d63638;
+                font-weight: 600;
+            }
+        }
     }
 
     .button {
@@ -412,10 +503,15 @@
 // Tabs
 .wp-neural-admin-tabs {
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 
     .components-tab-panel__tabs {
         border-bottom: 1px solid #c3c4c7;
         margin-bottom: 0;
+        flex-shrink: 0;
     }
 
     .components-tab-panel__tabs-item {
@@ -426,6 +522,14 @@
             box-shadow: inset 0 -3px 0 0 #2271b1;
         }
     }
+
+    // The tab panel content wrapper
+    > div:last-child {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
 }
 
 .wp-neural-admin-tab-content {
@@ -433,12 +537,18 @@
     border: 1px solid #c3c4c7;
     border-top: none;
     border-radius: 0 0 4px 4px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 // Chat Container wrapper
 .wp-neural-admin-chat-container {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 // Ability Browser
@@ -1178,12 +1288,46 @@
                 }
             }
 
-            .neural-message__time {
-                font-size: 11px;
-                color: #8c8f94;
+            .neural-message__footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
                 margin-top: 10px;
                 border-top: 1px solid #f0f0f1;
                 padding-top: 8px;
+            }
+
+            .neural-message__time {
+                font-size: 11px;
+                color: #8c8f94;
+            }
+
+            .neural-message__copy {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                padding: 0;
+                border: none;
+                background: transparent;
+                color: #8c8f94;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.15s ease;
+
+                &:hover {
+                    background: #f0f0f1;
+                    color: #1d2327;
+                }
+
+                &--copied {
+                    color: #00a32a;
+
+                    &:hover {
+                        color: #00a32a;
+                    }
+                }
             }
         }
 
@@ -1389,6 +1533,14 @@
             &--open {
                 transform: rotate(180deg);
             }
+        }
+
+        &__id {
+            margin-left: auto;
+            font-size: 11px;
+            color: #a7aaad;
+            font-family: monospace;
+            font-weight: 400;
         }
 
         &__result {

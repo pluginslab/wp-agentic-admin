@@ -24,6 +24,18 @@ const MODEL_CONFIG = {
 };
 
 /**
+ * Context window sizes for different models
+ */
+const MODEL_CONTEXT_SIZES = {
+    'SmolLM2-360M-Instruct-q4f16_1-MLC': 2048,
+    'SmolLM2-1.7B-Instruct-q4f16_1-MLC': 2048,
+    'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': 2048,
+    'Llama-3.2-1B-Instruct-q4f16_1-MLC': 2048,
+    // Default fallback
+    default: 2048,
+};
+
+/**
  * ModelLoader class for managing WebLLM model lifecycle
  */
 class ModelLoader {
@@ -35,6 +47,8 @@ class ModelLoader {
         this.loadProgress = 0;
         this.progressCallback = null;
         this.statusCallback = null;
+        this.lastUsageStats = null; // Store usage stats from completions
+        this.gpuAdapterInfo = null; // Store GPU adapter info (vendor, architecture, device)
     }
 
     /**
@@ -94,6 +108,14 @@ class ModelLoader {
             }
             
             console.log('WebGPU Adapter:', info);
+            
+            // Store adapter info for later use
+            this.gpuAdapterInfo = {
+                vendor: info.vendor || 'Unknown',
+                architecture: info.architecture || 'Unknown',
+                device: info.device || 'Unknown',
+                description: info.description || '',
+            };
 
             return {
                 supported: true,
@@ -264,6 +286,159 @@ class ModelLoader {
      */
     getModelId() {
         return this.modelId;
+    }
+
+    /**
+     * Update usage stats from a completion response
+     * Call this after each chat completion to track performance
+     *
+     * @param {Object} usage - Usage object from ChatCompletion or ChatCompletionChunk
+     */
+    updateUsageStats(usage) {
+        if (usage) {
+            this.lastUsageStats = {
+                ...usage,
+                timestamp: Date.now(),
+            };
+            console.log('[ModelLoader] Updated usage stats:', this.lastUsageStats);
+        }
+    }
+
+    /**
+     * Get the last recorded usage stats
+     *
+     * @return {Object|null} Last usage stats or null
+     */
+    getLastUsageStats() {
+        return this.lastUsageStats;
+    }
+
+    /**
+     * Get detailed info about the currently loaded model
+     *
+     * @return {Object|null} Model info with name, size, etc. or null if no model loaded
+     */
+    getLoadedModelInfo() {
+        if (!this.isReady || !this.modelId) {
+            return null;
+        }
+
+        const models = ModelLoader.getAvailableModels();
+        const modelInfo = models.find((m) => m.id === this.modelId);
+
+        if (modelInfo) {
+            return {
+                id: this.modelId,
+                name: modelInfo.name,
+                size: modelInfo.size,
+                description: modelInfo.description,
+            };
+        }
+
+        // Fallback for unknown models
+        return {
+            id: this.modelId,
+            name: this.modelId,
+            size: 'Unknown',
+            description: '',
+        };
+    }
+
+    /**
+     * Get GPU/VRAM usage statistics if available
+     * Note: WebGPU doesn't provide direct memory APIs, but we can estimate
+     *
+     * @return {Promise<Object|null>} Memory stats or null if unavailable
+     */
+    async getMemoryStats() {
+        if (!this.isReady || !this.engine) {
+            return null;
+        }
+
+        try {
+            // Check if we have usage stats from recent completions
+            if (this.lastUsageStats) {
+                const usage = this.lastUsageStats;
+                // Calculate tokens per second if we have the data
+                // WebLLM usage includes: prompt_tokens, completion_tokens, total_tokens
+                // and extra fields like prefill_tokens_per_s, decode_tokens_per_s
+                
+                let formatted = '';
+                if (usage.extra?.decode_tokens_per_s) {
+                    const decodeTps = usage.extra.decode_tokens_per_s.toFixed(1);
+                    formatted = `${decodeTps} tok/s`;
+                    
+                    if (usage.extra?.prefill_tokens_per_s) {
+                        const prefillTps = usage.extra.prefill_tokens_per_s.toFixed(1);
+                        formatted = `prefill: ${prefillTps} · output: ${decodeTps} tok/s`;
+                    }
+
+                    return {
+                        usage,
+                        formatted,
+                        decodeTps: usage.extra.decode_tokens_per_s,
+                        prefillTps: usage.extra?.prefill_tokens_per_s,
+                        available: true,
+                    };
+                }
+                
+                // Fallback: just show token counts
+                if (usage.completion_tokens) {
+                    return {
+                        usage,
+                        formatted: `${usage.completion_tokens} tokens generated`,
+                        available: true,
+                    };
+                }
+            }
+
+            // Get model info for estimated size
+            const modelInfo = this.getLoadedModelInfo();
+            if (modelInfo) {
+                return {
+                    estimatedSize: modelInfo.size,
+                    available: false,
+                    message: 'Estimated from model size',
+                };
+            }
+
+            return null;
+        } catch (err) {
+            console.warn('[ModelLoader] Error getting memory stats:', err);
+            return null;
+        }
+    }
+
+    /**
+     * Get GPU adapter info (vendor, architecture, device)
+     *
+     * @return {Object|null} GPU info or null if not available
+     */
+    getGPUInfo() {
+        return this.gpuAdapterInfo;
+    }
+
+    /**
+     * Get context window usage information
+     *
+     * @return {Object|null} Context usage info or null if not available
+     */
+    getContextUsage() {
+        if (!this.lastUsageStats) {
+            return null;
+        }
+
+        const maxContext = MODEL_CONTEXT_SIZES[this.modelId] || MODEL_CONTEXT_SIZES.default;
+        const usedTokens = this.lastUsageStats.prompt_tokens || 0;
+        const percentage = Math.round((usedTokens / maxContext) * 100);
+
+        return {
+            used: usedTokens,
+            max: maxContext,
+            percentage: Math.min(percentage, 100), // Cap at 100%
+            isHigh: percentage >= 75,
+            isCritical: percentage >= 90,
+        };
     }
 
     /**

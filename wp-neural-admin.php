@@ -37,6 +37,9 @@ if ( ! class_exists( 'WPNeuralAdmin' ) ) {
 			$this->define_constants();
 			$this->load_textdomain();
 
+			// Load functions first (provides register_neural_ability API).
+			require_once WP_NEURAL_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
+
 			require_once WP_NEURAL_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
 			require_once WP_NEURAL_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
 			require_once WP_NEURAL_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';

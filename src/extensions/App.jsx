@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Spinner, TabPanel, Notice } from '@wordpress/components';
+import { TabPanel, Notice } from '@wordpress/components';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import ModelStatus from './components/ModelStatus';
@@ -13,59 +13,66 @@ import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
 
 const App = () => {
-    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [modelReady, setModelReady] = useState(false);
     const [webGPUError, setWebGPUError] = useState(null);
     const [isExecuting, setIsExecuting] = useState(false);
-    const [isAutoLoading, setIsAutoLoading] = useState(false);
+    // Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
+    const [initPhase, setInitPhase] = useState('checking');
+    const [initMessage, setInitMessage] = useState('Checking WebGPU support...');
+    const [initProgress, setInitProgress] = useState(5);
 
     const settings = window.wpNeuralAdmin || {};
     const { i18n = {}, hasPrettyPermalinks = true, permalinksUrl = '' } = settings;
 
     /**
-     * Initial WebGPU check and auto-load cached model on mount
+     * Background WebGPU check and auto-load cached model on mount
+     * Shows progress bar during checks
      */
     useEffect(() => {
         const initializeApp = async () => {
             try {
                 // Check WebGPU support first
+                setInitMessage('Checking WebGPU support...');
+                setInitProgress(10);
                 const result = await modelLoader.checkWebGPUSupport();
                 if (!result.supported) {
                     setWebGPUError(result.reason);
-                    setIsLoading(false);
+                    setInitPhase(null);
                     return;
                 }
 
                 // Check if model is already loaded in memory
+                setInitMessage('Checking model status...');
+                setInitProgress(20);
                 if (modelLoader.isModelReady()) {
                     setModelReady(true);
-                    setIsLoading(false);
+                    setInitPhase(null);
                     return;
                 }
 
-                // Check if model is cached - if so, auto-load it
+                // Check if model is cached
+                setInitMessage('Checking cache...');
+                setInitProgress(30);
                 const isCached = await modelLoader.isModelCached();
-                
-                // Show the full UI now (with ModelStatus component)
-                setIsLoading(false);
                 
                 if (isCached) {
                     console.log('[App] Model is cached, auto-loading...');
-                    setIsAutoLoading(true);
+                    setInitPhase('loading');
+                    setInitMessage('Loading from cache...');
+                    setInitProgress(35);
                     try {
                         await modelLoader.load();
                         setModelReady(true);
                     } catch (loadErr) {
                         console.error('[App] Auto-load failed:', loadErr);
                         // Don't show error - user can manually load
-                    } finally {
-                        setIsAutoLoading(false);
                     }
                 }
+                setInitPhase(null);
             } catch (err) {
                 console.error('Initialization failed:', err);
-                setIsLoading(false);
+                setInitPhase(null);
             }
         };
 
@@ -112,9 +119,6 @@ const App = () => {
     if (!hasPrettyPermalinks) {
         return (
             <div className="wp-neural-admin-app">
-                <div className="wp-neural-admin-header">
-                    <h2>Neural Admin AI Assistant</h2>
-                </div>
                 <div className="wp-neural-admin-permalink-notice">
                     <Notice status="error" isDismissible={false}>
                         <p>
@@ -183,24 +187,8 @@ const App = () => {
         );
     }
 
-    if (isLoading) {
-        return (
-            <div className="wp-neural-admin-loading">
-                <Spinner />
-                <p>{i18n.loading || 'Loading...'}</p>
-            </div>
-        );
-    }
-
     return (
         <div className="wp-neural-admin-app">
-            <div className="wp-neural-admin-header">
-                <h2>Neural Admin AI Assistant</h2>
-                <p className="description">
-                    Your local AI-powered Site Reliability Engineer. Use the Chat tab to interact with AI, or the Abilities tab to manually test tools.
-                </p>
-            </div>
-
             <div className="wp-neural-admin-main">
                 <TabPanel
                     className="wp-neural-admin-tabs"
@@ -218,7 +206,9 @@ const App = () => {
             <ModelStatus
                 onModelReady={handleModelReady}
                 onModelError={handleModelError}
-                isAutoLoading={isAutoLoading}
+                initPhase={initPhase}
+                initMessage={initMessage}
+                initProgress={initProgress}
             />
         </div>
     );

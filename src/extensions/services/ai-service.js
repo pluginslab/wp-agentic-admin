@@ -163,11 +163,14 @@ class AIService {
                 temperature: options.temperature || 0.2,
                 max_tokens: options.maxTokens || 256,
                 stream: true,
+                stream_options: { include_usage: true },
                 stop: ['User:', 'USER:', '\n\nUser'],
             });
 
             // Process streaming chunks
+            let lastChunk = null;
             for await (const chunk of asyncChunkGenerator) {
+                lastChunk = chunk;
                 const delta = chunk.choices[0]?.delta?.content || '';
                 fullResponse += delta;
 
@@ -175,6 +178,17 @@ class AIService {
                 if (this.streamCallback) {
                     this.streamCallback(delta, fullResponse);
                 }
+
+                // Capture usage stats from chunks (usually in final chunk)
+                if (chunk.usage) {
+                    console.log('[AIService] Chunk has usage:', chunk.usage);
+                    modelLoader.updateUsageStats(chunk.usage);
+                }
+            }
+
+            // Log final chunk to see what's available
+            if (lastChunk) {
+                console.log('[AIService] Final chunk:', JSON.stringify(lastChunk, null, 2));
             }
 
             // Add assistant response to history

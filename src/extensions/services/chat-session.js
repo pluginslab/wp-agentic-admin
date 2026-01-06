@@ -218,19 +218,38 @@ class ChatSession {
     /**
      * Get conversation history for LLM context
      * Returns messages in a format suitable for LLM APIs
+     * Includes tool results so the LLM can reference previous data
      * 
      * @param {number} [maxMessages] - Maximum messages to include
      * @return {Array} Conversation history
      */
     getConversationHistory(maxMessages) {
         const relevantMessages = this.messages.filter(m => 
-            m.type === MessageType.USER || m.type === MessageType.ASSISTANT
+            m.type === MessageType.USER || 
+            m.type === MessageType.ASSISTANT ||
+            m.type === MessageType.TOOL_RESULT
         );
 
-        const history = relevantMessages.map(m => ({
-            role: m.type === MessageType.USER ? 'user' : 'assistant',
-            content: m.content,
-        }));
+        const history = relevantMessages.map(m => {
+            if (m.type === MessageType.TOOL_RESULT) {
+                // Include tool results as assistant messages with the data
+                const toolId = m.meta?.toolId || 'unknown tool';
+                const result = m.meta?.result;
+                const resultStr = result ? JSON.stringify(result, null, 2) : 'No data';
+                // Truncate if too large
+                const truncated = resultStr.length > 1000 
+                    ? resultStr.substring(0, 1000) + '...(truncated)'
+                    : resultStr;
+                return {
+                    role: 'assistant',
+                    content: `[Tool Result from ${toolId}]:\n${truncated}`,
+                };
+            }
+            return {
+                role: m.type === MessageType.USER ? 'user' : 'assistant',
+                content: m.content,
+            };
+        });
 
         if (maxMessages && history.length > maxMessages) {
             return history.slice(-maxMessages);

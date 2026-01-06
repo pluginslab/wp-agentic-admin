@@ -16,14 +16,15 @@
  * - createSession: Factory function for creating sessions
  * - MessageType: Enum for message types (USER, ASSISTANT, TOOL_RESULT, etc.)
  * 
- * Tool System (tool-registry.js, tool-router.js, wp-tools.js):
+ * Tool System (tool-registry.js, tool-router.js, wp-tools.js, neural-abilities-api.js):
  * - toolRegistry: Singleton registry of all available tools
  * - ToolRegistry: Class for creating custom registries
  * - toolRouter: Singleton for keyword-based tool detection
  * - ToolRouter: Class for custom routing logic
  * - registerWPTools: Function to register all WordPress tools
- * - wpTools: Array of WordPress tool configurations
- * - getToolConfig: Get a specific tool by ID
+ * - registerAbility: Public API for third-party plugins to register abilities
+ * - getAbility: Get a specific ability by ID
+ * - getAbilities: Get all registered abilities
  * 
  * Streaming (stream-simulator.js):
  * - streamSimulator: Singleton for typewriter effects
@@ -50,7 +51,16 @@ export { default as modelLoader } from './model-loader';
 
 // WordPress-specific
 export { default as abilitiesApi } from './abilities-api';
-export { registerWPTools, wpTools, getToolConfig } from './wp-tools';
+export { registerWPTools, getToolCount } from './wp-tools';
+export { 
+    registerAbility, 
+    unregisterAbility, 
+    getAbility, 
+    getAbilities,
+    hasAbility,
+    executeAbility,
+    exposeGlobalAPI 
+} from './neural-abilities-api';
 
 // Legacy exports (kept for reference, not actively used)
 export { default as aiService } from './ai-service';

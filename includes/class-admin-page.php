@@ -128,6 +128,12 @@ class Admin_Page {
 	private function get_localized_data(): array {
 		$settings = Settings::get_instance();
 
+		// Get JS configurations for registered abilities.
+		$abilities_js_config = array();
+		if ( function_exists( 'get_neural_abilities_js_config' ) ) {
+			$abilities_js_config = get_neural_abilities_js_config();
+		}
+
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
@@ -142,18 +148,19 @@ class Admin_Page {
 				'maxLogLines'        => (int) $settings->get_field( 'wp_neural_admin_max_log_lines', 100 ),
 			),
 			'browserRequirements' => Utils::get_browser_requirements(),
+			'abilities'           => $abilities_js_config,
 			'i18n'                => array(
-				'loading'           => __( 'Loading AI model...', 'wp-neural-admin' ),
-				'ready'             => __( 'AI assistant ready', 'wp-neural-admin' ),
-				'error'             => __( 'An error occurred', 'wp-neural-admin' ),
-				'noWebGPU'          => __( 'Your browser does not support WebGPU. Please use Chrome 113+ or Edge 113+.', 'wp-neural-admin' ),
-				'confirmAction'     => __( 'Confirm action', 'wp-neural-admin' ),
-				'cancel'            => __( 'Cancel', 'wp-neural-admin' ),
-				'execute'           => __( 'Execute', 'wp-neural-admin' ),
-				'placeholder'       => __( 'Describe your issue or what you want to do...', 'wp-neural-admin' ),
-				'send'              => __( 'Send', 'wp-neural-admin' ),
+				'loading'            => __( 'Loading AI model...', 'wp-neural-admin' ),
+				'ready'              => __( 'AI assistant ready', 'wp-neural-admin' ),
+				'error'              => __( 'An error occurred', 'wp-neural-admin' ),
+				'noWebGPU'           => __( 'Your browser does not support WebGPU. Please use Chrome 113+ or Edge 113+.', 'wp-neural-admin' ),
+				'confirmAction'      => __( 'Confirm action', 'wp-neural-admin' ),
+				'cancel'             => __( 'Cancel', 'wp-neural-admin' ),
+				'execute'            => __( 'Execute', 'wp-neural-admin' ),
+				'placeholder'        => __( 'Describe your issue or what you want to do...', 'wp-neural-admin' ),
+				'send'               => __( 'Send', 'wp-neural-admin' ),
 				'permalinksRequired' => __( 'Pretty permalinks are required for Neural Admin to work. Please update your permalink settings.', 'wp-neural-admin' ),
-				'updatePermalinks'  => __( 'Update Permalinks', 'wp-neural-admin' ),
+				'updatePermalinks'   => __( 'Update Permalinks', 'wp-neural-admin' ),
 			),
 		);
 	}
@@ -175,10 +182,6 @@ class Admin_Page {
 						<p><?php esc_html_e( 'JavaScript is required to use Neural Admin.', 'wp-neural-admin' ); ?></p>
 					</div>
 				</noscript>
-				<div class="wp-neural-admin-loading">
-					<span class="spinner is-active"></span>
-					<p><?php esc_html_e( 'Loading Neural Admin...', 'wp-neural-admin' ); ?></p>
-				</div>
 			</div>
 		</div>
 		<?php

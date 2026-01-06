@@ -20,75 +20,49 @@ All of this happens **locally in your browser** - no data is sent to external se
 
 ## Key Features
 
-- **100% Local AI**: Uses WebLLM to run a Small Language Model (Phi-3.5-mini) directly in your browser via WebAssembly and WebGPU
+- **100% Local AI**: Uses WebLLM to run a Small Language Model (SmolLM2-360M) directly in your browser via WebGPU
 - **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
 - **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
-- **WordPress Abilities API**: Natively integrates with WordPress's official Abilities API for standardized capability discovery and execution
+- **WordPress Abilities API**: Natively integrates with WordPress's official Abilities API
+- **Extensible**: Third-party plugins can register custom abilities
 - **Natural Language Interface**: Describe problems in plain English, get intelligent solutions
 
-## How It Works
-
-### Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   Your Browser                          │
-│  ┌───────────────────────────────────────────────────┐ │
-│  │              Local AI (WebLLM)                     │ │
-│  │         Phi-3.5-mini via WebGPU/WASM              │ │
-│  └───────────────────────────────────────────────────┘ │
-│                         │                               │
-│                   Tool Calls                            │
-│                         ▼                               │
-│  ┌───────────────────────────────────────────────────┐ │
-│  │           WordPress Abilities API                  │ │
-│  │    Standardized capability discovery & execution   │ │
-│  └───────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                   Your Browser                               │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              Local AI (WebLLM)                         │  │
+│  │         SmolLM2-360M via WebGPU/WASM                   │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                         │                                    │
+│                   Tool Calls                                 │
+│                         ▼                                    │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │           WordPress Abilities API                      │  │
+│  │    Standardized capability discovery & execution       │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
                           │
                     REST API                    
                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                 WordPress Server                        │
-│  ┌───────────────────────────────────────────────────┐ │
-│  │            Registered SRE Abilities                │ │
-│  │  - Error log reading                               │ │
-│  │  - Cache management                                │ │
-│  │  - Database optimization                           │ │
-│  │  - Plugin management                               │ │
-│  │  - Site health diagnostics                         │ │
-│  └───────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                 WordPress Server                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │            Registered SRE Abilities                    │  │
+│  │  - Error log reading    - Plugin management            │  │
+│  │  - Cache management     - Site health diagnostics      │  │
+│  │  - Database optimization                               │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-### The Agent Loop
-
-1. **User Input**: You describe a problem in natural language
-2. **Intent Detection**: Keyword-based routing determines which tool to use (reliable with small models)
-3. **Execution**: The appropriate WordPress ability is called via REST API
-4. **Summarization**: Results are formatted into human-readable summaries
-5. **Conversation**: For non-tool queries, the local LLM provides conversational responses
-6. **Confirmation**: Destructive actions always require explicit user approval
-
-## Technology Stack
-
-### Client-Side (The "Brain")
-- **Runtime**: WebAssembly (WASM) & WebGPU
-- **Library**: WebLLM
-- **Model**: SmolLM2-360M-Instruct (quantized, ~360MB)
-- **Framework**: React (integrated into WP-Admin)
-- **Chat Framework**: Custom orchestrator with tool registry, keyword-based routing, and simulated streaming
-
-### Server-Side (The "Body")
-- **Plugin**: PHP WordPress plugin
-- **Protocol**: WordPress Abilities API
-- **Tools**: Native PHP implementations of SRE functions
 
 ## Requirements
 
 - WordPress 6.7+
 - PHP 8.2+
-- Modern browser with WebGPU support (Chrome 113+, Edge 113+, or Firefox with flags)
+- Modern browser with WebGPU support (Chrome 113+, Edge 113+)
 - [Abilities API plugin](https://github.com/WordPress/abilities-api) installed
 
 ## Installation
@@ -135,59 +109,36 @@ AI: Let me check a few things.
     - Your database has 15 tables that need optimization (now fixed)
     - Object cache is not configured
     - You have 3 inactive plugins that could be removed
-    
-    Would you like me to help with any of these?
 ```
 
-## Privacy & Security
+## Documentation
 
-- **No External API Calls**: The AI model runs entirely in your browser
-- **No Data Collection**: Your site data never leaves your device
-- **Permission-Based**: All abilities respect WordPress capabilities (requires `manage_options`)
-- **Confirmation Required**: Destructive actions always require explicit user approval
+| Document | Description |
+|----------|-------------|
+| [Abilities Guide](docs/abilities-guide.md) | How to create new abilities |
+| [Chat Framework](docs/chat-framework.md) | Architecture of the chat system |
+| [Third-Party Integration](docs/third-party-integration.md) | Extending with custom plugins |
 
-## Development
+## Project Structure
 
-This project was created for the CloudFest Hackathon 2026.
-
-### Project Structure
 ```
 wp-neural-admin/
-├── wp-neural-admin.php          # Main plugin file
+├── wp-neural-admin.php              # Main plugin file
 ├── includes/
-│   ├── class-abilities.php      # PHP: Abilities registration with WP Abilities API
-│   ├── class-admin-page.php     # PHP: Admin page setup and asset loading
-│   ├── class-settings.php       # PHP: Plugin settings
-│   └── class-utils.php          # PHP: Utility functions
-├── src/
-│   └── extensions/
-│       ├── index.js             # Entry point
-│       ├── App.jsx              # Main React app with tabs and model loading
-│       ├── components/
-│       │   ├── ChatContainer.jsx    # Chat UI orchestration
-│       │   ├── ChatInput.jsx        # Message input component
-│       │   ├── MessageList.jsx      # Message list renderer
-│       │   ├── MessageItem.jsx      # Individual message rendering
-│       │   ├── ModelStatus.jsx      # Model loading status/controls
-│       │   ├── AbilityBrowser.jsx   # Manual ability testing UI
-│       │   └── WebGPUFallback.jsx   # Fallback for unsupported browsers
-│       ├── services/
-│       │   ├── index.js             # Central exports for all services
-│       │   ├── chat-orchestrator.js # Main coordinator (LLM + Tools + Streaming)
-│       │   ├── chat-session.js      # Message history + localStorage persistence
-│       │   ├── tool-registry.js     # Central registry for tool definitions
-│       │   ├── tool-router.js       # Keyword-based tool detection
-│       │   ├── stream-simulator.js  # Typewriter effect for generated text
-│       │   ├── wp-tools.js          # WordPress-specific tool configurations
-│       │   ├── model-loader.js      # WebLLM model management
-│       │   ├── abilities-api.js     # REST API client for WP Abilities
-│       │   └── ai-service.js        # Legacy AI service (kept for reference)
-│       └── styles/
-│           └── main.scss            # Perplexity-style chat UI styles
-├── build-extensions/            # Compiled JS/CSS (generated)
-└── docs/
-    └── PLAN.md                  # Development phases
+│   ├── functions-abilities.php      # Public API: register_neural_ability()
+│   ├── class-abilities.php          # Ability registration orchestrator
+│   ├── class-admin-page.php         # Admin page & assets
+│   └── abilities/                   # Individual PHP ability files
+├── src/extensions/
+│   ├── App.jsx                      # Main React app
+│   ├── abilities/                   # Individual JS ability files
+│   ├── components/                  # React UI components
+│   └── services/                    # Core services (orchestrator, registry, etc.)
+├── build-extensions/                # Compiled assets
+└── docs/                            # Documentation
 ```
+
+## Development
 
 ### Building
 
@@ -197,388 +148,28 @@ npm install
 npm run build
 ```
 
----
+### Technology Stack
 
-## Chat Framework Architecture
+**Client-Side:**
+- Runtime: WebAssembly & WebGPU
+- AI: WebLLM with SmolLM2-360M
+- UI: React
+- Chat: Custom orchestrator with keyword-based tool routing
 
-The chat system uses a decoupled framework architecture designed to work reliably with small language models (SmolLM2-360M) that struggle with complex tool-calling instructions.
+**Server-Side:**
+- Plugin: PHP 8.2+
+- Protocol: WordPress Abilities API
 
-### Key Design Decisions
+## Privacy & Security
 
-1. **Keyword-Based Tool Detection**: Small models are unreliable at following tool-calling prompts. Instead, we use keyword matching to detect user intent and select the appropriate tool.
-
-2. **Simulated Streaming**: For tool responses (which are pre-generated), we simulate the streaming effect with a typewriter animation for consistent UX.
-
-3. **Generated Summaries**: We don't show the model's output for tool calls (it hallucinates). Instead, we generate clean human-readable summaries from the structured tool results.
-
-4. **Session Persistence**: Chat history is saved to localStorage, surviving page reloads.
-
-### Service Layer Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    ChatContainer (React)                     │
-│         UI State, Message Display, User Input                │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    ChatOrchestrator                          │
-│         Main Coordinator - Routes to LLM or Tools            │
-│    Callbacks: onStreamStart/Chunk/End, onToolStart/End       │
-└──────────┬──────────────────────────────────┬───────────────┘
-           │                                  │
-           ▼                                  ▼
-┌─────────────────────┐            ┌─────────────────────────┐
-│     ToolRouter      │            │      ModelLoader        │
-│  Keyword Detection  │            │   WebLLM Management     │
-│   Score-based Match │            │   Load/Unload Model     │
-└─────────┬───────────┘            └─────────────────────────┘
-          │
-          ▼
-┌─────────────────────┐            ┌─────────────────────────┐
-│    ToolRegistry     │            │    StreamSimulator      │
-│  Tool Definitions   │◄───────────│   Typewriter Effect     │
-│  Keywords, Execute  │            │   Char/Word Streaming   │
-└─────────┬───────────┘            └─────────────────────────┘
-          │
-          ▼
-┌─────────────────────┐            ┌─────────────────────────┐
-│      WPTools        │            │      ChatSession        │
-│  WordPress Abilities│            │   Message History       │
-│  Summaries, Execute │            │   localStorage Persist  │
-└─────────────────────┘            └─────────────────────────┘
-```
-
-### Adding a New Ability (Complete Guide)
-
-Adding a new ability requires two parts: a PHP backend (the actual functionality) and a JavaScript frontend (chat integration). Here's a complete walkthrough.
-
-#### Step 1: Create the PHP Ability
-
-Open `includes/class-abilities.php` and add two things:
-
-**A) Register the ability** (add a new method call in `register_abilities()`):
-
-```php
-public function register_abilities(): void {
-    // ... existing abilities ...
-    $this->register_my_new_ability(); // Add this line
-}
-```
-
-**B) Create the registration and execution methods**:
-
-```php
-/**
- * Register my-new-ability.
- */
-private function register_my_new_ability(): void {
-    wp_register_ability(
-        'wp-neural-admin/my-new-ability',
-        array(
-            'label'               => __( 'My New Ability', 'wp-neural-admin' ),
-            'description'         => __( 'Does something useful for the site.', 'wp-neural-admin' ),
-            'category'            => 'sre-tools',
-            
-            // Define what input parameters the ability accepts
-            'input_schema'        => array(
-                'type'                 => 'object',
-                'properties'           => array(
-                    'limit' => array(
-                        'type'        => 'integer',
-                        'default'     => 10,
-                        'minimum'     => 1,
-                        'maximum'     => 100,
-                        'description' => __( 'Maximum items to return.', 'wp-neural-admin' ),
-                    ),
-                ),
-                'additionalProperties' => false,
-            ),
-            
-            // Define what the ability returns
-            'output_schema'       => array(
-                'type'       => 'object',
-                'properties' => array(
-                    'items' => array(
-                        'type'        => 'array',
-                        'items'       => array( 'type' => 'object' ),
-                        'description' => __( 'The items found.', 'wp-neural-admin' ),
-                    ),
-                    'total' => array(
-                        'type'        => 'integer',
-                        'description' => __( 'Total count.', 'wp-neural-admin' ),
-                    ),
-                ),
-            ),
-            
-            // The function that does the actual work
-            'execute_callback'    => array( $this, 'execute_my_new_ability' ),
-            
-            // Who can use this ability (usually admin only)
-            'permission_callback' => function () {
-                return current_user_can( 'manage_options' );
-            },
-            
-            'meta'                => array(
-                'show_in_rest' => true,
-                'annotations'  => array(
-                    'readonly'    => true,   // true = doesn't modify data
-                    'destructive' => false,  // true = could cause data loss
-                    'idempotent'  => true,   // true = safe to call multiple times
-                ),
-            ),
-        )
-    );
-}
-
-/**
- * Execute my-new-ability.
- *
- * @param array $input Input parameters from the schema.
- * @return array Output matching the output_schema.
- */
-public function execute_my_new_ability( array $input = array() ): array {
-    $limit = isset( $input['limit'] ) ? absint( $input['limit'] ) : 10;
-    
-    // Do your actual work here...
-    $items = array(); // Fetch your data
-    
-    return array(
-        'items' => $items,
-        'total' => count( $items ),
-    );
-}
-```
-
-#### Step 2: Create the JavaScript Tool Configuration
-
-Open `src/extensions/services/wp-tools.js` and add to the `wpTools` array:
-
-```javascript
-{
-    // Must match the PHP ability ID exactly
-    id: 'wp-neural-admin/my-new-ability',
-    
-    // Words/phrases that trigger this tool (lowercase)
-    // Longer phrases score higher, so "check items" beats "check"
-    keywords: [
-        'my ability', 
-        'check items', 
-        'find things',
-        'items',
-    ],
-    
-    // Shown immediately when tool is triggered (streamed with typewriter effect)
-    initialMessage: "Let me check that for you...",
-    
-    // Convert the API result into a human-readable response
-    // This is what the user sees after the tool runs
-    // The optional userMessage parameter allows context-aware responses
-    summarize: (result, userMessage = '') => {
-        const msg = userMessage.toLowerCase();
-        
-        // Context-aware: respond specifically to what user asked
-        if (msg.includes('how many')) {
-            return `You have **${result.total} items**.`;
-        }
-        
-        // Default: full summary
-        if (result.total === 0) {
-            return "I didn't find any items.";
-        }
-        return `I found **${result.total} items**. Here's what I discovered:\n\n` +
-            result.items.map(item => `- ${item.name}`).join('\n');
-    },
-    
-    // Execute the ability via REST API
-    // The execute function receives { userMessage } so you can extract parameters
-    execute: async ({ userMessage }) => {
-        return abilitiesApi.executeAbilityById('wp-neural-admin/my-new-ability', {});
-    },
-    
-    // Set to true for abilities that modify/delete data
-    // This shows a confirmation modal before executing
-    requiresConfirmation: false,
-    
-    // Optional: custom message for the confirmation modal
-    // confirmationMessage: 'This will modify your data. Continue?',
-},
-```
-
-#### Step 2b: Tools That Require Parameters (Important!)
-
-If your PHP ability requires input parameters (like a plugin name to deactivate), you need to **extract those parameters from the user's natural language message**. The orchestrator passes `{ userMessage }` to the `execute` function.
-
-**Example: Plugin Deactivate Tool**
-
-```javascript
-{
-    id: 'wp-neural-admin/plugin-deactivate',
-    keywords: ['deactivate', 'disable', 'turn off'],
-    initialMessage: "Deactivating the plugin...",
-    
-    // Helper function to extract parameters from natural language
-    extractParams: (userMessage) => {
-        const msg = userMessage.toLowerCase();
-        
-        // Map common names to actual plugin file paths
-        // IMPORTANT: The API expects the plugin FILE PATH, not just a slug!
-        // e.g., "hello.php" or "akismet/akismet.php"
-        const pluginMappings = {
-            'hello.php': ['hello dolly', 'hello-dolly'],
-            'akismet/akismet.php': ['akismet', 'anti-spam'],
-            'jetpack/jetpack.php': ['jetpack'],
-            // Add more mappings as needed
-        };
-        
-        // Try to match a known plugin
-        for (const [pluginPath, names] of Object.entries(pluginMappings)) {
-            if (names.some(name => msg.includes(name))) {
-                return { plugin: pluginPath };
-            }
-        }
-        
-        // Fallback: try to extract and guess the path
-        const match = msg.match(/deactivate\s+(?:the\s+)?(?:plugin\s+)?["']?([a-z0-9-_ ]+)["']?/i);
-        if (match && match[1]) {
-            const slug = match[1].trim().toLowerCase().replace(/\s+/g, '-');
-            return { plugin: `${slug}/${slug}.php` };
-        }
-        
-        return null;
-    },
-    
-    execute: async ({ userMessage }) => {
-        const tool = wpTools.find(t => t.id === 'wp-neural-admin/plugin-deactivate');
-        const params = tool.extractParams(userMessage);
-        
-        if (!params || !params.plugin) {
-            return { 
-                error: 'Could not determine which plugin to deactivate.' 
-            };
-        }
-        
-        // Pass extracted params to the API
-        return abilitiesApi.executeAbilityById('wp-neural-admin/plugin-deactivate', params);
-    },
-    
-    summarize: (result) => {
-        if (result.error) return `Failed: ${result.error}`;
-        return result.message || 'Plugin deactivated successfully.';
-    },
-    
-    requiresConfirmation: true,
-    confirmationMessage: 'Are you sure you want to deactivate this plugin?',
-},
-```
-
-**Key Points for Parameter Extraction:**
-
-1. **Check PHP schema first** - Look at `input_schema` in your PHP ability to see the exact parameter names and types expected
-2. **Map common names** - Users say "hello dolly" but the API needs `hello.php`
-3. **Handle failures gracefully** - Return a helpful error if you can't extract the required parameter
-4. **Use regex patterns** - Extract values from natural language patterns like "deactivate X" or "disable the X plugin"
-
-#### Step 3: Build and Test
-
-```bash
-npm run build
-```
-
-Then go to your WordPress admin, open Neural Admin, and try typing something with your keywords like "check items" or "find things".
-
-#### Tips for Good Abilities
-
-**Keywords:**
-- Include common variations ("plugin", "plugins", "extensions")
-- Longer phrases are more specific ("optimize database" vs just "database")
-- Think about how users naturally phrase requests
-
-**Summaries:**
-- Use markdown for formatting (`**bold**`, `\n\n` for paragraphs, `- ` for lists)
-- Keep it concise but informative
-- Handle edge cases (empty results, errors)
-- Use `userMessage` parameter for context-aware responses (e.g., "what's my PHP version?" returns just PHP, not full site health)
-
-**Destructive Actions:**
-- Set `requiresConfirmation: true` for anything that modifies data
-- Set `destructive: true` in PHP annotations
-- Provide a clear `confirmationMessage`
-
-**Parameter Extraction (for tools that need input):**
-- The `execute` function receives `{ userMessage }` - the user's original message
-- Check your PHP `input_schema` for exact parameter names (e.g., `plugin` not `plugin_slug`)
-- Create an `extractParams` helper to parse natural language into API parameters
-- Map common names to actual values (e.g., "hello dolly" → `hello.php`)
-- Always handle the case where extraction fails - return a helpful error message
-
-#### Testing Your Ability
-
-1. **Test the PHP endpoint directly** using the Abilities tab in Neural Admin
-2. **Test keyword detection** by typing various phrases in chat
-3. **Verify the summary** looks good with real data
-
-### Message Flow
-
-```
-User types: "what plugins are installed?"
-                    │
-                    ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 1. ChatOrchestrator.processMessage()                        │
-│    - Adds user message to ChatSession                       │
-│    - Calls ToolRouter.detectTool()                          │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 2. ToolRouter.detectTool()                                  │
-│    - Scans message for keywords                             │
-│    - "plugins" matches wp-neural-admin/plugin-list          │
-│    - Returns tool with highest keyword score                │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 3. ChatOrchestrator.processWithTool()                       │
-│    a. Stream initial message ("I'll check your plugins...") │
-│    b. Execute tool.execute() via AbilitiesAPI               │
-│    c. Add tool result to session                            │
-│    d. Generate & stream summary from tool.summarize()       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Service Reference
-
-| Service | File | Purpose |
-|---------|------|---------|
-| `ChatOrchestrator` | `chat-orchestrator.js` | Main coordinator - handles message processing, routes to tools or LLM, passes user message context to summarizers |
-| `ChatSession` | `chat-session.js` | Manages message history, provides localStorage persistence |
-| `ToolRegistry` | `tool-registry.js` | Central registry for all available tools |
-| `ToolRouter` | `tool-router.js` | Detects which tool to use based on keyword matching |
-| `StreamSimulator` | `stream-simulator.js` | Creates typewriter effect for pre-generated text |
-| `WPTools` | `wp-tools.js` | WordPress-specific tool definitions (keywords, execute, summarize) |
-| `ModelLoader` | `model-loader.js` | Manages WebLLM model lifecycle (load, unload, status) |
-| `AbilitiesAPI` | `abilities-api.js` | REST client for WordPress Abilities API |
-
-### Why Keyword Detection Instead of LLM Tool Calling?
-
-Small language models (under 1B parameters) are unreliable at:
-- Following complex system prompts
-- Outputting structured tool calls in specific formats
-- Not hallucinating tool names or parameters
-
-Our solution:
-- **Keyword detection** handles tool selection (fast, reliable, deterministic)
-- **LLM** handles conversational responses when no tool is needed
-- **Generated summaries** replace unreliable model output for tool results
-
-This hybrid approach gives users a smooth experience while working within the constraints of browser-based small models.
+- **No External API Calls**: The AI model runs entirely in your browser
+- **No Data Collection**: Your site data never leaves your device
+- **Permission-Based**: All abilities respect WordPress capabilities
+- **Confirmation Required**: Destructive actions require explicit approval
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and submit PRs to the `develop` branch.
+Contributions are welcome! Please read our contributing guidelines and submit PRs.
 
 ## License
 
@@ -588,3 +179,4 @@ GPL-2.0-or-later
 
 - WordPress AI Team for the [Abilities API](https://github.com/WordPress/abilities-api)
 - [WebLLM](https://github.com/mlc-ai/web-llm) for browser-based LLM inference
+- Created for CloudFest Hackathon 2026

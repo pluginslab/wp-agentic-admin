@@ -24,7 +24,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
-import { Button, Modal } from '@wordpress/components';
+import { Button, Modal, Notice } from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import {
@@ -32,6 +32,7 @@ import {
     ChatSession,
     registerWPTools,
     MessageType,
+    modelLoader,
 } from '../services';
 
 /**
@@ -50,6 +51,7 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
     const [isStreaming, setIsStreaming] = useState(false);
     const [isExecutingTool, setIsExecutingTool] = useState(false);
     const [pendingConfirmation, setPendingConfirmation] = useState(null);
+    const [contextUsage, setContextUsage] = useState(null);
     
     // Session ref to persist across renders
     const sessionRef = useRef(null);
@@ -107,6 +109,9 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
             },
             onStateChange: ({ isProcessing }) => {
                 setIsLoading?.(isProcessing);
+                // Update context usage after each message
+                const usage = modelLoader.getContextUsage();
+                setContextUsage(usage);
             },
         });
 
@@ -127,7 +132,7 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
         // Add welcome message if session is empty
         if (session.getMessageCount() === 0) {
             session.addAssistantMessage(
-                "Hello! I'm your WordPress SRE assistant. I can help you check site health, view error logs, manage plugins, flush cache, and optimize your database. What would you like to do?"
+                "Hey there! I'm your WordPress assistant. Need help with site health, error logs, plugins, caching, or database optimization? Just ask!"
             );
         }
 
@@ -253,7 +258,7 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
         
         // Add welcome message back
         sessionRef.current?.addAssistantMessage(
-            "Hello! I'm your WordPress SRE assistant. I can help you check site health, view error logs, manage plugins, flush cache, and optimize your database. What would you like to do?"
+            "Hey there! I'm your WordPress assistant. Need help with site health, error logs, plugins, caching, or database optimization? Just ask!"
         );
     }, []);
 
@@ -292,6 +297,30 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
             </div>
 
             <MessageList messages={displayMessages} />
+
+            {/* Context usage warning */}
+            {contextUsage?.isHigh && (
+                <div className="wp-neural-admin-context-warning">
+                    <Notice 
+                        status={contextUsage.isCritical ? "error" : "warning"} 
+                        isDismissible={false}
+                    >
+                        <span>
+                            {contextUsage.isCritical 
+                                ? `Context is almost full (${contextUsage.percentage}%). The AI may lose track of earlier messages.`
+                                : `Context is ${contextUsage.percentage}% full. Consider clearing the chat soon.`
+                            }
+                        </span>
+                        <Button 
+                            variant="link" 
+                            onClick={clearHistory}
+                            className="wp-neural-admin-context-warning__clear"
+                        >
+                            Clear Chat
+                        </Button>
+                    </Notice>
+                </div>
+            )}
             
             {/* Loading spinner while tool is executing */}
             {isExecutingTool && (

@@ -82,32 +82,36 @@ const getLoadingStage = (message, progress) => {
  * @param {Object} props - Component props
  * @param {Function} props.onModelReady - Callback when model is ready
  * @param {Function} props.onModelError - Callback when model loading fails
- * @param {boolean} props.isAutoLoading - Whether model is currently auto-loading from cache
+ * @param {string|null} props.initPhase - Current initialization phase ('checking', 'loading', or null)
+ * @param {string} props.initMessage - Message to display during initialization
+ * @param {number} props.initProgress - Progress percentage during initialization
  */
-const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
+const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initProgress }) => {
     const [status, setStatus] = useState('not-loaded'); // not-loaded, checking, loading, ready, error
     const [message, setMessage] = useState('AI model not loaded. Click "Load Model" to start.');
     const [progress, setProgress] = useState(0);
     const [selectedModel, setSelectedModel] = useState('SmolLM2-360M-Instruct-q4f16_1-MLC');
     const [isFromCache, setIsFromCache] = useState(false);
     const [rawMessage, setRawMessage] = useState('');
+    const [loadedModelInfo, setLoadedModelInfo] = useState(null);
+    const [memoryStats, setMemoryStats] = useState(null);
+    const [gpuInfo, setGpuInfo] = useState(null);
+    const [contextUsage, setContextUsage] = useState(null);
 
     const availableModels = ModelLoader.getAvailableModels();
 
-    // Track if we're in a loading state (loading or checking)
-    const isInLoadingState = status === 'loading' || status === 'checking' || isAutoLoading;
+    // Track if we're in a loading state (init phase, loading, or checking)
+    const isInLoadingState = initPhase !== null || status === 'loading' || status === 'checking';
 
     /**
-     * Update status when auto-loading starts - do this FIRST before callbacks
+     * Update status when init phase changes
      */
     useEffect(() => {
-        if (isAutoLoading) {
+        if (initPhase === 'loading') {
             setIsFromCache(true);
             setStatus('loading');
-            setMessage('Loading AI model from cache...');
-            setRawMessage('Initializing...');
         }
-    }, [isAutoLoading]);
+    }, [initPhase]);
 
     /**
      * Set up model loader callbacks
@@ -138,8 +142,56 @@ const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
             setStatus('ready');
             setMessage('AI model ready');
             setProgress(100);
+            // Get loaded model info
+            const info = modelLoader.getLoadedModelInfo();
+            setLoadedModelInfo(info);
+            // Get memory stats
+            modelLoader.getMemoryStats().then((stats) => {
+                setMemoryStats(stats);
+            });
         }
     }, [onModelReady, onModelError]);
+
+    /**
+     * Update model info when model becomes ready
+     * Poll for stats updates to capture performance after inference
+     */
+    useEffect(() => {
+        if (status === 'ready') {
+            const info = modelLoader.getLoadedModelInfo();
+            setLoadedModelInfo(info);
+            
+            // Get GPU info
+            const gpu = modelLoader.getGPUInfo();
+            setGpuInfo(gpu);
+
+            // Initial stats fetch
+            modelLoader.getMemoryStats().then((stats) => {
+                setMemoryStats(stats);
+            });
+
+            // Poll for stats updates every 2 seconds to capture post-inference performance
+            const statsInterval = setInterval(() => {
+                modelLoader.getMemoryStats().then((stats) => {
+                    if (stats) {
+                        setMemoryStats(stats);
+                    }
+                });
+                // Also update context usage
+                const context = modelLoader.getContextUsage();
+                if (context) {
+                    setContextUsage(context);
+                }
+            }, 2000);
+
+            return () => clearInterval(statsInterval);
+        } else {
+            setLoadedModelInfo(null);
+            setMemoryStats(null);
+            setGpuInfo(null);
+            setContextUsage(null);
+        }
+    }, [status]);
 
     /**
      * Handle Load Model button click
@@ -203,8 +255,20 @@ const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
         return handleLoadModel;
     };
 
-    // Get current loading stage info
-    const loadingStage = getLoadingStage(rawMessage, progress);
+    // Get current loading stage info - use init values during init phase, otherwise use model loader values
+    const isInInitPhase = initPhase === 'checking';
+    const displayProgress = isInInitPhase ? initProgress : progress;
+    const displayMessage = isInInitPhase ? initMessage : rawMessage;
+    const loadingStage = isInInitPhase 
+        ? { icon: '🔍', title: 'Initializing', description: initMessage }
+        : getLoadingStage(rawMessage, progress);
+
+    // Determine the main title for the loading card
+    const getLoadingTitle = () => {
+        if (isInInitPhase) return 'Initializing';
+        if (isFromCache) return 'Loading from Cache';
+        return 'Loading Model';
+    };
 
     return (
         <div className="wp-neural-admin-model-status">
@@ -215,19 +279,19 @@ const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
                         <span className="wp-neural-admin-loading-card__icon">{loadingStage.icon}</span>
                         <div className="wp-neural-admin-loading-card__title-wrap">
                             <h4 className="wp-neural-admin-loading-card__title">
-                                {isFromCache ? 'Loading from Cache' : 'Loading Model'}
+                                {getLoadingTitle()}
                             </h4>
                             <span className="wp-neural-admin-loading-card__subtitle">
                                 {loadingStage.title}
                             </span>
                         </div>
-                        <span className="wp-neural-admin-loading-card__percent">{progress}%</span>
+                        <span className="wp-neural-admin-loading-card__percent">{displayProgress}%</span>
                     </div>
 
                     <div className="wp-neural-admin-loading-card__progress">
                         <div
                             className="wp-neural-admin-loading-card__progress-bar"
-                            style={{ width: `${progress}%` }}
+                            style={{ width: `${displayProgress}%` }}
                         />
                     </div>
 
@@ -235,7 +299,7 @@ const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
                         {loadingStage.description}
                     </p>
 
-                    {isFromCache && (
+                    {isFromCache && !isInInitPhase && (
                         <p className="wp-neural-admin-loading-card__cache-note">
                             Model files are cached locally. No download needed!
                         </p>
@@ -247,7 +311,40 @@ const ModelStatus = ({ onModelReady, onModelError, isAutoLoading = false }) => {
             {!isInLoadingState && (
                 <div className="wp-neural-admin-status">
                     <span className={`wp-neural-admin-status__indicator ${getStatusClass()}`} />
-                    <span className="wp-neural-admin-status__text">{message}</span>
+                    <div className="wp-neural-admin-status__info">
+                        <span className="wp-neural-admin-status__text">
+                            {status === 'ready' && loadedModelInfo
+                                ? `${loadedModelInfo.name} ready`
+                                : message}
+                        </span>
+                        {status === 'ready' && loadedModelInfo && (
+                            <span className="wp-neural-admin-status__model-details">
+                                {gpuInfo && gpuInfo.device !== 'Unknown' && (
+                                    <span className="wp-neural-admin-status__gpu-info">
+                                        {gpuInfo.device}
+                                        {gpuInfo.vendor !== 'Unknown' && ` (${gpuInfo.vendor})`}
+                                        {' · '}
+                                    </span>
+                                )}
+                                {memoryStats?.available && memoryStats?.formatted
+                                    ? memoryStats.formatted
+                                    : `~${loadedModelInfo.size} VRAM`}
+                                {contextUsage && (
+                                    <span className={`wp-neural-admin-status__context ${contextUsage.isCritical ? 'context--critical' : contextUsage.isHigh ? 'context--high' : ''}`}>
+                                        {' · '}
+                                        <span className="context__label">Context:</span>
+                                        <span className="context__bar">
+                                            <span 
+                                                className="context__fill" 
+                                                style={{ width: `${contextUsage.percentage}%` }}
+                                            />
+                                        </span>
+                                        <span className="context__percent">{contextUsage.percentage}%</span>
+                                    </span>
+                                )}
+                            </span>
+                        )}
+                    </div>
 
                     {status === 'checking' && <Spinner />}
 
