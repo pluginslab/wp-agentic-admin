@@ -38,6 +38,24 @@ class ModelLoader {
     }
 
     /**
+     * Check if a model is already cached in the browser
+     *
+     * @param {string|null} modelId - Model ID to check, defaults to current model
+     * @return {Promise<boolean>} True if model is cached
+     */
+    async isModelCached(modelId = null) {
+        const id = modelId || this.modelId;
+        try {
+            const isCached = await webllm.hasModelInCache(id);
+            console.log(`[ModelLoader] Model ${id} cached:`, isCached);
+            return isCached;
+        } catch (err) {
+            console.warn('[ModelLoader] Error checking cache:', err);
+            return false;
+        }
+    }
+
+    /**
      * Check if WebGPU is supported
      *
      * @return {Promise<Object>} Support status and reason if not supported

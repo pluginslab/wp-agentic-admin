@@ -21,7 +21,7 @@ const ModelStatus = ({ onModelReady, onModelError }) => {
     const [status, setStatus] = useState('not-loaded'); // not-loaded, checking, loading, ready, error
     const [message, setMessage] = useState('AI model not loaded. Click "Load Model" to start.');
     const [progress, setProgress] = useState(0);
-    const [selectedModel, setSelectedModel] = useState('Phi-3.5-mini-instruct-q4f16_1-MLC');
+    const [selectedModel, setSelectedModel] = useState('SmolLM2-360M-Instruct-q4f16_1-MLC');
 
     const availableModels = ModelLoader.getAvailableModels();
 
@@ -164,8 +164,8 @@ const ModelStatus = ({ onModelReady, onModelError }) => {
             {status === 'not-loaded' && (
                 <p className="wp-neural-admin-model-info">
                     The AI model runs entirely in your browser using WebGPU. The first load
-                    will download ~2-3GB of model data, which is cached for future use.
-                    No data is sent to external servers.
+                    will download model data (250MB-1GB depending on model), which is cached for future use.
+                    Cached models auto-load on page refresh. No data is sent to external servers.
                 </p>
             )}
         </div>

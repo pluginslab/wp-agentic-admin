@@ -23,28 +23,46 @@ const App = () => {
     const { i18n = {}, hasPrettyPermalinks = true, permalinksUrl = '' } = settings;
 
     /**
-     * Initial WebGPU check on mount
+     * Initial WebGPU check and auto-load cached model on mount
      */
     useEffect(() => {
-        const checkWebGPU = async () => {
+        const initializeApp = async () => {
             try {
+                // Check WebGPU support first
                 const result = await modelLoader.checkWebGPUSupport();
                 if (!result.supported) {
                     setWebGPUError(result.reason);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Check if model is already loaded in memory
+                if (modelLoader.isModelReady()) {
+                    setModelReady(true);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Check if model is cached - if so, auto-load it
+                const isCached = await modelLoader.isModelCached();
+                if (isCached) {
+                    console.log('[App] Model is cached, auto-loading...');
+                    try {
+                        await modelLoader.load();
+                        setModelReady(true);
+                    } catch (loadErr) {
+                        console.error('[App] Auto-load failed:', loadErr);
+                        // Don't show error - user can manually load
+                    }
                 }
             } catch (err) {
-                console.error('WebGPU check failed:', err);
+                console.error('Initialization failed:', err);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        checkWebGPU();
-
-        // Check if model is already loaded (e.g., from previous session)
-        if (modelLoader.isModelReady()) {
-            setModelReady(true);
-        }
+        initializeApp();
     }, []);
 
     /**
