@@ -442,6 +442,14 @@ class ModelLoader {
     }
 
     /**
+     * Reset context usage stats (e.g., when chat is cleared)
+     */
+    resetContextUsage() {
+        this.lastUsageStats = null;
+        console.log('[ModelLoader] Context usage reset');
+    }
+
+    /**
      * Get available models list
      * These are from WebLLM's prebuilt model repository
      *

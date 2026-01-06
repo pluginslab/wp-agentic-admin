@@ -256,6 +256,10 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
         chatOrchestrator.clearSession();
         sessionRef.current?.deleteSaved();
         
+        // Reset context usage tracking
+        modelLoader.resetContextUsage();
+        setContextUsage(null);
+        
         // Add welcome message back
         sessionRef.current?.addAssistantMessage(
             "Hey there! I'm your WordPress assistant. Need help with site health, error logs, plugins, caching, or database optimization? Just ask!"
