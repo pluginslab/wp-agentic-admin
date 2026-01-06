@@ -208,10 +208,6 @@ class ChatOrchestrator {
         this.session.addAssistantMessage(summary);
         this.callbacks.onStreamEnd(summary);
 
-        // 5. Run LLM in background to maintain conversation context
-        // (we don't show its output since it's unreliable)
-        this.runBackgroundLLM(userMessage);
-
         return { success, toolId: tool.id, result };
     }
 
@@ -270,35 +266,6 @@ class ChatOrchestrator {
         } catch (error) {
             console.error('[ChatOrchestrator] LLM error:', error);
             throw error;
-        }
-    }
-
-    /**
-     * Run LLM in background to update conversation context
-     * We don't show the output since small models hallucinate
-     * 
-     * @param {string} userMessage - Original user message
-     */
-    async runBackgroundLLM(userMessage) {
-        if (!this.isLLMReady()) return;
-
-        try {
-            const engine = modelLoader.getEngine();
-            if (!engine) return;
-
-            // Simple completion to update context
-            await engine.chat.completions.create({
-                messages: [
-                    { role: 'system', content: this.systemPrompt },
-                    ...this.session.getConversationHistory(),
-                ],
-                temperature: this.llmOptions.temperature,
-                max_tokens: 50, // Minimal tokens
-                stream: false,
-            });
-        } catch (error) {
-            // Silently ignore background LLM errors
-            console.debug('[ChatOrchestrator] Background LLM error (ignored):', error);
         }
     }
 
