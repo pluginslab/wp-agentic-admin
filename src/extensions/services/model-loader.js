@@ -75,7 +75,9 @@ class ModelLoader {
 		this.gpuAdapterInfo = null;
 
 		// Service Worker state (v1.2)
-		this.useServiceWorker = true; // Default to SW mode
+		// SW mode is disabled by default - still experimental
+		// Can be enabled via setUseServiceWorker(true) before load()
+		this.useServiceWorker = false; // Disabled pending SW debugging (see v1.3.0)
 		this.swRegistration = null;
 		this.swSupported = null; // null = not checked, true/false = result
 	}

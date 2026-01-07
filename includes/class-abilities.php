@@ -124,6 +124,23 @@ class Abilities {
 			wp_neural_admin_register_site_health();
 		}
 
+		// v1.2.0: New WP-CLI-inspired abilities.
+		if ( function_exists( 'wp_neural_admin_register_transient_flush' ) ) {
+			wp_neural_admin_register_transient_flush();
+		}
+
+		if ( function_exists( 'wp_neural_admin_register_cron_list' ) ) {
+			wp_neural_admin_register_cron_list();
+		}
+
+		if ( function_exists( 'wp_neural_admin_register_rewrite_flush' ) ) {
+			wp_neural_admin_register_rewrite_flush();
+		}
+
+		if ( function_exists( 'wp_neural_admin_register_revision_cleanup' ) ) {
+			wp_neural_admin_register_revision_cleanup();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *

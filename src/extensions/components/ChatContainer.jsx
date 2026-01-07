@@ -79,9 +79,14 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
             onChange: (msgs) => {
                 // Convert session messages to display format
                 setMessages(convertMessagesToDisplay(msgs));
+                // Auto-save session on change
+                session.save();
             },
         });
         sessionRef.current = session;
+
+        // Load previous session if exists
+        session.load();
 
         // Initialize orchestrator with session
         chatOrchestrator.initialize(session);

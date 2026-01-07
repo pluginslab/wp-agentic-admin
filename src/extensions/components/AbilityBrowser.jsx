@@ -211,18 +211,16 @@ const AbilityBrowser = () => {
         setError(null);
 
         try {
-            // Try to load SRE tools first, fall back to all abilities
-            let data;
-            try {
-                data = await abilitiesApi.listAbilities('sre-tools');
-            } catch (e) {
-                // Category might not exist yet, try all abilities
-                data = await abilitiesApi.listAbilities();
-            }
+            // Fetch ALL abilities (no category filter) so we get both
+            // wp-neural-admin/* and core/* abilities
+            const data = await abilitiesApi.listAbilities();
             
-            // Filter to just our plugin's abilities if we got all
+            // Filter to our plugin's abilities AND WordPress core abilities
             const filtered = Array.isArray(data) 
-                ? data.filter(a => a.name?.startsWith('wp-neural-admin/'))
+                ? data.filter(a => 
+                    a.name?.startsWith('wp-neural-admin/') || 
+                    a.name?.startsWith('core/')
+                )
                 : [];
             
             setAbilities(filtered.length > 0 ? filtered : (Array.isArray(data) ? data : []));
@@ -305,9 +303,9 @@ const AbilityBrowser = () => {
     return (
         <div className="wp-neural-admin-ability-browser">
             <div className="wp-neural-admin-ability-browser__header">
-                <h3>Available SRE Abilities</h3>
+                <h3>Available Abilities</h3>
                 <p className="description">
-                    Test abilities manually by clicking Execute. Results will appear below.
+                    Test abilities manually by clicking Execute. Includes WordPress core and Neural Admin abilities.
                 </p>
                 <button type="button" className="button" onClick={loadAbilities}>
                     Refresh

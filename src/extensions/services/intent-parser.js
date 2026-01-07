@@ -84,8 +84,41 @@ const ACTION_PATTERNS = {
     // Database operations
     database: {
         patterns: [
-            /(?:optimize|clean|repair)\s+(?:the\s+)?(?:database|db)/gi,
-            /(?:database|db)\s+(?:optimization|cleanup|repair)/gi,
+            /(?:optimize|repair)\s+(?:the\s+)?(?:database|db)/gi,
+            /(?:database|db)\s+(?:optimization|repair)/gi,
+        ],
+        category: 'write',
+    },
+    // Transient operations (v1.2.0)
+    transient: {
+        patterns: [
+            /(?:clear|flush|delete|clean)\s+(?:the\s+)?(?:expired\s+)?transients?/gi,
+            /transients?\s+(?:clear|flush|delete|cleanup)/gi,
+        ],
+        category: 'write',
+    },
+    // Cron operations (v1.2.0)
+    cron: {
+        patterns: [
+            /(?:list|show|check|view)\s+(?:the\s+)?(?:cron|scheduled|wp-cron)\s*(?:events?|jobs?|tasks?)?/gi,
+            /(?:cron|wp-cron)\s+(?:events?|jobs?|list|status)/gi,
+            /scheduled\s+(?:tasks?|jobs?|events?)/gi,
+        ],
+        category: 'read',
+    },
+    // Rewrite/Permalink operations (v1.2.0)
+    rewrite: {
+        patterns: [
+            /(?:flush|refresh|regenerate|reset)\s+(?:the\s+)?(?:rewrite\s+rules?|permalinks?)/gi,
+            /(?:permalinks?|rewrite\s+rules?)\s+(?:flush|refresh|regenerate)/gi,
+        ],
+        category: 'write',
+    },
+    // Revision operations (v1.2.0)
+    revision: {
+        patterns: [
+            /(?:clean|delete|remove|clear)\s+(?:up\s+)?(?:the\s+)?(?:old\s+)?(?:post\s+)?revisions?/gi,
+            /(?:post\s+)?revisions?\s+(?:cleanup|clean|delete)/gi,
         ],
         category: 'write',
     },
@@ -120,6 +153,19 @@ const ACTION_TO_ABILITY = {
     'status': 'wp-neural-admin/site-health',
     'site-health': 'wp-neural-admin/site-health',
     'health-check': 'wp-neural-admin/site-health',
+    // v1.2.0: New abilities
+    'transient': 'wp-neural-admin/transient-flush',
+    'transients': 'wp-neural-admin/transient-flush',
+    'flush-transients': 'wp-neural-admin/transient-flush',
+    'cron': 'wp-neural-admin/cron-list',
+    'cron-list': 'wp-neural-admin/cron-list',
+    'scheduled-tasks': 'wp-neural-admin/cron-list',
+    'rewrite': 'wp-neural-admin/rewrite-flush',
+    'permalinks': 'wp-neural-admin/rewrite-flush',
+    'flush-rewrite': 'wp-neural-admin/rewrite-flush',
+    'revision': 'wp-neural-admin/revision-cleanup',
+    'revisions': 'wp-neural-admin/revision-cleanup',
+    'revision-cleanup': 'wp-neural-admin/revision-cleanup',
 };
 
 /**

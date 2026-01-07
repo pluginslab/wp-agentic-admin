@@ -143,16 +143,18 @@ class AbilitiesAPI {
     /**
      * Determine the correct HTTP method for an ability
      *
+     * WordPress Abilities API requires:
+     * - GET for read-only abilities
+     * - POST for all write operations (including destructive ones)
+     *
      * @param {Object} ability - Ability metadata object
-     * @return {string} HTTP method (GET, POST, or DELETE)
+     * @return {string} HTTP method (GET or POST)
      */
     getHttpMethod(ability) {
-        if (this.isDestructive(ability)) {
-            return 'DELETE';
-        }
         if (this.isReadOnly(ability)) {
             return 'GET';
         }
+        // All write operations (including destructive) use POST
         return 'POST';
     }
 
@@ -216,16 +218,16 @@ class AbilitiesAPI {
 
         console.log('[AbilitiesAPI] Method:', method, 'hasInput:', hasInput);
 
-        if (method === 'GET' || method === 'DELETE') {
-            // Use GET/DELETE with input as nested query parameters
+        if (method === 'GET') {
+            // Use GET with input as nested query parameters
             // WordPress REST API expects input[key]=value format for object params
             let endpoint = baseEndpoint;
             
             if (hasInput) {
                 endpoint += this.buildInputQueryString(input);
-                console.log('[AbilitiesAPI] GET/DELETE with input:', endpoint);
+                console.log('[AbilitiesAPI] GET with input:', endpoint);
             } else {
-                console.log('[AbilitiesAPI] GET/DELETE without input:', endpoint);
+                console.log('[AbilitiesAPI] GET without input:', endpoint);
             }
             
             return this.request(endpoint, { method });

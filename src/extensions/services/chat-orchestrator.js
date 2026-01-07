@@ -216,8 +216,19 @@ class ChatOrchestrator {
      * @return {Promise<Object>}
      */
     async processWithTool(userMessage, tool) {
-        // 1. Check if tool requires confirmation
-        if (tool.requiresConfirmation) {
+        // 1. Parse params first (needed to check if confirmation is required)
+        const params = tool.parseIntent ? tool.parseIntent(userMessage) : {};
+
+        // 2. Check if tool requires confirmation
+        // requiresConfirmation can be a boolean or a function that takes params
+        let needsConfirmation = false;
+        if (typeof tool.requiresConfirmation === 'function') {
+            needsConfirmation = tool.requiresConfirmation(params);
+        } else {
+            needsConfirmation = !!tool.requiresConfirmation;
+        }
+
+        if (needsConfirmation) {
             const confirmed = await this.requestConfirmation(tool);
             if (!confirmed) {
                 this.session.addAssistantMessage('Action cancelled.');
@@ -252,24 +263,20 @@ class ChatOrchestrator {
 
         this.callbacks.onToolEnd(tool.id, result, success);
 
-        // 4. Generate summary using LLM if available, otherwise use canned text
-        if (this.isLLMReady()) {
-            await this.generateLLMSummary(userMessage, tool, result, success);
-        } else {
-            // Fallback to canned summary if LLM not loaded
-            const summary = success 
-                ? tool.summarize(result, userMessage)
-                : 'I encountered an error while trying to help.';
+        // 4. Generate summary using the ability's summarize function
+        // This provides consistent, well-formatted output for each ability
+        const summary = success 
+            ? tool.summarize(result, userMessage)
+            : `I encountered an error: ${result.error || 'Unknown error'}`;
 
-            this.callbacks.onStreamStart();
-            await this.streamSimulator.stream(summary, {
-                ...this.streamOptions,
-                charDelay: 10,
-                onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
-            });
-            this.session.addAssistantMessage(summary);
-            this.callbacks.onStreamEnd(summary);
-        }
+        this.callbacks.onStreamStart();
+        await this.streamSimulator.stream(summary, {
+            ...this.streamOptions,
+            charDelay: 10,
+            onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
+        });
+        this.session.addAssistantMessage(summary);
+        this.callbacks.onStreamEnd(summary);
 
         return { success, toolId: tool.id, result };
     }
