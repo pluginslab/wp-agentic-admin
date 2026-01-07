@@ -39,7 +39,12 @@ WP Neural Admin transforms your WordPress admin panel into an intelligent comman
 == Changelog ==
 
 = 1.2.0 =
-* Development version
+* New: Service Worker integration for model persistence across page navigations
+* New: Model stays loaded in GPU memory while navigating wp-admin (no reload needed)
+* New: "Persistent" badge indicator when using Service Worker mode
+* New: Keyboard shortcut hint (Cmd/Ctrl+Enter) below send button
+* Improved: Automatic fallback to page-mode if Service Worker unavailable
+* Improved: Better status display showing current execution mode
 
 = 1.1.0 =
 * New: Multi-step workflow engine for chaining abilities together

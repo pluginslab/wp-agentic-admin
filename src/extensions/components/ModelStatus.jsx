@@ -97,6 +97,7 @@ const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initP
     const [memoryStats, setMemoryStats] = useState(null);
     const [gpuInfo, setGpuInfo] = useState(null);
     const [contextUsage, setContextUsage] = useState(null);
+    const [isServiceWorkerMode, setIsServiceWorkerMode] = useState(false);
 
     const availableModels = ModelLoader.getAvailableModels();
 
@@ -161,6 +162,9 @@ const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initP
             const info = modelLoader.getLoadedModelInfo();
             setLoadedModelInfo(info);
             
+            // Check if using Service Worker mode
+            setIsServiceWorkerMode(modelLoader.isUsingServiceWorker());
+            
             // Get GPU info
             const gpu = modelLoader.getGPUInfo();
             setGpuInfo(gpu);
@@ -190,6 +194,7 @@ const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initP
             setMemoryStats(null);
             setGpuInfo(null);
             setContextUsage(null);
+            setIsServiceWorkerMode(false);
         }
     }, [status]);
 
@@ -319,6 +324,11 @@ const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initP
                         </span>
                         {status === 'ready' && loadedModelInfo && (
                             <span className="wp-neural-admin-status__model-details">
+                                {isServiceWorkerMode && (
+                                    <span className="wp-neural-admin-status__mode-badge wp-neural-admin-status__mode-badge--persistent" title="Model persists across page navigations">
+                                        Persistent
+                                    </span>
+                                )}
                                 {gpuInfo && gpuInfo.device !== 'Unknown' && (
                                     <span className="wp-neural-admin-status__gpu-info">
                                         {gpuInfo.device}
@@ -382,7 +392,8 @@ const ModelStatus = ({ onModelReady, onModelError, initPhase, initMessage, initP
                 <p className="wp-neural-admin-model-info">
                     The AI model runs entirely in your browser using WebGPU. The first load
                     will download model data (250MB-1GB depending on model), which is cached for future use.
-                    Cached models auto-load on page refresh. No data is sent to external servers.
+                    Using a Service Worker, the model stays loaded as you navigate wp-admin - no reload needed!
+                    No data is sent to external servers.
                 </p>
             )}
         </div>

@@ -313,6 +313,40 @@
         gap: 2px;
     }
 
+    &__mode-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-right: 6px;
+
+        &--persistent {
+            background: #e7f5e7;
+            color: #1e7e1e;
+            border: 1px solid #b8e6bf;
+
+            &::before {
+                content: '●';
+                margin-right: 4px;
+                font-size: 6px;
+                animation: pulse-green 2s ease-in-out infinite;
+            }
+        }
+    }
+
+    @keyframes pulse-green {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
+        }
+    }
+
     &__context {
         display: inline-flex;
         align-items: center;

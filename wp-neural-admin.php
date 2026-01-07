@@ -99,7 +99,7 @@ if ( ! class_exists( 'WPNeuralAdmin' ) ) {
 		}
 
 		private function define_constants(): void {
-			define( 'WP_NEURAL_ADMIN_VERSION', '1.1.0' );
+			define( 'WP_NEURAL_ADMIN_VERSION', '1.2.0' );
 			define( 'WP_NEURAL_ADMIN_FILE', __FILE__ );
 			define( 'WP_NEURAL_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 			define( 'WP_NEURAL_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -117,7 +117,7 @@ if ( ! class_exists( 'WPNeuralAdmin' ) ) {
 		 * Activation hook
 		 */
 		public static function activate(): void {
-			update_option( 'wp_neural_admin_version', '1.1.0' );
+			update_option( 'wp_neural_admin_version', '1.2.0' );
 			flush_rewrite_rules();
 		}
 

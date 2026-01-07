@@ -139,6 +139,7 @@ class Admin_Page {
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'userId'              => get_current_user_id(),
 			'pluginUrl'           => esc_url( WP_NEURAL_ADMIN_PLUGIN_URL ),
+			'swUrl'               => esc_url( WP_NEURAL_ADMIN_PLUGIN_URL . 'build-extensions/sw.js' ),
 			'version'             => WP_NEURAL_ADMIN_VERSION,
 			'hasPrettyPermalinks' => $this->has_pretty_permalinks(),
 			'permalinksUrl'       => esc_url( admin_url( 'options-permalink.php' ) ),
