@@ -337,85 +337,101 @@ If you don't provide a `label`, one is derived from the ability ID:
 
 This works but isn't as descriptive. Always provide an explicit `label` for best results.
 
-## Summarize Function (Fallback Only)
+## Summarize Function
 
-The `summarize` function is a **required fallback** that's only used when the LLM cannot generate a response.
+The `summarize` function generates human-readable output from ability results.
 
-### How Tool Responses Work
+### Single Ability vs Workflow: Different Behaviors
 
-When an ability executes successfully, the response is generated as follows:
+**Important:** The summarize function behaves differently depending on context:
+
+| Context | Summarize Function Role | When Used |
+|---------|------------------------|-----------|
+| **Single Ability** | Fallback only | When LLM unavailable or fails |
+| **Workflow Step** | Primary output | Always - workflows bypass LLM for summaries |
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Tool executes and returns result data                  │
+│                  SINGLE ABILITY                         │
+│  Tool executes → LLM generates response                 │
+│                  (summarize only if LLM unavailable)    │
 └─────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │   Is LLM loaded?      │
-              └───────────────────────┘
-                    │           │
-                   YES          NO
-                    │           │
-                    ▼           ▼
-         ┌──────────────┐  ┌──────────────────┐
-         │ LLM generates │  │ Use summarize()  │
-         │ natural       │  │ fallback         │
-         │ response      │  │                  │
-         └──────────────┘  └──────────────────┘
-                    │           │
-                    │     (also used if LLM
-                    │      throws an error)
-                    │           │
-                    └─────┬─────┘
-                          ▼
-              ┌───────────────────────┐
-              │  Response shown to    │
-              │  user in chat         │
-              └───────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                  WORKFLOW                               │
+│  All steps execute → workflow.summarize() generates     │
+│                      final output (LLM not used)        │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**Primary behavior:** The LLM receives the raw tool result and generates a natural, contextual summary. This produces varied, human-like responses and captures performance stats (tok/s).
+### Why This Matters
 
-**Fallback behavior:** The `summarize()` function is used only when:
-- The LLM model is not loaded
-- The LLM throws an error during generation
+For **single abilities**, the LLM sees your raw result data and generates contextual, natural responses. Your summarize function is a safety net.
 
-### Why Provide a Summarize Function?
+For **workflows**, the LLM is bypassed entirely. Your workflow's `summarize` function is the **only** thing that generates the final message. A poor summarize function means users see useless output like "Completed 2 steps" instead of actual data.
 
-Even though the LLM handles most responses, you **must** provide a `summarize` function because:
+### Single Ability Summarize (Fallback)
 
-1. **Graceful degradation** - Users can still get useful responses if the model fails to load
-2. **Error resilience** - If LLM inference fails, users aren't left with no response
-3. **Testing** - Easier to test abilities without loading the model
-
-### Example Summarize Function
+For individual abilities, provide a basic summarize function as a fallback:
 
 ```javascript
-summarize: (result, userMessage = '') => {
-    // Handle errors
-    if (result.error) {
-        return `Failed: ${result.error}`;
-    }
+registerAbility('my-plugin/list-items', {
+    // ... other config ...
     
-    // Context-aware response
-    const msg = userMessage.toLowerCase();
-    if (msg.includes('how many')) {
-        return `You have **${result.total} items**.`;
-    }
-    
-    // Default response with markdown formatting
-    return `Found **${result.total} items**:\n\n` +
-        result.items.map(i => `- ${i.name}`).join('\n');
-},
+    summarize: (result, userMessage = '') => {
+        // Handle errors
+        if (result.error) {
+            return `Failed: ${result.error}`;
+        }
+        
+        // Basic formatted response
+        return `Found **${result.total} items**:\n\n` +
+            result.items.map(i => `- ${i.name}`).join('\n');
+    },
+});
 ```
 
-### Tips for Fallback Summaries
+**Tips for single ability summaries:**
+- Keep it simple - this is a fallback
+- Use markdown for formatting
+- Handle error cases
+- Don't over-engineer - the LLM handles nuanced responses
 
-- Use markdown: `**bold**`, `\n\n` for paragraphs, `- ` for lists
-- Keep it concise but informative
-- Handle edge cases (empty results, errors)
-- Don't over-engineer - this is a fallback, the LLM handles the nuanced responses
+### Workflow Summarize (Primary Output)
+
+For workflows, the summarize function is **critical**. See the [Workflows Guide](./workflows-guide.md#summarize-function-deep-dive) for detailed guidance on writing effective workflow summaries, including:
+
+- Understanding the results array structure
+- Extracting data from step results
+- Formatting with markdown
+- Handling failures gracefully
+- Complete production examples
+
+**Quick example:**
+
+```javascript
+registerWorkflow('my-plugin/audit', {
+    // ... steps ...
+    
+    summarize: (results) => {
+        const itemsResult = results.find(r => r.abilityId === 'my-plugin/list-items');
+        
+        if (!itemsResult?.success) {
+            return 'Audit failed - could not retrieve items.';
+        }
+        
+        const { items = [], total = 0 } = itemsResult.result;
+        
+        let summary = `Audit complete.\n\n`;
+        summary += `**Found ${total} items:**\n`;
+        items.forEach(i => {
+            summary += `- ${i.name} (${i.status})\n`;
+        });
+        
+        return summary;
+    },
+});
+```
 
 ## Confirmation for Destructive Actions
 

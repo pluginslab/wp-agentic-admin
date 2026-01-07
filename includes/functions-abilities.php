@@ -133,6 +133,7 @@ function get_neural_ability( string $id ): ?array {
  * Get JS configurations for all registered abilities.
  *
  * This is used to pass ability configurations to the frontend.
+ * Includes annotations from PHP config for operation type display.
  *
  * @since 1.0.0
  *
@@ -144,7 +145,22 @@ function get_neural_abilities_js_config(): array {
 	$js_configs = array();
 
 	foreach ( $wp_neural_abilities as $id => $ability ) {
-		$js_configs[ $id ] = $ability['js'];
+		$js_config = $ability['js'];
+
+		// Include annotations from PHP config for operation type display.
+		if ( isset( $ability['php']['meta']['annotations'] ) ) {
+			$js_config['annotations'] = $ability['php']['meta']['annotations'];
+		}
+
+		// Include label and description from PHP config.
+		if ( isset( $ability['php']['label'] ) ) {
+			$js_config['phpLabel'] = $ability['php']['label'];
+		}
+		if ( isset( $ability['php']['description'] ) ) {
+			$js_config['description'] = $ability['php']['description'];
+		}
+
+		$js_configs[ $id ] = $js_config;
 	}
 
 	return $js_configs;

@@ -8,6 +8,13 @@
  */
 
 /**
+ * @typedef {Object} ToolAnnotations
+ * @property {boolean} [readonly=true] - Whether the tool only reads data
+ * @property {boolean} [destructive=false] - Whether the tool may cause data loss
+ * @property {boolean} [idempotent=true] - Whether the tool is safe to repeat
+ */
+
+/**
  * @typedef {Object} ToolDefinition
  * @property {string} id - Unique tool identifier (e.g., 'wp-neural-admin/plugin-list')
  * @property {string[]} keywords - Keywords that trigger this tool
@@ -16,6 +23,7 @@
  * @property {Function} execute - Async function that executes the tool
  * @property {boolean} [requiresConfirmation=false] - Whether to confirm before executing
  * @property {string} [confirmationMessage] - Custom confirmation message
+ * @property {ToolAnnotations} [annotations] - Operation type annotations
  */
 
 /**
@@ -54,9 +62,21 @@ class ToolRegistry {
             requiresConfirmation: false,
             initialMessage: 'Working on it...',
             summarize: (result) => 'Task completed. See details below.',
+            annotations: {
+                readonly: true,
+                destructive: false,
+                idempotent: true,
+            },
             ...tool,
             // Normalize keywords to lowercase
             keywords: tool.keywords.map(k => k.toLowerCase()),
+            // Merge annotations with defaults
+            annotations: {
+                readonly: true,
+                destructive: false,
+                idempotent: true,
+                ...(tool.annotations || {}),
+            },
         };
 
         this.tools.set(tool.id, toolWithDefaults);

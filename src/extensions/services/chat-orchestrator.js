@@ -6,6 +6,7 @@
  * - Tool registry and router for tool detection/execution
  * - Stream simulator for typewriter effects
  * - Chat session for message management
+ * - Workflow orchestrator for multi-step actions (v1.1)
  * 
  * @package WPNeuralAdmin
  */
@@ -15,6 +16,9 @@ import toolRegistry from './tool-registry';
 import toolRouter from './tool-router';
 import streamSimulator from './stream-simulator';
 import { ChatSession, MessageType } from './chat-session';
+import intentParser from './intent-parser';
+import workflowRegistry from './workflow-registry';
+import workflowOrchestrator from './workflow-orchestrator';
 
 /**
  * Build system prompt dynamically based on registered abilities
@@ -73,6 +77,9 @@ class ChatOrchestrator {
         this.toolRegistry = toolRegistry;
         this.toolRouter = toolRouter;
         this.streamSimulator = streamSimulator;
+        this.intentParser = intentParser;
+        this.workflowRegistry = workflowRegistry;
+        this.workflowOrchestrator = workflowOrchestrator;
 
         // State
         this.isProcessing = false;
@@ -88,6 +95,12 @@ class ChatOrchestrator {
             onMessageAdd: () => {},
             onError: () => {},
             onStateChange: () => {},
+            // Workflow-specific callbacks (v1.1)
+            onWorkflowStart: () => {},
+            onWorkflowProgress: () => {},
+            onWorkflowStepComplete: () => {},
+            onWorkflowComplete: () => {},
+            onWorkflowFailed: () => {},
         };
     }
 
@@ -159,7 +172,21 @@ class ChatOrchestrator {
             // Add user message to session
             this.session.addUserMessage(userMessage);
 
-            // Detect if a tool should be used
+            // First, check for registered workflows
+            const workflow = this.workflowRegistry.detectWorkflow(userMessage);
+            if (workflow) {
+                console.log('[ChatOrchestrator] Detected registered workflow:', workflow.id);
+                return await this.processWithWorkflow(userMessage, workflow);
+            }
+
+            // Second, parse for multi-intent requests
+            const parseResult = this.intentParser.parse(userMessage);
+            if (parseResult.requiresWorkflow && parseResult.intents.length > 1) {
+                console.log('[ChatOrchestrator] Detected multi-intent request:', parseResult.intents.length, 'intents');
+                return await this.processWithAdhocWorkflow(userMessage, parseResult);
+            }
+
+            // Third, try single tool detection (existing flow)
             const tool = this.toolRouter.detectTool(userMessage);
 
             if (tool) {
@@ -403,6 +430,185 @@ Explain what went wrong and suggest what the user might try next.`;
     }
 
     /**
+     * Process message with a registered workflow
+     * 
+     * @param {string} userMessage - User's message
+     * @param {Object} workflow - Workflow definition from registry
+     * @return {Promise<Object>}
+     */
+    async processWithWorkflow(userMessage, workflow) {
+        console.log(`[ChatOrchestrator] Executing workflow: ${workflow.id}`);
+
+        // Set up workflow callbacks
+        this.workflowOrchestrator.setCallbacks({
+            onWorkflowStart: (wf, state) => {
+                this.callbacks.onWorkflowStart(wf, state);
+            },
+            onStepStart: (step, index) => {
+                // Don't trigger single-tool UI during workflows - we have workflow progress UI instead
+            },
+            onStepComplete: (stepResult) => {
+                this.callbacks.onWorkflowStepComplete(stepResult);
+                this.session.addToolResult(stepResult.abilityId, stepResult.result, stepResult.success);
+            },
+            onStepFailed: (stepResult, error) => {
+                // No need to call onToolEnd - workflow UI handles this
+            },
+            onRollbackStart: (stack) => {
+                console.log('[ChatOrchestrator] Rollback started');
+            },
+            onRollbackComplete: (results) => {
+                console.log('[ChatOrchestrator] Rollback completed:', results);
+            },
+            onWorkflowComplete: (result) => {
+                this.callbacks.onWorkflowComplete(result);
+            },
+            onWorkflowFailed: (result) => {
+                this.callbacks.onWorkflowFailed(result);
+            },
+            onProgress: (progress) => {
+                this.callbacks.onWorkflowProgress(progress);
+            },
+            onConfirmationRequired: async (item, details) => {
+                return this.requestWorkflowConfirmation(item, details);
+            },
+        });
+
+        // Add initial message (no fake typing - just show it)
+        const initialMessage = `I'll help you with "${workflow.label}". This involves ${workflow.steps.length} steps.`;
+        this.session.addAssistantMessage(initialMessage);
+
+        // Execute the workflow
+        const result = await this.workflowOrchestrator.execute(workflow, { userMessage });
+
+        // Generate summary
+        await this.generateWorkflowSummary(userMessage, workflow, result);
+
+        return {
+            success: result.success,
+            workflowId: workflow.id,
+            result,
+        };
+    }
+
+    /**
+     * Process message with an ad-hoc workflow (from parsed intents)
+     * 
+     * @param {string} userMessage - User's message
+     * @param {Object} parseResult - Result from IntentParser
+     * @return {Promise<Object>}
+     */
+    async processWithAdhocWorkflow(userMessage, parseResult) {
+        console.log(`[ChatOrchestrator] Creating ad-hoc workflow from ${parseResult.intents.length} intents`);
+
+        // Create ad-hoc workflow from intents
+        const workflow = this.workflowRegistry.createFromIntents(parseResult.intents, userMessage);
+
+        // Set up workflow callbacks (same as registered workflows)
+        this.workflowOrchestrator.setCallbacks({
+            onWorkflowStart: (wf, state) => {
+                this.callbacks.onWorkflowStart(wf, state);
+            },
+            onStepStart: (step, index) => {
+                // Don't trigger single-tool UI during workflows - we have workflow progress UI instead
+            },
+            onStepComplete: (stepResult) => {
+                this.callbacks.onWorkflowStepComplete(stepResult);
+                this.session.addToolResult(stepResult.abilityId, stepResult.result, stepResult.success);
+            },
+            onStepFailed: (stepResult, error) => {
+                // No need to call onToolEnd - workflow UI handles this
+            },
+            onRollbackStart: (stack) => {
+                console.log('[ChatOrchestrator] Rollback started');
+            },
+            onRollbackComplete: (results) => {
+                console.log('[ChatOrchestrator] Rollback completed:', results);
+            },
+            onWorkflowComplete: (result) => {
+                this.callbacks.onWorkflowComplete(result);
+            },
+            onWorkflowFailed: (result) => {
+                this.callbacks.onWorkflowFailed(result);
+            },
+            onProgress: (progress) => {
+                this.callbacks.onWorkflowProgress(progress);
+            },
+            onConfirmationRequired: async (item, details) => {
+                return this.requestWorkflowConfirmation(item, details);
+            },
+        });
+
+        // Add initial message listing the steps (no fake typing - just show it)
+        const stepList = parseResult.intents.map((intent, i) => 
+            `${i + 1}. ${intent.abilityId.split('/').pop().replace(/-/g, ' ')}`
+        ).join('\n');
+        
+        const initialMessage = `I'll help you with multiple tasks:\n${stepList}`;
+        this.session.addAssistantMessage(initialMessage);
+
+        // Execute the workflow
+        const result = await this.workflowOrchestrator.execute(workflow, { userMessage });
+
+        // Generate summary
+        await this.generateWorkflowSummary(userMessage, workflow, result);
+
+        return {
+            success: result.success,
+            workflowId: workflow.id,
+            isAdhoc: true,
+            result,
+        };
+    }
+
+    /**
+     * Generate a summary for workflow results
+     * 
+     * Uses the workflow's custom summarize function which extracts
+     * specific data from results. Falls back to default summary.
+     * 
+     * @param {string} userMessage - Original user message
+     * @param {Object} workflow - Workflow that was executed
+     * @param {Object} result - Workflow result
+     */
+    async generateWorkflowSummary(userMessage, workflow, result) {
+        // Use the pre-computed summary from the workflow's summarize function
+        // This contains the specific, data-driven summary we want to show
+        const summary = result.success 
+            ? result.summary 
+            : `Workflow failed: ${result.error?.message || 'Unknown error'}${result.rolledBack ? ' (changes rolled back)' : ''}`;
+        
+        // Stream the summary with typewriter effect
+        this.callbacks.onStreamStart();
+        await this.streamSimulator.stream(summary, {
+            ...this.streamOptions,
+            charDelay: 8, // Slightly faster for summaries
+            onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
+        });
+        this.session.addAssistantMessage(summary);
+        this.callbacks.onStreamEnd(summary);
+    }
+
+    /**
+     * Request confirmation for workflow execution
+     * 
+     * @param {Object} item - Workflow or step requiring confirmation
+     * @param {Object} details - Confirmation details
+     * @return {Promise<boolean>}
+     */
+    async requestWorkflowConfirmation(item, details) {
+        // Use the same confirmation handler as single tools
+        // but with enhanced details for workflows
+        console.log('[ChatOrchestrator] Workflow confirmation requested:', details);
+        return this.requestConfirmation({
+            ...item,
+            confirmationMessage: details.message || `Proceed with ${details.totalSteps || 1} operations?`,
+            isWorkflow: true,
+            workflowDetails: details,
+        });
+    }
+
+    /**
      * Request confirmation for destructive actions
      * 
      * @param {Object} tool - Tool requiring confirmation
@@ -430,6 +636,10 @@ Explain what went wrong and suggest what the user might try next.`;
     abort() {
         if (this.currentAbortController) {
             this.currentAbortController.abort();
+        }
+        // Also abort any running workflow
+        if (this.workflowOrchestrator.isRunning()) {
+            this.workflowOrchestrator.abort();
         }
         this.streamSimulator.abort();
         this.isProcessing = false;

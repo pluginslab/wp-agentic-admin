@@ -26,6 +26,14 @@
  * - getAbility: Get a specific ability by ID
  * - getAbilities: Get all registered abilities
  * 
+ * Workflow System (intent-parser.js, workflow-registry.js, workflow-orchestrator.js):
+ * - intentParser: Parses user messages to extract multiple intents
+ * - IntentParser: Class for custom intent parsing
+ * - workflowRegistry: Singleton registry for multi-step workflows
+ * - WorkflowRegistry: Class for custom workflow registries
+ * - workflowOrchestrator: Executes workflows with rollback support
+ * - WorkflowOrchestrator: Class for custom workflow execution
+ * 
  * Streaming (stream-simulator.js):
  * - streamSimulator: Singleton for typewriter effects
  * - StreamSimulator: Class for custom streaming instances
@@ -46,6 +54,11 @@ export { StreamSimulator, streamSimulator } from './stream-simulator';
 export { ChatSession, createSession, MessageType } from './chat-session';
 export { ChatOrchestrator, chatOrchestrator } from './chat-orchestrator';
 
+// Workflow system (v1.1)
+export { IntentParser, intentParser } from './intent-parser';
+export { WorkflowRegistry, workflowRegistry } from './workflow-registry';
+export { WorkflowOrchestrator, workflowOrchestrator } from './workflow-orchestrator';
+
 // LLM services
 export { default as modelLoader } from './model-loader';
 
@@ -53,13 +66,20 @@ export { default as modelLoader } from './model-loader';
 export { default as abilitiesApi } from './abilities-api';
 export { registerWPTools, getToolCount } from './wp-tools';
 export { 
+    // Abilities API
     registerAbility, 
     unregisterAbility, 
     getAbility, 
     getAbilities,
     hasAbility,
     executeAbility,
-    exposeGlobalAPI 
+    exposeGlobalAPI,
+    // Workflows API (v1.1)
+    registerWorkflow,
+    unregisterWorkflow,
+    getWorkflow,
+    getWorkflows,
+    hasWorkflow,
 } from './neural-abilities-api';
 
 // Legacy exports (kept for reference, not actively used)

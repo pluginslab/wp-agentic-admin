@@ -237,6 +237,92 @@ Removes a registered ability.
 wp.neuralAdmin.unregisterAbility('my-plugin/my-ability');
 ```
 
+### Workflow API (v1.1+)
+
+Workflows allow you to chain multiple abilities together as a single operation.
+
+#### `wp.neuralAdmin.registerWorkflow( id, config )`
+
+Registers a multi-step workflow.
+
+```javascript
+wp.neuralAdmin.registerWorkflow('my-plugin/my-workflow', {
+    label: 'My Multi-Step Workflow',
+    description: 'Does multiple things in sequence.',
+    keywords: ['do everything', 'full process'],
+    steps: [
+        { abilityId: 'my-plugin/step-one', label: 'First step' },
+        { abilityId: 'my-plugin/step-two', label: 'Second step' },
+    ],
+    requiresConfirmation: true,
+    confirmationMessage: 'This will run 2 operations. Continue?',
+    summarize: (results) => {
+        const success = results.every(r => r.success);
+        return success ? 'All steps completed!' : 'Some steps failed.';
+    },
+});
+```
+
+**Config Options:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `label` | string | Yes | Human-readable workflow name |
+| `description` | string | Yes | What the workflow does |
+| `steps` | array | Yes | Array of step definitions |
+| `keywords` | string[] | No | Trigger words for detection |
+| `requiresConfirmation` | boolean | No | Show confirmation dialog (default: true) |
+| `confirmationMessage` | string | No | Custom confirmation text |
+| `summarize` | function | **Recommended** | Generate final summary from results |
+
+> **Important:** Unlike single abilities where `summarize` is a fallback, workflow `summarize` functions are the **primary output**. The LLM is not used to generate workflow summaries. A good summarize function is critical for useful workflow output. See the [Workflows Guide - Summarize Deep Dive](./workflows-guide.md#summarize-function-deep-dive) for detailed guidance.
+
+**Step Options:**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `abilityId` | string | Yes | The ability to execute |
+| `label` | string | Yes | Step label for progress UI |
+| `mapParams` | function | No | Transform previous results to params |
+| `rollback` | function | No | Undo if later step fails |
+| `optional` | boolean | No | Continue if step fails (default: false) |
+
+#### `wp.neuralAdmin.unregisterWorkflow( id )`
+
+Removes a registered workflow.
+
+```javascript
+wp.neuralAdmin.unregisterWorkflow('my-plugin/my-workflow');
+```
+
+#### `wp.neuralAdmin.getWorkflow( id )`
+
+Returns the configuration for a registered workflow.
+
+```javascript
+const workflow = wp.neuralAdmin.getWorkflow('my-plugin/my-workflow');
+```
+
+#### `wp.neuralAdmin.getWorkflows()`
+
+Returns all registered workflows.
+
+```javascript
+const allWorkflows = wp.neuralAdmin.getWorkflows();
+```
+
+#### `wp.neuralAdmin.hasWorkflow( id )`
+
+Checks if a workflow is registered.
+
+```javascript
+if (wp.neuralAdmin.hasWorkflow('my-plugin/my-workflow')) {
+    // Workflow exists
+}
+```
+
+> **See Also:** For comprehensive workflow documentation including data passing between steps, rollback handling, and best practices, see the [Workflows Guide](./workflows-guide.md).
+
 ## Input Schema Best Practices
 
 ### Always Include a Default

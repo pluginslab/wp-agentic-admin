@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,16 @@ WP Neural Admin transforms your WordPress admin panel into an intelligent comman
 5. Start chatting!
 
 == Changelog ==
+
+= 1.1.0 =
+* New: Multi-step workflow engine for chaining abilities together
+* New: Built-in workflows: Site Cleanup, Performance Check, Plugin Audit, Database Maintenance
+* New: `wp.neuralAdmin.registerWorkflow()` API for third-party workflow registration
+* New: Workflow progress indicator in chat UI
+* New: Ad-hoc workflow creation from multi-intent messages
+* Changed: Default model upgraded to Qwen2.5-1.5B-Instruct for better reasoning (~1.6GB)
+* Improved: Confirmation dialog shows all workflow steps before execution
+* Improved: Automatic rollback of completed steps if later step fails
 
 = 1.0.0 =
 * Initial release

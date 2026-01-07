@@ -53,6 +53,10 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
     const [pendingConfirmation, setPendingConfirmation] = useState(null);
     const [contextUsage, setContextUsage] = useState(null);
     
+    // Workflow state (v1.1)
+    const [workflowProgress, setWorkflowProgress] = useState(null);
+    const [isRunningWorkflow, setIsRunningWorkflow] = useState(false);
+    
     // Session ref to persist across renders
     const sessionRef = useRef(null);
     const initializedRef = useRef(false);
@@ -113,14 +117,49 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
                 const usage = modelLoader.getContextUsage();
                 setContextUsage(usage);
             },
+            // Workflow callbacks (v1.1)
+            onWorkflowStart: (workflow, state) => {
+                setIsRunningWorkflow(true);
+                setWorkflowProgress({
+                    step: 0,
+                    total: workflow.steps?.length || 0,
+                    label: workflow.label,
+                    percentage: 0,
+                });
+            },
+            onWorkflowProgress: (progress) => {
+                setWorkflowProgress({
+                    step: progress.step,
+                    total: progress.total,
+                    label: progress.label,
+                    percentage: progress.percentage,
+                });
+            },
+            onWorkflowStepComplete: (stepResult) => {
+                // Progress is updated via onWorkflowProgress
+            },
+            onWorkflowComplete: (result) => {
+                setIsRunningWorkflow(false);
+                setWorkflowProgress(null);
+            },
+            onWorkflowFailed: (result) => {
+                setIsRunningWorkflow(false);
+                setWorkflowProgress(null);
+            },
         });
 
-        // Set up confirmation handler for destructive actions
+        // Set up confirmation handler for destructive actions (supports workflows v1.1)
         chatOrchestrator.setConfirmationHandler((tool) => {
             return new Promise((resolve) => {
+                const isWorkflow = tool.isWorkflow || false;
+                const workflowDetails = tool.workflowDetails || null;
+
                 setPendingConfirmation({
                     toolId: tool.id,
+                    label: tool.label || tool.id,
                     message: tool.confirmationMessage || `Execute ${tool.id}?`,
+                    isWorkflow,
+                    workflowDetails,
                     resolve,
                 });
             });
@@ -326,8 +365,34 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
                 </div>
             )}
             
-            {/* Loading spinner while tool is executing */}
-            {isExecutingTool && (
+            {/* Workflow progress indicator (v1.1) */}
+            {isRunningWorkflow && workflowProgress && (
+                <div className="neural-message neural-message--workflow">
+                    <div className="neural-timeline">
+                        <div className="neural-timeline__line" />
+                        <div className="neural-timeline__dot neural-timeline__dot--workflow" />
+                    </div>
+                    <div className="neural-workflow-progress">
+                        <div className="neural-workflow-progress__header">
+                            <span className="neural-workflow-progress__step">
+                                Step {workflowProgress.step} of {workflowProgress.total}
+                            </span>
+                            <span className="neural-workflow-progress__label">
+                                {workflowProgress.label}
+                            </span>
+                        </div>
+                        <div className="neural-workflow-progress__bar">
+                            <div 
+                                className="neural-workflow-progress__fill"
+                                style={{ width: `${workflowProgress.percentage}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Loading spinner while tool is executing (single tool, not workflow) */}
+            {isExecutingTool && !isRunningWorkflow && (
                 <div className="neural-message neural-message--loading">
                     <div className="neural-timeline">
                         <div className="neural-timeline__line" />
@@ -359,25 +424,59 @@ const ChatContainer = ({ modelReady = false, isLoading = false, setIsLoading }) 
                 </div>
             )}
 
-            {/* Confirmation Modal for destructive actions */}
+            {/* Confirmation Modal for destructive actions (supports workflows v1.1) */}
             {pendingConfirmation && (
                 <Modal
-                    title="Confirm Action"
+                    title={pendingConfirmation.isWorkflow ? "Confirm Workflow" : "Confirm Action"}
                     onRequestClose={handleCancel}
                     className="wp-neural-admin-confirm-modal"
                 >
-                    <p>
-                        The AI wants to execute: <strong>{pendingConfirmation.toolId}</strong>
-                    </p>
-                    <p>
-                        {pendingConfirmation.message}
-                    </p>
+                    {pendingConfirmation.isWorkflow && pendingConfirmation.workflowDetails ? (
+                        <>
+                            <p>
+                                <strong>{pendingConfirmation.workflowDetails.label}</strong>
+                            </p>
+                            <p className="wp-neural-admin-confirm-description">
+                                {pendingConfirmation.workflowDetails.description}
+                            </p>
+                            <p>This workflow will perform {pendingConfirmation.workflowDetails.totalSteps} steps:</p>
+                            <ol className="wp-neural-admin-confirm-steps">
+                                {pendingConfirmation.workflowDetails.steps?.map((step, i) => (
+                                    <li key={i} className={`step-${step.operationType || (step.isWrite ? 'write' : 'read')}`}>
+                                        <span className="step-label">{step.label}</span>
+                                        <span className={`step-badge step-badge--${step.operationType || (step.isWrite ? 'write' : 'read')}`}>
+                                            {step.operationType === 'delete' ? 'delete' : (step.isWrite ? 'write' : 'read')}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                            {pendingConfirmation.workflowDetails.destructiveOperations > 0 && (
+                                <Notice status="error" isDismissible={false}>
+                                    This includes {pendingConfirmation.workflowDetails.destructiveOperations} destructive operation(s) that may cause data loss.
+                                </Notice>
+                            )}
+                            {pendingConfirmation.workflowDetails.writeOperations > 0 && pendingConfirmation.workflowDetails.destructiveOperations === 0 && (
+                                <Notice status="warning" isDismissible={false}>
+                                    This includes {pendingConfirmation.workflowDetails.writeOperations} write operation(s) that will modify your site.
+                                </Notice>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <p>
+                                The AI wants to execute: <strong>{pendingConfirmation.label}</strong>
+                            </p>
+                            <p>
+                                {pendingConfirmation.message}
+                            </p>
+                        </>
+                    )}
                     <div className="wp-neural-admin-confirm-actions">
                         <Button variant="tertiary" onClick={handleCancel}>
                             Cancel
                         </Button>
                         <Button variant="primary" isDestructive onClick={handleConfirm}>
-                            Confirm
+                            {pendingConfirmation.isWorkflow ? 'Run Workflow' : 'Confirm'}
                         </Button>
                     </div>
                 </Modal>
