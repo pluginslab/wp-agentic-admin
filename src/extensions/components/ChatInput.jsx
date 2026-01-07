@@ -69,6 +69,10 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type your message.
     const isDisabled = disabled || isLoading;
     const buttonDisabled = isDisabled || !message.trim();
 
+    // Detect if user is on Mac for keyboard shortcut hint
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const shortcutKey = isMac ? '⌘' : 'Ctrl';
+
     return (
         <form className="wp-neural-admin-input-area" onSubmit={handleSubmit}>
             <textarea
@@ -81,19 +85,22 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type your message.
                 rows="3"
                 disabled={isDisabled}
             />
-            <button
-                type="submit"
-                className="button button-primary wp-neural-admin-send"
-                disabled={buttonDisabled}
-            >
-                {isLoading ? (
-                    <>
-                        <span className="spinner is-active" style={{ margin: 0 }} />
-                    </>
-                ) : (
-                    'Send'
-                )}
-            </button>
+            <div className="wp-neural-admin-send-wrapper">
+                <button
+                    type="submit"
+                    className="button button-primary wp-neural-admin-send"
+                    disabled={buttonDisabled}
+                >
+                    {isLoading ? (
+                        <>
+                            <span className="spinner is-active" style={{ margin: 0 }} />
+                        </>
+                    ) : (
+                        'Send'
+                    )}
+                </button>
+                <span className="wp-neural-admin-send-hint">{shortcutKey}+Enter</span>
+            </div>
         </form>
     );
 };

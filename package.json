@@ -1,6 +1,6 @@
 {
   "name": "wp-neural-admin",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "A privacy-first AI Site Reliability Engineer running entirely in the browser via WebLLM and the WordPress Abilities API.",
   "scripts": {
     "build": "npm run build:extensions",

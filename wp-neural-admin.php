@@ -3,7 +3,7 @@
  * Plugin Name: WP Neural Admin
  * Plugin URI: https://pluginslab.com/wp-neural-admin
  * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming WP-Admin into a natural language command center via the WordPress Abilities API.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Pluginslab
  * Author URI: https://pluginslab.com
  * License: GPL-2.0-or-later

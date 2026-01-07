@@ -237,10 +237,22 @@
         }
     }
 
-    .wp-neural-admin-send {
+    .wp-neural-admin-send-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         align-self: flex-end;
+        gap: 4px;
+    }
+
+    .wp-neural-admin-send {
         height: 36px;
         padding: 0 20px;
+    }
+
+    .wp-neural-admin-send-hint {
+        font-size: 11px;
+        color: #8c8f94;
     }
 }
 
