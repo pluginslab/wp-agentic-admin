@@ -86,7 +86,7 @@ class ModelLoader {
 	 * Requirements:
 	 * - Browser supports Service Workers
 	 * - Browser supports WebGPU
-	 * - We can register a SW at the wp-admin scope
+	 * - Browser is NOT Safari (Safari SW can't access WebGPU)
 	 *
 	 * @since 1.2.0
 	 * @return {Promise<boolean>} True if SW mode is available
@@ -100,6 +100,15 @@ class ModelLoader {
 		// Check basic SW support
 		if (!('serviceWorker' in navigator)) {
 			console.log('[ModelLoader] Service Workers not supported');
+			this.swSupported = false;
+			return false;
+		}
+
+		// Safari's Service Workers cannot access WebGPU APIs
+		// Detect Safari: has Safari in UA but not Chrome/Chromium
+		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+		if (isSafari) {
+			console.log('[ModelLoader] Safari detected - SW mode not supported (WebGPU unavailable in Safari SW)');
 			this.swSupported = false;
 			return false;
 		}
