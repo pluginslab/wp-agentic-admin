@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="WPAgenticAdmin">
+	<description>WordPress Coding Standards for WP Agentic Admin</description>
+	<file>.</file>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/build-extensions/*</exclude-pattern>
+
+	<rule ref="WordPress">
+		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+	</rule>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="wp-agentic-admin"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="wp_agentic_admin"/>
+				<element value="WPAgenticAdmin"/>
+			</property>
+		</properties>
+	</rule>
+	<config name="testVersion" value="8.2-"/>
+</ruleset>

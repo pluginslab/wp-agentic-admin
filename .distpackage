@@ -1,0 +1,10 @@
+includes/
+wp-agentic-admin.php
+uninstall.php
+readme.txt
+build-extensions/
+languages/
+README.md
+CHANGELOG.md
+ROADMAP.md
+docs/
