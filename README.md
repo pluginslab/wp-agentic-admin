@@ -214,8 +214,7 @@ AI: [Executing: site-health]
 | Document | Description |
 |----------|-------------|
 | [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Design principles and ReAct loop architecture |
-| [**ROADMAP.md**](ROADMAP.md) | Future development roadmap and planned features |
-| [**TEST-COVERAGE.md**](TEST-COVERAGE.md) | Automated test coverage summary |
+| [**IDEAS.md**](IDEAS.md) | Feature ideas and future possibilities |
 | [Abilities Guide](docs/ABILITIES-GUIDE.md) | How to create new abilities |
 | [Workflows Guide](docs/WORKFLOWS-GUIDE.md) | How to create multi-step workflows |
 | [Third-Party Integration](docs/THIRD-PARTY-INTEGRATION.md) | Extending with custom plugins |

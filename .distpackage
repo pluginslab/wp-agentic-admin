@@ -6,5 +6,6 @@ build-extensions/
 languages/
 README.md
 CHANGELOG.md
-ROADMAP.md
+IDEAS.md
+SLM-STRATEGY.md
 docs/
