@@ -14,13 +14,12 @@ import * as webllm from '@mlc-ai/web-llm';
 
 /**
  * Default model configuration
- * Using Qwen2.5-1.5B for better understanding and reasoning capability
+ * Using Qwen2.5-3B for better understanding and reasoning capability
  * See: https://github.com/mlc-ai/web-llm
  *
- * v1.1: Upgraded from SmolLM2-360M (~250MB) to Qwen2.5-1.5B (~1.6GB)
- * for improved multi-step workflow understanding
+ * v1.2: Using Qwen2.5-3B (~2.5GB) as default for optimal performance
  */
-const DEFAULT_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+const DEFAULT_MODEL = 'Qwen2.5-3B-Instruct-q4f16_1-MLC';
 
 /**
  * Model configuration options
@@ -34,15 +33,10 @@ const MODEL_CONFIG = {
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
-	'SmolLM2-360M-Instruct-q4f16_1-MLC': 2048,
-	'SmolLM2-1.7B-Instruct-q4f16_1-MLC': 2048,
-	'Qwen2.5-0.5B-Instruct-q4f16_1-MLC': 2048,
-	'Qwen2.5-1.5B-Instruct-q4f16_1-MLC': 4096, // Qwen 1.5B supports larger context
 	'Qwen2.5-3B-Instruct-q4f16_1-MLC': 4096,
-	'Llama-3.2-1B-Instruct-q4f16_1-MLC': 2048,
 	'Llama-3.2-3B-Instruct-q4f16_1-MLC': 4096,
 	// Default fallback
-	default: 2048,
+	default: 4096,
 };
 
 /**
@@ -972,54 +966,14 @@ class ModelLoader {
 	 */
 	static getAvailableModels() {
 		return [
-			// Recommended model (v1.1)
-			{
-				id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC',
-				name: 'Qwen 2.5 1.5B (Q4)',
-				size: '~1.6GB',
-				vram: '~2GB',
-				description:
-					'Best balance of capability and size. Recommended for most users.',
-				recommended: true,
-				capabilities: [ 'multi-step workflows', 'better reasoning' ],
-			},
-			// Smaller fallback options
-			{
-				id: 'SmolLM2-360M-Instruct-q4f16_1-MLC',
-				name: 'SmolLM2 360M (Q4)',
-				size: '~250MB',
-				vram: '~500MB',
-				description: 'Very small and fast. For low-memory devices.',
-				recommended: false,
-				capabilities: [ 'basic tasks' ],
-			},
-			{
-				id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC',
-				name: 'Qwen 2.5 0.5B (Q4)',
-				size: '~350MB',
-				vram: '~700MB',
-				description: 'Small but capable. Good fallback option.',
-				recommended: false,
-				capabilities: [ 'basic tasks', 'faster loading' ],
-			},
-			{
-				id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
-				name: 'Llama 3.2 1B (Q4)',
-				size: '~700MB',
-				vram: '~1GB',
-				description: 'Meta Llama 3.2. Good quality responses.',
-				recommended: false,
-				capabilities: [ 'multi-step workflows' ],
-			},
-			// Larger models for advanced users
 			{
 				id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
 				name: 'Qwen 2.5 3B (Q4)',
 				size: '~2.5GB',
 				vram: '~3GB',
 				description:
-					'Larger model with better reasoning. Requires more VRAM.',
-				recommended: false,
+					'Alibaba Qwen 2.5 3B. Excellent reasoning and complex workflows.',
+				recommended: true,
 				capabilities: [ 'complex workflows', 'advanced reasoning' ],
 			},
 			{

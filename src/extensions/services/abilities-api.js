@@ -133,8 +133,11 @@ class AbilitiesAPI {
 	 */
 	isReadOnly( ability ) {
 		// Check annotations for readonly flag
+		// Support both 'readonly' (PHP) and 'isReadOnly' (JS) naming conventions
 		const annotations = ability?.meta?.annotations || {};
-		return annotations.isReadOnly === true;
+		return (
+			annotations.isReadOnly === true || annotations.readonly === true
+		);
 	}
 
 	/**

@@ -34,9 +34,9 @@ module.exports = {
 		...defaultConfig.optimization,
 		// Prevent code splitting for SW - it needs to be self-contained
 		splitChunks: {
-			...defaultConfig.optimization ? .splitChunks,
+			...defaultConfig.optimization?.splitChunks,
 			cacheGroups: {
-				...defaultConfig.optimization ? .splitChunks ? .cacheGroups,
+				...defaultConfig.optimization?.splitChunks?.cacheGroups,
 				// Don't split the service worker
 				sw: false,
 			},

@@ -7,7 +7,38 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { Button, Spinner } from '@wordpress/components';
-import modelLoader, { ModelLoader } from '../services/model-loader';
+import modelLoader, {
+	ModelLoader,
+	DEFAULT_MODEL,
+} from '../services/model-loader';
+
+/**
+ * Get the saved model from localStorage
+ *
+ * @return {string} The saved model ID or DEFAULT_MODEL
+ */
+const getSavedModel = () => {
+	try {
+		const saved = localStorage.getItem( 'wp_agentic_admin_model' );
+		return saved || DEFAULT_MODEL;
+	} catch ( err ) {
+		console.warn( 'Failed to load saved model from localStorage:', err );
+		return DEFAULT_MODEL;
+	}
+};
+
+/**
+ * Save the selected model to localStorage
+ *
+ * @param {string} modelId - The model ID to save
+ */
+const saveModel = ( modelId ) => {
+	try {
+		localStorage.setItem( 'wp_agentic_admin_model', modelId );
+	} catch ( err ) {
+		console.warn( 'Failed to save model to localStorage:', err );
+	}
+};
 
 /**
  * Parse the loading stage from WebLLM progress message
@@ -42,10 +73,21 @@ const getLoadingStage = ( message, progress ) => {
 		lowerMsg.includes( 'loading model' ) ||
 		lowerMsg.includes( 'fetching' )
 	) {
+		// Determine if downloading or loading from cache
+		const isFromCache = lowerMsg.includes( 'cache' );
+		const isDownloading =
+			lowerMsg.includes( 'fetch' ) ||
+			lowerMsg.includes( 'download' ) ||
+			! isFromCache;
+
 		return {
-			icon: '📦',
-			title: 'Loading Model Weights',
-			description: 'Loading AI model weights from cache...',
+			icon: isFromCache ? '📦' : '⬇️',
+			title: isFromCache
+				? 'Loading Model Weights'
+				: 'Downloading Model',
+			description: isFromCache
+				? 'Loading AI model weights from cache...'
+				: 'Downloading AI model weights (~2.5GB)...',
 		};
 	}
 
@@ -103,9 +145,7 @@ const ModelStatus = ( {
 		'AI model not loaded. Click "Load Model" to start.'
 	);
 	const [ progress, setProgress ] = useState( 0 );
-	const [ selectedModel, setSelectedModel ] = useState(
-		'SmolLM2-360M-Instruct-q4f16_1-MLC'
-	);
+	const [ selectedModel, setSelectedModel ] = useState( getSavedModel() );
 	const [ isFromCache, setIsFromCache ] = useState( false );
 	const [ rawMessage, setRawMessage ] = useState( '' );
 	const [ loadedModelInfo, setLoadedModelInfo ] = useState( null );
@@ -218,6 +258,8 @@ const ModelStatus = ( {
 	 */
 	const handleLoadModel = useCallback( async () => {
 		try {
+			// Save the selected model before loading
+			saveModel( selectedModel );
 			await modelLoader.load( selectedModel );
 		} catch ( err ) {
 			console.error( 'Failed to load model:', err );
@@ -410,9 +452,11 @@ const ModelStatus = ( {
 								<select
 									className="wp-agentic-admin-model-select"
 									value={ selectedModel }
-									onChange={ ( e ) =>
-										setSelectedModel( e.target.value )
-									}
+									onChange={ ( e ) => {
+										const modelId = e.target.value;
+										setSelectedModel( modelId );
+										saveModel( modelId );
+									} }
 									disabled={
 										status === 'loading' ||
 										status === 'checking'

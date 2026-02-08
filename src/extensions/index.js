@@ -9,7 +9,7 @@ import App from './App';
 import './styles/main.scss';
 
 document.addEventListener( 'DOMContentLoaded', () => {
-	console.log( '[WP Agentic Admin] Version 0.1.0 initializing...' );
+	console.log( '[WP Agentic Admin] Version 0.1.1 initializing...' );
 	const container = document.getElementById( 'wp-agentic-admin-root' );
 
 	if ( ! container ) {
