@@ -9,8 +9,14 @@
  */
 
 // Import the ability registration helper.
-import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
-import { extractPluginParams, formatPluginActionResult } from './shared/plugin-helpers';
+import {
+	registerAbility,
+	executeAbility,
+} from '../services/agentic-abilities-api';
+import {
+	extractPluginParams,
+	formatPluginActionResult,
+} from './shared/plugin-helpers';
 
 /**
  * Extract plugin parameters from user message.
@@ -20,8 +26,12 @@ import { extractPluginParams, formatPluginActionResult } from './shared/plugin-h
  * @param {string} userMessage - The user's original message like "activate akismet"
  * @return {Object|null} Object with { plugin: "path/file.php" } or null if not found
  */
-function extractParams(userMessage) {
-    return extractPluginParams(userMessage, ['activate', 'enable', 'turn on']);
+function extractParams( userMessage ) {
+	return extractPluginParams( userMessage, [
+		'activate',
+		'enable',
+		'turn on',
+	] );
 }
 
 /**
@@ -34,64 +44,67 @@ function extractParams(userMessage) {
  * is generally less risky than deactivation.
  */
 export function registerPluginActivate() {
-    registerAbility('wp-agentic-admin/plugin-activate', {
-        label: 'Activate plugins',
+	registerAbility( 'wp-agentic-admin/plugin-activate', {
+		label: 'Activate plugins',
 
-        // Keywords for activation-related commands.
-        keywords: [
-            'activate',
-            'enable',
-            'turn on',
-            'activate plugin',
-            'enable plugin',
-        ],
+		// Keywords for activation-related commands.
+		keywords: [
+			'activate',
+			'enable',
+			'turn on',
+			'activate plugin',
+			'enable plugin',
+		],
 
-        initialMessage: "Activating the plugin...",
+		initialMessage: 'Activating the plugin...',
 
-        /**
-         * Generate summary from the result.
-         *
-         * @param {Object} result - The result from PHP.
-         * @return {string} Human-readable summary.
-         */
-        summarize: (result) => {
-            return formatPluginActionResult(result, 'Plugin has been activated successfully.');
-        },
+		/**
+		 * Generate summary from the result.
+		 *
+		 * @param {Object} result - The result from PHP.
+		 * @return {string} Human-readable summary.
+		 */
+		summarize: ( result ) => {
+			return formatPluginActionResult(
+				result,
+				'Plugin has been activated successfully.'
+			);
+		},
 
-        // Export extractParams so it can be tested or reused.
-        extractParams,
+		// Export extractParams so it can be tested or reused.
+		extractParams,
 
-        /**
-         * Execute the ability.
-         *
-         * PARAMETER EXTRACTION EXAMPLE:
-         * This execute function demonstrates extracting parameters from
-         * natural language. The user says "activate akismet" and we
-         * need to figure out the actual plugin file path to send to PHP.
-         *
-         * @param {Object} params - Parameters from the chat system.
-         * @param {string} params.userMessage - The user's original message.
-         * @return {Promise<Object>} The result from PHP, or an error object.
-         */
-        execute: async ({ userMessage }) => {
-            // Extract plugin path from the user's message.
-            const params = extractParams(userMessage);
+		/**
+		 * Execute the ability.
+		 *
+		 * PARAMETER EXTRACTION EXAMPLE:
+		 * This execute function demonstrates extracting parameters from
+		 * natural language. The user says "activate akismet" and we
+		 * need to figure out the actual plugin file path to send to PHP.
+		 *
+		 * @param {Object} params             - Parameters from the chat system.
+		 * @param {string} params.userMessage - The user's original message.
+		 * @return {Promise<Object>} The result from PHP, or an error object.
+		 */
+		execute: async ( { userMessage } ) => {
+			// Extract plugin path from the user's message.
+			const params = extractParams( userMessage );
 
-            // If we couldn't figure out which plugin, return a helpful error.
-            if (!params || !params.plugin) {
-                return {
-                    error: 'Could not determine which plugin to activate. Please specify the plugin name, e.g., "activate hello dolly"'
-                };
-            }
+			// If we couldn't figure out which plugin, return a helpful error.
+			if ( ! params || ! params.plugin ) {
+				return {
+					error: 'Could not determine which plugin to activate. Please specify the plugin name, e.g., "activate hello dolly"',
+				};
+			}
 
-            // Execute the PHP ability with the extracted parameters.
-            return executeAbility('wp-agentic-admin/plugin-activate', params);
-        },
+			// Execute the PHP ability with the extracted parameters.
+			return executeAbility( 'wp-agentic-admin/plugin-activate', params );
+		},
 
-        // NON-DESTRUCTIVE ACTION: No confirmation needed.
-        // Activation is generally safe and can be easily reversed.
-        requiresConfirmation: false,
-    });
+		// NON-DESTRUCTIVE ACTION: No confirmation needed.
+		// Activation is generally safe and can be easily reversed.
+		requiresConfirmation: false,
+	} );
 }
 
 export default registerPluginActivate;

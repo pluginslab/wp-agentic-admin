@@ -41,90 +41,92 @@
  * @see includes/abilities/cron-list.php for the PHP implementation
  */
 
-import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
+import {
+	registerAbility,
+	executeAbility,
+} from '../services/agentic-abilities-api';
 
 /**
  * Register the cron-list ability with the chat system.
  */
 export function registerCronList() {
-    registerAbility('wp-agentic-admin/cron-list', {
-        label: 'List cron events',
+	registerAbility( 'wp-agentic-admin/cron-list', {
+		label: 'List cron events',
 
-        keywords: [
-            'cron',
-            'wp-cron',
-            'cron event',
-            'cron job',
-            'scheduled task',
-            'cron schedule',
-            'background task',
-        ],
+		keywords: [
+			'cron',
+			'wp-cron',
+			'cron event',
+			'cron job',
+			'scheduled task',
+			'cron schedule',
+			'background task',
+		],
 
-        initialMessage: 'Fetching scheduled cron events...',
+		initialMessage: 'Fetching scheduled cron events...',
 
-        /**
-         * Generate summary from the result.
-         *
-         * @param {Object} result - The result from PHP.
-         * @return {string} Human-readable summary.
-         */
-        summarize: (result) => {
-            if (!result.success) {
-                return result.message || 'Failed to fetch cron events.';
-            }
+		/**
+		 * Generate summary from the result.
+		 *
+		 * @param {Object} result - The result from PHP.
+		 * @return {string} Human-readable summary.
+		 */
+		summarize: ( result ) => {
+			if ( ! result.success ) {
+				return result.message || 'Failed to fetch cron events.';
+			}
 
-            const total = result.total_events || 0;
-            const overdue = result.overdue_count || 0;
+			const total = result.total_events || 0;
+			const overdue = result.overdue_count || 0;
 
-            if (total === 0) {
-                return 'No cron events are currently scheduled.';
-            }
+			if ( total === 0 ) {
+				return 'No cron events are currently scheduled.';
+			}
 
-            let summary = result.message + '\n\n';
+			let summary = result.message + '\n\n';
 
-            // Show top events (limit to 10 for readability).
-            const events = result.events || [];
-            const displayEvents = events.slice(0, 10);
+			// Show top events (limit to 10 for readability).
+			const events = result.events || [];
+			const displayEvents = events.slice( 0, 10 );
 
-            if (displayEvents.length > 0) {
-                summary += '**Upcoming events:**\n';
-                
-                displayEvents.forEach((event) => {
-                    const status = event.is_overdue ? ' (OVERDUE)' : '';
-                    const timeInfo = event.is_overdue 
-                        ? `${event.next_run_diff} ago`
-                        : `in ${event.next_run_diff}`;
-                    
-                    summary += `- \`${event.hook}\` - ${event.schedule} - ${timeInfo}${status}\n`;
-                });
+			if ( displayEvents.length > 0 ) {
+				summary += '**Upcoming events:**\n';
 
-                if (events.length > 10) {
-                    summary += `\n...and ${events.length - 10} more events.`;
-                }
-            }
+				displayEvents.forEach( ( event ) => {
+					const status = event.is_overdue ? ' (OVERDUE)' : '';
+					const timeInfo = event.is_overdue
+						? `${ event.next_run_diff } ago`
+						: `in ${ event.next_run_diff }`;
 
-            if (overdue > 0) {
-                summary += `\n\n**Note:** ${overdue} overdue event(s) may indicate wp-cron is not running properly. Consider checking your hosting configuration or using a real cron job.`;
-            }
+					summary += `- \`${ event.hook }\` - ${ event.schedule } - ${ timeInfo }${ status }\n`;
+				} );
 
-            return summary;
-        },
+				if ( events.length > 10 ) {
+					summary += `\n...and ${ events.length - 10 } more events.`;
+				}
+			}
 
-        /**
-         * Execute the ability.
-         *
-         * @param {Object} params - Parameters from the chat system.
-         * @return {Promise<Object>} The result from PHP.
-         */
-        execute: async (params) => {
-            return executeAbility('wp-agentic-admin/cron-list', {
-                show_overdue: true,
-            });
-        },
+			if ( overdue > 0 ) {
+				summary += `\n\n**Note:** ${ overdue } overdue event(s) may indicate wp-cron is not running properly. Consider checking your hosting configuration or using a real cron job.`;
+			}
 
-        // Read-only operation - no confirmation needed.
-        requiresConfirmation: false,
-    });
+			return summary;
+		},
+
+		/**
+		 * Execute the ability.
+		 *
+		 * @return {Promise<Object>} The result from PHP.
+		 */
+		execute: async () => {
+			return executeAbility( 'wp-agentic-admin/cron-list', {
+				show_overdue: true,
+			} );
+		},
+
+		// Read-only operation - no confirmation needed.
+		requiresConfirmation: false,
+	} );
 }
 
 export default registerCronList;

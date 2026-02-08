@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+build-extensions/
+dist/
+
+# WordPress core
+wp-admin/
+wp-includes/
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.swp
+.DS_Store

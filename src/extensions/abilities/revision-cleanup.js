@@ -36,122 +36,132 @@
  * @see includes/abilities/revision-cleanup.php for the PHP implementation
  */
 
-import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
+import {
+	registerAbility,
+	executeAbility,
+} from '../services/agentic-abilities-api';
 
 /**
  * Register the revision-cleanup ability with the chat system.
  */
 export function registerRevisionCleanup() {
-    registerAbility('wp-agentic-admin/revision-cleanup', {
-        label: 'Clean up revisions',
+	registerAbility( 'wp-agentic-admin/revision-cleanup', {
+		label: 'Clean up revisions',
 
-        keywords: [
-            'revision',
-            'revisions',
-            'post revision',
-            'clean revision',
-            'delete revision',
-            'revision cleanup',
-        ],
+		keywords: [
+			'revision',
+			'revisions',
+			'post revision',
+			'clean revision',
+			'delete revision',
+			'revision cleanup',
+		],
 
-        initialMessage: 'Analyzing post revisions...',
+		initialMessage: 'Analyzing post revisions...',
 
-        /**
-         * Generate summary from the result.
-         *
-         * @param {Object} result - The result from PHP.
-         * @return {string} Human-readable summary.
-         */
-        summarize: (result) => {
-            if (!result.success) {
-                return result.message || 'Failed to clean up revisions.';
-            }
+		/**
+		 * Generate summary from the result.
+		 *
+		 * @param {Object} result - The result from PHP.
+		 * @return {string} Human-readable summary.
+		 */
+		summarize: ( result ) => {
+			if ( ! result.success ) {
+				return result.message || 'Failed to clean up revisions.';
+			}
 
-            let summary = result.message;
+			let summary = result.message;
 
-            if (result.dry_run) {
-                summary += '\n\n**This was a dry run.** To actually delete the revisions, confirm the action.';
-            } else if (result.deleted_count > 0) {
-                summary += '\n\nYour database is now cleaner! This can improve backup times and reduce storage costs.';
-            }
+			if ( result.dry_run ) {
+				summary +=
+					'\n\n**This was a dry run.** To actually delete the revisions, confirm the action.';
+			} else if ( result.deleted_count > 0 ) {
+				summary +=
+					'\n\nYour database is now cleaner! This can improve backup times and reduce storage costs.';
+			}
 
-            return summary;
-        },
+			return summary;
+		},
 
-        /**
-         * Get confirmation message before executing.
-         *
-         * @param {Object} params - The parameters that will be used.
-         * @return {string} Confirmation message to show user.
-         */
-        getConfirmationMessage: (params) => {
-            const keepLast = params.keep_last || 3;
-            return `This will delete post revisions, keeping the ${keepLast} most recent revisions per post. This action cannot be undone. Do you want to proceed?`;
-        },
+		/**
+		 * Get confirmation message before executing.
+		 *
+		 * @param {Object} params - The parameters that will be used.
+		 * @return {string} Confirmation message to show user.
+		 */
+		getConfirmationMessage: ( params ) => {
+			const keepLast = params.keep_last || 3;
+			return `This will delete post revisions, keeping the ${ keepLast } most recent revisions per post. This action cannot be undone. Do you want to proceed ? `;
+		},
 
-        /**
-         * Execute the ability.
-         *
-         * @param {Object} params - Parameters from the chat system.
-         * @return {Promise<Object>} The result from PHP.
-         */
-        execute: async (params) => {
-            const keepLast = params.keep_last !== undefined ? params.keep_last : 3;
-            const dryRun = params.dry_run !== undefined ? params.dry_run : false;
+		/**
+		 * Execute the ability.
+		 *
+		 * @param {Object} params - Parameters from the chat system.
+		 * @return {Promise<Object>} The result from PHP.
+		 */
+		execute: async ( params ) => {
+			const keepLast =
+				params.keep_last !== undefined ? params.keep_last : 3;
+			const dryRun =
+				params.dry_run !== undefined ? params.dry_run : false;
 
-            return executeAbility('wp-agentic-admin/revision-cleanup', {
-                keep_last: keepLast,
-                dry_run: dryRun,
-            });
-        },
+			return executeAbility( 'wp-agentic-admin/revision-cleanup', {
+				keep_last: keepLast,
+				dry_run: dryRun,
+			} );
+		},
 
-        /**
-         * Parse user intent to extract parameters.
-         *
-         * @param {string} message - The user's message.
-         * @return {Object} Extracted parameters.
-         */
-        parseIntent: (message) => {
-            const lowerMessage = message.toLowerCase();
-            
-            // Check for specific keep_last values.
-            let keepLast = 3; // Default.
-            
-            // Match patterns like "keep 5 revisions", "keep last 2", etc.
-            const keepMatch = lowerMessage.match(/keep\s*(?:last\s*)?(\d+)/);
-            if (keepMatch) {
-                keepLast = parseInt(keepMatch[1], 10);
-            }
-            
-            // Check if user wants to delete ALL revisions.
-            if (lowerMessage.includes('all revision') || 
-                lowerMessage.includes('delete all') ||
-                lowerMessage.includes('remove all')) {
-                keepLast = 0;
-            }
+		/**
+		 * Parse user intent to extract parameters.
+		 *
+		 * @param {string} message - The user's message.
+		 * @return {Object} Extracted parameters.
+		 */
+		parseIntent: ( message ) => {
+			const lowerMessage = message.toLowerCase();
 
-            // Check for dry run/preview request.
-            const dryRun = lowerMessage.includes('dry run') || 
-                          lowerMessage.includes('preview') ||
-                          lowerMessage.includes('what would');
+			// Check for specific keep_last values.
+			let keepLast = 3; // Default.
 
-            return {
-                keep_last: keepLast,
-                dry_run: dryRun,
-            };
-        },
+			// Match patterns like "keep 5 revisions", "keep last 2", etc.
+			const keepMatch = lowerMessage.match( /keep\s*(?:last\s*)?(\d+)/ );
+			if ( keepMatch ) {
+				keepLast = parseInt( keepMatch[ 1 ], 10 );
+			}
 
-        /**
-         * Only require confirmation for actual deletions, not previews/dry runs.
-         *
-         * @param {Object} params - The parsed parameters.
-         * @return {boolean} Whether confirmation is required.
-         */
-        requiresConfirmation: (params) => {
-            // Don't require confirmation for dry runs/previews
-            return !params.dry_run;
-        },
-    });
+			// Check if user wants to delete ALL revisions.
+			if (
+				lowerMessage.includes( 'all revision' ) ||
+				lowerMessage.includes( 'delete all' ) ||
+				lowerMessage.includes( 'remove all' )
+			) {
+				keepLast = 0;
+			}
+
+			// Check for dry run/preview request.
+			const dryRun =
+				lowerMessage.includes( 'dry run' ) ||
+				lowerMessage.includes( 'preview' ) ||
+				lowerMessage.includes( 'what would' );
+
+			return {
+				keep_last: keepLast,
+				dry_run: dryRun,
+			};
+		},
+
+		/**
+		 * Only require confirmation for actual deletions, not previews/dry runs.
+		 *
+		 * @param {Object} params - The parsed parameters.
+		 * @return {boolean} Whether confirmation is required.
+		 */
+		requiresConfirmation: ( params ) => {
+			// Don't require confirmation for dry runs/previews
+			return ! params.dry_run;
+		},
+	} );
 }
 
 export default registerRevisionCleanup;

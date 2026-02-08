@@ -1,6 +1,6 @@
 /**
  * Workflows Index
- * 
+ *
  * Exports all workflow registration functions.
  * Pre-defined multi-step workflows using existing abilities.
  * These workflows are registered during initialization and provide
@@ -23,7 +23,7 @@
  * - Use `results.find(r => r.abilityId === '...')` to get specific step results
  * - Always check `stepResult?.success` before accessing `stepResult.result`
  * - Check `stepResult?.skipped` to see if step was skipped by includeIf conditions
- * 
+ *
  * @since 0.1.0
  * @see docs/workflows-guide.md for complete documentation
  */
@@ -51,12 +51,12 @@ export { registerDatabaseMaintenanceWorkflow } from './database-maintenance';
  * @see docs/third-party-integration.md for integration examples
  */
 export function registerAllWorkflows() {
-    registerSiteCleanupWorkflow();
-    registerPerformanceCheckWorkflow();
-    registerPluginAuditWorkflow();
-    registerDatabaseMaintenanceWorkflow();
+	registerSiteCleanupWorkflow();
+	registerPerformanceCheckWorkflow();
+	registerPluginAuditWorkflow();
+	registerDatabaseMaintenanceWorkflow();
 
-    console.log('[Workflows] All built-in workflows registered');
+	console.log( '[Workflows] All built-in workflows registered' );
 }
 
 export default registerAllWorkflows;

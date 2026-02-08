@@ -1,10 +1,9 @@
 /**
  * Abilities Index
- * 
+ *
  * Exports all ability registration functions.
  * Includes both WP-Agentic-Admin custom abilities and
  * WordPress 6.9+ core ability wrappers.
- * 
  */
 
 // WP-Agentic-Admin custom abilities
@@ -41,34 +40,36 @@ export { registerCoreEnvironmentInfo } from './core-environment-info';
 
 /**
  * Register all abilities.
- * 
+ *
  * This function is called during initialization to register
  * all abilities with the chat system, including:
  * - WP-Agentic-Admin custom abilities (wp-agentic-admin/*)
  * - WordPress 6.9+ core ability wrappers (core/*)
  */
 export function registerAllAbilities() {
-    // WP-Agentic-Admin custom abilities
-    registerErrorLogRead();
-    registerCacheFlush();
-    registerDbOptimize();
-    registerPluginList();
-    registerPluginDeactivate();
-    registerPluginActivate();
-    registerSiteHealth();
-    registerTransientFlush();
-    registerCronList();
-    registerRewriteFlush();
-    registerRewriteList();
-    registerRevisionCleanup();
+	// WP-Agentic-Admin custom abilities
+	registerErrorLogRead();
+	registerCacheFlush();
+	registerDbOptimize();
+	registerPluginList();
+	registerPluginDeactivate();
+	registerPluginActivate();
+	registerSiteHealth();
+	registerTransientFlush();
+	registerCronList();
+	registerRewriteFlush();
+	registerRewriteList();
+	registerRevisionCleanup();
 
-    // WordPress 6.9+ core ability wrappers
-    // These provide chat-friendly interfaces for WordPress core abilities
-    // Note: core/get-user-info is not included as it has show_in_rest=false
-    registerCoreSiteInfo();
-    registerCoreEnvironmentInfo();
+	// WordPress 6.9+ core ability wrappers
+	// These provide chat-friendly interfaces for WordPress core abilities
+	// Note: core/get-user-info is not included as it has show_in_rest=false
+	registerCoreSiteInfo();
+	registerCoreEnvironmentInfo();
 
-    console.log('[Abilities] All abilities registered (including WordPress core wrappers)');
+	console.log(
+		'[Abilities] All abilities registered (including WordPress core wrappers)'
+	);
 }
 
 export default registerAllAbilities;

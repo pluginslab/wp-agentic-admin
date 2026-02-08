@@ -25,10 +25,11 @@ const SW_VERSION = '1.3.102';
 
 /**
  * Log helper with timestamp
+ * @param {...any} args - Console log arguments to output with timestamp.
  */
-function swLog(...args) {
-	const timestamp = new Date().toISOString().split('T')[1].slice(0, -1);
-	console.log(`[WP Agentic SW ${timestamp}]`, ...args);
+function swLog( ...args ) {
+	const timestamp = new Date().toISOString().split( 'T' )[ 1 ].slice( 0, -1 );
+	console.log( `[WP Agentic SW ${ timestamp }]`, ...args );
 }
 
 /**
@@ -36,31 +37,32 @@ function swLog(...args) {
  * IMPORTANT: Must be created at top level, not inside event handlers
  * Chrome requires message handlers to be set up during initial script evaluation
  */
-swLog(`Service Worker version: ${SW_VERSION}`);
-swLog('Creating ServiceWorkerMLCEngineHandler...');
+swLog( `Service Worker version: ${ SW_VERSION }` );
+swLog( 'Creating ServiceWorkerMLCEngineHandler...' );
+// eslint-disable-next-line no-unused-vars -- handler sets up message listeners via side effects
 const handler = new ServiceWorkerMLCEngineHandler();
-swLog('ServiceWorkerMLCEngineHandler created successfully');
+swLog( 'ServiceWorkerMLCEngineHandler created successfully' );
 
 /**
  * Activate event - Claim clients
  */
-self.addEventListener('activate', (event) => {
-	swLog('Service Worker activating...');
-	swLog('Service Worker activated and ready');
+self.addEventListener( 'activate', ( event ) => {
+	swLog( 'Service Worker activating...' );
+	swLog( 'Service Worker activated and ready' );
 
 	// Claim all clients immediately so they can start using this SW
-	event.waitUntil(self.clients.claim());
-});
+	event.waitUntil( self.clients.claim() );
+} );
 
 /**
  * Install event - Skip waiting to activate immediately
  */
-self.addEventListener('install', (event) => {
-	swLog('Service Worker installing...');
+self.addEventListener( 'install', ( event ) => {
+	swLog( 'Service Worker installing...' );
 
 	// Skip waiting to become active immediately
-	event.waitUntil(self.skipWaiting());
-});
+	event.waitUntil( self.skipWaiting() );
+} );
 
 /**
  * Note: NO custom message event listener!

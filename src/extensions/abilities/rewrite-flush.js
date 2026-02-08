@@ -34,61 +34,64 @@
  * @see includes/abilities/rewrite-flush.php for the PHP implementation
  */
 
-import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
+import {
+	registerAbility,
+	executeAbility,
+} from '../services/agentic-abilities-api';
 
 /**
  * Register the rewrite-flush ability with the chat system.
  */
 export function registerRewriteFlush() {
-    registerAbility('wp-agentic-admin/rewrite-flush', {
-        label: 'Flush rewrite rules',
+	registerAbility( 'wp-agentic-admin/rewrite-flush', {
+		label: 'Flush rewrite rules',
 
-        keywords: [
-            'flush rewrite',
-            'flush permalink',
-            'regenerate permalink',
-            'refresh rewrite',
-            'reset rewrite',
-            'fix 404',
-        ],
+		keywords: [
+			'flush rewrite',
+			'flush permalink',
+			'regenerate permalink',
+			'refresh rewrite',
+			'reset rewrite',
+			'fix 404',
+		],
 
-        initialMessage: 'Flushing rewrite rules...',
+		initialMessage: 'Flushing rewrite rules...',
 
-        /**
-         * Generate summary from the result.
-         *
-         * @param {Object} result - The result from PHP.
-         * @return {string} Human-readable summary.
-         */
-        summarize: (result) => {
-            if (!result.success) {
-                return result.message || 'Failed to flush rewrite rules.';
-            }
+		/**
+		 * Generate summary from the result.
+		 *
+		 * @param {Object} result - The result from PHP.
+		 * @return {string} Human-readable summary.
+		 */
+		summarize: ( result ) => {
+			if ( ! result.success ) {
+				return result.message || 'Failed to flush rewrite rules.';
+			}
 
-            let summary = result.message;
-            
-            if (result.permalink_structure) {
-                summary += `\n\nCurrent permalink structure: \`${result.permalink_structure}\``;
-            }
+			let summary = result.message;
 
-            summary += '\n\nThis can fix 404 errors on posts/pages after changing permalink settings or installing new plugins that register custom post types.';
+			if ( result.permalink_structure ) {
+				summary += `\n\nCurrent permalink structure: \`${ result.permalink_structure }\``;
+			}
 
-            return summary;
-        },
+			summary +=
+				'\n\nThis can fix 404 errors on posts/pages after changing permalink settings or installing new plugins that register custom post types.';
 
-        /**
-         * Execute the ability.
-         *
-         * @param {Object} params - Parameters from the chat system.
-         * @return {Promise<Object>} The result from PHP.
-         */
-        execute: async (params) => {
-            return executeAbility('wp-agentic-admin/rewrite-flush', {});
-        },
+			return summary;
+		},
 
-        // Flushing rewrites is safe and common - no confirmation needed.
-        requiresConfirmation: false,
-    });
+		/**
+		 * Execute the ability.
+		 *
+		 * @return {Promise<Object>} The result from PHP.
+		 */
+		execute: async () => {
+			return executeAbility( 'wp-agentic-admin/rewrite-flush', {} );
+		},
+
+		// Flushing rewrites is safe and common - no confirmation needed.
+		requiresConfirmation: false,
+	} );
 }
 
 export default registerRewriteFlush;

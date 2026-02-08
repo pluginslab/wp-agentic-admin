@@ -13,14 +13,14 @@
 import modelLoader from './model-loader';
 import toolRegistry from './tool-registry';
 import streamSimulator from './stream-simulator';
-import { ChatSession, MessageType } from './chat-session';
+import { ChatSession } from './chat-session';
 import workflowRegistry from './workflow-registry';
 import workflowOrchestrator from './workflow-orchestrator';
 import ReactAgent from './react-agent';
 import messageRouter from './message-router';
 import { createLogger } from '../utils/logger';
 
-const log = createLogger('Orchestrator');
+const log = createLogger( 'Orchestrator' );
 
 /**
  * Build system prompt for conversational queries
@@ -31,25 +31,28 @@ const log = createLogger('Orchestrator');
  * @return {string} System prompt
  */
 function buildSystemPrompt() {
-    const tools = toolRegistry.getAll();
+	const tools = toolRegistry.getAll();
 
-    if (tools.length === 0) {
-        return `You are a WordPress assistant. No tools are currently available. Let the user know they need to wait for abilities to load or check their configuration.`;
-    }
+	if ( tools.length === 0 ) {
+		return `You are a WordPress assistant. No tools are currently available. Let the user know they need to wait for abilities to load or check their configuration.`;
+	}
 
-    // Build a simple list of available abilities
-    const toolsList = tools
-        .map(tool => {
-            const label = tool.label || tool.id.split('/').pop().replace(/-/g, ' ');
-            const description = tool.description || '';
-            return description ? `- ${label}: ${description}` : `- ${label}`;
-        })
-        .join('\n');
+	// Build a simple list of available abilities
+	const toolsList = tools
+		.map( ( tool ) => {
+			const label =
+				tool.label || tool.id.split( '/' ).pop().replace( /-/g, ' ' );
+			const description = tool.description || '';
+			return description
+				? `- ${ label }: ${ description }`
+				: `- ${ label }`;
+		} )
+		.join( '\n' );
 
-    return `You are a WordPress assistant. You can help users with questions about WordPress and suggest available tools.
+	return `You are a WordPress assistant. You can help users with questions about WordPress and suggest available tools.
 
 Available abilities:
-${toolsList}
+${ toolsList }
 
 When users ask questions:
 - Answer helpfully and conversationally
@@ -72,703 +75,752 @@ Be helpful and conversational.`;
  * Coordinates all chat-related services
  */
 class ChatOrchestrator {
-    /**
-     * Create a new chat orchestrator
-     * 
-     * @param {Object} options - Configuration options
-     * @param {string} [options.systemPrompt] - Custom system prompt
-     * @param {Object} [options.llmOptions] - LLM generation options
-     * @param {Object} [options.streamOptions] - Stream simulator options
-     */
-    constructor(options = {}) {
-        this.customSystemPrompt = options.systemPrompt || null;
-        this.llmOptions = {
-            temperature: 0.2,
-            maxTokens: 256,
-            ...options.llmOptions,
-        };
-        this.streamOptions = {
-            charDelay: 15,
-            ...options.streamOptions,
-        };
+	/**
+	 * Create a new chat orchestrator
+	 *
+	 * @param {Object} options                 - Configuration options
+	 * @param {string} [options.systemPrompt]  - Custom system prompt
+	 * @param {Object} [options.llmOptions]    - LLM generation options
+	 * @param {Object} [options.streamOptions] - Stream simulator options
+	 */
+	constructor( options = {} ) {
+		this.customSystemPrompt = options.systemPrompt || null;
+		this.llmOptions = {
+			temperature: 0.2,
+			maxTokens: 256,
+			...options.llmOptions,
+		};
+		this.streamOptions = {
+			charDelay: 15,
+			...options.streamOptions,
+		};
 
-        // Services
-        this.session = null;
-        this.toolRegistry = toolRegistry;
-        this.streamSimulator = streamSimulator;
-        this.workflowRegistry = workflowRegistry;
-        this.workflowOrchestrator = workflowOrchestrator;
-        this.messageRouter = messageRouter;
-        this.reactAgent = null; // Created on-demand
+		// Services
+		this.session = null;
+		this.toolRegistry = toolRegistry;
+		this.streamSimulator = streamSimulator;
+		this.workflowRegistry = workflowRegistry;
+		this.workflowOrchestrator = workflowOrchestrator;
+		this.messageRouter = messageRouter;
+		this.reactAgent = null; // Created on-demand
 
-        // State
-        this.isProcessing = false;
-        this.currentAbortController = null;
+		// State
+		this.isProcessing = false;
+		this.currentAbortController = null;
 
-        // Callbacks
-        this.callbacks = {
-            onStreamStart: () => {},
-            onStreamChunk: () => {},
-            onStreamEnd: () => {},
-            onToolStart: () => {},
-            onToolEnd: () => {},
-            onMessageAdd: () => {},
-            onError: () => {},
-            onStateChange: () => {},
-            // Workflow-specific callbacks
-            onWorkflowStart: () => {},
-            onWorkflowProgress: () => {},
-            onWorkflowStepComplete: () => {},
-            onWorkflowComplete: () => {},
-            onWorkflowFailed: () => {},
-        };
-    }
+		// Callbacks
+		this.callbacks = {
+			onStreamStart: () => {},
+			onStreamChunk: () => {},
+			onStreamEnd: () => {},
+			onToolStart: () => {},
+			onToolEnd: () => {},
+			onMessageAdd: () => {},
+			onError: () => {},
+			onStateChange: () => {},
+			// Workflow-specific callbacks
+			onWorkflowStart: () => {},
+			onWorkflowProgress: () => {},
+			onWorkflowStepComplete: () => {},
+			onWorkflowComplete: () => {},
+			onWorkflowFailed: () => {},
+		};
+	}
 
-    /**
-     * Initialize the orchestrator with a session
-     * 
-     * @param {ChatSession} session - Chat session to use
-     */
-    initialize(session) {
-        this.session = session;
-        
-        // Save the original onChange callback
-        const originalOnChange = session.onChange;
-        
-        // Wire up session onChange to our callback, but preserve the original
-        session.onChange = (messages, newMessage) => {
-            // Call the original callback first (for persistence, etc.)
-            if (originalOnChange) {
-                originalOnChange(messages, newMessage);
-            }
-            // Then call our orchestrator callback
-            this.callbacks.onMessageAdd(messages, newMessage);
-        };
+	/**
+	 * Initialize the orchestrator with a session
+	 *
+	 * @param {ChatSession} session - Chat session to use
+	 */
+	initialize( session ) {
+		this.session = session;
 
-        log.info('Initialized with session:', session.id);
-    }
+		// Save the original onChange callback
+		const originalOnChange = session.onChange;
 
-    /**
-     * Get the current system prompt
-     * Uses custom prompt if provided, otherwise builds dynamically from registered tools
-     * 
-     * @return {string}
-     */
-    getSystemPrompt() {
-        return this.customSystemPrompt || buildSystemPrompt();
-    }
+		// Wire up session onChange to our callback, but preserve the original
+		session.onChange = ( messages, newMessage ) => {
+			// Call the original callback first (for persistence, etc.)
+			if ( originalOnChange ) {
+				originalOnChange( messages, newMessage );
+			}
+			// Then call our orchestrator callback
+			this.callbacks.onMessageAdd( messages, newMessage );
+		};
 
-    /**
-     * Set callbacks for UI integration
-     * 
-     * @param {Object} callbacks - Callback functions
-     */
-    setCallbacks(callbacks) {
-        this.callbacks = { ...this.callbacks, ...callbacks };
-    }
+		log.info( 'Initialized with session:', session.id );
+	}
 
-    /**
-     * Check if LLM is ready
-     * 
-     * @return {boolean}
-     */
-    isLLMReady() {
-        return modelLoader.isModelReady();
-    }
+	/**
+	 * Get the current system prompt
+	 * Uses custom prompt if provided, otherwise builds dynamically from registered tools
+	 *
+	 * @return {string} The system prompt for conversational mode.
+	 */
+	getSystemPrompt() {
+		return this.customSystemPrompt || buildSystemPrompt();
+	}
 
-    /**
-     * Process a user message
-     * This is the main entry point for handling user input
-     *
-     * New routing logic (v1.5.0):
-     * 1. Check if it's an informational question → conversational mode
-     * 2. Check for workflow keyword match → workflow mode
-     * 3. Default to ReAct loop for actions
-     *
-     * @param {string} userMessage - The user's message
-     * @return {Promise<Object>} Result with success status and any errors
-     */
-    async processMessage(userMessage) {
-        if (!this.session) {
-            throw new Error('ChatOrchestrator not initialized. Call initialize() first.');
-        }
+	/**
+	 * Set callbacks for UI integration
+	 *
+	 * @param {Object} callbacks - Callback functions
+	 */
+	setCallbacks( callbacks ) {
+		this.callbacks = { ...this.callbacks, ...callbacks };
+	}
 
-        if (this.isProcessing) {
-            return { success: false, error: 'Already processing a message' };
-        }
+	/**
+	 * Check if LLM is ready
+	 *
+	 * @return {boolean} True if the model is loaded and ready.
+	 */
+	isLLMReady() {
+		return modelLoader.isModelReady();
+	}
 
-        this.isProcessing = true;
-        this.currentAbortController = new AbortController();
-        this.callbacks.onStateChange({ isProcessing: true });
+	/**
+	 * Process a user message
+	 * This is the main entry point for handling user input
+	 *
+	 * New routing logic (v1.5.0):
+	 * 1. Check if it's an informational question → conversational mode
+	 * 2. Check for workflow keyword match → workflow mode
+	 * 3. Default to ReAct loop for actions
+	 *
+	 * @param {string} userMessage - The user's message
+	 * @return {Promise<Object>} Result with success status and any errors
+	 */
+	async processMessage( userMessage ) {
+		if ( ! this.session ) {
+			throw new Error(
+				'ChatOrchestrator not initialized. Call initialize() first.'
+			);
+		}
 
-        try {
-            // Add user message to session
-            this.session.addUserMessage(userMessage);
+		if ( this.isProcessing ) {
+			return { success: false, error: 'Already processing a message' };
+		}
 
-            // Route the message
-            const route = this.messageRouter.route(userMessage);
+		this.isProcessing = true;
+		this.currentAbortController = new AbortController();
+		this.callbacks.onStateChange( { isProcessing: true } );
 
-            if (route.type === 'conversational') {
-                log.info('Routing to conversational mode (informational question)');
-                return await this.processWithLLM(userMessage);
-            }
+		try {
+			// Add user message to session
+			this.session.addUserMessage( userMessage );
 
-            if (route.type === 'workflow') {
-                log.info('Routing to workflow:', route.workflow.id);
-                return await this.processWithWorkflow(userMessage, route.workflow);
-            }
+			// Route the message
+			const route = this.messageRouter.route( userMessage );
 
-            // Default: ReAct loop for actions
-            log.info('Routing to ReAct loop');
-            return await this.processWithReact(userMessage);
+			if ( route.type === 'conversational' ) {
+				log.info(
+					'Routing to conversational mode (informational question)'
+				);
+				return await this.processWithLLM( userMessage );
+			}
 
-        } catch (error) {
-            log.error('Error processing message:', error);
-            this.session.addErrorMessage('An error occurred while processing your message.');
-            this.callbacks.onError(error);
-            return { success: false, error: error.message };
-        } finally {
-            this.isProcessing = false;
-            this.currentAbortController = null;
-            this.callbacks.onStateChange({ isProcessing: false });
-        }
-    }
+			if ( route.type === 'workflow' ) {
+				log.info( 'Routing to workflow:', route.workflow.id );
+				return await this.processWithWorkflow(
+					userMessage,
+					route.workflow
+				);
+			}
 
-    /**
-     * Process message with ReAct loop
-     *
-     * Uses the ReAct agent to intelligently select and use tools.
-     *
-     * @param {string} userMessage - User's message
-     * @return {Promise<Object>}
-     */
-    async processWithReact(userMessage) {
-        if (!this.isLLMReady()) {
-            this.session.addAssistantMessage(
-                'The AI model is not loaded yet. Please load the model first.'
-            );
-            return { success: false, error: 'Model not loaded' };
-        }
+			// Default: ReAct loop for actions
+			log.info( 'Routing to ReAct loop' );
+			return await this.processWithReact( userMessage );
+		} catch ( error ) {
+			log.error( 'Error processing message:', error );
+			this.session.addErrorMessage(
+				'An error occurred while processing your message.'
+			);
+			this.callbacks.onError( error );
+			return { success: false, error: error.message };
+		} finally {
+			this.isProcessing = false;
+			this.currentAbortController = null;
+			this.callbacks.onStateChange( { isProcessing: false } );
+		}
+	}
 
-        // Create ReAct agent if not exists
-        if (!this.reactAgent) {
-            this.reactAgent = new ReactAgent(modelLoader, toolRegistry);
+	/**
+	 * Process message with ReAct loop
+	 *
+	 * Uses the ReAct agent to intelligently select and use tools.
+	 *
+	 * @param {string} userMessage - User's message
+	 * @return {Promise<Object>} Result with success status and ReAct execution details.
+	 */
+	async processWithReact( userMessage ) {
+		if ( ! this.isLLMReady() ) {
+			this.session.addAssistantMessage(
+				'The AI model is not loaded yet. Please load the model first.'
+			);
+			return { success: false, error: 'Model not loaded' };
+		}
 
-            // Wire up callbacks
-            this.reactAgent.setCallbacks({
-                onToolStart: (toolId) => {
-                    this.callbacks.onToolStart(toolId);
-                },
-                onToolEnd: (toolId, result, success) => {
-                    this.callbacks.onToolEnd(toolId, result, success);
-                    // Add tool result to session
-                    this.session.addToolResult(toolId, result, success);
-                },
-                onConfirmationRequired: async (tool, args) => {
-                    return await this.requestConfirmation(tool);
-                },
-            });
-        }
+		// Create ReAct agent if not exists
+		if ( ! this.reactAgent ) {
+			this.reactAgent = new ReactAgent( modelLoader, toolRegistry );
 
-        // Execute ReAct loop
-        const result = await this.reactAgent.execute(
-            userMessage,
-            this.session.getConversationHistory()
-        );
+			// Wire up callbacks
+			this.reactAgent.setCallbacks( {
+				onToolStart: ( toolId ) => {
+					this.callbacks.onToolStart( toolId );
+				},
+				onToolEnd: ( toolId, result, success ) => {
+					this.callbacks.onToolEnd( toolId, result, success );
+					// Add tool result to session
+					this.session.addToolResult( toolId, result, success );
+				},
+				onConfirmationRequired: async ( tool ) => {
+					return await this.requestConfirmation( tool );
+				},
+			} );
+		}
 
-        // Stream the final answer
-        this.callbacks.onStreamStart();
-        await this.streamSimulator.stream(result.finalAnswer, {
-            ...this.streamOptions,
-            onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
-        });
-        this.session.addAssistantMessage(result.finalAnswer);
-        this.callbacks.onStreamEnd(result.finalAnswer);
+		// Execute ReAct loop
+		const result = await this.reactAgent.execute(
+			userMessage,
+			this.session.getConversationHistory()
+		);
 
-        log.info(`ReAct completed: ${result.iterations} iterations, ${result.toolsUsed.length} tools used`);
+		// Stream the final answer
+		this.callbacks.onStreamStart();
+		await this.streamSimulator.stream( result.finalAnswer, {
+			...this.streamOptions,
+			onChunk: ( char, text ) =>
+				this.callbacks.onStreamChunk( char, text ),
+		} );
+		this.session.addAssistantMessage( result.finalAnswer );
+		this.callbacks.onStreamEnd( result.finalAnswer );
 
-        return {
-            success: result.success,
-            result,
-        };
-    }
+		log.info(
+			`ReAct completed: ${ result.iterations } iterations, ${ result.toolsUsed.length } tools used`
+		);
 
-    /**
-     * Process message with a specific tool (legacy method, kept for workflow support)
-     *
-     * @param {string} userMessage - User's message
-     * @param {Object} tool - Tool to execute
-     * @param {Object} [intent] - Intent object (optional, for typo correction context)
-     * @return {Promise<Object>}
-     */
-    async processWithTool(userMessage, tool, intent = null) {
-        // 1. Parse params first (needed to check if confirmation is required)
-        const params = tool.parseIntent ? tool.parseIntent(userMessage) : {};
+		return {
+			success: result.success,
+			result,
+		};
+	}
 
-        // 2. Check if tool requires confirmation
-        // requiresConfirmation can be a boolean or a function that takes params
-        let needsConfirmation = false;
-        if (typeof tool.requiresConfirmation === 'function') {
-            needsConfirmation = tool.requiresConfirmation(params);
-        } else {
-            needsConfirmation = !!tool.requiresConfirmation;
-        }
+	/**
+	 * Process message with a specific tool (legacy method, kept for workflow support)
+	 *
+	 * @param {string} userMessage - User's message
+	 * @param {Object} tool        - Tool to execute
+	 * @param {Object} [intent]    - Intent object (optional, for typo correction context)
+	 * @return {Promise<Object>} Result with success status, tool ID, and execution result.
+	 */
+	async processWithTool( userMessage, tool, intent = null ) {
+		// 1. Parse params first (needed to check if confirmation is required)
+		const params = tool.parseIntent ? tool.parseIntent( userMessage ) : {};
 
-        if (needsConfirmation) {
-            const confirmed = await this.requestConfirmation(tool);
-            if (!confirmed) {
-                this.session.addAssistantMessage('Action cancelled.');
-                return { success: true, cancelled: true };
-            }
-        }
+		// 2. Check if tool requires confirmation
+		// requiresConfirmation can be a boolean or a function that takes params
+		let needsConfirmation = false;
+		if ( typeof tool.requiresConfirmation === 'function' ) {
+			needsConfirmation = tool.requiresConfirmation( params );
+		} else {
+			needsConfirmation = !! tool.requiresConfirmation;
+		}
 
-        // 2. Stream the initial message
-        this.callbacks.onStreamStart();
-        await this.streamSimulator.stream(tool.initialMessage, {
-            ...this.streamOptions,
-            onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
-        });
-        this.session.addAssistantMessage(tool.initialMessage);
-        this.callbacks.onStreamEnd(tool.initialMessage);
+		if ( needsConfirmation ) {
+			const confirmed = await this.requestConfirmation( tool );
+			if ( ! confirmed ) {
+				this.session.addAssistantMessage( 'Action cancelled.' );
+				return { success: true, cancelled: true };
+			}
+		}
 
-        // 3. Execute the tool
-        this.callbacks.onToolStart(tool.id);
-        
-        let result;
-        let success = true;
+		// 2. Stream the initial message
+		this.callbacks.onStreamStart();
+		await this.streamSimulator.stream( tool.initialMessage, {
+			...this.streamOptions,
+			onChunk: ( char, text ) =>
+				this.callbacks.onStreamChunk( char, text ),
+		} );
+		this.session.addAssistantMessage( tool.initialMessage );
+		this.callbacks.onStreamEnd( tool.initialMessage );
 
-        try {
-            // Pass userMessage to execute so tools can extract parameters
-            result = await tool.execute({ userMessage });
-            this.session.addToolResult(tool.id, result, true);
-        } catch (error) {
-            result = { error: error.message };
-            success = false;
-            this.session.addToolResult(tool.id, result, false);
-        }
+		// 3. Execute the tool
+		this.callbacks.onToolStart( tool.id );
 
-        this.callbacks.onToolEnd(tool.id, result, success);
+		let result;
+		let success = true;
 
-        // 4. Generate summary
-        // If LLM is available, use it for contextual responses
-        // Otherwise, fall back to the ability's summarize function
-        const engine = modelLoader.getEngine();
-        
-        if (engine && success) {
-            // Use LLM to generate contextual summary (pass intent for typo context)
-            await this.generateLLMSummary(userMessage, tool, result, success, intent);
-        } else {
-            // Fallback to canned summary (no LLM or tool failed)
-            const summary = success 
-                ? tool.summarize(result, userMessage)
-                : `I encountered an error: ${result.error || 'Unknown error'}`;
+		try {
+			// Pass userMessage to execute so tools can extract parameters
+			result = await tool.execute( { userMessage } );
+			this.session.addToolResult( tool.id, result, true );
+		} catch ( error ) {
+			result = { error: error.message };
+			success = false;
+			this.session.addToolResult( tool.id, result, false );
+		}
 
-            // Add tool context prefix
-            const toolName = this.getToolName(tool);
-            const messageWithContext = `• ${toolName}\n${summary}`;
+		this.callbacks.onToolEnd( tool.id, result, success );
 
-            this.callbacks.onStreamStart();
-            await this.streamSimulator.stream(messageWithContext, {
-                ...this.streamOptions,
-                charDelay: 10,
-                onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
-            });
-            this.session.addAssistantMessage(messageWithContext);
-            this.callbacks.onStreamEnd(messageWithContext);
-        }
+		// 4. Generate summary
+		// If LLM is available, use it for contextual responses
+		// Otherwise, fall back to the ability's summarize function
+		const engine = modelLoader.getEngine();
 
-        return { success, toolId: tool.id, result };
-    }
+		if ( engine && success ) {
+			// Use LLM to generate contextual summary (pass intent for typo context)
+			await this.generateLLMSummary(
+				userMessage,
+				tool,
+				result,
+				success,
+				intent
+			);
+		} else {
+			// Fallback to canned summary (no LLM or tool failed)
+			const summary = success
+				? tool.summarize( result, userMessage )
+				: `I encountered an error: ${
+						result.error || 'Unknown error'
+				  }`;
 
-    /**
-     * Get tool name for display (label or fallback to ID)
-     * 
-     * @param {Object} tool - Tool object
-     * @return {string} Display name
-     */
-    getToolName(tool) {
-        return tool.label || tool.id;
-    }
+			// Add tool context prefix
+			const toolName = this.getToolName( tool );
+			const messageWithContext = `• ${ toolName }\n${ summary }`;
 
-    /**
-     * Generate a summary using the LLM
-     * 
-     * @param {string} userMessage - Original user message
-     * @param {Object} tool - Tool that was executed
-     * @param {Object} result - Tool execution result
-     * @param {boolean} success - Whether tool succeeded
-     * @param {Object} [intent] - Intent object (optional, for typo correction context)
-     */
-    async generateLLMSummary(userMessage, tool, result, success, intent = null) {
-        const engine = modelLoader.getEngine();
-        if (!engine) {
-            throw new Error('LLM engine not available');
-        }
+			this.callbacks.onStreamStart();
+			await this.streamSimulator.stream( messageWithContext, {
+				...this.streamOptions,
+				charDelay: 10,
+				onChunk: ( char, text ) =>
+					this.callbacks.onStreamChunk( char, text ),
+			} );
+			this.session.addAssistantMessage( messageWithContext );
+			this.callbacks.onStreamEnd( messageWithContext );
+		}
 
-        // Build a focused prompt for summarization
-        let summaryPrompt;
-        if (success) {
-            // Truncate result if too large to fit in context
-            const resultStr = JSON.stringify(result, null, 2);
-            const truncatedResult = resultStr.length > 1500 
-                ? resultStr.substring(0, 1500) + '...(truncated)'
-                : resultStr;
+		return { success, toolId: tool.id, result };
+	}
 
-            summaryPrompt = `The user asked: "${userMessage}"
+	/**
+	 * Get tool name for display (label or fallback to ID)
+	 *
+	 * @param {Object} tool - Tool object
+	 * @return {string} Display name
+	 */
+	getToolName( tool ) {
+		return tool.label || tool.id;
+	}
 
-I ran the "${tool.label}" tool and got this result:
-${truncatedResult}
+	/**
+	 * Generate a summary using the LLM
+	 *
+	 * @param {string}  userMessage - Original user message
+	 * @param {Object}  tool        - Tool that was executed
+	 * @param {Object}  result      - Tool execution result
+	 * @param {boolean} success     - Whether tool succeeded
+	 */
+	async generateLLMSummary( userMessage, tool, result, success ) {
+		const engine = modelLoader.getEngine();
+		if ( ! engine ) {
+			throw new Error( 'LLM engine not available' );
+		}
+
+		// Build a focused prompt for summarization
+		let summaryPrompt;
+		if ( success ) {
+			// Truncate result if too large to fit in context
+			const resultStr = JSON.stringify( result, null, 2 );
+			const truncatedResult =
+				resultStr.length > 1500
+					? resultStr.substring( 0, 1500 ) + '...(truncated)'
+					: resultStr;
+
+			summaryPrompt = `The user asked: "${ userMessage }"
+
+I ran the "${ tool.label }" tool and got this result:
+${ truncatedResult }
 
 Answer ONLY what the user asked. Be concise and specific. Do not include extra information they didn't ask for.`;
-        } else {
-            summaryPrompt = `The user asked: "${userMessage}"
+		} else {
+			summaryPrompt = `The user asked: "${ userMessage }"
 
-I tried to run the "${tool.label}" tool but it failed with error: ${result.error}
+I tried to run the "${ tool.label }" tool but it failed with error: ${ result.error }
 
 Explain what went wrong and suggest what the user might try next.`;
-        }
+		}
 
-        // Use a simple, focused system prompt for summarization
-        const summarySystemPrompt = 'You are a helpful WordPress assistant. Your job is to summarize tool results clearly and concisely. Answer the user\'s question based on the data provided.';
+		// Use a simple, focused system prompt for summarization
+		const summarySystemPrompt =
+			"You are a helpful WordPress assistant. Your job is to summarize tool results clearly and concisely. Answer the user's question based on the data provided.";
 
-        const messages = [
-            { role: 'system', content: summarySystemPrompt },
-            { role: 'user', content: summaryPrompt },
-        ];
+		const messages = [
+			{ role: 'system', content: summarySystemPrompt },
+			{ role: 'user', content: summaryPrompt },
+		];
 
-        // Stream from LLM
-        this.callbacks.onStreamStart();
-        let fullResponse = '';
+		// Stream from LLM
+		this.callbacks.onStreamStart();
+		let fullResponse = '';
 
-        try {
-            const stream = await engine.chat.completions.create({
-                messages,
-                temperature: 0.3, // Lower temperature for more factual summaries
-                max_tokens: this.llmOptions.maxTokens,
-                stream: true,
-                stream_options: { include_usage: true },
-                stop: ['User:', 'USER:', '\n\nUser'],
-            });
+		try {
+			const stream = await engine.chat.completions.create( {
+				messages,
+				temperature: 0.3, // Lower temperature for more factual summaries
+				max_tokens: this.llmOptions.maxTokens,
+				stream: true,
+				stream_options: { include_usage: true },
+				stop: [ 'User:', 'USER:', '\n\nUser' ],
+			} );
 
-            for await (const chunk of stream) {
-                if (this.currentAbortController?.signal.aborted) {
-                    break;
-                }
+			for await ( const chunk of stream ) {
+				if ( this.currentAbortController?.signal.aborted ) {
+					break;
+				}
 
-                const delta = chunk.choices[0]?.delta?.content || '';
-                fullResponse += delta;
-                this.callbacks.onStreamChunk(delta, fullResponse);
+				const delta = chunk.choices[ 0 ]?.delta?.content || '';
+				fullResponse += delta;
+				this.callbacks.onStreamChunk( delta, fullResponse );
 
-                // Capture usage stats from the final chunk
-                if (chunk.usage) {
-                    log.debug('Tool summary usage stats:', chunk.usage);
-                    modelLoader.updateUsageStats(chunk.usage);
-                }
-            }
+				// Capture usage stats from the final chunk
+				if ( chunk.usage ) {
+					log.debug( 'Tool summary usage stats:', chunk.usage );
+					modelLoader.updateUsageStats( chunk.usage );
+				}
+			}
 
-            // Add tool context prefix to help LLM recognize completed actions
-            const toolName = this.getToolName(tool);
-            const messageWithContext = `• ${toolName}\n${fullResponse}`;
-            this.session.addAssistantMessage(messageWithContext);
-            this.callbacks.onStreamEnd(fullResponse);
-        } catch (error) {
-            log.error('LLM summary error:', error);
-            // Fallback to canned summary on error
-            const fallbackSummary = success 
-                ? tool.summarize(result, userMessage)
-                : 'I encountered an error while trying to help.';
-            
-            // Add tool context prefix
-            const toolName = this.getToolName(tool);
-            const messageWithContext = `• ${toolName}\n${fallbackSummary}`;
-            this.session.addAssistantMessage(messageWithContext);
-            this.callbacks.onStreamEnd(fallbackSummary);
-        }
-    }
+			// Add tool context prefix to help LLM recognize completed actions
+			const toolName = this.getToolName( tool );
+			const messageWithContext = `• ${ toolName }\n${ fullResponse }`;
+			this.session.addAssistantMessage( messageWithContext );
+			this.callbacks.onStreamEnd( fullResponse );
+		} catch ( error ) {
+			log.error( 'LLM summary error:', error );
+			// Fallback to canned summary on error
+			const fallbackSummary = success
+				? tool.summarize( result, userMessage )
+				: 'I encountered an error while trying to help.';
 
-    /**
-     * Detect if LLM output contains hallucinated tool results
-     * 
-     * @param {string} response - LLM response text
-     * @return {boolean} True if hallucination detected
-     */
-    detectHallucinatedToolResult(response) {
-        // Check for common hallucination patterns
-        const hallucinationPatterns = [
-            /\[Tool Result from [^\]]+\]/i,           // [Tool Result from ...]
-            /\{[\s\n]*"(success|data|result)"/i,      // JSON objects at start
-            /Analyzing|Checking|Processing\.\.\./i,   // Tool-like initial messages
-        ];
+			// Add tool context prefix
+			const toolName = this.getToolName( tool );
+			const messageWithContext = `• ${ toolName }\n${ fallbackSummary }`;
+			this.session.addAssistantMessage( messageWithContext );
+			this.callbacks.onStreamEnd( fallbackSummary );
+		}
+	}
 
-        return hallucinationPatterns.some(pattern => pattern.test(response));
-    }
+	/**
+	 * Detect if LLM output contains hallucinated tool results
+	 *
+	 * @param {string} response - LLM response text
+	 * @return {boolean} True if hallucination detected
+	 */
+	detectHallucinatedToolResult( response ) {
+		// Check for common hallucination patterns
+		const hallucinationPatterns = [
+			/\[Tool Result from [^\]]+\]/i, // [Tool Result from ...]
+			/\{[\s\n]*"(success|data|result)"/i, // JSON objects at start
+			/Analyzing|Checking|Processing\.\.\./i, // Tool-like initial messages
+		];
 
-    /**
-     * Process message with pure LLM (no tool)
-     * 
-     * @param {string} userMessage - User's message
-     * @return {Promise<Object>}
-     */
-    async processWithLLM(userMessage) {
-        if (!this.isLLMReady()) {
-            this.session.addAssistantMessage(
-                'The AI model is not loaded yet. Please load the model first.'
-            );
-            return { success: false, error: 'Model not loaded' };
-        }
+		return hallucinationPatterns.some( ( pattern ) =>
+			pattern.test( response )
+		);
+	}
 
-        const engine = modelLoader.getEngine();
-        if (!engine) {
-            throw new Error('LLM engine not available');
-        }
+	/**
+	 * Process message with pure LLM (no tool)
+	 *
+	 * @return {Promise<Object>} Result with success status and LLM response text.
+	 */
+	async processWithLLM() {
+		if ( ! this.isLLMReady() ) {
+			this.session.addAssistantMessage(
+				'The AI model is not loaded yet. Please load the model first.'
+			);
+			return { success: false, error: 'Model not loaded' };
+		}
 
-        // Build messages for LLM
-        const messages = [
-            { role: 'system', content: this.getSystemPrompt() },
-            ...this.session.getConversationHistory(),
-        ];
+		const engine = modelLoader.getEngine();
+		if ( ! engine ) {
+			throw new Error( 'LLM engine not available' );
+		}
 
-        // Stream from LLM
-        this.callbacks.onStreamStart();
-        let fullResponse = '';
+		// Build messages for LLM
+		const messages = [
+			{ role: 'system', content: this.getSystemPrompt() },
+			...this.session.getConversationHistory(),
+		];
 
-        try {
-            const stream = await engine.chat.completions.create({
-                messages,
-                temperature: this.llmOptions.temperature,
-                max_tokens: this.llmOptions.maxTokens,
-                stream: true,
-                stream_options: { include_usage: true },
-                stop: ['User:', 'USER:', '\n\nUser'],
-            });
+		// Stream from LLM
+		this.callbacks.onStreamStart();
+		let fullResponse = '';
 
-            for await (const chunk of stream) {
-                if (this.currentAbortController?.signal.aborted) {
-                    break;
-                }
+		try {
+			const stream = await engine.chat.completions.create( {
+				messages,
+				temperature: this.llmOptions.temperature,
+				max_tokens: this.llmOptions.maxTokens,
+				stream: true,
+				stream_options: { include_usage: true },
+				stop: [ 'User:', 'USER:', '\n\nUser' ],
+			} );
 
-                const delta = chunk.choices[0]?.delta?.content || '';
-                fullResponse += delta;
-                this.callbacks.onStreamChunk(delta, fullResponse);
+			for await ( const chunk of stream ) {
+				if ( this.currentAbortController?.signal.aborted ) {
+					break;
+				}
 
-                // Capture usage stats from the final chunk
-                if (chunk.usage) {
-                    console.log('[ChatOrchestrator] Got usage stats:', chunk.usage);
-                    modelLoader.updateUsageStats(chunk.usage);
-                }
-            }
+				const delta = chunk.choices[ 0 ]?.delta?.content || '';
+				fullResponse += delta;
+				this.callbacks.onStreamChunk( delta, fullResponse );
 
-            // Detect and filter hallucinated tool results
-            const hallucinationDetected = this.detectHallucinatedToolResult(fullResponse);
-            if (hallucinationDetected) {
-                log.warn('Detected hallucinated tool result, replacing with helpful message');
-                fullResponse = "I don't have an ability to do that. I can help you with:\n\n" + 
-                    toolRegistry.getAll().map(t => `- ${t.label || t.id}`).join('\n');
-            }
+				// Capture usage stats from the final chunk
+				if ( chunk.usage ) {
+					console.log(
+						'[ChatOrchestrator] Got usage stats:',
+						chunk.usage
+					);
+					modelLoader.updateUsageStats( chunk.usage );
+				}
+			}
 
-            this.session.addAssistantMessage(fullResponse);
-            this.callbacks.onStreamEnd(fullResponse);
+			// Detect and filter hallucinated tool results
+			const hallucinationDetected =
+				this.detectHallucinatedToolResult( fullResponse );
+			if ( hallucinationDetected ) {
+				log.warn(
+					'Detected hallucinated tool result, replacing with helpful message'
+				);
+				fullResponse =
+					"I don't have an ability to do that. I can help you with:\n\n" +
+					toolRegistry
+						.getAll()
+						.map( ( t ) => `- ${ t.label || t.id }` )
+						.join( '\n' );
+			}
 
-            return { success: true, response: fullResponse };
-        } catch (error) {
-            log.error('LLM error:', error);
-            throw error;
-        }
-    }
+			this.session.addAssistantMessage( fullResponse );
+			this.callbacks.onStreamEnd( fullResponse );
 
+			return { success: true, response: fullResponse };
+		} catch ( error ) {
+			log.error( 'LLM error:', error );
+			throw error;
+		}
+	}
 
-    /**
-     * Process message with a registered workflow
-     * 
-     * @param {string} userMessage - User's message
-     * @param {Object} workflow - Workflow definition from registry
-     * @return {Promise<Object>}
-     */
-    async processWithWorkflow(userMessage, workflow) {
-        log.info(`Executing workflow: ${workflow.id}`);
+	/**
+	 * Process message with a registered workflow
+	 *
+	 * @param {string} userMessage - User's message
+	 * @param {Object} workflow    - Workflow definition from registry
+	 * @return {Promise<Object>} Result with success status, workflow ID, and execution details.
+	 */
+	async processWithWorkflow( userMessage, workflow ) {
+		log.info( `Executing workflow: ${ workflow.id }` );
 
-        // Set up workflow callbacks
-        this.workflowOrchestrator.setCallbacks({
-            onWorkflowStart: (wf, state) => {
-                this.callbacks.onWorkflowStart(wf, state);
-            },
-            onStepStart: (step, index) => {
-                // Don't trigger single-tool UI during workflows - we have workflow progress UI instead
-            },
-            onStepComplete: (stepResult) => {
-                this.callbacks.onWorkflowStepComplete(stepResult);
-                this.session.addToolResult(stepResult.abilityId, stepResult.result, stepResult.success);
-            },
-            onStepFailed: (stepResult, error) => {
-                // No need to call onToolEnd - workflow UI handles this
-            },
-            onRollbackStart: (stack) => {
-                console.log('[ChatOrchestrator] Rollback started');
-            },
-            onRollbackComplete: (results) => {
-                console.log('[ChatOrchestrator] Rollback completed:', results);
-            },
-            onWorkflowComplete: (result) => {
-                this.callbacks.onWorkflowComplete(result);
-            },
-            onWorkflowFailed: (result) => {
-                this.callbacks.onWorkflowFailed(result);
-            },
-            onProgress: (progress) => {
-                this.callbacks.onWorkflowProgress(progress);
-            },
-            onConfirmationRequired: async (item, details) => {
-                return this.requestWorkflowConfirmation(item, details);
-            },
-        });
+		// Set up workflow callbacks
+		this.workflowOrchestrator.setCallbacks( {
+			onWorkflowStart: ( wf, state ) => {
+				this.callbacks.onWorkflowStart( wf, state );
+			},
+			onStepStart: () => {
+				// Don't trigger single-tool UI during workflows - we have workflow progress UI instead
+			},
+			onStepComplete: ( stepResult ) => {
+				this.callbacks.onWorkflowStepComplete( stepResult );
+				this.session.addToolResult(
+					stepResult.abilityId,
+					stepResult.result,
+					stepResult.success
+				);
+			},
+			onStepFailed: () => {
+				// No need to call onToolEnd - workflow UI handles this
+			},
+			onRollbackStart: () => {
+				console.log( '[ChatOrchestrator] Rollback started' );
+			},
+			onRollbackComplete: ( results ) => {
+				console.log(
+					'[ChatOrchestrator] Rollback completed:',
+					results
+				);
+			},
+			onWorkflowComplete: ( result ) => {
+				this.callbacks.onWorkflowComplete( result );
+			},
+			onWorkflowFailed: ( result ) => {
+				this.callbacks.onWorkflowFailed( result );
+			},
+			onProgress: ( progress ) => {
+				this.callbacks.onWorkflowProgress( progress );
+			},
+			onConfirmationRequired: async ( item, details ) => {
+				return this.requestWorkflowConfirmation( item, details );
+			},
+		} );
 
-        // Add initial message (no fake typing - just show it)
-        const initialMessage = `I'll help you with "${workflow.label}". This involves ${workflow.steps.length} steps.`;
-        this.session.addAssistantMessage(initialMessage);
+		// Add initial message (no fake typing - just show it)
+		const initialMessage = `I'll help you with "${ workflow.label }". This involves ${ workflow.steps.length } steps.`;
+		this.session.addAssistantMessage( initialMessage );
 
-        // Execute the workflow
-        const result = await this.workflowOrchestrator.execute(workflow, { userMessage });
+		// Execute the workflow
+		const result = await this.workflowOrchestrator.execute( workflow, {
+			userMessage,
+		} );
 
-        // Generate summary
-        await this.generateWorkflowSummary(userMessage, workflow, result);
+		// Generate summary
+		await this.generateWorkflowSummary( userMessage, workflow, result );
 
-        return {
-            success: result.success,
-            workflowId: workflow.id,
-            result,
-        };
-    }
+		return {
+			success: result.success,
+			workflowId: workflow.id,
+			result,
+		};
+	}
 
+	/**
+	 * Generate a summary for workflow results
+	 *
+	 * Uses the workflow's custom summarize function which extracts
+	 * specific data from results. Falls back to default summary.
+	 *
+	 * @param {string} userMessage - Original user message
+	 * @param {Object} workflow    - Workflow that was executed
+	 * @param {Object} result      - Workflow result
+	 */
+	async generateWorkflowSummary( userMessage, workflow, result ) {
+		// Use the pre-computed summary from the workflow's summarize function
+		// This contains the specific, data-driven summary we want to show
+		const summary = result.success
+			? result.summary
+			: `Workflow failed: ${ result.error?.message || 'Unknown error' }${
+					result.rolledBack ? ' (changes rolled back)' : ''
+			  }`;
 
-    /**
-     * Generate a summary for workflow results
-     * 
-     * Uses the workflow's custom summarize function which extracts
-     * specific data from results. Falls back to default summary.
-     * 
-     * @param {string} userMessage - Original user message
-     * @param {Object} workflow - Workflow that was executed
-     * @param {Object} result - Workflow result
-     */
-    async generateWorkflowSummary(userMessage, workflow, result) {
-        // Use the pre-computed summary from the workflow's summarize function
-        // This contains the specific, data-driven summary we want to show
-        const summary = result.success 
-            ? result.summary 
-            : `Workflow failed: ${result.error?.message || 'Unknown error'}${result.rolledBack ? ' (changes rolled back)' : ''}`;
-        
-        // Stream the summary with typewriter effect
-        this.callbacks.onStreamStart();
-        await this.streamSimulator.stream(summary, {
-            ...this.streamOptions,
-            charDelay: 8, // Slightly faster for summaries
-            onChunk: (char, text) => this.callbacks.onStreamChunk(char, text),
-        });
-        this.session.addAssistantMessage(summary);
-        this.callbacks.onStreamEnd(summary);
-    }
+		// Stream the summary with typewriter effect
+		this.callbacks.onStreamStart();
+		await this.streamSimulator.stream( summary, {
+			...this.streamOptions,
+			charDelay: 8, // Slightly faster for summaries
+			onChunk: ( char, text ) =>
+				this.callbacks.onStreamChunk( char, text ),
+		} );
+		this.session.addAssistantMessage( summary );
+		this.callbacks.onStreamEnd( summary );
+	}
 
-    /**
-     * Request confirmation for workflow execution
-     * 
-     * @param {Object} item - Workflow or step requiring confirmation
-     * @param {Object} details - Confirmation details
-     * @return {Promise<boolean>}
-     */
-    async requestWorkflowConfirmation(item, details) {
-        // Use the same confirmation handler as single tools
-        // but with enhanced details for workflows
-        console.log('[ChatOrchestrator] Workflow confirmation requested:', details);
-        return this.requestConfirmation({
-            ...item,
-            confirmationMessage: details.message || `Proceed with ${details.totalSteps || 1} operations?`,
-            isWorkflow: true,
-            workflowDetails: details,
-        });
-    }
+	/**
+	 * Request confirmation for workflow execution
+	 *
+	 * @param {Object} item    - Workflow or step requiring confirmation
+	 * @param {Object} details - Confirmation details
+	 * @return {Promise<boolean>} True if user confirmed, false if cancelled.
+	 */
+	async requestWorkflowConfirmation( item, details ) {
+		// Use the same confirmation handler as single tools
+		// but with enhanced details for workflows
+		console.log(
+			'[ChatOrchestrator] Workflow confirmation requested:',
+			details
+		);
+		return this.requestConfirmation( {
+			...item,
+			confirmationMessage:
+				details.message ||
+				`Proceed with ${ details.totalSteps || 1 } operations?`,
+			isWorkflow: true,
+			workflowDetails: details,
+		} );
+	}
 
-    /**
-     * Request confirmation for destructive actions
-     * 
-     * @param {Object} tool - Tool requiring confirmation
-     * @return {Promise<boolean>}
-     */
-    async requestConfirmation(tool) {
-        // This should be implemented by the UI layer
-        // Default implementation returns true (auto-confirm)
-        console.warn('[ChatOrchestrator] No confirmation handler set, auto-confirming');
-        return true;
-    }
+	/**
+	 * Request confirmation for destructive actions
+	 *
+	 * @return {Promise<boolean>} True if confirmed, false if rejected.
+	 */
+	async requestConfirmation() {
+		// This should be implemented by the UI layer
+		// Default implementation returns true (auto-confirm)
+		console.warn(
+			'[ChatOrchestrator] No confirmation handler set, auto-confirming'
+		);
+		return true;
+	}
 
-    /**
-     * Set custom confirmation handler
-     * 
-     * @param {Function} handler - Async function that returns boolean
-     */
-    setConfirmationHandler(handler) {
-        this.requestConfirmation = handler;
-    }
+	/**
+	 * Set custom confirmation handler
+	 *
+	 * @param {Function} handler - Async function that returns boolean
+	 */
+	setConfirmationHandler( handler ) {
+		this.requestConfirmation = handler;
+	}
 
-    /**
-     * Abort current processing
-     */
-    abort() {
-        if (this.currentAbortController) {
-            this.currentAbortController.abort();
-        }
-        // Also abort any running workflow
-        if (this.workflowOrchestrator.isRunning()) {
-            this.workflowOrchestrator.abort();
-        }
-        this.streamSimulator.abort();
-        this.isProcessing = false;
-        this.callbacks.onStateChange({ isProcessing: false });
-    }
+	/**
+	 * Abort current processing
+	 */
+	abort() {
+		if ( this.currentAbortController ) {
+			this.currentAbortController.abort();
+		}
+		// Also abort any running workflow
+		if ( this.workflowOrchestrator.isRunning() ) {
+			this.workflowOrchestrator.abort();
+		}
+		this.streamSimulator.abort();
+		this.isProcessing = false;
+		this.callbacks.onStateChange( { isProcessing: false } );
+	}
 
-    /**
-     * Clear the chat session
-     */
-    clearSession() {
-        if (this.session) {
-            this.session.clear();
-        }
-    }
+	/**
+	 * Clear the chat session
+	 */
+	clearSession() {
+		if ( this.session ) {
+			this.session.clear();
+		}
+	}
 
-    /**
-     * Save the current session
-     * 
-     * @return {boolean}
-     */
-    saveSession() {
-        return this.session?.save() || false;
-    }
+	/**
+	 * Save the current session
+	 *
+	 * @return {boolean} True if session was saved successfully.
+	 */
+	saveSession() {
+		return this.session?.save() || false;
+	}
 
-    /**
-     * Load a saved session
-     * 
-     * @return {boolean}
-     */
-    loadSession() {
-        return this.session?.load() || false;
-    }
+	/**
+	 * Load a saved session
+	 *
+	 * @return {boolean} True if session was loaded successfully.
+	 */
+	loadSession() {
+		return this.session?.load() || false;
+	}
 
-    /**
-     * Get current processing state
-     * 
-     * @return {boolean}
-     */
-    getIsProcessing() {
-        return this.isProcessing;
-    }
+	/**
+	 * Get current processing state
+	 *
+	 * @return {boolean} True if currently processing a message.
+	 */
+	getIsProcessing() {
+		return this.isProcessing;
+	}
 
-    /**
-     * Get the current session
-     * 
-     * @return {ChatSession|null}
-     */
-    getSession() {
-        return this.session;
-    }
+	/**
+	 * Get the current session
+	 *
+	 * @return {ChatSession|null} The current chat session or null if not initialized.
+	 */
+	getSession() {
+		return this.session;
+	}
 }
 
 // Create singleton instance

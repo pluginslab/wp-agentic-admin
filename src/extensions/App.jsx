@@ -12,205 +12,218 @@ import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
 
 const App = () => {
-    const [error, setError] = useState(null);
-    const [modelReady, setModelReady] = useState(false);
-    const [webGPUError, setWebGPUError] = useState(null);
-    const [isExecuting, setIsExecuting] = useState(false);
-    // Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
-    const [initPhase, setInitPhase] = useState('checking');
-    const [initMessage, setInitMessage] = useState('Checking WebGPU support...');
-    const [initProgress, setInitProgress] = useState(5);
+	const [ modelReady, setModelReady ] = useState( false );
+	const [ webGPUError, setWebGPUError ] = useState( null );
+	const [ isExecuting, setIsExecuting ] = useState( false );
+	// Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
+	const [ initPhase, setInitPhase ] = useState( 'checking' );
+	const [ initMessage, setInitMessage ] = useState(
+		'Checking WebGPU support...'
+	);
+	const [ initProgress, setInitProgress ] = useState( 5 );
 
-    const settings = window.wpAgenticAdmin || {};
-    const { i18n = {}, hasPrettyPermalinks = true, permalinksUrl = '' } = settings;
+	const settings = window.wpAgenticAdmin || {};
+	const {
+		i18n = {},
+		hasPrettyPermalinks = true,
+		permalinksUrl = '',
+	} = settings;
 
-    /**
-     * Background WebGPU check and auto-load cached model on mount
-     * Shows progress bar during checks
-     */
-    useEffect(() => {
-        const initializeApp = async () => {
-            try {
-                // Check WebGPU support first
-                setInitMessage('Checking WebGPU support...');
-                setInitProgress(10);
-                const result = await modelLoader.checkWebGPUSupport();
-                if (!result.supported) {
-                    setWebGPUError(result.reason);
-                    setInitPhase(null);
-                    return;
-                }
+	/**
+	 * Background WebGPU check and auto-load cached model on mount
+	 * Shows progress bar during checks
+	 */
+	useEffect( () => {
+		const initializeApp = async () => {
+			try {
+				// Check WebGPU support first
+				setInitMessage( 'Checking WebGPU support...' );
+				setInitProgress( 10 );
+				const result = await modelLoader.checkWebGPUSupport();
+				if ( ! result.supported ) {
+					setWebGPUError( result.reason );
+					setInitPhase( null );
+					return;
+				}
 
-                // Check if model is already loaded in memory
-                setInitMessage('Checking model status...');
-                setInitProgress(20);
-                if (modelLoader.isModelReady()) {
-                    setModelReady(true);
-                    setInitPhase(null);
-                    return;
-                }
+				// Check if model is already loaded in memory
+				setInitMessage( 'Checking model status...' );
+				setInitProgress( 20 );
+				if ( modelLoader.isModelReady() ) {
+					setModelReady( true );
+					setInitPhase( null );
+					return;
+				}
 
-                // Check if model is cached
-                setInitMessage('Checking cache...');
-                setInitProgress(30);
-                const isCached = await modelLoader.isModelCached();
-                
-                if (isCached) {
-                    console.log('[App] Model is cached, auto-loading...');
-                    setInitPhase('loading');
-                    setInitMessage('Loading from cache...');
-                    setInitProgress(35);
-                    try {
-                        await modelLoader.load();
-                        setModelReady(true);
-                    } catch (loadErr) {
-                        console.error('[App] Auto-load failed:', loadErr);
-                        // Don't show error - user can manually load
-                    }
-                }
-                setInitPhase(null);
-            } catch (err) {
-                console.error('Initialization failed:', err);
-                setInitPhase(null);
-            }
-        };
+				// Check if model is cached
+				setInitMessage( 'Checking cache...' );
+				setInitProgress( 30 );
+				const isCached = await modelLoader.isModelCached();
 
-        initializeApp();
-    }, []);
+				if ( isCached ) {
+					console.log( '[App] Model is cached, auto-loading...' );
+					setInitPhase( 'loading' );
+					setInitMessage( 'Loading from cache...' );
+					setInitProgress( 35 );
+					try {
+						await modelLoader.load();
+						setModelReady( true );
+					} catch ( loadErr ) {
+						console.error( '[App] Auto-load failed:', loadErr );
+						// Don't show error - user can manually load
+					}
+				}
+				setInitPhase( null );
+			} catch ( err ) {
+				console.error( 'Initialization failed:', err );
+				setInitPhase( null );
+			}
+		};
 
-    /**
-     * Warn user before leaving page if model is loaded
-     */
-    useEffect(() => {
-        const handleBeforeUnload = (e) => {
-            if (modelReady) {
-                const message = 'The AI model is loaded. Leaving this page will unload it and require re-initialization on return.';
-                e.preventDefault();
-                e.returnValue = message;
-                return message;
-            }
-        };
+		initializeApp();
+	}, [] );
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [modelReady]);
+	/**
+	 * Warn user before leaving page if model is loaded
+	 */
+	useEffect( () => {
+		const handleBeforeUnload = ( e ) => {
+			if ( modelReady ) {
+				const message =
+					'The AI model is loaded. Leaving this page will unload it and require re-initialization on return.';
+				e.preventDefault();
+				e.returnValue = message;
+				return message;
+			}
+		};
 
-    /**
-     * Handle model ready callback
-     */
-    const handleModelReady = useCallback(() => {
-        setModelReady(true);
-        setWebGPUError(null);
-    }, []);
+		window.addEventListener( 'beforeunload', handleBeforeUnload );
+		return () =>
+			window.removeEventListener( 'beforeunload', handleBeforeUnload );
+	}, [ modelReady ] );
 
-    /**
-     * Handle model error callback
-     */
-    const handleModelError = useCallback((errorMessage) => {
-        setModelReady(false);
-        // Only set WebGPU error if it's a WebGPU-specific error
-        if (errorMessage.includes('WebGPU') || errorMessage.includes('GPU')) {
-            setWebGPUError(errorMessage);
-        }
-    }, []);
+	/**
+	 * Handle model ready callback
+	 */
+	const handleModelReady = useCallback( () => {
+		setModelReady( true );
+		setWebGPUError( null );
+	}, [] );
 
-    // If permalinks are not configured, show error
-    if (!hasPrettyPermalinks) {
-        return (
-            <div className="wp-agentic-admin-app">
-                <div className="wp-agentic-admin-permalink-notice">
-                    <Notice status="error" isDismissible={false}>
-                        <p>
-                            <strong>{i18n.permalinksRequired || 'Pretty permalinks are required for Agentic Admin to work.'}</strong>
-                        </p>
-                        <p>
-                            The REST API requires a permalink structure other than "Plain" to function properly.
-                            Please go to <strong>Settings &rarr; Permalinks</strong> and select any option except "Plain".
-                        </p>
-                        <p>
-                            <a href={permalinksUrl} className="button button-primary">
-                                {i18n.updatePermalinks || 'Update Permalinks'}
-                            </a>
-                        </p>
-                    </Notice>
-                </div>
-            </div>
-        );
-    }
+	/**
+	 * Handle model error callback
+	 */
+	const handleModelError = useCallback( ( errorMessage ) => {
+		setModelReady( false );
+		// Only set WebGPU error if it's a WebGPU-specific error
+		if (
+			errorMessage.includes( 'WebGPU' ) ||
+			errorMessage.includes( 'GPU' )
+		) {
+			setWebGPUError( errorMessage );
+		}
+	}, [] );
 
-    /**
-     * Tab panel configuration
-     */
-    const tabs = [
-        {
-            name: 'chat',
-            title: 'Chat',
-            className: 'wp-agentic-admin-tab',
-        },
-        {
-            name: 'abilities',
-            title: 'Abilities',
-            className: 'wp-agentic-admin-tab',
-        },
-    ];
+	// If permalinks are not configured, show error
+	if ( ! hasPrettyPermalinks ) {
+		return (
+			<div className="wp-agentic-admin-app">
+				<div className="wp-agentic-admin-permalink-notice">
+					<Notice status="error" isDismissible={ false }>
+						<p>
+							<strong>
+								{ i18n.permalinksRequired ||
+									'Pretty permalinks are required for Agentic Admin to work.' }
+							</strong>
+						</p>
+						<p>
+							The REST API requires a permalink structure other
+							than &quot;Plain&quot; to function properly. Please
+							go to <strong>Settings &rarr; Permalinks</strong>{ ' ' }
+							and select any option except &quot;Plain&quot;.
+						</p>
+						<p>
+							<a
+								href={ permalinksUrl }
+								className="button button-primary"
+							>
+								{ i18n.updatePermalinks || 'Update Permalinks' }
+							</a>
+						</p>
+					</Notice>
+				</div>
+			</div>
+		);
+	}
 
-    /**
-     * Render tab content
-     */
-    const renderTabContent = (tab) => {
-        switch (tab.name) {
-            case 'chat':
-                // If WebGPU has a fatal error, show fallback
-                if (webGPUError && !modelReady) {
-                    return <WebGPUFallback reason={webGPUError} />;
-                }
-                return (
-                    <ChatContainer
-                        modelReady={modelReady}
-                        isLoading={isExecuting}
-                        setIsLoading={setIsExecuting}
-                    />
-                );
-            case 'abilities':
-                return <AbilityBrowser />;
-            default:
-                return null;
-        }
-    };
+	/**
+	 * Tab panel configuration
+	 */
+	const tabs = [
+		{
+			name: 'chat',
+			title: 'Chat',
+			className: 'wp-agentic-admin-tab',
+		},
+		{
+			name: 'abilities',
+			title: 'Abilities',
+			className: 'wp-agentic-admin-tab',
+		},
+	];
 
-    if (error) {
-        return (
-            <div className="wp-agentic-admin-error notice notice-error">
-                <p>{error}</p>
-            </div>
-        );
-    }
+	/**
+	 * Render tab content
+	 *
+	 * @param {Object} tab - The tab object to render
+	 * @return {JSX.Element} The rendered tab content
+	 */
+	const renderTabContent = ( tab ) => {
+		switch ( tab.name ) {
+			case 'chat':
+				// If WebGPU has a fatal error, show fallback
+				if ( webGPUError && ! modelReady ) {
+					return <WebGPUFallback reason={ webGPUError } />;
+				}
+				return (
+					<ChatContainer
+						modelReady={ modelReady }
+						isLoading={ isExecuting }
+						setIsLoading={ setIsExecuting }
+					/>
+				);
+			case 'abilities':
+				return <AbilityBrowser />;
+			default:
+				return null;
+		}
+	};
 
-    return (
-        <div className="wp-agentic-admin-app">
-            <div className="wp-agentic-admin-main">
-                <TabPanel
-                    className="wp-agentic-admin-tabs"
-                    tabs={tabs}
-                    initialTabName="chat"
-                >
-                    {(tab) => (
-                        <div className="wp-agentic-admin-tab-content">
-                            {renderTabContent(tab)}
-                        </div>
-                    )}
-                </TabPanel>
-            </div>
+	return (
+		<div className="wp-agentic-admin-app">
+			<div className="wp-agentic-admin-main">
+				<TabPanel
+					className="wp-agentic-admin-tabs"
+					tabs={ tabs }
+					initialTabName="chat"
+				>
+					{ ( tab ) => (
+						<div className="wp-agentic-admin-tab-content">
+							{ renderTabContent( tab ) }
+						</div>
+					) }
+				</TabPanel>
+			</div>
 
-            <ModelStatus
-                onModelReady={handleModelReady}
-                onModelError={handleModelError}
-                initPhase={initPhase}
-                initMessage={initMessage}
-                initProgress={initProgress}
-            />
-        </div>
-    );
+			<ModelStatus
+				onModelReady={ handleModelReady }
+				onModelError={ handleModelError }
+				initPhase={ initPhase }
+				initMessage={ initMessage }
+				initProgress={ initProgress }
+			/>
+		</div>
+	);
 };
 
 export default App;

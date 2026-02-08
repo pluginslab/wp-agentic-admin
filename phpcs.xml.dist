@@ -5,6 +5,9 @@
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/build-extensions/*</exclude-pattern>
+	<exclude-pattern>*.js</exclude-pattern>
+	<exclude-pattern>*.jsx</exclude-pattern>
+	<exclude-pattern>*.scss</exclude-pattern>
 
 	<rule ref="WordPress">
 		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
@@ -23,6 +26,44 @@
 				<element value="WPAgenticAdmin"/>
 			</property>
 		</properties>
+		<!-- Exclude public API functions - intentionally unprefixed for clean developer experience -->
+		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
 	</rule>
+
+	<!-- Allow unprefixed public API functions in abilities API -->
+	<!-- These are intentionally unprefixed for third-party developer experience -->
+	<!-- Example: register_agentic_ability() is cleaner than wp_agentic_admin_register_agentic_ability() -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound">
+		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
+		<!-- Allow WordPress core variables in uninstall.php (e.g., $sites, $site from get_sites()) -->
+		<exclude-pattern>uninstall\.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow translation functions without escaping in exception messages -->
+	<!-- Exception messages are not displayed as HTML, they go to error logs -->
+	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow unused $input parameter in ability execute callbacks -->
+	<!-- Required by WordPress Abilities API signature, even when not used -->
+	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter">
+		<exclude-pattern>includes/abilities/*</exclude-pattern>
+	</rule>
+
+	<!-- Main plugin file naming convention - not a class file -->
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<exclude-pattern>wp-agentic-admin\.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow direct database calls in database optimization utility -->
+	<!-- This is intentional - we're optimizing tables directly -->
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<exclude-pattern>includes/abilities/db-optimize\.php</exclude-pattern>
+	</rule>
+
 	<config name="testVersion" value="8.2-"/>
 </ruleset>

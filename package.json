@@ -1,6 +1,6 @@
 {
   "name": "wp-agentic-admin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A privacy-first AI Site Reliability Engineer running entirely in the browser via WebLLM and the WordPress Abilities API.",
   "scripts": {
     "build": "npm run build:extensions",
@@ -11,8 +11,13 @@
     "test": "wp-scripts test-unit-js --testMatch='**/__tests__/**/*.test.js'",
     "test:watch": "npm run test -- --watch",
     "lint:js": "wp-scripts lint-js src/",
-    "lint:css": "wp-scripts lint-style src/",
-    "lint": "npm run lint:js && npm run lint:css"
+    "lint:js:fix": "wp-scripts lint-js src/ --fix",
+    "lint:css": "wp-scripts lint-style 'src/**/*.scss'",
+    "lint:css:fix": "wp-scripts lint-style 'src/**/*.scss' --fix",
+    "lint:php": "composer lint",
+    "lint:php:fix": "composer lint:fix",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:php",
+    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix && npm run lint:php:fix"
   },
   "devDependencies": {
     "@wordpress/scripts": "^27.0.0",

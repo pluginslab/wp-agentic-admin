@@ -1,0 +1,30 @@
+{
+  "name": "pluginslab/wp-agentic-admin",
+  "description": "A privacy-first AI Site Reliability Engineer running entirely in the browser via WebLLM and the WordPress Abilities API.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Pluginslab",
+      "homepage": "https://github.com/pluginslab"
+    }
+  ],
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "wp-coding-standards/wpcs": "^3.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": "phpcs",
+    "lint:fix": "phpcbf",
+    "lint:errors": "phpcs --error-severity=1 --warning-severity=8"
+  }
+}

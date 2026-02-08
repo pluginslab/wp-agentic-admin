@@ -7,7 +7,7 @@
  * 2. Page mode (fallback) - Model lives in the page, unloads on navigation
  *
  * @since 0.1.0
- * @updated 1.2.0 - Added Service Worker support for model persistence
+ * @since 1.2.0- Added Service Worker support for model persistence
  */
 
 import * as webllm from '@mlc-ai/web-llm';
@@ -59,7 +59,7 @@ const SW_CONFIG = {
  * ModelLoader class for managing WebLLM model lifecycle
  *
  * @since 0.1.0
- * @updated 1.2.0 - Added Service Worker support
+ * @since 1.2.0- Added Service Worker support
  */
 class ModelLoader {
 	constructor() {
@@ -73,10 +73,10 @@ class ModelLoader {
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
 
-	// Service Worker state (v1.2)
-	// SW mode enabled for Phase 1 testing (v1.3.0)
-	// Can be disabled via setUseServiceWorker(false) if issues found
-	this.useServiceWorker = true; // Enabled for Phase 1 testing
+		// Service Worker state (v1.2)
+		// SW mode enabled for Phase 1 testing (v1.3.0)
+		// Can be disabled via setUseServiceWorker(false) if issues found
+		this.useServiceWorker = true; // Enabled for Phase 1 testing
 		this.swRegistration = null;
 		this.swSupported = null; // null = not checked, true/false = result
 	}
@@ -94,36 +94,42 @@ class ModelLoader {
 	 */
 	async checkServiceWorkerSupport() {
 		// Return cached result if already checked
-		if (this.swSupported !== null) {
+		if ( this.swSupported !== null ) {
 			return this.swSupported;
 		}
 
 		// Check basic SW support
-		if (!('serviceWorker' in navigator)) {
-			console.log('[ModelLoader] Service Workers not supported');
+		if ( ! ( 'serviceWorker' in navigator ) ) {
+			console.log( '[ModelLoader] Service Workers not supported' );
 			this.swSupported = false;
 			return false;
 		}
 
 		// Safari's Service Workers cannot access WebGPU APIs
 		// Detect Safari: has Safari in UA but not Chrome/Chromium
-		const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-		if (isSafari) {
-			console.log('[ModelLoader] Safari detected - SW mode not supported (WebGPU unavailable in Safari SW)');
+		const isSafari = /^((?!chrome|android).)*safari/i.test(
+			navigator.userAgent
+		);
+		if ( isSafari ) {
+			console.log(
+				'[ModelLoader] Safari detected - SW mode not supported (WebGPU unavailable in Safari SW)'
+			);
 			this.swSupported = false;
 			return false;
 		}
 
 		// Check WebGPU support (required for WebLLM)
 		const gpuCheck = await this.checkWebGPUSupport();
-		if (!gpuCheck.supported) {
-			console.log('[ModelLoader] WebGPU not supported, SW mode unavailable');
+		if ( ! gpuCheck.supported ) {
+			console.log(
+				'[ModelLoader] WebGPU not supported, SW mode unavailable'
+			);
 			this.swSupported = false;
 			return false;
 		}
 
 		this.swSupported = true;
-		console.log('[ModelLoader] Service Worker mode available');
+		console.log( '[ModelLoader] Service Worker mode available' );
 		return true;
 	}
 
@@ -138,10 +144,12 @@ class ModelLoader {
 	 * @return {Promise<ServiceWorkerRegistration|null>} Registration or null if failed
 	 */
 	async registerServiceWorker() {
-		if (!this.swSupported) {
+		if ( ! this.swSupported ) {
 			const supported = await this.checkServiceWorkerSupport();
-			if (!supported) {
-				console.log('[ModelLoader] Service Worker not supported, returning null');
+			if ( ! supported ) {
+				console.log(
+					'[ModelLoader] Service Worker not supported, returning null'
+				);
 				return null;
 			}
 		}
@@ -150,34 +158,67 @@ class ModelLoader {
 			// Get the SW script URL from WordPress
 			const swUrl = this.getServiceWorkerUrl();
 
-			console.log('[ModelLoader] Registering Service Worker:', swUrl);
-			console.log('[ModelLoader] Current location:', window.location.href);
-			console.log('[ModelLoader] SW support checked:', this.swSupported);
+			console.log( '[ModelLoader] Registering Service Worker:', swUrl );
+			console.log(
+				'[ModelLoader] Current location:',
+				window.location.href
+			);
+			console.log(
+				'[ModelLoader] SW support checked:',
+				this.swSupported
+			);
 
-		// Register with /wp-admin/ scope so SW can control admin pages
-		// The PHP backend sets Service-Worker-Allowed header to allow this broader scope
-		this.swRegistration = await navigator.serviceWorker.register(swUrl, {
-			type: 'module',
-			scope: '/wp-admin/',
-		});
+			// Register with /wp-admin/ scope so SW can control admin pages
+			// The PHP backend sets Service-Worker-Allowed header to allow this broader scope
+			this.swRegistration = await navigator.serviceWorker.register(
+				swUrl,
+				{
+					type: 'module',
+					scope: '/wp-admin/',
+				}
+			);
 
-		console.log('[ModelLoader] SW registered, state:', this.swRegistration.installing ? 'installing' : this.swRegistration.waiting ? 'waiting' : this.swRegistration.active ? 'active' : 'unknown');
+			console.log(
+				'[ModelLoader] SW registered, state:',
+				// eslint-disable-next-line no-nested-ternary -- intentional status message selection
+				this.swRegistration.installing
+					? 'installing'
+					: this.swRegistration.waiting
+					? 'waiting'
+					: // eslint-disable-next-line no-nested-ternary -- intentional status message selection
+					this.swRegistration.active
+					? 'active'
+					: 'unknown'
+			);
 
-		// Don't wait for navigator.serviceWorker.ready - it may hang on first load
-		// The SW uses skipWaiting() and clients.claim() so it activates immediately
-		// WebLLM's CreateServiceWorkerMLCEngine uses postMessage and doesn't need the SW to be "controlling"
-		console.log('[ModelLoader] Service Worker registration complete, proceeding...');
+			// Don't wait for navigator.serviceWorker.ready - it may hang on first load
+			// The SW uses skipWaiting() and clients.claim() so it activates immediately
+			// WebLLM's CreateServiceWorkerMLCEngine uses postMessage and doesn't need the SW to be "controlling"
+			console.log(
+				'[ModelLoader] Service Worker registration complete, proceeding...'
+			);
 
-		console.log('[ModelLoader] Service Worker registered successfully');
-		console.log('[ModelLoader] SW Scope:', this.swRegistration.scope);
-		console.log('[ModelLoader] Page URL:', window.location.href);
-		console.log('[ModelLoader] SW controlling page?:', navigator.serviceWorker.controller ? 'YES' : 'NO');
-		if (navigator.serviceWorker.controller) {
-			console.log('[ModelLoader] Controller URL:', navigator.serviceWorker.controller.scriptURL);
-		}
-		return this.swRegistration;
-		} catch (err) {
-			console.error('[ModelLoader] Service Worker registration failed:', err);
+			console.log(
+				'[ModelLoader] Service Worker registered successfully'
+			);
+			console.log( '[ModelLoader] SW Scope:', this.swRegistration.scope );
+			console.log( '[ModelLoader] Page URL:', window.location.href );
+			console.log(
+				'[ModelLoader] SW controlling page?:',
+				navigator.serviceWorker.controller ? 'YES' : 'NO'
+			);
+			if ( navigator.serviceWorker.controller ) {
+				console.log(
+					'[ModelLoader] Controller URL:',
+					navigator.serviceWorker.controller.scriptURL
+				);
+			}
+			return this.swRegistration;
+		} catch ( err ) {
+			console.error(
+				'[ModelLoader] Service Worker registration failed:',
+				err
+			);
 			this.swSupported = false;
 			return null;
 		}
@@ -185,48 +226,66 @@ class ModelLoader {
 
 	/**
 	 * Wait for Service Worker to become active
-	 * 
+	 *
 	 * @since 0.1.0
 	 * @param {ServiceWorkerRegistration} registration - The SW registration
 	 * @return {Promise<ServiceWorker|null>} The active worker or null
 	 */
-	async waitForActiveWorker(registration) {
-		console.log('[ModelLoader] waitForActiveWorker called');
-		console.log('[ModelLoader] registration.active:', registration.active);
-		console.log('[ModelLoader] registration.installing:', registration.installing);
-		console.log('[ModelLoader] registration.waiting:', registration.waiting);
-		
+	async waitForActiveWorker( registration ) {
+		console.log( '[ModelLoader] waitForActiveWorker called' );
+		console.log(
+			'[ModelLoader] registration.active:',
+			registration.active
+		);
+		console.log(
+			'[ModelLoader] registration.installing:',
+			registration.installing
+		);
+		console.log(
+			'[ModelLoader] registration.waiting:',
+			registration.waiting
+		);
+
 		// If already active, return immediately
-		if (registration.active) {
-			console.log('[ModelLoader] SW is already active');
+		if ( registration.active ) {
+			console.log( '[ModelLoader] SW is already active' );
 			return registration.active;
 		}
-		
+
 		// Poll for the SW to become active (with timeout)
-		console.log('[ModelLoader] Polling for SW to become active...');
+		console.log( '[ModelLoader] Polling for SW to become active...' );
 		const startTime = Date.now();
 		const timeout = 5000; // 5 seconds
-		
-		while (Date.now() - startTime < timeout) {
+
+		while ( Date.now() - startTime < timeout ) {
 			// Check if it's active now
-			if (registration.active) {
-				console.log('[ModelLoader] SW is now active!');
+			if ( registration.active ) {
+				console.log( '[ModelLoader] SW is now active!' );
 				return registration.active;
 			}
-			
+
 			// Wait a bit before checking again
-			await new Promise(resolve => setTimeout(resolve, 50));
-			
+			await new Promise( ( resolve ) => setTimeout( resolve, 50 ) );
+
 			// Log current state every 500ms
-			if ((Date.now() - startTime) % 500 < 50) {
-				const state = registration.installing ? 'installing' : 
-				              registration.waiting ? 'waiting' : 
-				              registration.active ? 'active' : 'unknown';
-				console.log('[ModelLoader] Still waiting... current state:', state);
+			if ( ( Date.now() - startTime ) % 500 < 50 ) {
+				// eslint-disable-next-line no-nested-ternary -- intentional status message selection
+				const state = registration.installing
+					? 'installing'
+					: registration.waiting
+					? 'waiting'
+					: // eslint-disable-next-line no-nested-ternary -- intentional status message selection
+					registration.active
+					? 'active'
+					: 'unknown';
+				console.log(
+					'[ModelLoader] Still waiting... current state:',
+					state
+				);
 			}
 		}
-		
-		console.error('[ModelLoader] Timeout waiting for SW to activate');
+
+		console.error( '[ModelLoader] Timeout waiting for SW to activate' );
 		return null;
 	}
 
@@ -245,7 +304,7 @@ class ModelLoader {
 			typeof window.wpAgenticAdmin !== 'undefined' &&
 			window.wpAgenticAdmin.pluginUrl
 		) {
-			return `${window.wpAgenticAdmin.pluginUrl}build-extensions/sw-loader.php`;
+			return `${ window.wpAgenticAdmin.pluginUrl }build-extensions/sw-loader.php`;
 		}
 
 		// Fallback: relative path to PHP loader
@@ -261,14 +320,14 @@ class ModelLoader {
 	 * @param {string|null} modelId - Model ID to check, defaults to current model
 	 * @return {Promise<boolean>} True if model is cached
 	 */
-	async isModelCached(modelId = null) {
+	async isModelCached( modelId = null ) {
 		const id = modelId || this.modelId;
 		try {
-			const isCached = await webllm.hasModelInCache(id);
-			console.log(`[ModelLoader] Model ${id} cached:`, isCached);
+			const isCached = await webllm.hasModelInCache( id );
+			console.log( `[ModelLoader] Model ${ id } cached:`, isCached );
 			return isCached;
-		} catch (err) {
-			console.warn('[ModelLoader] Error checking cache:', err);
+		} catch ( err ) {
+			console.warn( '[ModelLoader] Error checking cache:', err );
 			return false;
 		}
 	}
@@ -279,37 +338,35 @@ class ModelLoader {
 	 * @return {Promise<Object>} Support status and reason if not supported
 	 */
 	async checkWebGPUSupport() {
-		if (!navigator.gpu) {
+		if ( ! navigator.gpu ) {
 			return {
 				supported: false,
-				reason:
-					'WebGPU is not available in this browser. Please use Chrome 113+, Edge 113+, or another WebGPU-enabled browser.',
+				reason: 'WebGPU is not available in this browser. Please use Chrome 113+, Edge 113+, or another WebGPU-enabled browser.',
 			};
 		}
 
 		try {
 			const adapter = await navigator.gpu.requestAdapter();
-			if (!adapter) {
+			if ( ! adapter ) {
 				return {
 					supported: false,
-					reason:
-						'No WebGPU adapter found. Your GPU may not be supported.',
+					reason: 'No WebGPU adapter found. Your GPU may not be supported.',
 				};
 			}
 
 			// Get adapter info for logging - handle both old and new API
 			let info = {};
 			try {
-				if (adapter.info) {
+				if ( adapter.info ) {
 					info = adapter.info;
-				} else if (typeof adapter.requestAdapterInfo === 'function') {
+				} else if ( typeof adapter.requestAdapterInfo === 'function' ) {
 					info = await adapter.requestAdapterInfo();
 				}
-			} catch (infoErr) {
-				console.warn('Could not get adapter info:', infoErr);
+			} catch ( infoErr ) {
+				console.warn( 'Could not get adapter info:', infoErr );
 			}
 
-			console.log('WebGPU Adapter:', info);
+			console.log( 'WebGPU Adapter:', info );
 
 			// Store adapter info for later use
 			this.gpuAdapterInfo = {
@@ -323,10 +380,10 @@ class ModelLoader {
 				supported: true,
 				adapter: info,
 			};
-		} catch (err) {
+		} catch ( err ) {
 			return {
 				supported: false,
-				reason: `WebGPU initialization error: ${err.message}`,
+				reason: `WebGPU initialization error: ${ err.message }`,
 			};
 		}
 	}
@@ -336,7 +393,7 @@ class ModelLoader {
 	 *
 	 * @param {Function} callback - Called with (progress, message)
 	 */
-	onProgress(callback) {
+	onProgress( callback ) {
 		this.progressCallback = callback;
 	}
 
@@ -345,7 +402,7 @@ class ModelLoader {
 	 *
 	 * @param {Function} callback - Called with (status, message)
 	 */
-	onStatus(callback) {
+	onStatus( callback ) {
 		this.statusCallback = callback;
 	}
 
@@ -353,24 +410,24 @@ class ModelLoader {
 	 * Report progress update
 	 *
 	 * @param {number} progress - Progress percentage (0-100)
-	 * @param {string} message - Status message
+	 * @param {string} message  - Status message
 	 */
-	reportProgress(progress, message) {
+	reportProgress( progress, message ) {
 		this.loadProgress = progress;
-		if (this.progressCallback) {
-			this.progressCallback(progress, message);
+		if ( this.progressCallback ) {
+			this.progressCallback( progress, message );
 		}
 	}
 
 	/**
 	 * Report status change
 	 *
-	 * @param {string} status - Status string
+	 * @param {string} status  - Status string
 	 * @param {string} message - Status message
 	 */
-	reportStatus(status, message) {
-		if (this.statusCallback) {
-			this.statusCallback(status, message);
+	reportStatus( status, message ) {
+		if ( this.statusCallback ) {
+			this.statusCallback( status, message );
 		}
 	}
 
@@ -380,17 +437,17 @@ class ModelLoader {
 	 * Attempts to use Service Worker mode first, falls back to page mode if unavailable.
 	 *
 	 * @since 0.1.0
-	 * @updated 1.2.0 - Added Service Worker support
+	 * @since 1.2.0- Added Service Worker support
 	 * @param {string|null} modelId - Optional model ID override
 	 * @return {Promise<boolean>} True if loaded successfully
 	 */
-	async load(modelId = null) {
-		if (this.isLoading) {
-			throw new Error('Model is already loading');
+	async load( modelId = null ) {
+		if ( this.isLoading ) {
+			throw new Error( 'Model is already loading' );
 		}
 
-		if (this.isReady && this.engine) {
-			console.log('Model already loaded');
+		if ( this.isReady && this.engine ) {
+			console.log( 'Model already loaded' );
 			return true;
 		}
 
@@ -399,39 +456,50 @@ class ModelLoader {
 
 		try {
 			// Check WebGPU support first
-			this.reportStatus('checking', 'Checking WebGPU support...');
-			this.reportProgress(0, 'Checking WebGPU support...');
+			this.reportStatus( 'checking', 'Checking WebGPU support...' );
+			this.reportProgress( 0, 'Checking WebGPU support...' );
 
 			const gpuCheck = await this.checkWebGPUSupport();
-			if (!gpuCheck.supported) {
-				throw new Error(gpuCheck.reason);
+			if ( ! gpuCheck.supported ) {
+				throw new Error( gpuCheck.reason );
 			}
 
-			this.reportProgress(5, 'WebGPU supported. Initializing engine...');
+			this.reportProgress(
+				5,
+				'WebGPU supported. Initializing engine...'
+			);
 
 			// Determine which mode to use
-			const useSW = this.useServiceWorker && (await this.checkServiceWorkerSupport());
+			const useSW =
+				this.useServiceWorker &&
+				( await this.checkServiceWorkerSupport() );
 
-			if (useSW) {
+			if ( useSW ) {
 				await this.loadWithServiceWorker();
 			} else {
 				await this.loadWithoutServiceWorker();
 			}
 
-			this.reportProgress(100, 'Model loaded successfully!');
-			this.reportStatus('ready', 'AI model ready');
+			this.reportProgress( 100, 'Model loaded successfully!' );
+			this.reportStatus( 'ready', 'AI model ready' );
 			this.isReady = true;
 			this.isLoading = false;
 
 			const mode = useSW ? 'Service Worker' : 'Page';
-			console.log(`[ModelLoader] WebLLM model loaded (${mode} mode):`, this.modelId);
+			console.log(
+				`[ModelLoader] WebLLM model loaded (${ mode } mode):`,
+				this.modelId
+			);
 			return true;
-		} catch (err) {
+		} catch ( err ) {
 			this.isLoading = false;
 			this.isReady = false;
 			this.engine = null;
-			this.reportStatus('error', `Failed to load model: ${err.message}`);
-			console.error('Failed to load WebLLM model:', err);
+			this.reportStatus(
+				'error',
+				`Failed to load model: ${ err.message }`
+			);
+			console.error( 'Failed to load WebLLM model:', err );
 			throw err;
 		}
 	}
@@ -445,114 +513,175 @@ class ModelLoader {
 	 * @private
 	 */
 	async loadWithServiceWorker() {
-		this.reportStatus('loading', 'Registering Service Worker...');
-		this.reportProgress(8, 'Registering Service Worker...');
+		this.reportStatus( 'loading', 'Registering Service Worker...' );
+		this.reportProgress( 8, 'Registering Service Worker...' );
 
 		// Register SW if not already registered
 		const registration = await this.registerServiceWorker();
-		if (!registration) {
-			console.warn('[ModelLoader] SW registration failed, falling back to page mode');
+		if ( ! registration ) {
+			console.warn(
+				'[ModelLoader] SW registration failed, falling back to page mode'
+			);
 			this.useServiceWorker = false;
 			return this.loadWithoutServiceWorker();
 		}
 
-	// Wait for SW to be active before trying to communicate with it
-	// The SW uses skipWaiting() but we still need to wait for it to become active
-	console.log('[ModelLoader] Waiting for Service Worker to become active...');
-	this.reportStatus('loading', 'Waiting for Service Worker to activate...');
-	this.reportProgress(9, 'Waiting for Service Worker...');
-	
-	// Wait for the SW to be active (with timeout)
-	const activeWorker = await Promise.race([
-		this.waitForActiveWorker(registration),
-		new Promise((_, reject) => setTimeout(() => reject(new Error('SW activation timeout')), 5000))
-	]);
-	
-	if (!activeWorker) {
-		console.warn('[ModelLoader] SW failed to activate, falling back to page mode');
-		this.useServiceWorker = false;
-		return this.loadWithoutServiceWorker();
-	}
-	
-	console.log('[ModelLoader] Service Worker is active, proceeding with engine creation...');
-	
-	// CRITICAL: Wait for SW to be controlling this page
-	// Hard refresh (Shift+Cmd+R) kills navigator.serviceWorker.controller
-	// WebLLM needs this to communicate with the SW
-	if (!navigator.serviceWorker.controller) {
-		console.log('[ModelLoader] SW not controlling page yet, waiting for controllerchange...');
-		this.reportStatus('loading', 'Waiting for Service Worker control...');
-		
-		// Wait for controller to be set (happens after activation + clients.claim())
-		const controllerPromise = new Promise((resolve) => {
-			if (navigator.serviceWorker.controller) {
-				resolve();
-			} else {
-				navigator.serviceWorker.addEventListener('controllerchange', () => {
-					console.log('[ModelLoader] Controller changed, SW now controlling page');
+		// Wait for SW to be active before trying to communicate with it
+		// The SW uses skipWaiting() but we still need to wait for it to become active
+		console.log(
+			'[ModelLoader] Waiting for Service Worker to become active...'
+		);
+		this.reportStatus(
+			'loading',
+			'Waiting for Service Worker to activate...'
+		);
+		this.reportProgress( 9, 'Waiting for Service Worker...' );
+
+		// Wait for the SW to be active (with timeout)
+		const activeWorker = await Promise.race( [
+			this.waitForActiveWorker( registration ),
+			new Promise( ( _, reject ) =>
+				setTimeout(
+					() => reject( new Error( 'SW activation timeout' ) ),
+					5000
+				)
+			),
+		] );
+
+		if ( ! activeWorker ) {
+			console.warn(
+				'[ModelLoader] SW failed to activate, falling back to page mode'
+			);
+			this.useServiceWorker = false;
+			return this.loadWithoutServiceWorker();
+		}
+
+		console.log(
+			'[ModelLoader] Service Worker is active, proceeding with engine creation...'
+		);
+
+		// CRITICAL: Wait for SW to be controlling this page
+		// Hard refresh (Shift+Cmd+R) kills navigator.serviceWorker.controller
+		// WebLLM needs this to communicate with the SW
+		if ( ! navigator.serviceWorker.controller ) {
+			console.log(
+				'[ModelLoader] SW not controlling page yet, waiting for controllerchange...'
+			);
+			this.reportStatus(
+				'loading',
+				'Waiting for Service Worker control...'
+			);
+
+			// Wait for controller to be set (happens after activation + clients.claim())
+			const controllerPromise = new Promise( ( resolve ) => {
+				if ( navigator.serviceWorker.controller ) {
 					resolve();
-				}, { once: true });
+				} else {
+					navigator.serviceWorker.addEventListener(
+						'controllerchange',
+						() => {
+							console.log(
+								'[ModelLoader] Controller changed, SW now controlling page'
+							);
+							resolve();
+						},
+						{ once: true }
+					);
+				}
+			} );
+
+			try {
+				await Promise.race( [
+					controllerPromise,
+					new Promise( ( _, reject ) =>
+						setTimeout(
+							() =>
+								reject( new Error( 'SW controller timeout' ) ),
+							3000
+						)
+					),
+				] );
+			} catch ( err ) {
+				console.warn(
+					'[ModelLoader] Timeout waiting for SW controller:',
+					err
+				);
+				console.warn( '[ModelLoader] Falling back to page mode' );
+				this.useServiceWorker = false;
+				return this.loadWithoutServiceWorker();
 			}
-		});
-		
-		try {
-			await Promise.race([
-				controllerPromise,
-				new Promise((_, reject) => setTimeout(() => reject(new Error('SW controller timeout')), 3000))
-			]);
-		} catch (err) {
-			console.warn('[ModelLoader] Timeout waiting for SW controller:', err);
-			console.warn('[ModelLoader] Falling back to page mode');
-			this.useServiceWorker = false;
-			return this.loadWithoutServiceWorker();
 		}
-	}
-	
-	console.log('[ModelLoader] SW is controlling page, ready for engine creation');
 
-	this.reportStatus('loading', 'Initializing WebLLM engine in Service Worker...');
-	this.reportProgress(10, 'Initializing WebLLM engine...');
+		console.log(
+			'[ModelLoader] SW is controlling page, ready for engine creation'
+		);
 
-	// Create progress callback for WebLLM
-	const initProgressCallback = (report) => {
-		console.log('[ModelLoader] Init progress:', report.progress, report.text);
-		const progress = Math.round(10 + report.progress * 85); // Scale to 10-95%
-		this.reportProgress(progress, report.text);
-	};
+		this.reportStatus(
+			'loading',
+			'Initializing WebLLM engine in Service Worker...'
+		);
+		this.reportProgress( 10, 'Initializing WebLLM engine...' );
 
-	console.log('[ModelLoader] About to call CreateServiceWorkerMLCEngine...');
-	console.log('[ModelLoader] Model ID:', this.modelId);
-	console.log('[ModelLoader] Keep-alive interval:', SW_CONFIG.keepAliveMs);
-	console.log('[ModelLoader] SW registration:', this.swRegistration);
-	console.log('[ModelLoader] Active worker:', activeWorker);
-	
-	// Create the Service Worker MLCEngine
-	// This sends messages to the SW which holds the actual engine
-	try {
-		console.log('[ModelLoader] Calling CreateServiceWorkerMLCEngine NOW...');
-		console.log('[ModelLoader] Parameters:');
-		console.log('  - modelId:', this.modelId);
-		console.log('  - registration:', this.swRegistration);
-		console.log('  - keepAliveMs:', SW_CONFIG.keepAliveMs);
-		
-		// WebLLM uses navigator.serviceWorker.controller internally
-		// Don't pass the registration - it can't be cloned for postMessage
-		this.engine = await webllm.CreateServiceWorkerMLCEngine(
-			this.modelId,
-			{
-				initProgressCallback,
-			},
-			undefined, // Let WebLLM use navigator.serviceWorker.controller
+		// Create progress callback for WebLLM
+		const initProgressCallback = ( report ) => {
+			console.log(
+				'[ModelLoader] Init progress:',
+				report.progress,
+				report.text
+			);
+			const progress = Math.round( 10 + report.progress * 85 ); // Scale to 10-95%
+			this.reportProgress( progress, report.text );
+		};
+
+		console.log(
+			'[ModelLoader] About to call CreateServiceWorkerMLCEngine...'
+		);
+		console.log( '[ModelLoader] Model ID:', this.modelId );
+		console.log(
+			'[ModelLoader] Keep-alive interval:',
 			SW_CONFIG.keepAliveMs
 		);
-		console.log('[ModelLoader] CreateServiceWorkerMLCEngine returned successfully');
-	} catch (err) {
-		console.error('[ModelLoader] CreateServiceWorkerMLCEngine failed:', err);
-		console.error('[ModelLoader] Error details:', err.message, err.stack);
-		throw err;
-	}
+		console.log( '[ModelLoader] SW registration:', this.swRegistration );
+		console.log( '[ModelLoader] Active worker:', activeWorker );
 
-	console.log('[ModelLoader] Service Worker MLCEngine created');
+		// Create the Service Worker MLCEngine
+		// This sends messages to the SW which holds the actual engine
+		try {
+			console.log(
+				'[ModelLoader] Calling CreateServiceWorkerMLCEngine NOW...'
+			);
+			console.log( '[ModelLoader] Parameters:' );
+			console.log( '  - modelId:', this.modelId );
+			console.log( '  - registration:', this.swRegistration );
+			console.log( '  - keepAliveMs:', SW_CONFIG.keepAliveMs );
+
+			// WebLLM uses navigator.serviceWorker.controller internally
+			// Don't pass the registration - it can't be cloned for postMessage
+			this.engine = await webllm.CreateServiceWorkerMLCEngine(
+				this.modelId,
+				{
+					initProgressCallback,
+				},
+				undefined, // Let WebLLM use navigator.serviceWorker.controller
+				SW_CONFIG.keepAliveMs
+			);
+			console.log(
+				'[ModelLoader] CreateServiceWorkerMLCEngine returned successfully'
+			);
+		} catch ( err ) {
+			console.error(
+				'[ModelLoader] CreateServiceWorkerMLCEngine failed:',
+				err
+			);
+			console.error(
+				'[ModelLoader] Error details:',
+				err.message,
+				err.stack
+			);
+			throw err;
+		}
+
+		console.log( '[ModelLoader] Service Worker MLCEngine created' );
 	}
 
 	/**
@@ -564,21 +693,21 @@ class ModelLoader {
 	 * @private
 	 */
 	async loadWithoutServiceWorker() {
-		this.reportStatus('loading', 'Initializing WebLLM engine...');
-		this.reportProgress(10, 'Initializing WebLLM engine (page mode)...');
+		this.reportStatus( 'loading', 'Initializing WebLLM engine...' );
+		this.reportProgress( 10, 'Initializing WebLLM engine (page mode)...' );
 
 		// Create progress callback for WebLLM
-		const initProgressCallback = (report) => {
-			const progress = Math.round(10 + report.progress * 85);
-			this.reportProgress(progress, report.text);
+		const initProgressCallback = ( report ) => {
+			const progress = Math.round( 10 + report.progress * 85 );
+			this.reportProgress( progress, report.text );
 		};
 
 		// Create the regular MLCEngine (page-local)
-		this.engine = await webllm.CreateMLCEngine(this.modelId, {
+		this.engine = await webllm.CreateMLCEngine( this.modelId, {
 			initProgressCallback,
-		});
+		} );
 
-		console.log('[ModelLoader] Page-local MLCEngine created');
+		console.log( '[ModelLoader] Page-local MLCEngine created' );
 	}
 
 	/**
@@ -589,9 +718,11 @@ class ModelLoader {
 	 * @since 0.1.0
 	 * @param {boolean} useSW - Whether to use Service Worker mode
 	 */
-	setUseServiceWorker(useSW) {
-		if (this.isReady || this.isLoading) {
-			console.warn('[ModelLoader] Cannot change mode while model is loaded/loading');
+	setUseServiceWorker( useSW ) {
+		if ( this.isReady || this.isLoading ) {
+			console.warn(
+				'[ModelLoader] Cannot change mode while model is loaded/loading'
+			);
 			return;
 		}
 		this.useServiceWorker = useSW;
@@ -632,29 +763,29 @@ class ModelLoader {
 	 * but keeps the SW alive for potential future use.
 	 *
 	 * @since 0.1.0
-	 * @updated 1.2.0 - Added SW support
+	 * @since 1.2.0- Added SW support
 	 */
 	async unload() {
-		if (this.engine) {
+		if ( this.engine ) {
 			try {
 				await this.engine.unload();
-				console.log('[ModelLoader] Model unloaded');
-			} catch (err) {
-				console.warn('Error unloading model:', err);
+				console.log( '[ModelLoader] Model unloaded' );
+			} catch ( err ) {
+				console.warn( 'Error unloading model:', err );
 			}
 			this.engine = null;
 		}
 		this.isReady = false;
 		this.isLoading = false;
 		this.loadProgress = 0;
-		this.reportStatus('not-loaded', 'Model unloaded');
+		this.reportStatus( 'not-loaded', 'Model unloaded' );
 	}
 
 	/**
 	 * Reset the chat context (clear conversation history in the engine)
 	 */
 	async resetChat() {
-		if (this.engine) {
+		if ( this.engine ) {
 			await this.engine.resetChat();
 		}
 	}
@@ -674,13 +805,16 @@ class ModelLoader {
 	 *
 	 * @param {Object} usage - Usage object from ChatCompletion or ChatCompletionChunk
 	 */
-	updateUsageStats(usage) {
-		if (usage) {
+	updateUsageStats( usage ) {
+		if ( usage ) {
 			this.lastUsageStats = {
 				...usage,
 				timestamp: Date.now(),
 			};
-			console.log('[ModelLoader] Updated usage stats:', this.lastUsageStats);
+			console.log(
+				'[ModelLoader] Updated usage stats:',
+				this.lastUsageStats
+			);
 		}
 	}
 
@@ -699,14 +833,14 @@ class ModelLoader {
 	 * @return {Object|null} Model info with name, size, etc. or null if no model loaded
 	 */
 	getLoadedModelInfo() {
-		if (!this.isReady || !this.modelId) {
+		if ( ! this.isReady || ! this.modelId ) {
 			return null;
 		}
 
 		const models = ModelLoader.getAvailableModels();
-		const modelInfo = models.find((m) => m.id === this.modelId);
+		const modelInfo = models.find( ( m ) => m.id === this.modelId );
 
-		if (modelInfo) {
+		if ( modelInfo ) {
 			return {
 				id: this.modelId,
 				name: modelInfo.name,
@@ -733,23 +867,24 @@ class ModelLoader {
 	 * @return {Promise<Object|null>} Memory stats or null if unavailable
 	 */
 	async getMemoryStats() {
-		if (!this.isReady || !this.engine) {
+		if ( ! this.isReady || ! this.engine ) {
 			return null;
 		}
 
 		try {
 			// Check if we have usage stats from recent completions
-			if (this.lastUsageStats) {
+			if ( this.lastUsageStats ) {
 				const usage = this.lastUsageStats;
 				let formatted = '';
-				if (usage.extra?.decode_tokens_per_s) {
-					const decodeTps = usage.extra.decode_tokens_per_s.toFixed(1);
-					formatted = `${decodeTps} tok/s`;
+				if ( usage.extra?.decode_tokens_per_s ) {
+					const decodeTps =
+						usage.extra.decode_tokens_per_s.toFixed( 1 );
+					formatted = `${ decodeTps } tok/s`;
 
-					if (usage.extra?.prefill_tokens_per_s) {
+					if ( usage.extra?.prefill_tokens_per_s ) {
 						const prefillTps =
-							usage.extra.prefill_tokens_per_s.toFixed(1);
-						formatted = `prefill: ${prefillTps} · output: ${decodeTps} tok/s`;
+							usage.extra.prefill_tokens_per_s.toFixed( 1 );
+						formatted = `prefill: ${ prefillTps } · output: ${ decodeTps } tok/s`;
 					}
 
 					return {
@@ -762,10 +897,10 @@ class ModelLoader {
 				}
 
 				// Fallback: just show token counts
-				if (usage.completion_tokens) {
+				if ( usage.completion_tokens ) {
 					return {
 						usage,
-						formatted: `${usage.completion_tokens} tokens generated`,
+						formatted: `${ usage.completion_tokens } tokens generated`,
 						available: true,
 					};
 				}
@@ -773,7 +908,7 @@ class ModelLoader {
 
 			// Get model info for estimated size
 			const modelInfo = this.getLoadedModelInfo();
-			if (modelInfo) {
+			if ( modelInfo ) {
 				return {
 					estimatedSize: modelInfo.size,
 					available: false,
@@ -782,8 +917,8 @@ class ModelLoader {
 			}
 
 			return null;
-		} catch (err) {
-			console.warn('[ModelLoader] Error getting memory stats:', err);
+		} catch ( err ) {
+			console.warn( '[ModelLoader] Error getting memory stats:', err );
 			return null;
 		}
 	}
@@ -803,19 +938,19 @@ class ModelLoader {
 	 * @return {Object|null} Context usage info or null if not available
 	 */
 	getContextUsage() {
-		if (!this.lastUsageStats) {
+		if ( ! this.lastUsageStats ) {
 			return null;
 		}
 
 		const maxContext =
-			MODEL_CONTEXT_SIZES[this.modelId] || MODEL_CONTEXT_SIZES.default;
+			MODEL_CONTEXT_SIZES[ this.modelId ] || MODEL_CONTEXT_SIZES.default;
 		const usedTokens = this.lastUsageStats.prompt_tokens || 0;
-		const percentage = Math.round((usedTokens / maxContext) * 100);
+		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 
 		return {
 			used: usedTokens,
 			max: maxContext,
-			percentage: Math.min(percentage, 100),
+			percentage: Math.min( percentage, 100 ),
 			isHigh: percentage >= 75,
 			isCritical: percentage >= 90,
 		};
@@ -826,7 +961,7 @@ class ModelLoader {
 	 */
 	resetContextUsage() {
 		this.lastUsageStats = null;
-		console.log('[ModelLoader] Context usage reset');
+		console.log( '[ModelLoader] Context usage reset' );
 	}
 
 	/**
@@ -846,7 +981,7 @@ class ModelLoader {
 				description:
 					'Best balance of capability and size. Recommended for most users.',
 				recommended: true,
-				capabilities: ['multi-step workflows', 'better reasoning'],
+				capabilities: [ 'multi-step workflows', 'better reasoning' ],
 			},
 			// Smaller fallback options
 			{
@@ -856,7 +991,7 @@ class ModelLoader {
 				vram: '~500MB',
 				description: 'Very small and fast. For low-memory devices.',
 				recommended: false,
-				capabilities: ['basic tasks'],
+				capabilities: [ 'basic tasks' ],
 			},
 			{
 				id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC',
@@ -865,7 +1000,7 @@ class ModelLoader {
 				vram: '~700MB',
 				description: 'Small but capable. Good fallback option.',
 				recommended: false,
-				capabilities: ['basic tasks', 'faster loading'],
+				capabilities: [ 'basic tasks', 'faster loading' ],
 			},
 			{
 				id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
@@ -874,7 +1009,7 @@ class ModelLoader {
 				vram: '~1GB',
 				description: 'Meta Llama 3.2. Good quality responses.',
 				recommended: false,
-				capabilities: ['multi-step workflows'],
+				capabilities: [ 'multi-step workflows' ],
 			},
 			// Larger models for advanced users
 			{
@@ -885,7 +1020,7 @@ class ModelLoader {
 				description:
 					'Larger model with better reasoning. Requires more VRAM.',
 				recommended: false,
-				capabilities: ['complex workflows', 'advanced reasoning'],
+				capabilities: [ 'complex workflows', 'advanced reasoning' ],
 			},
 			{
 				id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
@@ -894,7 +1029,7 @@ class ModelLoader {
 				vram: '~3GB',
 				description: 'Meta Llama 3.2 3B. High quality responses.',
 				recommended: false,
-				capabilities: ['complex workflows', 'advanced reasoning'],
+				capabilities: [ 'complex workflows', 'advanced reasoning' ],
 			},
 		];
 	}

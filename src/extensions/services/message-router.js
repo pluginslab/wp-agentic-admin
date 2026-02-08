@@ -14,12 +14,12 @@
 import workflowRegistry from './workflow-registry';
 import { createLogger } from '../utils/logger';
 
-const log = createLogger('MessageRouter');
+const log = createLogger( 'MessageRouter' );
 
 /**
  * @typedef {Object} RouteResult
- * @property {'workflow'|'react'|'conversational'} type - Route type
- * @property {Object} [workflow] - Workflow definition (if type is 'workflow')
+ * @property {'workflow'|'react'|'conversational'} type       - Route type
+ * @property {Object}                              [workflow] - Workflow definition (if type is 'workflow')
  */
 
 /**
@@ -39,14 +39,14 @@ const log = createLogger('MessageRouter');
  * to prevent small models from over-eagerly calling tools.
  */
 const QUESTION_PATTERNS = [
-    /^what (is|are|does|do|was|were)/i,
-    /^how (do|does|can|to|is|are)/i,
-    /^why (is|are|does|do|did)/i,
-    /^when (is|are|does|do|did)/i,
-    /^where (is|are|does|do)/i,
-    /^who (is|are|does|do)/i,
-    /^can you (explain|tell me|describe)/i,
-    /^(explain|describe|tell me about)/i,
+	/^what (is|are|does|do|was|were)/i,
+	/^how (do|does|can|to|is|are)/i,
+	/^why (is|are|does|do|did)/i,
+	/^when (is|are|does|do|did)/i,
+	/^where (is|are|does|do)/i,
+	/^who (is|are|does|do)/i,
+	/^can you (explain|tell me|describe)/i,
+	/^(explain|describe|tell me about)/i,
 ];
 
 /**
@@ -55,9 +55,9 @@ const QUESTION_PATTERNS = [
  * @param {string} message - User message
  * @return {boolean} True if message looks like a question
  */
-function isQuestion(message) {
-    const trimmed = message.trim();
-    return QUESTION_PATTERNS.some(pattern => pattern.test(trimmed));
+function isQuestion( message ) {
+	const trimmed = message.trim();
+	return QUESTION_PATTERNS.some( ( pattern ) => pattern.test( trimmed ) );
 }
 
 /**
@@ -71,31 +71,33 @@ function isQuestion(message) {
  * @param {string} userMessage - The user's message
  * @return {RouteResult} Route decision
  */
-export function route(userMessage) {
-    if (!userMessage || typeof userMessage !== 'string') {
-        log.warn('Invalid message, defaulting to ReAct');
-        return { type: 'react' };
-    }
+export function route( userMessage ) {
+	if ( ! userMessage || typeof userMessage !== 'string' ) {
+		log.warn( 'Invalid message, defaulting to ReAct' );
+		return { type: 'react' };
+	}
 
-    // Step 1: Check for informational questions
-    if (isQuestion(userMessage)) {
-        log.info('Detected informational question, routing to conversational mode');
-        return { type: 'conversational' };
-    }
+	// Step 1: Check for informational questions
+	if ( isQuestion( userMessage ) ) {
+		log.info(
+			'Detected informational question, routing to conversational mode'
+		);
+		return { type: 'conversational' };
+	}
 
-    // Step 2: Check for workflow keyword match
-    const workflow = workflowRegistry.detectWorkflow(userMessage);
-    if (workflow) {
-        log.info(`Detected workflow: ${workflow.id}`);
-        return {
-            type: 'workflow',
-            workflow,
-        };
-    }
+	// Step 2: Check for workflow keyword match
+	const workflow = workflowRegistry.detectWorkflow( userMessage );
+	if ( workflow ) {
+		log.info( `Detected workflow: ${ workflow.id }` );
+		return {
+			type: 'workflow',
+			workflow,
+		};
+	}
 
-    // Step 3: Default to ReAct loop for actions
-    log.info('No workflow or question detected, routing to ReAct');
-    return { type: 'react' };
+	// Step 3: Default to ReAct loop for actions
+	log.info( 'No workflow or question detected, routing to ReAct' );
+	return { type: 'react' };
 }
 
 /**
@@ -106,8 +108,8 @@ export function route(userMessage) {
  * @param {string} userMessage - The user's message
  * @return {boolean} True if a workflow would be triggered
  */
-export function isWorkflowQuery(userMessage) {
-    return route(userMessage).type === 'workflow';
+export function isWorkflowQuery( userMessage ) {
+	return route( userMessage ).type === 'workflow';
 }
 
 /**
@@ -118,8 +120,8 @@ export function isWorkflowQuery(userMessage) {
  * @param {string} userMessage - The user's message
  * @return {boolean} True if message is detected as a question
  */
-export function isConversationalQuery(userMessage) {
-    return route(userMessage).type === 'conversational';
+export function isConversationalQuery( userMessage ) {
+	return route( userMessage ).type === 'conversational';
 }
 
 export default { route, isWorkflowQuery, isConversationalQuery };

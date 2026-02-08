@@ -30,8 +30,14 @@
  * @see includes/abilities/plugin-deactivate.php for the PHP implementation
  */
 
-import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
-import { extractPluginParams, formatPluginActionResult } from './shared/plugin-helpers';
+import {
+	registerAbility,
+	executeAbility,
+} from '../services/agentic-abilities-api';
+import {
+	extractPluginParams,
+	formatPluginActionResult,
+} from './shared/plugin-helpers';
 
 /**
  * Extract plugin slug from user message.
@@ -46,73 +52,79 @@ import { extractPluginParams, formatPluginActionResult } from './shared/plugin-h
  * extractParams("turn off hello dolly") -> { plugin: "hello.php" }
  * extractParams("disable my-custom-plugin") -> { plugin: "my-custom-plugin/my-custom-plugin.php" }
  */
-function extractParams(userMessage) {
-    return extractPluginParams(userMessage, ['deactivate', 'disable', 'turn off']);
+function extractParams( userMessage ) {
+	return extractPluginParams( userMessage, [
+		'deactivate',
+		'disable',
+		'turn off',
+	] );
 }
 
 /**
  * Register the plugin-deactivate ability with the chat system.
  */
 export function registerPluginDeactivate() {
-    registerAbility('wp-agentic-admin/plugin-deactivate', {
-        label: 'Deactivate plugins',
+	registerAbility( 'wp-agentic-admin/plugin-deactivate', {
+		label: 'Deactivate plugins',
 
-        // Limited keywords since this is a destructive action.
-        // We want users to be explicit about wanting to deactivate.
-        keywords: [
-            'deactivate',
-            'disable',
-            'turn off',
-            'deactivate plugin',
-        ],
+		// Limited keywords since this is a destructive action.
+		// We want users to be explicit about wanting to deactivate.
+		keywords: [ 'deactivate', 'disable', 'turn off', 'deactivate plugin' ],
 
-        initialMessage: "Deactivating the plugin...",
+		initialMessage: 'Deactivating the plugin...',
 
-        /**
-         * Generate summary from the result.
-         *
-         * @param {Object} result - The result from PHP.
-         * @return {string} Human-readable summary.
-         */
-        summarize: (result) => {
-            return formatPluginActionResult(result, 'Plugin has been deactivated successfully.');
-        },
+		/**
+		 * Generate summary from the result.
+		 *
+		 * @param {Object} result - The result from PHP.
+		 * @return {string} Human-readable summary.
+		 */
+		summarize: ( result ) => {
+			return formatPluginActionResult(
+				result,
+				'Plugin has been deactivated successfully.'
+			);
+		},
 
-        // Export extractParams so it can be tested or reused.
-        extractParams,
+		// Export extractParams so it can be tested or reused.
+		extractParams,
 
-        /**
-         * Execute the ability.
-         *
-         * PARAMETER EXTRACTION EXAMPLE:
-         * This execute function demonstrates extracting parameters from
-         * natural language. The user says "deactivate akismet" and we
-         * need to figure out the actual plugin file path to send to PHP.
-         *
-         * @param {Object} params - Parameters from the chat system.
-         * @param {string} params.userMessage - The user's original message.
-         * @return {Promise<Object>} The result from PHP, or an error object.
-         */
-        execute: async ({ userMessage }) => {
-            // Extract plugin path from the user's message.
-            const params = extractParams(userMessage);
+		/**
+		 * Execute the ability.
+		 *
+		 * PARAMETER EXTRACTION EXAMPLE:
+		 * This execute function demonstrates extracting parameters from
+		 * natural language. The user says "deactivate akismet" and we
+		 * need to figure out the actual plugin file path to send to PHP.
+		 *
+		 * @param {Object} params             - Parameters from the chat system.
+		 * @param {string} params.userMessage - The user's original message.
+		 * @return {Promise<Object>} The result from PHP, or an error object.
+		 */
+		execute: async ( { userMessage } ) => {
+			// Extract plugin path from the user's message.
+			const params = extractParams( userMessage );
 
-            // If we couldn't figure out which plugin, return a helpful error.
-            if (!params || !params.plugin) {
-                return {
-                    error: 'Could not determine which plugin to deactivate. Please specify the plugin name, e.g., "deactivate hello dolly"'
-                };
-            }
+			// If we couldn't figure out which plugin, return a helpful error.
+			if ( ! params || ! params.plugin ) {
+				return {
+					error: 'Could not determine which plugin to deactivate. Please specify the plugin name, e.g., "deactivate hello dolly"',
+				};
+			}
 
-            // Execute the PHP ability with the extracted parameters.
-            return executeAbility('wp-agentic-admin/plugin-deactivate', params);
-        },
+			// Execute the PHP ability with the extracted parameters.
+			return executeAbility(
+				'wp-agentic-admin/plugin-deactivate',
+				params
+			);
+		},
 
-        // DESTRUCTIVE ACTION: Require user confirmation before executing.
-        // This prevents accidental deactivation from misunderstood commands.
-        requiresConfirmation: true,
-        confirmationMessage: 'Are you sure you want to deactivate this plugin? This may affect your site functionality.',
-    });
+		// DESTRUCTIVE ACTION: Require user confirmation before executing.
+		// This prevents accidental deactivation from misunderstood commands.
+		requiresConfirmation: true,
+		confirmationMessage:
+			'Are you sure you want to deactivate this plugin? This may affect your site functionality.',
+	} );
 }
 
 export default registerPluginDeactivate;
