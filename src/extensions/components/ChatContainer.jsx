@@ -545,6 +545,22 @@ const ChatContainer = ( {
 				</div>
 			) }
 
+			{ /* Thinking indicator while LLM is processing (before tool call or streaming) */ }
+			{ isLoading && ! isExecutingTool && ! isStreaming && ! isRunningWorkflow && (
+				<div className="agentic-message agentic-message--loading">
+					<div className="agentic-timeline">
+						<div className="agentic-timeline__line" />
+						<div className="agentic-timeline__dot agentic-timeline__dot--loading" />
+					</div>
+					<div className="agentic-loading">
+						<div className="agentic-loading__spinner" />
+						<span className="agentic-loading__text">
+							Thinking...
+						</span>
+					</div>
+				</div>
+			) }
+
 			{ /* Loading spinner while tool is executing (single tool, not workflow) */ }
 			{ isExecutingTool && ! isRunningWorkflow && (
 				<div className="agentic-message agentic-message--loading">
