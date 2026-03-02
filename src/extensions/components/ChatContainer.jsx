@@ -202,6 +202,23 @@ const ChatContainer = ( {
 			);
 		}
 
+		// Test observability hook (for E2E browser tests)
+		window.__wpAgenticTestHook = {
+			getMessages: () => sessionRef.current?.getMessages() || [],
+			getLastReactResult: () =>
+				chatOrchestrator.reactAgent?.lastResult || null,
+			getToolsUsed: () =>
+				chatOrchestrator.reactAgent?.lastResult?.toolsUsed || [],
+			getObservations: () =>
+				chatOrchestrator.reactAgent?.lastResult?.observations || [],
+			isProcessing: () => chatOrchestrator.getIsProcessing(),
+			sendMessage: ( msg ) => chatOrchestrator.processMessage( msg ),
+			clearChat: () => {
+				sessionRef.current?.clear();
+				setMessages( [] );
+			},
+		};
+
 		return () => {
 			// Save session on unmount
 			session.save();

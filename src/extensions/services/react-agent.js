@@ -23,10 +23,10 @@ const log = createLogger( 'ReactAgent' );
  */
 const REACT_CONFIG = {
 	maxIterations: 10, // Safety limit to prevent infinite loops
-	temperature: 0.4, // Balanced: predictable tool selection + natural responses
-	maxTokens: 512, // Enough for reasoning + function call
+	temperature: 0.3, // 7B models are more reliable, lower temp for consistency
+	maxTokens: 1024, // 7B models produce richer reasoning
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
-	maxToolResultLength: 1000, // Max characters for tool results (prevent context overflow)
+	maxToolResultLength: 2000, // 7B models handle more context
 };
 
 /**
@@ -147,16 +147,22 @@ class ReactAgent {
 		}
 
 		// Route to appropriate execution mode
+		let result;
 		if ( this.useFunctionCalling ) {
-			return await this.executeWithFunctionCalling(
+			result = await this.executeWithFunctionCalling(
+				userMessage,
+				conversationHistory
+			);
+		} else {
+			result = await this.executeWithPromptBased(
 				userMessage,
 				conversationHistory
 			);
 		}
-		return await this.executeWithPromptBased(
-			userMessage,
-			conversationHistory
-		);
+
+		// Store last result for test observability
+		this.lastResult = result;
+		return result;
 	}
 
 	/**
@@ -214,19 +220,6 @@ class ReactAgent {
 						toolArgs,
 						userMessage
 					);
-
-					// TODO Hackathon: Smaller models (1.5B-3B) struggle with error recovery when tools fail.
-					// Example: "show errors and deactivate broken plugin" test revealed:
-					// 1. Model correctly identified "broken-plugin" from error logs
-					// 2. Tool returned {success: false, message: "Plugin not found"}
-					// 3. Model then hallucinated wrong tool name (wp-agentic_admin vs wp-agentic-admin)
-					// 4. Repeated call detection stopped loop, but final answer was generic fallback
-					// Future work should explore:
-					// - Explicit error handling instructions in system prompt
-					// - Teaching model to explain failures clearly to users
-					// - Early exit patterns when tools return {success: false}
-					// - Better "tool not found" vs "tool failed" distinction
-					// The model needs clearer guidance on: "If tool fails, explain why to user, don't retry"
 
 					toolsUsed.push( toolName );
 					observations.push( {
@@ -435,10 +428,6 @@ class ReactAgent {
 						userMessage
 					);
 
-					// TODO Hackathon: Same error recovery issue as function calling mode.
-					// See the TODO in executeWithFunctionCalling() for details on how smaller models
-					// struggle to handle tool failures gracefully and hallucinate invalid tool names.
-
 					toolsUsed.push( toolName );
 					observations.push( {
 						tool: toolName,
@@ -572,9 +561,6 @@ class ReactAgent {
 			// Try to summarize based on the data structure
 			if ( data.entries && Array.isArray( data.entries ) ) {
 				// Error log or similar list data
-				// TODO Hackathon: Improve error log output to show the last 3 entries of type "error"
-				// (or just the last 3 if no "error" type entries exist). This provides more
-				// relevant recent errors instead of showing the first few which might be older.
 				const count = data.entries.length;
 				const sample = data.entries.slice( 0, 3 ).join( '\n' );
 				return `I found ${ count } entries from the ${ toolName }. Here are the first few:\n\n${ sample }\n\n${
@@ -609,44 +595,7 @@ class ReactAgent {
 	 *
 	 * Extracts the FIRST valid JSON object from response text.
 	 * Handles cases where LLM outputs multiple JSON objects or wraps in markdown.
-	 *
-	 * TODO Hackathon: Small models (1.5B-3B) struggle significantly with JSON output formatting.
-	 * Multiple issues encountered during testing:
-	 *
-	 * 1. **Unescaped control characters**: Models include raw \n, \t in JSON strings
-	 *    Example: {"args": {"reason": "Clean up\ndatabase"}}
-	 *    Fix: Sanitize control characters before parsing
-	 *
-	 * 2. **Missing quotes around property values**: "args:{} instead of "args": {}
-	 *    Example: {"action": "tool_call", "args:{}}
-	 *    Fix: Regex to add missing quotes and spaces
-	 *
-	 * 3. **Multiple JSON objects at once**: Model tries to output 2+ actions simultaneously
-	 *    Example: {"action": "tool_call", ...}{"action": "final_answer", ...}
-	 *    Fix: Brace-counting to extract only FIRST object
-	 *
-	 * 4. **Single quotes instead of double**: {'action': 'tool_call'}
-	 *    Fix: Replace all single quotes with double quotes
-	 *
-	 * 5. **Trailing commas**: {"action": "tool_call",}
-	 *    Fix: Remove commas before closing braces/brackets
-	 *
-	 * Test case "clean up database and check health after" revealed:
-	 * - Model successfully called db-optimize
-	 * - On second iteration, output raw JSON that wasn't parsed correctly
-	 * - Result: Raw JSON appeared in final answer instead of executing site-health
-	 *
-	 * Future work should explore:
-	 * - Stricter JSON schema enforcement in system prompt
-	 * - More explicit single-action-only instructions with repetition
-	 * - Few-shot examples showing exact JSON format for each iteration
-	 * - Post-processing to detect and re-parse failed JSON outputs
-	 * - Consider JSON repair libraries for extreme cases
-	 * - Alternative: Teach model to use simpler text-based action format instead of JSON
-	 *
-	 * The current sanitization catches most issues but small models fundamentally
-	 * struggle with structured output. Larger models (7B+) or fine-tuning may be needed
-	 * for reliable JSON generation.
+	 * Includes sanitization for edge cases (control characters, trailing commas).
 	 *
 	 * @param {string} content - LLM response content
 	 * @return {Object|null} Parsed action or null if invalid
@@ -865,18 +814,6 @@ class ReactAgent {
 	/**
 	 * Build system prompt for function calling mode
 	 *
-	 * TODO Hackathon: Smaller models (1.5B-3B) tend to be over-eager with tool calling,
-	 * often calling multiple tools when only one is needed (e.g., "flush cache" calls both
-	 * cache-flush AND transient-flush). Future work should explore simplistic verbal
-	 * techniques to help smaller models understand intent better:
-	 * - Language simplification and more explicit instructions
-	 * - Semantic restructuring with clearer action boundaries
-	 * - Synonym usage and repetition for key concepts
-	 * - More constrained examples showing single-tool patterns
-	 * - Explicit "stop after success" instructions
-	 * The goal is to find verbal/prompt engineering tricks that work better with limited
-	 * model capacity, rather than relying on larger models to "figure it out."
-	 *
 	 * @return {string} System prompt
 	 */
 	buildSystemPromptFunctionCalling() {
@@ -899,6 +836,12 @@ RULES:
 - Use tools to get real data, never fake it
 - Answer conversationally if no tools are needed
 
+ERROR HANDLING:
+- If a tool returns {success: false}, explain the failure to the user clearly
+- Do NOT retry a failed tool with the same arguments
+- Do NOT guess or invent tool names — only use the tools provided
+- If the task cannot be completed, explain why and suggest alternatives
+
 EXAMPLES:
 
 User: "list my plugins"
@@ -907,16 +850,15 @@ User: "list my plugins"
 User: "my site is slow"
 → Call site-health → See database is large → Call db-optimize → Answer with summary
 
+User: "deactivate broken-plugin"
+→ Call plugin-deactivate → If it fails with "Plugin not found", tell the user the exact error
+
 User: "what is a transient?"
 → Answer directly (no tools needed)`;
 	}
 
 	/**
 	 * Build system prompt for prompt-based mode
-	 *
-	 * TODO Hackathon: Same over-eager tool calling issue as function calling mode.
-	 * See buildSystemPromptFunctionCalling() TODO for details on exploring simplistic
-	 * verbal techniques for smaller models.
 	 *
 	 * @return {string} System prompt with JSON instructions
 	 */
@@ -941,6 +883,11 @@ To give final answer:
 {"action": "final_answer", "content": "Your answer here"}
 
 CRITICAL: ALWAYS output JSON, even after seeing tool results!
+
+ERROR HANDLING:
+- If a tool returns {success: false}, give a final_answer explaining the failure
+- Do NOT retry a failed tool with the same arguments
+- Do NOT invent tool names — only use tools from the list above
 
 COMPLETE EXAMPLE:
 

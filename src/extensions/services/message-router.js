@@ -25,18 +25,10 @@ const log = createLogger( 'MessageRouter' );
 /**
  * Question patterns that indicate informational queries
  *
- * TODO Hackathon: This is a simple regex-based pre-filter added because small models
- * (like Qwen 2.5 1.5B-3B) struggle to distinguish between informational questions
- * ("what is a transient?") and action requests ("flush transients").
- *
- * For the hackathon, investigate better approaches:
- * - Fine-tune system prompt for smaller models
- * - Use few-shot examples specifically for question detection
- * - Consider a lightweight question classifier
- * - Test if slightly larger models (7B) handle this better
- *
- * This pre-filter works but is hacky - it catches obvious questions before ReAct
- * to prevent small models from over-eagerly calling tools.
+ * This regex-based pre-filter catches obvious questions before the ReAct loop.
+ * With 7B models, this serves as a performance optimization — routing pure
+ * informational questions to the cheaper conversational path avoids unnecessary
+ * tool-calling overhead.
  */
 const QUESTION_PATTERNS = [
 	/^what (is|are|does|do|was|were)/i,

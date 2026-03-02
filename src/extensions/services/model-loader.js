@@ -14,29 +14,29 @@ import * as webllm from '@mlc-ai/web-llm';
 
 /**
  * Default model configuration
- * Using Qwen2.5-3B for better understanding and reasoning capability
+ * Using Hermes-2-Pro-Mistral-7B for reliable function calling and reasoning
  * See: https://github.com/mlc-ai/web-llm
  *
- * v1.2: Using Qwen2.5-3B (~2.5GB) as default for optimal performance
+ * v2.0: Upgraded to 7B models for better JSON output, multi-step reasoning, and error recovery
  */
-const DEFAULT_MODEL = 'Qwen2.5-3B-Instruct-q4f16_1-MLC';
+const DEFAULT_MODEL = 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC';
 
 /**
  * Model configuration options
  */
 const MODEL_CONFIG = {
-	// Context window size (smaller = faster, less memory)
-	context_window_size: 2048,
+	// Context window size (larger for 7B models)
+	context_window_size: 4096,
 };
 
 /**
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
-	'Qwen2.5-3B-Instruct-q4f16_1-MLC': 4096,
-	'Llama-3.2-3B-Instruct-q4f16_1-MLC': 4096,
+	'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC': 32768,
+	'Llama-3.1-8B-Instruct-q4f16_1-MLC': 8192,
 	// Default fallback
-	default: 4096,
+	default: 8192,
 };
 
 /**
@@ -967,23 +967,33 @@ class ModelLoader {
 	static getAvailableModels() {
 		return [
 			{
-				id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
-				name: 'Qwen 2.5 3B (Q4)',
-				size: '~2.5GB',
-				vram: '~3GB',
+				id: 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC',
+				name: 'Hermes 2 Pro 7B (Q4)',
+				size: '~4.5GB',
+				vram: '~5GB',
 				description:
-					'Alibaba Qwen 2.5 3B. Excellent reasoning and complex workflows.',
+					'NousResearch Hermes 2 Pro 7B. 90% function calling score, reliable JSON output.',
 				recommended: true,
-				capabilities: [ 'complex workflows', 'advanced reasoning' ],
+				capabilities: [
+					'function calling',
+					'complex workflows',
+					'advanced reasoning',
+					'JSON output',
+				],
 			},
 			{
-				id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-				name: 'Llama 3.2 3B (Q4)',
-				size: '~2.3GB',
-				vram: '~3GB',
-				description: 'Meta Llama 3.2 3B. High quality responses.',
+				id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC',
+				name: 'Llama 3.1 8B (Q4)',
+				size: '~4.5GB',
+				vram: '~5GB',
+				description:
+					'Meta Llama 3.1 8B. Native function calling, strong instruction following.',
 				recommended: false,
-				capabilities: [ 'complex workflows', 'advanced reasoning' ],
+				capabilities: [
+					'function calling',
+					'complex workflows',
+					'advanced reasoning',
+				],
 			},
 		];
 	}

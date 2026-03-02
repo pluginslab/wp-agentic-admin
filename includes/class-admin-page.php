@@ -151,7 +151,7 @@ class Admin_Page {
 			'hasPrettyPermalinks' => $this->has_pretty_permalinks(),
 			'permalinksUrl'       => esc_url( admin_url( 'options-permalink.php' ) ),
 			'settings'            => array(
-				'modelId'            => $settings->get_field( 'wp_agentic_admin_model_id', 'Qwen2.5-3B-Instruct-q4f16_1-MLC' ),
+				'modelId'            => $settings->get_field( 'wp_agentic_admin_model_id', 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC' ),
 				'confirmDestructive' => (bool) $settings->get_field( 'wp_agentic_admin_confirm_destructive', 1 ),
 				'maxLogLines'        => (int) $settings->get_field( 'wp_agentic_admin_max_log_lines', 100 ),
 			),

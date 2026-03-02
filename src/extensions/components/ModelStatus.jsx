@@ -87,7 +87,7 @@ const getLoadingStage = ( message, progress ) => {
 				: 'Downloading Model',
 			description: isFromCache
 				? 'Loading AI model weights from cache...'
-				: 'Downloading AI model weights (~2.5GB)...',
+				: 'Downloading AI model weights (~4.5GB)...',
 		};
 	}
 

@@ -96,10 +96,10 @@ class Settings {
 						'label'       => __( 'Model', 'wp-agentic-admin' ),
 						'type'        => 'select',
 						'options'     => array(
-							'Qwen2.5-3B-Instruct-q4f16_1-MLC'   => 'Qwen 2.5 3B (Recommended)',
-							'Llama-3.2-3B-Instruct-q4f16_1-MLC' => 'Llama 3.2 3B',
+							'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC' => 'Hermes 2 Pro 7B (Recommended)',
+							'Llama-3.1-8B-Instruct-q4f16_1-MLC'   => 'Llama 3.1 8B',
 						),
-						'default'     => 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+						'default'     => 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC',
 						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin' ),
 					),
 				),
