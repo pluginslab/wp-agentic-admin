@@ -34,7 +34,7 @@ export const suite = {
 			name: 'View error log',
 			input: 'show me the error log',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/error-log' ],
+				toolsCalled: [ 'wp-agentic-admin/error-log-read' ],
 				toolsCalledExactly: 1,
 				responseNotEmpty: true,
 			},

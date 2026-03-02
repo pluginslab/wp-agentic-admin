@@ -106,42 +106,56 @@ class ReactAgent {
 			};
 		}
 
-		// Try function calling first if not yet determined
+		// Determine tool calling mode if not yet set
 		if ( this.useFunctionCalling === null ) {
-			try {
-				log.info( 'Testing function calling support...' );
-				await engine.chat.completions.create( {
-					messages: [ { role: 'user', content: 'test' } ],
-					tools: [
-						{
-							type: 'function',
-							function: { name: 'test', description: 'test' },
-						},
-					],
-					tool_choice: 'none',
-					max_tokens: 1,
-				} );
-				this.useFunctionCalling = true;
+			// Hermes-2-Pro models support function calling but WebLLM's implementation
+			// does not allow custom system prompts or multi-turn tool conversations,
+			// so we force prompt-based mode for reliable multi-step reasoning.
+			const modelId = this.modelLoader.getModelId();
+			if ( modelId.toLowerCase().includes( 'hermes' ) ) {
+				this.useFunctionCalling = false;
 				log.info(
-					'Function calling supported - using native function calling mode'
+					'Hermes model detected - using prompt-based mode (WebLLM FC limitation)'
 				);
-			} catch ( error ) {
-				const errorMessage = error?.message || String( error );
-				if (
-					errorMessage.includes(
-						'not supported for ChatCompletionRequest.tools'
-					)
-				) {
-					this.useFunctionCalling = false;
+			} else {
+				try {
+					log.info( 'Testing function calling support...' );
+					await engine.chat.completions.create( {
+						messages: [ { role: 'user', content: 'test' } ],
+						tools: [
+							{
+								type: 'function',
+								function: {
+									name: 'test',
+									description: 'test',
+								},
+							},
+						],
+						tool_choice: 'none',
+						max_tokens: 1,
+					} );
+					this.useFunctionCalling = true;
 					log.info(
-						'Function calling not supported - using prompt-based mode'
+						'Function calling supported - using native function calling mode'
 					);
-				} else {
-					log.error(
-						'Function calling test failed with unexpected error:',
-						error
-					);
-					throw error; // Re-throw unexpected errors
+				} catch ( error ) {
+					const errorMessage = error?.message || String( error );
+					if (
+						errorMessage.includes(
+							'not supported for ChatCompletionRequest.tools'
+						)
+					) {
+						this.useFunctionCalling = false;
+						log.info(
+							'Function calling not supported - using prompt-based mode'
+						);
+					} else {
+						log.error(
+							'Function calling test failed with unexpected error:',
+							error
+						);
+						throw error;
+					}
 				}
 			}
 		}
@@ -174,18 +188,24 @@ class ReactAgent {
 	 */
 	async executeWithFunctionCalling( userMessage, conversationHistory ) {
 		const engine = this.modelLoader.getEngine();
-		const systemPrompt = this.buildSystemPromptFunctionCalling();
 		const toolDefinitions = this.buildToolDefinitions();
 
 		const observations = [];
 		const toolsUsed = [];
 		let iteration = 0;
 
-		const messages = [
-			{ role: 'system', content: systemPrompt },
-			...conversationHistory,
-			{ role: 'user', content: userMessage },
-		];
+		// Hermes-2-Pro models use a built-in chat template for function calling
+		// and do not allow custom system prompts when tools are provided.
+		const modelId = this.modelLoader.getModelId();
+		const isHermes = modelId.toLowerCase().includes( 'hermes' );
+
+		const messages = [];
+		if ( ! isHermes ) {
+			const systemPrompt = this.buildSystemPromptFunctionCalling();
+			messages.push( { role: 'system', content: systemPrompt } );
+		}
+		messages.push( ...conversationHistory );
+		messages.push( { role: 'user', content: userMessage } );
 
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;

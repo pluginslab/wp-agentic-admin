@@ -10,15 +10,15 @@
 export const config = {
 	// WordPress URLs
 	urls: {
-		login: 'http://localhost:8888/wp-login.php',
-		admin: 'http://localhost:8888/wp-admin/',
-		plugin: 'http://localhost:8888/wp-admin/admin.php?page=wp-agentic-admin',
+		login: 'https://wp-agentic-admin.local/wp-login.php',
+		admin: 'https://wp-agentic-admin.local/wp-admin/',
+		plugin: 'https://wp-agentic-admin.local/wp-admin/admin.php?page=wp-agentic-admin',
 	},
 
 	// WordPress credentials
 	credentials: {
-		username: 'admin',
-		password: 'password',
+		username: 'marcel',
+		password: 'marcel',
 	},
 
 	// Model configuration
