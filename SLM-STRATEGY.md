@@ -6,12 +6,14 @@ You can save this as `docs/SLM-STRATEGY.md` or append it to `ARCHITECTURE.md`.
 
 # SLM Strategy: The Semantic Translation Layer
 
+> **Status Update (v0.2.0):** The upgrade to 7B models (Qwen2.5-7B, ~5GB VRAM) achieved **96% E2E accuracy** with 100% JSON reliability — without needing the semantic translation layer described below. Modern consumer hardware (16GB+ RAM with discrete/integrated GPU) runs 7B models comfortably via WebGPU. This strategy remains relevant as an optimization for **low-end hardware** where only 1.5B-3B models fit, but is no longer the primary approach.
+
 ## 1. The Challenge
 
 Running Local AI in the browser imposes strict hardware constraints.
 
 * **Constraint:** The average developer laptop (e.g., MacBook Air M1 8GB, standard Windows ultrabooks) cannot reliably run 7B+ parameter models alongside a browser and OS without crashing or severe throttling.
-* **Target:** We must operate within the **1.5B – 3B** parameter range (approx. 1.2GB - 2.5GB VRAM).
+* **Target:** For low-end hardware, we must operate within the **1.5B – 3B** parameter range (approx. 1.2GB - 2.5GB VRAM). For standard hardware (16GB+ RAM), 7B models (~5GB VRAM) run well and achieve excellent accuracy without this layer.
 * **The Problem:** Small Language Models (SLMs) are excellent at following syntax (e.g., "Output JSON") but struggle with **fuzzy intent mapping** (e.g., understanding that "The apple is rotten" means "Deactivate broken plugin").
 
 ## 2. The Solution: "Smart Routing, Dumb Worker"

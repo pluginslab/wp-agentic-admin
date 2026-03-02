@@ -20,7 +20,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 
 ## Key Features
 
-- **100% Local AI**: Uses WebLLM to run a Small Language Model (Qwen2.5-3B or Llama-3.2-3B) directly in your browser via WebGPU
+- **100% Local AI**: Uses WebLLM to run a 7B language model (Qwen2.5-7B, Hermes-2-Pro-7B, or Llama-3.1-8B) directly in your browser via WebGPU
 - **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
 - **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
 - **Persistent AI**: Model stays loaded across page navigations using Service Worker technology
@@ -40,7 +40,7 @@ WP-Agentic-Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI deci
 │                   Your Browser                               │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │              Local AI (WebLLM)                         │  │
-│  │      Qwen2.5-3B / Llama-3.2-3B via WebGPU/WASM         │  │
+│  │    Qwen2.5-7B / Hermes-2-Pro-7B / Llama-3.1-8B         │  │
 │  │                                                         │  │
 │  │  ReAct Loop: LLM decides tools based on observations  │  │
 │  └───────────────────────────────────────────────────────┘  │
@@ -88,8 +88,10 @@ The AI decides **one action at a time**, observing results and adapting its stra
 
 For complex multi-step operations, pre-defined workflows can be triggered via keywords:
 
-- "full cleanup" / "site cleanup" / "maintenance" → Executes: cache-flush → db-optimize (conditional) → site-health
-- "performance check" / "health check" / "check site" → Executes: site-health → error-log-read (conditional)
+- "full cleanup" / "site cleanup" / "maintenance" → cache-flush → db-optimize (conditional) → site-health
+- "performance check" / "health check" / "check site" → site-health → error-log-read (conditional)
+- "audit plugins" / "check my plugins" → plugin-list → site-health
+- "database maintenance" / "optimize database" → db-optimize → cache-flush
 
 Otherwise, the ReAct loop handles everything dynamically.
 
@@ -104,7 +106,7 @@ Otherwise, the ReAct loop handles everything dynamically.
 
 1. Download and install WP-Agentic-Admin
 2. Navigate to "Agentic Admin" in your WordPress admin menu
-3. Wait for the AI model to download (one-time, ~2.5GB for Qwen2.5-3B)
+3. Wait for the AI model to download (one-time, ~4.5GB for Qwen2.5-7B)
 4. Start chatting!
 
 ## Persistent AI Mode
@@ -121,7 +123,7 @@ WP-Agentic-Admin uses **Service Worker technology** to keep the AI model loaded 
 ### How It Works
 
 When you first load Agentic Admin in Chrome or Edge:
-1. The model downloads to browser cache (~2.5GB, one-time)
+1. The model downloads to browser cache (~4.5GB, one-time)
 2. A Service Worker registers and loads the model into GPU memory
 3. The model stays loaded as long as you have a Agentic Admin tab open
 4. Navigate away and back - the model is still there!
@@ -221,6 +223,7 @@ AI: [Executing: site-health]
 | [Abilities Guide](docs/ABILITIES-GUIDE.md) | How to create new abilities |
 | [Workflows Guide](docs/WORKFLOWS-GUIDE.md) | How to create multi-step workflows |
 | [Third-Party Integration](docs/THIRD-PARTY-INTEGRATION.md) | Extending with custom plugins |
+| [Testing Guide](tests/TESTING.md) | Unit tests and E2E browser test suite |
 
 ### Key Concepts
 
@@ -269,16 +272,18 @@ npm run build
 ### Testing
 
 ```bash
-npm test                    # Run all tests
+npm test                    # Run unit tests (43 tests)
 npm test -- react-agent     # Run specific test file
 npm run test:watch          # Watch mode
 ```
+
+The project also includes an E2E browser test suite that validates the full pipeline (user message → LLM reasoning → tool selection → tool execution → response) using Chrome DevTools MCP. See [tests/TESTING.md](tests/TESTING.md) for details.
 
 ### Technology Stack
 
 **Client-Side:**
 - Runtime: WebAssembly & WebGPU
-- AI: WebLLM with Qwen2.5-3B / Llama-3.2-3B
+- AI: WebLLM with Qwen2.5-7B (default), Hermes-2-Pro-7B, Llama-3.1-8B
 - UI: React
 - Chat: ReAct loop with adaptive tool selection
 - Persistence: Service Worker mode keeps model loaded across navigation

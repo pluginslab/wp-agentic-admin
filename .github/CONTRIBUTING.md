@@ -61,16 +61,15 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 
 ### Branch Strategy
 
-- `main` - Stable release branch (protected)
-- `develop` - Active development branch
-- Feature branches - Created from `develop` for new features/fixes
+- `main` - Primary development and release branch
+- Feature branches - Created from `main` for new features/fixes
 
 ### Creating a Feature Branch
 
 ```bash
-# Update your develop branch
-git checkout develop
-git pull upstream develop
+# Update your main branch
+git checkout main
+git pull upstream main
 
 # Create your feature branch
 git checkout -b feature/your-feature-name
@@ -82,13 +81,12 @@ git checkout -b fix/bug-description
 
 ```bash
 # Regularly sync with upstream
-git checkout develop
-git pull upstream develop
-git push origin develop
+git checkout main
+git pull upstream main
 
 # Rebase your feature branch
 git checkout feature/your-feature-name
-git rebase develop
+git rebase main
 ```
 
 ## Contribution Types
@@ -208,11 +206,10 @@ npm run test:watch
 
 ### Writing Tests
 
-Place tests in `src/extensions/__tests__/`:
+Place unit tests in `src/extensions/services/__tests__/` next to the source they test:
 
 ```javascript
-import { describe, it, expect } from '@jest/globals';
-import { exampleFunction } from '../services/example';
+import { exampleFunction } from '../example';
 
 describe('exampleFunction', () => {
     it('should handle valid input', () => {
@@ -227,16 +224,20 @@ describe('exampleFunction', () => {
 });
 ```
 
+### E2E Browser Tests
+
+The project also includes E2E tests that validate the full AI pipeline in a real browser. These are defined in `tests/e2e/` and executed via Claude Code using Chrome DevTools MCP. See [tests/TESTING.md](../tests/TESTING.md) for details.
+
 ## Pull Request Process
 
 ### Before Submitting
 
-1. **Update your branch** with latest `develop`:
+1. **Update your branch** with latest `main`:
    ```bash
-   git checkout develop
-   git pull upstream develop
+   git checkout main
+   git pull upstream main
    git checkout feature/your-feature-name
-   git rebase develop
+   git rebase main
    ```
 
 2. **Run tests**:
@@ -287,7 +288,7 @@ ability structure and test cases.
    ```
 
 2. **Create PR on GitHub**:
-   - Base branch: `develop`
+   - Base branch: `main`
    - Compare branch: `your-fork:feature/your-feature-name`
    - Fill out the PR template completely
 
@@ -303,7 +304,7 @@ ability structure and test cases.
 1. Automated checks will run (tests, linting)
 2. Maintainers will review your code
 3. Address any feedback by pushing new commits
-4. Once approved, your PR will be merged into `develop`
+4. Once approved, your PR will be merged into `main`
 
 ### What Happens Next
 

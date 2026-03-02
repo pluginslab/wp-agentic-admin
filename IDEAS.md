@@ -39,6 +39,8 @@ These features align with CloudFest Hackathon goals and are targeted for impleme
 
 **Hackathon Goal:** Improve local LLM reasoning and tool selection + enhance small model reliability.
 
+> **Update (v0.2.0):** The upgrade to 7B models (Qwen2.5-7B) achieved 96% E2E accuracy *without* the semantic translation layer. This idea remains valuable as a potential optimization for lower-end hardware (where 3B models are the only option), but is no longer a critical priority.
+
 ---
 
 ### 4. Error Log Improvements
@@ -135,21 +137,18 @@ These features align with CloudFest Hackathon goals and are targeted for impleme
 
 Features to pursue after hackathon priorities are complete.
 
-### Larger Model Support (7B+)
-**Mission:** Contingency plan if SLM Strategy doesn't achieve desired results with 3B models. Detect model size and enable enhanced features for users with hardware capable of running 7B+ models.
+### ~~Larger Model Support (7B+)~~ DONE
 
-**Status:** Fallback option - only pursue if 3B + semantic translation isn't good enough.
+**Status:** Implemented in v0.2.0. Qwen2.5-7B is now the default model.
 
-**Enhanced Features (if needed):**
-- Multi-step reasoning (5-10 steps instead of 2-3)
-- Better error recovery (retry with different approach)
-- More reliable LLM-based conditions
-- More accurate workflow composition
-- Conversational context (remember previous queries)
+**Results:**
+- 96% E2E pass rate (26/27 tests) — up from 74% with 3B models
+- 100% JSON reliability (up from 63%)
+- Multi-step reasoning, conditional logic, and goal completion all at 100%
+- ~5GB VRAM, runs on consumer hardware with WebGPU
+- No semantic translation layer needed — 7B models handle intent mapping natively
 
-**Target Models:** Llama 3.2 7B, Qwen 2.5 7B, Phi-4 7B
-
-**Decision Point:** Re-evaluate after SLM Strategy implementation. If semantic translation solves the problems, 7B+ becomes "nice to have" rather than "critical next step."
+**Models available:** Qwen 2.5 7B (default), Hermes 2 Pro 7B, Llama 3.1 8B
 
 ---
 
