@@ -389,9 +389,21 @@ class ReactAgent {
 
 					// If we've already used tools and LLM is responding naturally, accept it
 					if ( toolsUsed.length > 0 ) {
+						// Try to extract clean content if it looks like a JSON envelope
+						let answer = content;
+						if ( content.trim().startsWith( '{' ) ) {
+							try {
+								const parsed = JSON.parse( content );
+								if ( parsed.content ) {
+									answer = parsed.content;
+								}
+							} catch ( e ) {
+								// Not valid JSON, use raw content
+							}
+						}
 						return {
 							success: true,
-							finalAnswer: content,
+							finalAnswer: answer,
 							iterations: iteration,
 							toolsUsed,
 							observations,
@@ -481,12 +493,26 @@ class ReactAgent {
 				// Case 2: Final answer
 				if ( action.action === 'final_answer' ) {
 					log.info( 'LLM provided final answer' );
+					let answer =
+						action.content ||
+						action.answer ||
+						'Task completed.';
+
+					// Unwrap double-encoded JSON envelope if model wrapped the answer twice
+					if ( typeof answer === 'string' && answer.trim().startsWith( '{' ) ) {
+						try {
+							const inner = JSON.parse( answer );
+							if ( inner.content ) {
+								answer = inner.content;
+							}
+						} catch ( e ) {
+							// Not double-encoded, keep as-is
+						}
+					}
+
 					return {
 						success: true,
-						finalAnswer:
-							action.content ||
-							action.answer ||
-							'Task completed.',
+						finalAnswer: answer,
 						iterations: iteration,
 						toolsUsed,
 						observations,
@@ -647,8 +673,20 @@ class ReactAgent {
 				return '';
 			} );
 
+			// Try to parse BEFORE any quote replacement (7B models output valid JSON)
+			// Quote replacement corrupts apostrophes in content (e.g. "Here's" → "Here"s")
+			try {
+				const action = JSON.parse( text );
+				if ( action.action ) {
+					return action;
+				}
+			} catch ( e ) {
+				// Not clean JSON, try with syntax fixes
+				log.debug( 'Initial JSON parse failed:', e.message );
+			}
+
 			// Try to fix common JSON syntax issues from small models
-			// 1. Single quotes to double quotes
+			// 1. Single quotes to double quotes (for models that use single-quoted JSON keys)
 			// 2. Remove trailing commas before } or ]
 			// 3. Fix property names missing closing quotes (e.g., "args:{} → "args": {})
 			const jsonText = text
@@ -656,15 +694,13 @@ class ReactAgent {
 				.replace( /,(\s*[}\]])/g, '$1' ) // Remove trailing commas
 				.replace( /"(\w+):([^"])/g, '"$1": $2' ); // Fix missing quote+space: "args:{} → "args": {}
 
-			// Try to parse the whole thing first (in case it's clean JSON)
 			try {
 				const action = JSON.parse( jsonText );
 				if ( action.action ) {
 					return action;
 				}
 			} catch ( e ) {
-				// Not clean JSON, continue with extraction
-				log.debug( 'Initial JSON parse failed:', e.message );
+				log.debug( 'Fixed JSON parse also failed:', e.message );
 			}
 
 			// Extract first valid JSON object by counting braces
