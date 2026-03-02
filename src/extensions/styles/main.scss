@@ -1583,6 +1583,14 @@
 			gap: 12px;
 		}
 
+		// Loading indicator - same alignment as tool messages
+		&--loading {
+			flex-direction: row !important;
+			align-items: flex-start !important;
+			gap: 12px;
+			padding: 0 !important;
+		}
+
 		// Error message
 		&--error {
 			flex-direction: row !important;
@@ -1799,8 +1807,7 @@
 // Loading indicator while ability executes
 .agentic-message--loading {
 	display: flex;
-	gap: 16px;
-	padding: 16px 20px;
+	gap: 12px;
 
 	.agentic-timeline {
 		display: flex;
