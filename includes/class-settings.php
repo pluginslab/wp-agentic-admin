@@ -97,8 +97,6 @@ class Settings {
 						'type'        => 'select',
 						'options'     => array(
 							'Qwen2.5-7B-Instruct-q4f16_1-MLC'     => 'Qwen 2.5 7B (Recommended)',
-							'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC' => 'Hermes 2 Pro 7B',
-							'Llama-3.1-8B-Instruct-q4f16_1-MLC'   => 'Llama 3.1 8B',
 						),
 						'default'     => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin' ),

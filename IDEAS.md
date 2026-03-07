@@ -123,7 +123,7 @@ Features to pursue after hackathon priorities are complete.
 - ~5GB VRAM, runs on consumer hardware with WebGPU
 - No semantic translation layer needed — 7B models handle intent mapping natively
 
-**Models available:** Qwen 2.5 7B (default), Hermes 2 Pro 7B, Llama 3.1 8B
+**Model:** Qwen 2.5 7B
 
 ---
 

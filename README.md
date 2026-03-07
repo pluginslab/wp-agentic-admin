@@ -20,7 +20,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 
 ## Key Features
 
-- **100% Local AI**: Uses WebLLM to run a 7B language model (Qwen2.5-7B, Hermes-2-Pro-7B, or Llama-3.1-8B) directly in your browser via WebGPU
+- **100% Local AI**: Uses WebLLM to run Qwen2.5-7B directly in your browser via WebGPU
 - **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
 - **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
 - **Persistent AI**: Model stays loaded across page navigations using Service Worker technology
@@ -40,7 +40,7 @@ WP-Agentic-Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI deci
 │                   Your Browser                               │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │              Local AI (WebLLM)                         │  │
-│  │    Qwen2.5-7B / Hermes-2-Pro-7B / Llama-3.1-8B         │  │
+│  │    Qwen2.5-7B                                           │  │
 │  │                                                         │  │
 │  │  ReAct Loop: LLM decides tools based on observations  │  │
 │  └───────────────────────────────────────────────────────┘  │
@@ -283,7 +283,7 @@ The project also includes an E2E browser test suite that validates the full pipe
 
 **Client-Side:**
 - Runtime: WebAssembly & WebGPU
-- AI: WebLLM with Qwen2.5-7B (default), Hermes-2-Pro-7B, Llama-3.1-8B
+- AI: WebLLM with Qwen2.5-7B
 - UI: React
 - Chat: ReAct loop with adaptive tool selection
 - Persistence: Service Worker mode keeps model loaded across navigation

@@ -54,8 +54,8 @@ class Admin_Page {
 	 */
 	public function add_admin_menu(): void {
 		add_menu_page(
-			__( 'Agentic Admin', 'wp-agentic-admin' ),
-			__( 'Agentic Admin', 'wp-agentic-admin' ),
+			__( 'WP Agentic Admin', 'wp-agentic-admin' ),
+			__( 'WP Agentic Admin', 'wp-agentic-admin' ),
 			'manage_options',
 			'wp-agentic-admin',
 			array( $this, 'render_page' ),

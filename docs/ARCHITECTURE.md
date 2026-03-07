@@ -119,7 +119,7 @@ Everything runs in the browser using WebLLM and WebGPU. No server-side AI requir
 
 ### 4. Optimized for Local Models
 
-Tuned for 7B parameter models (Qwen2.5-7B, Hermes-2-Pro-7B, Llama-3.1-8B) running locally via WebGPU.
+Tuned for the Qwen2.5-7B model running locally via WebGPU.
 
 **Why:** 7B models deliver 96% accuracy on agentic tasks while running on consumer hardware (~5GB VRAM). No cloud API needed.
 
@@ -296,9 +296,7 @@ WP-Agentic-Admin runs 7B parameter models locally via WebGPU. The default model 
 
 | Model | Pass Rate | JSON Reliability | Strengths |
 |-------|-----------|-----------------|-----------|
-| **Qwen 2.5 7B** (default) | 96% (26/27) | 100% | Best overall: clean JSON, precise tool selection, multi-step reasoning |
-| Hermes 2 Pro 7B | 74% (20/27) | 63% | Good at conditional logic, but JSON parse failures and over-shooting |
-| Llama 3.1 8B | Not tested | — | Alternative option |
+| **Qwen 2.5 7B** | 96% (26/27) | 100% | Clean JSON, precise tool selection, multi-step reasoning |
 
 ### Challenges Solved
 
@@ -324,7 +322,7 @@ WP-Agentic-Admin runs 7B parameter models locally via WebGPU. The default model 
 ### Dual-Mode Support
 
 - Function calling for models that support it
-- Prompt-based JSON for models that don't (Qwen, Hermes)
+- Prompt-based JSON fallback
 - Auto-detection on first run
 
 ---
@@ -356,7 +354,7 @@ See [tests/TESTING.md](../tests/TESTING.md) for the full testing guide.
 **v0.1.x:**
 - ReAct loop for adaptive execution
 - Workflow keyword detection for common patterns
-- 3B models (Qwen2.5-3B, Llama-3.2-3B) — 74% E2E accuracy
+- 3B models — 74% E2E accuracy
 
 **v0.3.0 (current):**
 - Upgraded to 7B models — 96% E2E accuracy with Qwen2.5-7B
@@ -413,7 +411,7 @@ The frontend is built with React (via `@wordpress/element`) in `src/extensions/`
 
 The PHP settings system is managed by `class-settings.php` (`includes/class-settings.php`):
 
-- **Model selection** - Choose which AI model to use (Qwen2.5-7B, Hermes-2-Pro-7B, Llama-3.1-8B)
+- **Model selection** - Choose which AI model to use (Qwen2.5-7B)
 - **Confirm destructive actions** - Toggle requiring user confirmation before executing destructive abilities (enabled by default)
 - **Max log lines** - Configure the maximum number of log lines to read at once (default: 100)
 

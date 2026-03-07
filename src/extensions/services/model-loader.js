@@ -34,10 +34,8 @@ const MODEL_CONFIG = {
  */
 const MODEL_CONTEXT_SIZES = {
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
-	'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC': 32768,
-	'Llama-3.1-8B-Instruct-q4f16_1-MLC': 8192,
 	// Default fallback
-	default: 8192,
+	default: 4096,
 };
 
 /**
@@ -980,35 +978,6 @@ class ModelLoader {
 					'complex workflows',
 					'advanced reasoning',
 					'JSON output',
-				],
-			},
-			{
-				id: 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC',
-				name: 'Hermes 2 Pro 7B (Q4)',
-				size: '~4.5GB',
-				vram: '~5GB',
-				description:
-					'NousResearch Hermes 2 Pro 7B. 90% function calling score, reliable JSON output.',
-				recommended: false,
-				capabilities: [
-					'function calling',
-					'complex workflows',
-					'advanced reasoning',
-					'JSON output',
-				],
-			},
-			{
-				id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC',
-				name: 'Llama 3.1 8B (Q4)',
-				size: '~4.5GB',
-				vram: '~5GB',
-				description:
-					'Meta Llama 3.1 8B. Native function calling, strong instruction following.',
-				recommended: false,
-				capabilities: [
-					'function calling',
-					'complex workflows',
-					'advanced reasoning',
 				],
 			},
 		];

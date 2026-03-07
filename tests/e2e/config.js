@@ -24,7 +24,6 @@ export const config = {
 	// Model configuration
 	models: {
 		default: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-		alternative: 'Hermes-2-Pro-Mistral-7B-q4f16_1-MLC',
 	},
 
 	// CSS selectors for interacting with the plugin UI

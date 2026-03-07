@@ -108,16 +108,8 @@ class ReactAgent {
 
 		// Determine tool calling mode if not yet set
 		if ( this.useFunctionCalling === null ) {
-			// Hermes-2-Pro models support function calling but WebLLM's implementation
-			// does not allow custom system prompts or multi-turn tool conversations,
-			// so we force prompt-based mode for reliable multi-step reasoning.
-			const modelId = this.modelLoader.getModelId();
-			if ( modelId.toLowerCase().includes( 'hermes' ) ) {
-				this.useFunctionCalling = false;
-				log.info(
-					'Hermes model detected - using prompt-based mode (WebLLM FC limitation)'
-				);
-			} else {
+			// Auto-detect function calling support
+			{
 				try {
 					log.info( 'Testing function calling support...' );
 					await engine.chat.completions.create( {
@@ -194,16 +186,9 @@ class ReactAgent {
 		const toolsUsed = [];
 		let iteration = 0;
 
-		// Hermes-2-Pro models use a built-in chat template for function calling
-		// and do not allow custom system prompts when tools are provided.
-		const modelId = this.modelLoader.getModelId();
-		const isHermes = modelId.toLowerCase().includes( 'hermes' );
-
 		const messages = [];
-		if ( ! isHermes ) {
-			const systemPrompt = this.buildSystemPromptFunctionCalling();
-			messages.push( { role: 'system', content: systemPrompt } );
-		}
+		const systemPrompt = this.buildSystemPromptFunctionCalling();
+		messages.push( { role: 'system', content: systemPrompt } );
 		messages.push( ...conversationHistory );
 		messages.push( { role: 'user', content: userMessage } );
 
