@@ -23,7 +23,7 @@ export const config = {
 
 	// Model configuration
 	models: {
-		default: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
+		default: 'Qwen3-1.7B-q4f16_1-MLC',
 	},
 
 	// CSS selectors for interacting with the plugin UI
@@ -50,7 +50,7 @@ export const config = {
 		login: 5000,
 		modelLoad: 300000, // 5 minutes for first model load
 		modelLoadCached: 60000, // 1 minute for cached model
-		messageProcessing: 120000, // 2 minutes per message (7B models)
+		messageProcessing: 120000, // 2 minutes per message
 		pollInterval: 2000, // Poll every 2 seconds
 		betweenTests: 3000, // Wait between tests for model stability
 	},

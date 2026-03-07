@@ -20,7 +20,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 
 ## Key Features
 
-- **100% Local AI**: Uses WebLLM to run Qwen2.5-7B directly in your browser via WebGPU
+- **100% Local AI**: Uses WebLLM to run Qwen 3 1.7B (default) or Qwen 2.5 7B directly in your browser via WebGPU
 - **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
 - **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
 - **Persistent AI**: Model stays loaded across page navigations using Service Worker technology
@@ -40,7 +40,7 @@ WP-Agentic-Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI deci
 │                   Your Browser                               │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │              Local AI (WebLLM)                         │  │
-│  │    Qwen2.5-7B                                           │  │
+│  │    Qwen 3 1.7B (default) / Qwen 2.5 7B                  │  │
 │  │                                                         │  │
 │  │  ReAct Loop: LLM decides tools based on observations  │  │
 │  └───────────────────────────────────────────────────────┘  │
@@ -106,7 +106,7 @@ Otherwise, the ReAct loop handles everything dynamically.
 
 1. Download and install WP-Agentic-Admin
 2. Navigate to "Agentic Admin" in your WordPress admin menu
-3. Wait for the AI model to download (one-time, ~4.5GB for Qwen2.5-7B)
+3. Wait for the AI model to download (one-time, ~1.2GB for Qwen 3 1.7B or ~4.5GB for Qwen 2.5 7B)
 4. Start chatting!
 
 ## Persistent AI Mode
@@ -123,7 +123,7 @@ WP-Agentic-Admin uses **Service Worker technology** to keep the AI model loaded 
 ### How It Works
 
 When you first load Agentic Admin in Chrome or Edge:
-1. The model downloads to browser cache (~4.5GB, one-time)
+1. The model downloads to browser cache (~1.2GB for Qwen 3 1.7B, ~4.5GB for Qwen 2.5 7B, one-time)
 2. A Service Worker registers and loads the model into GPU memory
 3. The model stays loaded as long as you have a Agentic Admin tab open
 4. Navigate away and back - the model is still there!
@@ -283,7 +283,7 @@ The project also includes an E2E browser test suite that validates the full pipe
 
 **Client-Side:**
 - Runtime: WebAssembly & WebGPU
-- AI: WebLLM with Qwen2.5-7B
+- AI: WebLLM with Qwen 3 1.7B (default) or Qwen 2.5 7B
 - UI: React
 - Chat: ReAct loop with adaptive tool selection
 - Persistence: Service Worker mode keeps model loaded across navigation

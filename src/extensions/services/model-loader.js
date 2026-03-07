@@ -19,7 +19,7 @@ import * as webllm from '@mlc-ai/web-llm';
  *
  * v2.0: Upgraded to 7B models for better JSON output, multi-step reasoning, and error recovery
  */
-const DEFAULT_MODEL = 'Qwen2.5-7B-Instruct-q4f16_1-MLC';
+const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
 
 /**
  * Model configuration options
@@ -33,6 +33,7 @@ const MODEL_CONFIG = {
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
+	'Qwen3-1.7B-q4f16_1-MLC': 4096,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
 	// Default fallback
 	default: 4096,
@@ -966,13 +967,27 @@ class ModelLoader {
 	static getAvailableModels() {
 		return [
 			{
+				id: 'Qwen3-1.7B-q4f16_1-MLC',
+				name: 'Qwen 3 1.7B (Q4)',
+				size: '~1.2GB',
+				vram: '~1.5GB',
+				description:
+					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight.',
+				recommended: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'fast inference',
+				],
+			},
+			{
 				id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 				name: 'Qwen 2.5 7B (Q4)',
 				size: '~4.5GB',
 				vram: '~5GB',
 				description:
 					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following.',
-				recommended: true,
+				recommended: false,
 				capabilities: [
 					'function calling',
 					'complex workflows',

@@ -119,9 +119,11 @@ Everything runs in the browser using WebLLM and WebGPU. No server-side AI requir
 
 ### 4. Optimized for Local Models
 
-Tuned for the Qwen2.5-7B model running locally via WebGPU.
+Supports multiple models running locally via WebGPU:
+- **Qwen 3 1.7B** (default) — Fast inference (~1.2GB), 93% E2E accuracy, native tool calling
+- **Qwen 2.5 7B** (alternative) — Higher accuracy (96%), better multi-step reasoning (~4.5GB)
 
-**Why:** 7B models deliver 96% accuracy on agentic tasks while running on consumer hardware (~5GB VRAM). No cloud API needed.
+**Why:** Local models deliver 93–96% accuracy on agentic tasks while running on consumer hardware. No cloud API needed.
 
 ---
 
@@ -290,13 +292,16 @@ register_agentic_ability('wp-agentic-admin/db-optimize', [
 
 ## Model Optimizations
 
-WP-Agentic-Admin runs 7B parameter models locally via WebGPU. The default model (Qwen2.5-7B) achieves **96% accuracy** on E2E agentic tests (26/27 passing), with 100% JSON reliability.
+WP-Agentic-Admin runs models locally via WebGPU. Two models are available:
 
 ### Model Comparison
 
-| Model | Pass Rate | JSON Reliability | Strengths |
-|-------|-----------|-----------------|-----------|
-| **Qwen 2.5 7B** | 96% (26/27) | 100% | Clean JSON, precise tool selection, multi-step reasoning |
+| Model | Size | Pass Rate | JSON Reliability | Strengths |
+|-------|------|-----------|-----------------|-----------|
+| **Qwen 3 1.7B** (default) | ~1.2GB | 93% (14/15) | 100% | Fast inference, native tool calling, lightweight |
+| **Qwen 2.5 7B** | ~4.5GB | 96% (26/27) | 100% | Multi-step reasoning, complex workflows, precise tool selection |
+
+The 1.7B model is recommended for most users — it loads faster, uses less VRAM, and handles single-tool and multi-tool tasks reliably. The 7B model is available for users who need advanced multi-step reasoning or have sufficient GPU memory.
 
 ### Challenges Solved
 
@@ -356,7 +361,7 @@ See [tests/TESTING.md](../tests/TESTING.md) for the full testing guide.
 - Workflow keyword detection for common patterns
 - 3B models — 74% E2E accuracy
 
-**v0.3.0 (current):**
+**v0.3.0:**
 - Upgraded to 7B models — 96% E2E accuracy with Qwen2.5-7B
 - 100% JSON reliability (up from 63% with 3B models)
 - JSON envelope fix (prevents raw action wrappers leaking to users)
@@ -364,6 +369,12 @@ See [tests/TESTING.md](../tests/TESTING.md) for the full testing guide.
 - E2E browser test suite (27 tests across 8 categories)
 - Test observability hook (`window.__wpAgenticTestHook`)
 - 4 workflows tested at 100% pass rate
+
+**v0.4.0 (current):**
+- Added Qwen 3 1.7B as default model — 93% E2E accuracy, ~3x faster inference
+- Qwen 2.5 7B retained as alternative for advanced reasoning
+- Multi-model support — users can choose from dropdown
+- Model preference persisted in localStorage
 
 **Future Enhancements:**
 - Expanded abilities library (16+ new abilities proposed)
