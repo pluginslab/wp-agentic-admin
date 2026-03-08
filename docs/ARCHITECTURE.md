@@ -113,15 +113,15 @@ The ReAct loop lets the AI adapt to what it discovers, rather than following rig
 
 Everything runs in the browser using WebLLM and WebGPU. No server-side AI required.
 
-**Why:** Privacy, zero server costs, works offline, GDPR compliant by design.
+**Why:** Privacy, zero server costs, GDPR compliant by design.
 
-**Service Worker Architecture:** The AI model is hosted in a Service Worker (`sw.js`) using `ServiceWorkerMLCEngineHandler` from WebLLM. This allows the model to persist in GPU memory across wp-admin page navigations -- the model stays loaded as long as at least one browser tab is connected. Client pages communicate with the Service Worker via `postMessage`. This avoids re-downloading and re-loading the model on every page change.
+**Service Worker Architecture:** The AI model is hosted in a Service Worker (`sw.js`) using `ServiceWorkerMLCEngineHandler` from WebLLM. This allows the model to persist in GPU memory across wp-admin page navigations — the model stays loaded as long as at least one browser tab is connected. Client pages communicate with the Service Worker via `postMessage`. This avoids re-downloading and re-loading the model on every page change.
 
 ### 4. Optimized for Local Models
 
-Supports multiple models running locally via WebGPU:
-- **Qwen 3 1.7B** (default) — Fast inference (~1.2GB), 93% E2E accuracy, native tool calling
-- **Qwen 2.5 7B** (alternative) — Higher accuracy (96%), better multi-step reasoning (~4.5GB)
+Two models are available, both running locally via WebGPU:
+- **Qwen 3 1.7B** (default in code, `Qwen3-1.7B-q4f16_1-MLC`) — Fast inference (~1.2GB), 93% E2E accuracy, native function calling
+- **Qwen 2.5 7B** (alternative, `Qwen2.5-7B-Instruct-q4f16_1-MLC`) — Higher accuracy (96%), better multi-step reasoning (~4.5GB), prompt-based JSON mode
 
 **Why:** Local models deliver 93–96% accuracy on agentic tasks while running on consumer hardware. No cloud API needed.
 
@@ -131,23 +131,23 @@ Supports multiple models running locally via WebGPU:
 
 ### Message Routing
 
+The router uses **2-tier routing**: workflow detection first, then everything else through ReAct.
+
 ```
 User Message
-  ↓
-Is it a question? (e.g., "what is a transient?")
-  ↓ Yes → Conversational Mode (LLM answers directly)
-  ↓ No
   ↓
 Does it match a workflow keyword? (e.g., "full site cleanup")
   ↓ Yes → Execute Workflow (pre-defined steps)
   ↓ No
   ↓
-ReAct Loop (AI-driven adaptive execution)
+ReAct Loop (handles everything: questions, tool calls, diagnostics)
 ```
+
+The ReAct loop handles both informational questions (answering directly without calling tools) and action requests (selecting and executing tools). There is no separate "conversational mode" — the LLM naturally decides whether to call tools or respond directly.
 
 ### ReAct Loop Flow
 
-> **Note:** The ReAct agent supports TWO execution modes: **function-calling mode** (for models that support native tool use) and **prompt-based JSON mode** (for models that need structured prompts). The default model (Qwen2.5-7B) uses prompt-based JSON mode and achieves 96% accuracy on E2E agentic tests. The mode is auto-detected on the first inference call.
+> **Note:** The ReAct agent supports TWO execution modes: **function-calling mode** (for models that support native tool use) and **prompt-based JSON mode** (for models that need structured prompts). The default model (Qwen 3 1.7B) uses function-calling mode with native tool use. The alternative model (Qwen 2.5 7B) uses prompt-based JSON mode. The mode is auto-detected on the first inference call.
 
 ```javascript
 while (iteration < maxIterations) {
@@ -188,9 +188,9 @@ return "I reached the maximum number of steps...";
 - Error recovery
 
 **2. Message Router (`message-router.js`)**
-- Question detection (regex patterns)
+- 2-tier routing: workflow detection, then ReAct
 - Workflow keyword matching
-- Default to ReAct loop
+- Default to ReAct loop (handles both questions and actions)
 
 **3. Tool Registry (`tool-registry.js`)**
 - Registers all available abilities
@@ -318,11 +318,11 @@ The 1.7B model is recommended for most users — it loads faster, uses less VRAM
 - Context window overflow handling
 - JSON envelope unwrapping (prevents raw `{"action": "final_answer", ...}` leaking to user)
 
-### Pre-filtering
+### Question Handling
 
-- Questions detected before ReAct (regex patterns)
-- Prevents "what is a transient?" from calling tools
-- Reduces unnecessary LLM calls
+- Questions like "what is a transient?" go through the ReAct loop
+- The LLM naturally answers without calling tools when no action is needed
+- No separate pre-filter — the model decides whether to use tools or respond directly
 
 ### Dual-Mode Support
 
@@ -336,9 +336,9 @@ The 1.7B model is recommended for most users — it loads faster, uses less VRAM
 
 WP-Agentic-Admin has two layers of testing:
 
-### Unit Tests (43 tests)
+### Unit Tests (41 tests)
 - `react-agent.test.js` - ReAct loop: JSON parsing, tool routing, iteration limits, repeated call detection, error handling
-- `message-router.test.js` - 3-way message routing (conversational, workflow, react)
+- `message-router.test.js` - 2-tier message routing (workflow, ReAct)
 - Mocked LLM responses for deterministic testing
 - Run with `npm test`
 
@@ -391,17 +391,16 @@ The goal is to make the AI **more reliable and helpful** while keeping it **loca
 
 The following service modules live in `src/extensions/services/` and `src/extensions/utils/`:
 
-- **ChatOrchestrator** (`chat-orchestrator.js`) - Main message coordinator. Routes messages via MessageRouter to conversational, workflow, or ReAct paths. Builds system prompts, manages LLM summary generation, and truncates tool results to 1500 chars for summary prompts.
+- **ChatOrchestrator** (`chat-orchestrator.js`) - Main message coordinator. Routes messages via MessageRouter to workflow or ReAct paths. Builds system prompts, manages LLM summary generation, and truncates tool results to 1500 chars for summary prompts.
 - **ChatSession** (`chat-session.js`) - Chat history management with `localStorage` persistence. Tracks messages, tool calls, and session metadata.
 - **StreamSimulator** (`stream-simulator.js`) - Typewriter-style text streaming for chat responses, providing a natural reading experience.
 - **ModelLoader** (`model-loader.js`) - WebLLM model management. Handles model download, loading, and inference. Uses a Service Worker (`sw.js`) for model persistence across page navigations.
-- **AIService** (`ai-service.js`) - Legacy keyword-based ability detection (fallback path when ReAct is not available).
 - **AbilitiesAPI** (`abilities-api.js`) - REST client for the WordPress Abilities API. Fetches registered abilities from the server.
 - **AgenticAbilitiesAPI** (`agentic-abilities-api.js`) - Public JavaScript registration API exposed as `wp.agenticAdmin.*`. Allows JS-side ability and workflow registration.
 - **ToolRegistry** (`tool-registry.js`) - JavaScript-side ability registration and keyword matching. Converts abilities to function-calling format for the LLM.
 - **WorkflowRegistry** (`workflow-registry.js`) - Workflow registration and keyword-based detection. Matches user messages to pre-defined workflows.
 - **WorkflowOrchestrator** (`workflow-orchestrator.js`) - Workflow execution engine with rollback support, `includeIf` conditional steps, `mapParams`, optional steps, confirmation prompts, and abort handling.
-- **MessageRouter** (`message-router.js`) - 3-way message routing: conversational (question detection via regex), workflow (keyword matching), and ReAct (default fallback).
+- **MessageRouter** (`message-router.js`) - 2-tier message routing: workflow (keyword matching) and ReAct (default for everything else, including questions).
 - **ReactAgent** (`react-agent.js`) - Core ReAct loop with dual-mode support (function-calling and prompt-based JSON). Handles observation tracking, confirmation, repeated-call detection, and error recovery.
 - **Logger** (`utils/logger.js`) - Centralized logging with configurable levels. Used across all services via `createLogger('ModuleName')`.
 
@@ -422,7 +421,7 @@ The frontend is built with React (via `@wordpress/element`) in `src/extensions/`
 
 The PHP settings system is managed by `class-settings.php` (`includes/class-settings.php`):
 
-- **Model selection** - Choose which AI model to use (Qwen2.5-7B)
+- **Model selection** - Choose which AI model to use (currently only Qwen 2.5 7B in settings UI; the default model `Qwen3-1.7B` is hardcoded in `model-loader.js`)
 - **Confirm destructive actions** - Toggle requiring user confirmation before executing destructive abilities (enabled by default)
 - **Max log lines** - Configure the maximum number of log lines to read at once (default: 100)
 

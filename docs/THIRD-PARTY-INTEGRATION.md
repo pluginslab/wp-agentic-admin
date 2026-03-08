@@ -221,7 +221,7 @@ wp.agenticAdmin.registerAbility('my-plugin/my-ability', {
     initialMessage: 'Processing...',
     summarize: (result, userMessage) => 'Summary text',
     execute: async (params) => { /* return result */ },
-    extractParams: (userMessage) => { /* return structured params */ },
+    parseIntent: (userMessage) => { /* return structured params */ },
     requiresConfirmation: false,
     confirmationMessage: 'Are you sure?',
 });
@@ -236,7 +236,7 @@ wp.agenticAdmin.registerAbility('my-plugin/my-ability', {
 >
 > You should still implement `summarize()` for all abilities to ensure a good user experience in all scenarios.
 
-> **Note on `extractParams()`:** The optional `extractParams` function receives the user's natural language message and returns a structured parameters object. This is useful when your ability needs to parse specific values (e.g., plugin slugs, post IDs) from the user's message before execution. See the built-in `plugin-activate.js` and `plugin-deactivate.js` abilities for real-world examples.
+> **Note on `parseIntent()`:** The optional `parseIntent` function receives the user's natural language message and returns a structured parameters object. This is called by the orchestrator before `execute()`, `requiresConfirmation()`, and `getConfirmationMessage()`. It is useful when your ability needs to parse specific values (e.g., plugin slugs, post IDs) from the user's message. See `revision-cleanup.js`, `transient-flush.js`, and `core-site-info.js` for real-world examples. Alternatively, you can extract params directly inside your `execute()` function (as `plugin-activate.js` and `plugin-deactivate.js` do with a local `extractParams` helper).
 
 #### `wp.agenticAdmin.executeAbility( id, input )`
 
@@ -489,7 +489,7 @@ Available context variables are auto-extracted from previous step results:
 
 **Best Practices:**
 
-✅ **Use function-based for production** (fast, deterministic, works with 1.5B model)  
+✅ **Use function-based for production** (fast, deterministic, works with any model)  
 ⚠️ **Use LLM-based for semantic flexibility** (requires 3B+ model for accuracy)  
 ✅ **Always check `stepResult?.success`** before accessing data  
 ✅ **Fail-safe defaults:** Steps execute on error (safe behavior)  

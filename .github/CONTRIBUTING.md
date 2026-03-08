@@ -248,7 +248,7 @@ The project also includes E2E tests that validate the full AI pipeline in a real
 
 3. **Review your changes**:
    ```bash
-   git diff develop
+   git diff main
    ```
 
 ### Commit Messages

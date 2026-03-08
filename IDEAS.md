@@ -200,13 +200,13 @@ Even in function calling mode (structured `tools` array), 100+ tool definitions 
 
 **Why it matters:**
 - transformers.js gives native function calling via Qwen chat templates (no prompt-based JSON hacking)
-- Service Worker persistence is a major UX win (WebLLM doesn't have this)
 - `engine.supportsTools` auto-detection from tokenizer chat template
 
 **Why WebLLM still wins (for now):**
 - WebLLM uses TVM compiled to WebGPU shaders — weights go directly to GPU, bypassing WASM entirely
 - Successfully loads 7B models (~5GB VRAM) on the same hardware
 - No WASM memory bottleneck
+- Service Worker persistence now works with WebLLM's `ServiceWorkerMLCEngineHandler`
 
 **Investigation leads for hackathon:**
 - The `tantara/transformers.js-chrome` reference repo loads `Qwen2.5-1.5B-Instruct` (q4f16) successfully with the same stack. Their Chrome extension environment (Plasmo bundler, clean context) differs from our WordPress admin (webpack, heavy page).

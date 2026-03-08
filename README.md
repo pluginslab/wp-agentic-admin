@@ -84,16 +84,17 @@ AI: "Your database was causing slowness. I optimized it and saved 125MB."
 
 The AI decides **one action at a time**, observing results and adapting its strategy.
 
-### Workflow Detection
+### 2-Tier Routing
 
-For complex multi-step operations, pre-defined workflows can be triggered via keywords:
+Messages are routed through a simple 2-tier system:
 
-- "full cleanup" / "site cleanup" / "maintenance" → cache-flush → db-optimize (conditional) → site-health
-- "performance check" / "health check" / "check site" → site-health → error-log-read (conditional)
-- "audit plugins" / "check my plugins" → plugin-list → site-health
-- "database maintenance" / "optimize database" → db-optimize → cache-flush
+1. **Workflow detection** — keyword matching triggers pre-defined multi-step workflows:
+   - "full cleanup" / "site cleanup" / "maintenance" → cache-flush → db-optimize (conditional) → site-health
+   - "performance check" / "health check" / "check site" → site-health → error-log-read (conditional)
+   - "audit plugins" / "check my plugins" → plugin-list → site-health
+   - "database maintenance" / "optimize database" → db-optimize → cache-flush
 
-Otherwise, the ReAct loop handles everything dynamically.
+2. **ReAct loop** — everything else (questions, actions, diagnostics) goes through the AI-driven adaptive loop.
 
 ## Requirements
 
@@ -272,7 +273,7 @@ npm run build
 ### Testing
 
 ```bash
-npm test                    # Run unit tests (43 tests)
+npm test                    # Run unit tests (41 tests)
 npm test -- react-agent     # Run specific test file
 npm run test:watch          # Watch mode
 ```

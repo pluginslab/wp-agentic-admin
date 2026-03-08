@@ -18,7 +18,7 @@ WP-Agentic-Admin uses a **hybrid approach** balancing deterministic execution wi
 
 The choice depends on safety requirements and task predictability. For detailed architectural decisions, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-> **Current Focus:** We focus on rigid and semi-flexible workflows optimized for local 1.5B-3B models. The system is designed to scale as capabilities mature.
+> **Current Focus:** We focus on rigid and semi-flexible workflows optimized for local models (1.7B default, 7B alternative). The system is designed to scale as capabilities mature.
 
 ## Quick Start
 
@@ -343,48 +343,43 @@ The `WorkflowOrchestrator` supports 10 callback functions for UI updates and wor
 
 ## How Workflow Execution Works
 
-When a user sends a message, the `MessageRouter` determines how to handle it:
+When a user sends a message, the `MessageRouter` determines how to handle it using 2-tier routing:
 
 ```
-User message → Question pre-filter → Is informational question?
-                                        │
-                              YES ──────┤────── NO
-                              │                  │
-                              ▼                  ▼
-                    ┌────────────────┐  Keyword detection → Match workflow?
-                    │ Conversational │         │                    │
-                    │ mode (no       │   NO ───┤              YES ─┤
-                    │ workflows)     │         ▼                    ▼
-                    └────────────────┘  ┌────────────┐   ┌──────────────────┐
-                                        │ ReAct loop │   │ Show confirmation │
-                                        └────────────┘   │ (if required)     │
-                                                         └──────────────────┘
-                                                                    │
-                                                                    ▼
-                                                          ┌──────────────────┐
-                                                          │ Execute Step 1   │
-                                                          └──────────────────┘
-                                                                    │
-                                                                    ▼
-                                                          ┌──────────────────┐
-                                                          │ Execute Step 2   │◄── mapParams(previousResults)
-                                                          └──────────────────┘
-                                                                    │
-                                                                    ▼
-                                                                  ...
-                                                                    │
-                                                                    ▼
-                                                          ┌──────────────────┐
-                                                          │ Execute Step N   │
-                                                          └──────────────────┘
-                                                                    │
-                                                                    ▼
-                                                          ┌──────────────────┐
-                                                          │ Generate summary │◄── summarize(allResults)
-                                                          └──────────────────┘
+User message → Keyword detection → Match workflow?
+                    │                         │
+              NO ───┤                   YES ──┤
+                    ▼                         ▼
+           ┌────────────┐          ┌──────────────────┐
+           │ ReAct loop │          │ Show confirmation │
+           │ (handles   │          │ (if required)     │
+           │ questions  │          └──────────────────┘
+           │ & actions) │                    │
+           └────────────┘                    ▼
+                                   ┌──────────────────┐
+                                   │ Execute Step 1   │
+                                   └──────────────────┘
+                                             │
+                                             ▼
+                                   ┌──────────────────┐
+                                   │ Execute Step 2   │◄── mapParams(previousResults)
+                                   └──────────────────┘
+                                             │
+                                             ▼
+                                           ...
+                                             │
+                                             ▼
+                                   ┌──────────────────┐
+                                   │ Execute Step N   │
+                                   └──────────────────┘
+                                             │
+                                             ▼
+                                   ┌──────────────────┐
+                                   │ Generate summary │◄── summarize(allResults)
+                                   └──────────────────┘
 ```
 
-The question pre-filter uses regex patterns (defined in `MessageRouter`) to detect informational questions such as "what is...", "how do...", "explain...", etc. If a message matches these patterns, it is routed to conversational mode and **never** checked against workflow keywords. Only non-question messages proceed to keyword detection.
+All non-workflow messages go through the ReAct loop, which handles both informational questions (the LLM responds directly without calling tools) and action requests (the LLM selects and executes tools).
 
 ### On Failure
 
@@ -473,7 +468,7 @@ Not all workflows should be implemented the same way. The structure depends on t
 
 ---
 
-#### Option 1: Function-Based (Fast, Deterministic) ✅ **Recommended for 1.5B Models**
+#### Option 1: Function-Based (Fast, Deterministic) ✅ **Recommended**
 
 ```javascript
 wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
@@ -521,7 +516,7 @@ wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
 **Benefits:**
 - ✅ Instant execution (no LLM call)
 - ✅ Deterministic, predictable logic
-- ✅ Works perfectly with 1.5B models
+- ✅ Works with any model size
 - ✅ Easy to debug and test
 - ✅ Type-safe (IDE autocomplete)
 
@@ -597,7 +592,7 @@ The system auto-extracts common variables from previous step results:
 - ✅ Handles natural language user intent
 
 **Drawbacks:**
-- ⚠️ Requires 3B+ model for accuracy (1.5B makes errors)
+- ⚠️ Requires 3B+ model for accuracy (smaller models make errors)
 - ⚠️ Slower (3-second LLM call per condition)
 - ⚠️ Less predictable (LLM may surprise you)
 
@@ -636,7 +631,7 @@ includeIf: {
 
 **1. Use function-based for production reliability:**
 ```javascript
-// ✅ Good: Fast, deterministic, works with 1.5B model
+// ✅ Good: Fast, deterministic, works with any model
 includeIf: (prev, params) => prev[0]?.result?.database_size > 500 * 1024 * 1024
 ```
 

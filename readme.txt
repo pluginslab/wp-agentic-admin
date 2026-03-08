@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.1.1
+Stable tag: 0.4.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 
 = Features =
 
-* **100% Local AI**: Uses WebLLM to run a Small Language Model directly in your browser via WebAssembly and WebGPU
+* **100% Local AI**: Uses WebLLM to run Qwen 3 1.7B (default) or Qwen 2.5 7B directly in your browser via WebGPU
 * **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
 * **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
 * **WordPress Abilities API**: Natively integrates with WordPress's official Abilities API
@@ -33,17 +33,8 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 1. Upload the `wp-agentic-admin` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Navigate to "Agentic Admin" in your WordPress admin menu
-4. Wait for the AI model to download (one-time, ~360MB)
+4. Wait for the AI model to download (one-time, ~1.2GB for Qwen 3 1.7B or ~4.5GB for Qwen 2.5 7B)
 5. Start chatting!
-
-== Roadmap ==
-
-= 1.3.0 (Planned) =
-* Service Worker model persistence - Keep the AI model loaded in GPU memory across page navigations
-  * Currently blocked: WebLLM's ServiceWorkerMLCEngineHandler hangs during initialization
-  * Investigation needed: Message passing between page and SW not working as expected
-  * Alternative to explore: WebWorkerMLCEngine or SharedWorker approach
-  * Goal: Eliminate model reload time when navigating between wp-admin pages
 
 == Changelog ==
 
@@ -58,7 +49,7 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 * New: Smart confirmation for revision cleanup (preview/dry-run skips confirmation)
 * Improved: Better keyword separation to avoid triggering multiple abilities
 * Improved: Chat session persistence across page refreshes
-* Improved: Total of 12 abilities now available (10 custom + 2 core wrappers)
+* Improved: Total of 14 abilities now available (12 custom + 2 core wrappers)
 * Fixed: HTTP method for destructive abilities (now uses POST as required by Abilities API)
 
 = 1.1.0 =
@@ -67,7 +58,7 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 * New: `wp.agenticAdmin.registerWorkflow()` API for third-party workflow registration
 * New: Workflow progress indicator in chat UI
 * New: Ad-hoc workflow creation from multi-intent messages
-* Changed: Default model upgraded to Qwen2.5-1.5B-Instruct for better reasoning (~1.6GB)
+* Changed: Default model upgraded to Qwen3-1.7B for better reasoning with native function calling (~1.2GB)
 * Improved: Confirmation dialog shows all workflow steps before execution
 * Improved: Automatic rollback of completed steps if later step fails
 
