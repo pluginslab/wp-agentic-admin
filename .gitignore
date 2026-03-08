@@ -5,4 +5,5 @@ wp-agentic-admin.zip
 *.pdf
 tests/e2e/screenshots/
 tests/e2e/RESULTS.md
+build-extensions/
 build-test-harness/
