@@ -105,6 +105,7 @@ class ChatOrchestrator {
 		this.reactAgent = null; // Created on-demand
 
 		// State
+		this.modelLoader = modelLoader;
 		this.isProcessing = false;
 		this.currentAbortController = null;
 
@@ -149,6 +150,30 @@ class ChatOrchestrator {
 		};
 
 		log.info( 'Initialized with session:', session.id );
+	}
+
+	/**
+	 * Build usage stats meta for attaching to assistant messages.
+	 *
+	 * @return {Object} Meta object with usage stats, or empty object.
+	 */
+	getUsageStatsMeta() {
+		const stats = this.modelLoader.getLastUsageStats();
+		if ( ! stats ) {
+			return {};
+		}
+		const meta = {};
+		if ( stats.extra?.prefill_tokens_per_s ) {
+			meta.prefillTps = parseFloat(
+				stats.extra.prefill_tokens_per_s.toFixed( 1 )
+			);
+		}
+		if ( stats.extra?.decode_tokens_per_s ) {
+			meta.decodeTps = parseFloat(
+				stats.extra.decode_tokens_per_s.toFixed( 1 )
+			);
+		}
+		return meta;
 	}
 
 	/**
@@ -220,9 +245,19 @@ class ChatOrchestrator {
 				);
 			}
 
+			if ( route.type === 'conversational' ) {
+				log.info( 'Routing to direct LLM (conversational)' );
+				return await this.processWithLLM();
+			}
+
 			// Default: ReAct loop for actions
-			log.info( 'Routing to ReAct loop' );
-			return await this.processWithReact( userMessage );
+			log.info(
+				`Routing to ReAct loop (thinking: ${ route.disableThinking ? 'off' : 'on' })`
+			);
+			return await this.processWithReact(
+				userMessage,
+				route.disableThinking
+			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
 			this.session.addErrorMessage(
@@ -242,10 +277,11 @@ class ChatOrchestrator {
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
-	 * @param {string} userMessage - User's message
+	 * @param {string}  userMessage      - User's message
+	 * @param {boolean} disableThinking  - Whether to disable model thinking
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
-	async processWithReact( userMessage ) {
+	async processWithReact( userMessage, disableThinking = false ) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -273,6 +309,9 @@ class ChatOrchestrator {
 			} );
 		}
 
+		// Update thinking mode per-request based on router decision
+		this.reactAgent.config.disableThinking = disableThinking;
+
 		// Execute ReAct loop
 		const result = await this.reactAgent.execute(
 			userMessage,
@@ -286,7 +325,10 @@ class ChatOrchestrator {
 			onChunk: ( char, text ) =>
 				this.callbacks.onStreamChunk( char, text ),
 		} );
-		this.session.addAssistantMessage( result.finalAnswer );
+		this.session.addAssistantMessage(
+			result.finalAnswer,
+			this.getUsageStatsMeta()
+		);
 		this.callbacks.onStreamEnd( result.finalAnswer );
 
 		log.info(
@@ -486,7 +528,10 @@ Explain what went wrong and suggest what the user might try next.`;
 			// Add tool context prefix to help LLM recognize completed actions
 			const toolName = this.getToolName( tool );
 			const messageWithContext = `• ${ toolName }\n${ fullResponse }`;
-			this.session.addAssistantMessage( messageWithContext );
+			this.session.addAssistantMessage(
+				messageWithContext,
+				this.getUsageStatsMeta()
+			);
 			this.callbacks.onStreamEnd( fullResponse );
 		} catch ( error ) {
 			log.error( 'LLM summary error:', error );
@@ -622,7 +667,10 @@ Explain what went wrong and suggest what the user might try next.`;
 						.join( '\n' );
 			}
 
-			this.session.addAssistantMessage( fullResponse );
+			this.session.addAssistantMessage(
+				fullResponse,
+				this.getUsageStatsMeta()
+			);
 			this.callbacks.onStreamEnd( fullResponse );
 
 			return { success: true, response: fullResponse };

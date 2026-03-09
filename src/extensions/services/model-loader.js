@@ -873,12 +873,12 @@ class ModelLoader {
 				if ( usage.extra?.decode_tokens_per_s ) {
 					const decodeTps =
 						usage.extra.decode_tokens_per_s.toFixed( 1 );
-					formatted = `${ decodeTps } tok/s`;
+					formatted = `GS ${ decodeTps } t/s`;
 
 					if ( usage.extra?.prefill_tokens_per_s ) {
 						const prefillTps =
 							usage.extra.prefill_tokens_per_s.toFixed( 1 );
-						formatted = `prefill: ${ prefillTps } · output: ${ decodeTps } tok/s`;
+						formatted = `PS ${ prefillTps } t/s · GS ${ decodeTps } t/s`;
 					}
 
 					return {

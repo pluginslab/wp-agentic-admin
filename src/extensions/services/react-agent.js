@@ -23,6 +23,7 @@ const REACT_CONFIG = {
 	maxTokens: 1024, // 7B models produce richer reasoning
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
 	maxToolResultLength: 2000, // 7B models handle more context
+	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
 };
 
 /**
@@ -144,6 +145,11 @@ class ReactAgent {
 					temperature: this.config.temperature,
 					max_tokens: this.config.maxTokens,
 				} );
+
+				// Capture usage stats for performance tracking
+				if ( response.usage ) {
+					this.modelLoader.updateUsageStats( response.usage );
+				}
 
 				let content = response.choices[ 0 ]?.message?.content || '';
 				log.debug( 'LLM response:', content );
@@ -739,7 +745,7 @@ User: "list plugins"
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}`;
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
 	}
 }
 

@@ -375,10 +375,14 @@ const ModelStatus = ( {
 										{ ' · ' }
 									</span>
 								) }
+								{ `~${ loadedModelInfo.size } VRAM` }
 								{ memoryStats?.available &&
-								memoryStats?.formatted
-									? memoryStats.formatted
-									: `~${ loadedModelInfo.size } VRAM` }
+									memoryStats?.formatted && (
+										<>
+											{ ' · ' }
+											{ memoryStats.formatted }
+										</>
+									) }
 								{ contextUsage && (
 									<span
 										className={ `wp-agentic-admin-status__context ${
@@ -403,7 +407,10 @@ const ModelStatus = ( {
 											/>
 										</span>
 										<span className="context__percent">
-											{ contextUsage.percentage }%
+											{ contextUsage.used.toLocaleString() }
+											/
+											{ contextUsage.max.toLocaleString() }{ ' ' }
+											({ contextUsage.percentage }%)
 										</span>
 									</span>
 								) }

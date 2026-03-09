@@ -130,7 +130,7 @@ const getAbilityLabel = ( abilityId ) => {
  * @return {JSX.Element} Rendered message
  */
 const MessageItem = ( { message } ) => {
-	const { type, content, timestamp } = message;
+	const { type, content, timestamp, prefillTps, decodeTps } = message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
 
@@ -283,6 +283,13 @@ const MessageItem = ( { message } ) => {
 					<div className="agentic-message__footer">
 						<div className="agentic-message__time">
 							{ formatTime( timestamp ) }
+							{ decodeTps && (
+								<span className="agentic-message__stats">
+									{ prefillTps
+										? `PS ${ prefillTps } t/s · GS ${ decodeTps } t/s`
+										: `GS ${ decodeTps } t/s` }
+								</span>
+							) }
 						</div>
 						<button
 							className={ `agentic-message__copy ${

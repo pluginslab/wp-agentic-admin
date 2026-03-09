@@ -102,9 +102,9 @@ class ChatSession {
 	 * @param {string} content - Message content
 	 * @return {Object} The added message
 	 */
-	addAssistantMessage( content ) {
+	addAssistantMessage( content, meta = {} ) {
 		return this.addMessage(
-			this.createMessage( MessageType.ASSISTANT, content )
+			this.createMessage( MessageType.ASSISTANT, content, meta )
 		);
 	}
 

@@ -36,6 +36,7 @@
 			isModelReady() {
 				return this.engine !== null;
 			}
+			updateUsageStats() {}
 			async load( modelId ) {
 				log( `Loading model: ${ modelId }...` );
 
@@ -88,7 +89,8 @@
 			await modelLoader.load( modelId );
 
 			// Create ReAct agent
-			const agent = new ReactAgent( modelLoader, toolRegistry );
+			const agentOptions = config.disableThinking ? { disableThinking: true } : {};
+			const agent = new ReactAgent( modelLoader, toolRegistry, agentOptions );
 
 			// Run tests
 			const results = [];

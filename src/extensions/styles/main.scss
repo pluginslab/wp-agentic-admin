@@ -1490,6 +1490,17 @@
 				color: #8c8f94;
 			}
 
+			.agentic-message__stats {
+				margin-left: 8px;
+				color: #a7aaad;
+				font-variant-numeric: tabular-nums;
+
+				&::before {
+					content: '·';
+					margin-right: 8px;
+				}
+			}
+
 			.agentic-message__copy {
 				display: flex;
 				align-items: center;

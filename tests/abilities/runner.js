@@ -27,6 +27,7 @@ const args = process.argv.slice( 2 );
 const fileIndex = args.indexOf( '--file' );
 const modelIndex = args.indexOf( '--model' );
 const harnessIndex = args.indexOf( '--harness' );
+const disableThinking = args.includes( '--no-think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
 	console.error(
@@ -164,6 +165,7 @@ if ( ! fs.existsSync( buildPath ) ) {
 	console.log( '╚══════════════════════════════════════════════╝' );
 	console.log( '' );
 	console.log( `  Model:     ${ modelId }` );
+	console.log( `  Thinking:  ${ disableThinking ? 'DISABLED' : 'enabled' }` );
 	console.log( `  Test file: ${ testFilePath }` );
 	console.log( `  Harness:   ${ pluginRoot }` );
 	console.log( '' );
@@ -281,6 +283,7 @@ if ( ! fs.existsSync( buildPath ) ) {
 				modelId,
 				abilities: serializableAbilities,
 				tests,
+				disableThinking,
 			}
 		);
 

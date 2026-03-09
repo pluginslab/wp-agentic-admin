@@ -254,6 +254,8 @@ const ChatContainer = ( {
 						type: 'assistant',
 						content: msg.content,
 						timestamp: msg.timestamp,
+						prefillTps: msg.meta?.prefillTps,
+						decodeTps: msg.meta?.decodeTps,
 					};
 				case MessageType.TOOL_REQUEST:
 					return {
