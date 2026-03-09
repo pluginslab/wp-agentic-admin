@@ -1649,7 +1649,17 @@
 			&--error {
 				background: #d63638;
 			}
+
+			&--thinking {
+				background: #9b59b6;
+				animation: agentic-pulse 1.5s ease-in-out infinite;
+			}
 		}
+	}
+
+	@keyframes agentic-pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
 	}
 
 	// Tool execution blocks
@@ -1768,6 +1778,26 @@
 				white-space: pre-wrap;
 				word-break: break-word;
 			}
+
+			&--thinking {
+				border-top-color: #e8daef;
+				background: #faf5ff;
+
+				.agentic-thinking__text {
+					margin: 0;
+					font-size: 12px;
+					line-height: 1.6;
+					color: #6c6c6c;
+					font-style: italic;
+					white-space: pre-wrap;
+					word-break: break-word;
+				}
+			}
+		}
+
+		&--thinking-done {
+			border-color: #d5c6e0;
+			background: #faf5ff;
 		}
 	}
 

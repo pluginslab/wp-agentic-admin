@@ -252,7 +252,9 @@ class ChatOrchestrator {
 
 			// Default: ReAct loop for actions
 			log.info(
-				`Routing to ReAct loop (thinking: ${ route.disableThinking ? 'off' : 'on' })`
+				`Routing to ReAct loop (thinking: ${
+					route.disableThinking ? 'off' : 'on'
+				})`
 			);
 			return await this.processWithReact(
 				userMessage,
@@ -277,8 +279,8 @@ class ChatOrchestrator {
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
-	 * @param {string}  userMessage      - User's message
-	 * @param {boolean} disableThinking  - Whether to disable model thinking
+	 * @param {string}  userMessage     - User's message
+	 * @param {boolean} disableThinking - Whether to disable model thinking
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
 	async processWithReact( userMessage, disableThinking = false ) {
@@ -302,6 +304,16 @@ class ChatOrchestrator {
 					this.callbacks.onToolEnd( toolId, result, success );
 					// Add tool result to session
 					this.session.addToolResult( toolId, result, success );
+				},
+				onThinkingStart: () => {
+					this.callbacks.onThinkingStart?.();
+				},
+				onThinkingChunk: ( delta, fullThinkText ) => {
+					this.callbacks.onThinkingChunk?.( delta, fullThinkText );
+				},
+				onThinkingEnd: ( thinkContent ) => {
+					this.session.addThinkingMessage( thinkContent );
+					this.callbacks.onThinkingEnd?.( thinkContent );
 				},
 				onConfirmationRequired: async ( tool ) => {
 					return await this.requestConfirmation( tool );
@@ -594,7 +606,8 @@ Explain what went wrong and suggest what the user might try next.`;
 		// Stream from LLM
 		this.callbacks.onStreamStart();
 		let fullResponse = '';
-		let inThinkBlock = false; // Track <think> blocks to suppress them from UI
+		let inThinkBlock = false; // Track <think> blocks
+		let thinkContent = ''; // Accumulated thinking content
 
 		try {
 			const stream = await engine.chat.completions.create( {
@@ -614,21 +627,49 @@ Explain what went wrong and suggest what the user might try next.`;
 				const delta = chunk.choices[ 0 ]?.delta?.content || '';
 				fullResponse += delta;
 
-				// Suppress <think> blocks from streaming to the UI.
+				// Stream <think> blocks to the UI as thinking indicators.
 				// Qwen 3 outputs <think>...</think> before the actual response.
 				if (
 					fullResponse.includes( '<think>' ) &&
 					! fullResponse.includes( '</think>' )
 				) {
-					inThinkBlock = true;
+					if ( ! inThinkBlock ) {
+						inThinkBlock = true;
+						this.callbacks.onThinkingStart?.();
+					}
+					// Extract thinking content so far (after <think> tag)
+					const thinkStart = fullResponse.indexOf( '<think>' ) + 7;
+					thinkContent = fullResponse.substring( thinkStart ).trim();
+					this.callbacks.onThinkingChunk?.( delta, thinkContent );
+					// Capture usage stats from the final chunk
+					if ( chunk.usage ) {
+						log.debug( 'Usage stats:', chunk.usage );
+						modelLoader.updateUsageStats( chunk.usage );
+					}
+					continue;
 				}
 				if ( inThinkBlock && fullResponse.includes( '</think>' ) ) {
 					inThinkBlock = false;
+					// Extract final thinking content
+					const thinkMatch = fullResponse.match(
+						/<think>([\s\S]*?)<\/think>/
+					);
+					thinkContent = thinkMatch
+						? thinkMatch[ 1 ].trim()
+						: thinkContent;
+					// Persist thinking to session and notify UI
+					this.session.addThinkingMessage( thinkContent );
+					this.callbacks.onThinkingEnd?.( thinkContent );
 					// Strip think block and stream the clean content so far
 					const cleanResponse = fullResponse
 						.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
 						.trim();
 					this.callbacks.onStreamChunk( '', cleanResponse );
+					// Capture usage stats from the final chunk
+					if ( chunk.usage ) {
+						log.debug( 'Usage stats:', chunk.usage );
+						modelLoader.updateUsageStats( chunk.usage );
+					}
 					continue;
 				}
 
@@ -649,6 +690,11 @@ Explain what went wrong and suggest what the user might try next.`;
 				.trim();
 			// Handle incomplete think block (model ran out of tokens)
 			if ( fullResponse.startsWith( '<think>' ) ) {
+				// Persist and end thinking even if incomplete
+				if ( inThinkBlock && thinkContent ) {
+					this.session.addThinkingMessage( thinkContent );
+					this.callbacks.onThinkingEnd?.( thinkContent );
+				}
 				fullResponse = '';
 			}
 

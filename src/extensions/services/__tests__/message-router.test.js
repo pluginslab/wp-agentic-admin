@@ -129,9 +129,7 @@ describe( 'MessageRouter', () => {
 
 		it( 'should route clear action commands to ReAct without thinking', () => {
 			expect( route( 'check site health' ).type ).toBe( 'react' );
-			expect( route( 'check site health' ).disableThinking ).toBe(
-				true
-			);
+			expect( route( 'check site health' ).disableThinking ).toBe( true );
 
 			expect( route( 'flush cache' ).type ).toBe( 'react' );
 			expect( route( 'flush cache' ).disableThinking ).toBe( true );

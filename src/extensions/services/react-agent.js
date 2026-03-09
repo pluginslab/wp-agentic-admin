@@ -58,6 +58,7 @@ class ReactAgent {
 		this.callbacks = {
 			onToolStart: () => {},
 			onToolEnd: () => {},
+			onThinking: () => {},
 			onConfirmationRequired: async () => true, // Default: auto-confirm
 		};
 	}
@@ -140,27 +141,72 @@ class ReactAgent {
 			);
 
 			try {
-				const response = await engine.chat.completions.create( {
+				// Stream LLM response to show thinking tokens live
+				const stream = await engine.chat.completions.create( {
 					messages,
 					temperature: this.config.temperature,
 					max_tokens: this.config.maxTokens,
+					stream: true,
+					stream_options: { include_usage: true },
 				} );
 
-				// Capture usage stats for performance tracking
-				if ( response.usage ) {
-					this.modelLoader.updateUsageStats( response.usage );
+				let fullResponse = '';
+				let inThinkBlock = false;
+
+				for await ( const chunk of stream ) {
+					const delta = chunk.choices[ 0 ]?.delta?.content || '';
+					fullResponse += delta;
+
+					// Stream thinking tokens live
+					if (
+						fullResponse.includes( '<think>' ) &&
+						! fullResponse.includes( '</think>' )
+					) {
+						if ( ! inThinkBlock ) {
+							inThinkBlock = true;
+							this.callbacks.onThinkingStart();
+						}
+						const thinkStart =
+							fullResponse.indexOf( '<think>' ) + 7;
+						const thinkContent = fullResponse
+							.substring( thinkStart )
+							.trim();
+						this.callbacks.onThinkingChunk( delta, thinkContent );
+					}
+
+					// Thinking block completed
+					if ( inThinkBlock && fullResponse.includes( '</think>' ) ) {
+						inThinkBlock = false;
+						const thinkMatch = fullResponse.match(
+							/<think>([\s\S]*?)<\/think>/
+						);
+						this.callbacks.onThinkingEnd(
+							thinkMatch ? thinkMatch[ 1 ].trim() : ''
+						);
+					}
+
+					// Capture usage stats from the final chunk
+					if ( chunk.usage ) {
+						this.modelLoader.updateUsageStats( chunk.usage );
+					}
 				}
 
-				let content = response.choices[ 0 ]?.message?.content || '';
+				let content = fullResponse;
 				log.debug( 'LLM response:', content );
 
-				// Strip <think> blocks early so they never leak into displayed output.
-				// Qwen 3 and similar models output <think>...</think> before the response.
+				// Strip <think> blocks from content for JSON parsing
 				content = content
 					.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
 					.trim();
 				// Handle incomplete think block (no closing tag — model ran out of tokens)
 				if ( content.startsWith( '<think>' ) ) {
+					if ( inThinkBlock ) {
+						const thinkStart =
+							fullResponse.indexOf( '<think>' ) + 7;
+						this.callbacks.onThinkingEnd(
+							fullResponse.substring( thinkStart ).trim()
+						);
+					}
 					const jsonIdx = content.indexOf( '{' );
 					content = jsonIdx > 0 ? content.substring( jsonIdx ) : '';
 				}
@@ -745,7 +791,9 @@ User: "list plugins"
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
+			this.config.disableThinking ? '\n\n/nothink' : ''
+		}`;
 	}
 }
 

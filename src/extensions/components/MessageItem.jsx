@@ -175,6 +175,83 @@ const MessageItem = ( { message } ) => {
 		);
 	}
 
+	// Thinking block — streams live, then collapses into peekable timeline entry
+	if ( type === 'thinking' ) {
+		const thinkingIsStreaming = message.isStreaming;
+
+		return (
+			<div className="agentic-message agentic-message--tool">
+				<div className="agentic-timeline">
+					<div className="agentic-timeline__line" />
+					<div
+						className={ `agentic-timeline__dot agentic-timeline__dot--${
+							thinkingIsStreaming ? 'thinking' : 'tool'
+						}` }
+					/>
+				</div>
+				<div
+					className={ `agentic-tool ${
+						thinkingIsStreaming ? '' : 'agentic-tool--thinking-done'
+					}` }
+				>
+					<button
+						className="agentic-tool__header agentic-tool__header--clickable"
+						onClick={ () => setIsExpanded( ! isExpanded ) }
+						type="button"
+					>
+						<span className="agentic-tool__icon">
+							{ thinkingIsStreaming ? (
+								<span className="agentic-tool__spinner" />
+							) : (
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+								>
+									<circle cx="12" cy="12" r="10" />
+									<path d="M12 16v-4" />
+									<path d="M12 8h.01" />
+								</svg>
+							) }
+						</span>
+						<span className="agentic-tool__label">
+							{ thinkingIsStreaming
+								? 'Thinking...'
+								: 'Thought process' }
+						</span>
+						<span
+							className={ `agentic-tool__expand ${
+								isExpanded ? 'agentic-tool__expand--open' : ''
+							}` }
+						>
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<polyline points="6 9 12 15 18 9" />
+							</svg>
+						</span>
+					</button>
+					{ ( isExpanded || thinkingIsStreaming ) && (
+						<div className="agentic-tool__result agentic-tool__result--thinking">
+							<p className="agentic-thinking__text">
+								{ content }
+								{ thinkingIsStreaming && '▊' }
+							</p>
+						</div>
+					) }
+				</div>
+			</div>
+		);
+	}
+
 	// Loading indicator (inline in message flow)
 	if ( type === 'loading' ) {
 		return (

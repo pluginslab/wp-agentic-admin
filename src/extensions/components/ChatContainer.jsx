@@ -62,6 +62,10 @@ const ChatContainer = ( {
 	const [ pendingConfirmation, setPendingConfirmation ] = useState( null );
 	const [ contextUsage, setContextUsage ] = useState( null );
 
+	// Thinking state — streams <think> blocks live while being generated
+	const [ isThinking, setIsThinking ] = useState( false );
+	const [ thinkingText, setThinkingText ] = useState( '' );
+
 	// Workflow state (v1.1)
 	const [ workflowProgress, setWorkflowProgress ] = useState( null );
 	const [ isRunningWorkflow, setIsRunningWorkflow ] = useState( false );
@@ -119,6 +123,17 @@ const ChatContainer = ( {
 			onStreamEnd: () => {
 				setIsStreaming( false );
 				setStreamingText( '' );
+			},
+			onThinkingStart: () => {
+				setIsThinking( true );
+				setThinkingText( '' );
+			},
+			onThinkingChunk: ( chunk, fullThinkText ) => {
+				setThinkingText( fullThinkText );
+			},
+			onThinkingEnd: () => {
+				setIsThinking( false );
+				setThinkingText( '' );
 			},
 			onToolStart: () => {
 				setIsExecutingTool( true );
@@ -273,6 +288,14 @@ const ChatContainer = ( {
 						abilityName: msg.meta?.toolId,
 						result: msg.meta?.result,
 						success: msg.meta?.success,
+						timestamp: msg.timestamp,
+					};
+				case MessageType.THINKING:
+					return {
+						id: msg.id,
+						type: 'thinking',
+						content: msg.content,
+						isStreaming: false,
 						timestamp: msg.timestamp,
 					};
 				case MessageType.ERROR:
@@ -458,18 +481,30 @@ const ChatContainer = ( {
 		const msgs = [ ...messages ];
 
 		// Show loading indicator inline in the message flow
-		const showThinking =
+		const showLoadingDot =
 			isLoading &&
 			! isExecutingTool &&
 			! isStreaming &&
-			! isRunningWorkflow;
+			! isRunningWorkflow &&
+			! isThinking;
 		const showRunningTool = isExecutingTool && ! isRunningWorkflow;
 
-		if ( showThinking || showRunningTool ) {
+		if ( showLoadingDot || showRunningTool ) {
 			msgs.push( {
 				id: 'loading-indicator',
 				type: 'loading',
 				content: showRunningTool ? 'Running tool...' : 'Thinking...',
+				timestamp: new Date().toISOString(),
+			} );
+		}
+
+		// Show live thinking stream (while <think> block is being generated)
+		if ( isThinking && thinkingText ) {
+			msgs.push( {
+				id: 'thinking-stream',
+				type: 'thinking',
+				content: thinkingText,
+				isStreaming: true,
 				timestamp: new Date().toISOString(),
 			} );
 		}
@@ -491,6 +526,8 @@ const ChatContainer = ( {
 		isExecutingTool,
 		isStreaming,
 		isRunningWorkflow,
+		isThinking,
+		thinkingText,
 		streamingText,
 	] );
 

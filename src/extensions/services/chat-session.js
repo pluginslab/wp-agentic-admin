@@ -15,6 +15,7 @@ export const MessageType = {
 	SYSTEM: 'system',
 	TOOL_REQUEST: 'tool_request',
 	TOOL_RESULT: 'tool_result',
+	THINKING: 'thinking',
 	ERROR: 'error',
 };
 
@@ -100,6 +101,7 @@ class ChatSession {
 	 * Add an assistant message
 	 *
 	 * @param {string} content - Message content
+	 * @param          meta
 	 * @return {Object} The added message
 	 */
 	addAssistantMessage( content, meta = {} ) {
@@ -154,6 +156,18 @@ class ChatSession {
 					: 'Tool execution failed',
 				{ toolId, result, success }
 			)
+		);
+	}
+
+	/**
+	 * Add a thinking message (collapsed reasoning from the LLM)
+	 *
+	 * @param {string} content - Thinking content
+	 * @return {Object} The added message
+	 */
+	addThinkingMessage( content ) {
+		return this.addMessage(
+			this.createMessage( MessageType.THINKING, content )
 		);
 	}
 

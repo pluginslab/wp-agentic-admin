@@ -23,6 +23,46 @@ jest.mock( '../../utils/logger', () => ( {
 	} ),
 } ) );
 
+/**
+ * Create a mock async iterable stream from a content string.
+ * Simulates WebLLM streaming by yielding one chunk with the full content.
+ *
+ * @param {string} content - The LLM response content
+ * @return {AsyncIterable} Mock stream
+ */
+function mockStream( content ) {
+	return {
+		async *[ Symbol.asyncIterator ]() {
+			yield {
+				choices: [ { delta: { content } } ],
+			};
+			// Final chunk with usage stats
+			yield {
+				choices: [ { delta: { content: '' } } ],
+				usage: {
+					prompt_tokens: 100,
+					completion_tokens: 50,
+					total_tokens: 150,
+				},
+			};
+		},
+	};
+}
+
+/**
+ * Helper to create a mock that returns streams for chained mockResolvedValueOnce calls.
+ * Usage: mockStreamOnce( mockEngine, content1, content2, ... )
+ *
+ * @param {Object}    engine      - Mock engine object
+ * @param {...string} contentArgs - Content strings for each LLM call
+ */
+function mockStreamOnce( engine, ...contentArgs ) {
+	let mock = engine.chat.completions.create;
+	for ( const content of contentArgs ) {
+		mock = mock.mockResolvedValueOnce( mockStream( content ) );
+	}
+}
+
 describe( 'ReactAgent', () => {
 	let reactAgent;
 	let mockModelLoader;
@@ -43,6 +83,7 @@ describe( 'ReactAgent', () => {
 		// Mock model loader
 		mockModelLoader = {
 			getEngine: jest.fn().mockReturnValue( mockEngine ),
+			updateUsageStats: jest.fn(),
 		};
 
 		// Mock tool registry
@@ -91,27 +132,11 @@ describe( 'ReactAgent', () => {
 
 	describe( 'JSON Parsing', () => {
 		it( 'should handle clean JSON output', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "You have 1 plugin installed."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin installed."}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -125,27 +150,11 @@ describe( 'ReactAgent', () => {
 
 		it( 'should sanitize control characters in JSON', async () => {
 			// Model outputs JSON with unescaped newline
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {"reason": "List\nplugins"}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Done"}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {"reason": "List\nplugins"}}',
+				'{"action": "final_answer", "content": "Done"}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -153,27 +162,11 @@ describe( 'ReactAgent', () => {
 		} );
 
 		it( 'should fix single quotes in JSON', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									"{'action': 'tool_call', 'tool': 'wp-agentic-admin/plugin-list', 'args': {}}",
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									"{'action': 'final_answer', 'content': 'Done'}",
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				"{'action': 'tool_call', 'tool': 'wp-agentic-admin/plugin-list', 'args': {}}",
+				"{'action': 'final_answer', 'content': 'Done'}"
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -181,27 +174,11 @@ describe( 'ReactAgent', () => {
 		} );
 
 		it( 'should fix missing quotes after property names', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args:{}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Done"}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args:{}}',
+				'{"action": "final_answer", "content": "Done"}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -210,27 +187,11 @@ describe( 'ReactAgent', () => {
 
 		it( 'should extract first JSON object when multiple are output', async () => {
 			// Model tries to output TWO actions at once
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}{"action": "final_answer", "content": "Done"}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Done"}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}{"action": "final_answer", "content": "Done"}',
+				'{"action": "final_answer", "content": "Done"}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -244,27 +205,11 @@ describe( 'ReactAgent', () => {
 
 	describe( 'Tool Execution', () => {
 		it( 'should execute single tool call', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "You have 1 plugin installed."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin installed."}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -279,40 +224,12 @@ describe( 'ReactAgent', () => {
 		} );
 
 		it( 'should chain multiple tools', async () => {
-			mockEngine.chat.completions.create
-				// First: Call site-health
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
-							},
-						},
-					],
-				} )
-				// Second: Call plugin-list
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} )
-				// Third: Provide final answer
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Site is healthy and you have 1 plugin."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "Site is healthy and you have 1 plugin."}'
+			);
 
 			const result = await reactAgent.execute( 'check my site', [] );
 
@@ -327,29 +244,11 @@ describe( 'ReactAgent', () => {
 
 	describe( 'Repeated Call Detection', () => {
 		it( 'should stop when same tool is called twice in a row', async () => {
-			mockEngine.chat.completions.create
-				// First: Call plugin-list
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} )
-				// Second: Call plugin-list AGAIN (repeated)
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -375,15 +274,11 @@ describe( 'ReactAgent', () => {
 					callCount % 2 === 0
 						? 'wp-agentic-admin/plugin-list'
 						: 'wp-agentic-admin/site-health';
-				return Promise.resolve( {
-					choices: [
-						{
-							message: {
-								content: `{"action": "tool_call", "tool": "${ tool }", "args": {}}`,
-							},
-						},
-					],
-				} );
+				return Promise.resolve(
+					mockStream(
+						`{"action": "tool_call", "tool": "${ tool }", "args": {}}`
+					)
+				);
 			} );
 
 			const result = await reactAgent.execute( 'do something', [] );
@@ -406,27 +301,11 @@ describe( 'ReactAgent', () => {
 			};
 			mockToolRegistry.get.mockReturnValue( errorTool );
 
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/broken-tool", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Tool failed, but I handled it."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/broken-tool", "args": {}}',
+				'{"action": "final_answer", "content": "Tool failed, but I handled it."}'
+			);
 
 			const result = await reactAgent.execute( 'run broken tool', [] );
 
@@ -440,27 +319,11 @@ describe( 'ReactAgent', () => {
 		it( 'should handle tool not found', async () => {
 			mockToolRegistry.get.mockReturnValue( null );
 
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/nonexistent", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Tool not found."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/nonexistent", "args": {}}',
+				'{"action": "final_answer", "content": "Tool not found."}'
+			);
 
 			const result = await reactAgent.execute( 'run fake tool', [] );
 
@@ -493,27 +356,11 @@ describe( 'ReactAgent', () => {
 			};
 			mockToolRegistry.get.mockReturnValue( confirmTool );
 
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {"plugin": "test"}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Plugin deactivated."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {"plugin": "test"}}',
+				'{"action": "final_answer", "content": "Plugin deactivated."}'
+			);
 
 			const result = await reactAgent.execute( 'deactivate plugin', [] );
 
@@ -534,27 +381,11 @@ describe( 'ReactAgent', () => {
 			};
 			mockToolRegistry.get.mockReturnValue( confirmTool );
 
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Action cancelled."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {}}',
+				'{"action": "final_answer", "content": "Action cancelled."}'
+			);
 
 			const result = await reactAgent.execute( 'deactivate plugin', [] );
 
@@ -566,16 +397,10 @@ describe( 'ReactAgent', () => {
 
 	describe( 'Conversational Mode (No Tools)', () => {
 		it( 'should handle responses without tool calls', async () => {
-			mockEngine.chat.completions.create.mockResolvedValueOnce( {
-				choices: [
-					{
-						message: {
-							content:
-								'{"action": "final_answer", "content": "A transient is temporary cached data in WordPress."}',
-						},
-					},
-				],
-			} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "A transient is temporary cached data in WordPress."}'
+			);
 
 			const result = await reactAgent.execute(
 				'what is a transient?',
@@ -591,27 +416,11 @@ describe( 'ReactAgent', () => {
 
 	describe( 'Real-World Test Cases from Manual Testing', () => {
 		it( 'should handle "list plugins" correctly', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "You have 1 plugin installed: Test Plugin (active)."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin installed: Test Plugin (active)."}'
+			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
 
@@ -622,27 +431,11 @@ describe( 'ReactAgent', () => {
 		} );
 
 		it( 'should handle "my site is slow" with multi-tool chain', async () => {
-			mockEngine.chat.completions.create
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
-							},
-						},
-					],
-				} )
-				.mockResolvedValueOnce( {
-					choices: [
-						{
-							message: {
-								content:
-									'{"action": "final_answer", "content": "Your site is running WordPress 6.9 on PHP 8.3.29."}',
-							},
-						},
-					],
-				} );
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
+				'{"action": "final_answer", "content": "Your site is running WordPress 6.9 on PHP 8.3.29."}'
+			);
 
 			const result = await reactAgent.execute( 'my site is slow', [] );
 
