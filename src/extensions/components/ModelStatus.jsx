@@ -45,75 +45,46 @@ const saveModel = ( modelId ) => {
  *
  * @param {string} message  - Progress message from WebLLM
  * @param {number} progress - Current progress percentage
- * @return {Object} Stage info with icon, title, and description
+ * @return {Object} Stage info with icon and title
  */
 const getLoadingStage = ( message, progress ) => {
 	const lowerMsg = message.toLowerCase();
 
 	if ( progress < 5 || lowerMsg.includes( 'webgpu' ) ) {
-		return {
-			icon: '🔍',
-			title: 'Checking WebGPU',
-			description: 'Verifying your browser supports GPU acceleration...',
-		};
+		return { icon: '🔍', title: 'Checking WebGPU' };
 	}
 
 	if (
 		lowerMsg.includes( 'initializing' ) ||
 		lowerMsg.includes( 'engine' )
 	) {
-		return {
-			icon: '⚙️',
-			title: 'Initializing Engine',
-			description: 'Setting up the WebLLM inference engine...',
-		};
+		return { icon: '⚙️', title: 'Initializing Engine' };
 	}
 
 	if (
 		lowerMsg.includes( 'loading model' ) ||
 		lowerMsg.includes( 'fetching' )
 	) {
-		// Determine if downloading or loading from cache
 		const isFromCache = lowerMsg.includes( 'cache' );
 		return {
 			icon: isFromCache ? '📦' : '⬇️',
 			title: isFromCache ? 'Loading Model Weights' : 'Downloading Model',
-			description: isFromCache
-				? 'Loading AI model weights from cache...'
-				: 'Downloading AI model weights (~4.5GB)...',
 		};
 	}
 
 	if ( lowerMsg.includes( 'shader' ) || lowerMsg.includes( 'compiling' ) ) {
-		return {
-			icon: '🔧',
-			title: 'Compiling Shaders',
-			description: 'Compiling GPU shaders for your graphics card...',
-		};
+		return { icon: '🔧', title: 'Compiling Shaders' };
 	}
 
 	if ( lowerMsg.includes( 'tokenizer' ) ) {
-		return {
-			icon: '📝',
-			title: 'Loading Tokenizer',
-			description: 'Loading the text tokenizer...',
-		};
+		return { icon: '📝', title: 'Loading Tokenizer' };
 	}
 
 	if ( progress >= 95 ) {
-		return {
-			icon: '✨',
-			title: 'Finalizing',
-			description: 'Almost ready! Final initialization...',
-		};
+		return { icon: '✨', title: 'Finalizing' };
 	}
 
-	// Default / generic loading
-	return {
-		icon: '🧠',
-		title: 'Loading Model',
-		description: message || 'Preparing AI model...',
-	};
+	return { icon: '🧠', title: 'Loading Model' };
 };
 
 /**
@@ -158,7 +129,6 @@ const ModelStatus = ( {
 	 */
 	useEffect( () => {
 		if ( initPhase === 'loading' ) {
-			setIsFromCache( true );
 			setStatus( 'loading' );
 		}
 	}, [ initPhase ] );
@@ -171,6 +141,16 @@ const ModelStatus = ( {
 			setProgress( prog );
 			setRawMessage( msg );
 			setMessage( msg );
+			// Detect cache vs download from WebLLM progress messages
+			if ( msg && msg.toLowerCase().includes( 'cache' ) ) {
+				setIsFromCache( true );
+			} else if (
+				msg &&
+				( msg.toLowerCase().includes( 'fetching' ) ||
+					msg.toLowerCase().includes( 'downloading' ) )
+			) {
+				setIsFromCache( false );
+			}
 		} );
 
 		modelLoader.onStatus( ( stat, msg ) => {
@@ -314,7 +294,7 @@ const ModelStatus = ( {
 	const isInInitPhase = initPhase === 'checking';
 	const displayProgress = isInInitPhase ? initProgress : progress;
 	const loadingStage = isInInitPhase
-		? { icon: '🔍', title: 'Initializing', description: initMessage }
+		? { icon: '🔍', title: 'Initializing' }
 		: getLoadingStage( rawMessage, progress );
 
 	// Determine the main title for the loading card
@@ -356,10 +336,6 @@ const ModelStatus = ( {
 							style={ { width: `${ displayProgress }%` } }
 						/>
 					</div>
-
-					<p className="wp-agentic-admin-loading-card__description">
-						{ loadingStage.description }
-					</p>
 
 					{ isFromCache && ! isInInitPhase && (
 						<p className="wp-agentic-admin-loading-card__cache-note">
