@@ -337,7 +337,10 @@ The 1.7B model is recommended for most users — it loads faster, uses less VRAM
 
 ### Thinking Mode Optimization
 
-- Qwen 3 generates internal `<think>...</think>` blocks before responding (~200-300 tokens of invisible reasoning)
+- Qwen 3 generates internal `<think>...</think>` blocks before responding (~200-300 tokens of reasoning)
+- **Thinking UI:** Thinking tokens stream live in the chat interface — shown expanded with a purple pulsing timeline dot while generating, then collapsed into a peekable "Thought process" entry (same pattern as tool call results). Users can click to expand/peek at the reasoning at any time
+- **Thinking persistence:** Completed thinking blocks are persisted as `THINKING` message type in the session, appearing in the chat timeline alongside tool calls and responses
+- **Streaming in both paths:** Both the ReAct loop (switched to streaming LLM calls) and the conversational path stream thinking via `onThinkingStart/Chunk/End` callbacks
 - For clear action commands (keyword + action verb), thinking is disabled via `/nothink` — saves ~8-10s per interaction
 - For ambiguous inputs (keyword only, no clear action), thinking remains enabled for accurate tool selection
 - Tool selection accuracy is 100% with thinking disabled on clear action commands (verified via ability test harness)
@@ -410,7 +413,7 @@ The goal is to make the AI **more reliable and helpful** while keeping it **loca
 The following service modules live in `src/extensions/services/` and `src/extensions/utils/`:
 
 - **ChatOrchestrator** (`chat-orchestrator.js`) - Main message coordinator. Routes messages via MessageRouter to workflow or ReAct paths. Builds system prompts, manages LLM summary generation, and truncates tool results to 1500 chars for summary prompts.
-- **ChatSession** (`chat-session.js`) - Chat history management with `localStorage` persistence. Tracks messages, tool calls, and session metadata.
+- **ChatSession** (`chat-session.js`) - Chat history management with `localStorage` persistence. Tracks messages, tool calls, thinking blocks, and session metadata. Message types: `USER`, `ASSISTANT`, `SYSTEM`, `TOOL_REQUEST`, `TOOL_RESULT`, `THINKING`, `ERROR`.
 - **StreamSimulator** (`stream-simulator.js`) - Typewriter-style text streaming for chat responses, providing a natural reading experience.
 - **ModelLoader** (`model-loader.js`) - WebLLM model management. Handles model download, loading, and inference. Uses a Service Worker (`sw.js`) for model persistence across page navigations.
 - **AbilitiesAPI** (`abilities-api.js`) - REST client for the WordPress Abilities API. Fetches registered abilities from the server.
@@ -419,7 +422,7 @@ The following service modules live in `src/extensions/services/` and `src/extens
 - **WorkflowRegistry** (`workflow-registry.js`) - Workflow registration and keyword-based detection. Matches user messages to pre-defined workflows.
 - **WorkflowOrchestrator** (`workflow-orchestrator.js`) - Workflow execution engine with rollback support, `includeIf` conditional steps, `mapParams`, optional steps, confirmation prompts, and abort handling.
 - **MessageRouter** (`message-router.js`) - 3-tier message routing: workflow (keyword matching), ReAct (tool keyword + action intent, with optional thinking), and conversational (direct LLM for knowledge questions).
-- **ReactAgent** (`react-agent.js`) - Core ReAct loop with dual-mode support (function-calling and prompt-based JSON). Handles observation tracking, confirmation, repeated-call detection, and error recovery.
+- **ReactAgent** (`react-agent.js`) - Core ReAct loop with streaming LLM calls and dual-mode support (function-calling and prompt-based JSON). Streams `<think>` blocks live via `onThinkingStart/Chunk/End` callbacks. Handles observation tracking, confirmation, repeated-call detection, and error recovery.
 - **Logger** (`utils/logger.js`) - Centralized logging with configurable levels. Used across all services via `createLogger('ModuleName')`.
 
 ### React UI Components
@@ -430,7 +433,7 @@ The frontend is built with React (via `@wordpress/element`) in `src/extensions/`
 - **ChatContainer.jsx** - Chat panel layout, manages message flow between ChatInput and MessageList
 - **ChatInput.jsx** - User input field with send button
 - **MessageList.jsx** - Scrollable message display area
-- **MessageItem.jsx** - Individual message rendering (user, assistant, tool results, confirmations)
+- **MessageItem.jsx** - Individual message rendering (user, assistant, tool results, thinking blocks, confirmations)
 - **AbilityBrowser.jsx** - Abilities tab, lists all registered abilities and workflows
 - **WebGPUFallback.jsx** - Fallback UI shown when the browser does not support WebGPU
 - **ModelStatus.jsx** - Model loading progress indicator and status display
