@@ -24,6 +24,7 @@ const REACT_CONFIG = {
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
 	maxToolResultLength: 2000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
+	disableThinkingAfterTool: true, // Skip thinking on iterations after tool results
 };
 
 /**
@@ -136,8 +137,15 @@ class ReactAgent {
 
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;
+			const hasToolResults = toolsUsed.length > 0;
 			log.debug(
-				`ReAct iteration ${ iteration }/${ this.config.maxIterations } (prompt-based mode)`
+				`ReAct iteration ${ iteration }/${
+					this.config.maxIterations
+				} (prompt-based mode, thinking: ${
+					hasToolResults && this.config.disableThinkingAfterTool
+						? 'off (post-tool)'
+						: 'on'
+				})`
 			);
 
 			try {
@@ -157,8 +165,13 @@ class ReactAgent {
 					const delta = chunk.choices[ 0 ]?.delta?.content || '';
 					fullResponse += delta;
 
-					// Stream thinking tokens live
+					// Stream thinking tokens live (skip when thinking
+					// is disabled after tool results)
+					const thinkingSuppressed =
+						hasToolResults && this.config.disableThinkingAfterTool;
+
 					if (
+						! thinkingSuppressed &&
 						fullResponse.includes( '<think>' ) &&
 						! fullResponse.includes( '</think>' )
 					) {
@@ -180,9 +193,15 @@ class ReactAgent {
 						const thinkMatch = fullResponse.match(
 							/<think>([\s\S]*?)<\/think>/
 						);
-						this.callbacks.onThinkingEnd(
-							thinkMatch ? thinkMatch[ 1 ].trim() : ''
-						);
+						const finalThinkContent = thinkMatch
+							? thinkMatch[ 1 ].trim()
+							: '';
+						if ( finalThinkContent ) {
+							this.callbacks.onThinkingEnd( finalThinkContent );
+						} else {
+							// Empty think block — cancel the thinking UI
+							this.callbacks.onThinkingEnd( null );
+						}
 					}
 
 					// Capture usage stats from the final chunk
@@ -748,10 +767,12 @@ class ReactAgent {
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
-		return (
-			message +
-			'\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.'
-		);
+		const suffix =
+			'\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.';
+		const nothink = this.config.disableThinkingAfterTool
+			? '\n\n/nothink'
+			: '';
+		return message + suffix + nothink;
 	}
 
 	/**

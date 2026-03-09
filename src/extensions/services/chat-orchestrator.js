@@ -312,7 +312,9 @@ class ChatOrchestrator {
 					this.callbacks.onThinkingChunk?.( delta, fullThinkText );
 				},
 				onThinkingEnd: ( thinkContent ) => {
-					this.session.addThinkingMessage( thinkContent );
+					if ( thinkContent ) {
+						this.session.addThinkingMessage( thinkContent );
+					}
 					this.callbacks.onThinkingEnd?.( thinkContent );
 				},
 				onConfirmationRequired: async ( tool ) => {
