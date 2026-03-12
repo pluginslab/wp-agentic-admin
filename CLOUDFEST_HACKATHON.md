@@ -18,7 +18,7 @@ These features align with CloudFest Hackathon goals and are targeted for impleme
 ---
 
 ### 2. Expanded Abilities Library
-**Mission:** Add 17 new SRE and WordPress-specific abilities based on common admin tasks.
+**Mission:** Add 25+ new SRE and WordPress-specific abilities based on common admin tasks.
 
 **Categories:**
 
@@ -43,6 +43,22 @@ These features align with CloudFest Hackathon goals and are targeted for impleme
 - `update-check` - Check for WordPress/plugin/theme updates
 - `disk-usage` - Check wp-content disk usage
 
+**Filesystem (2):**
+- `read-file` - Read WordPress files (theme templates, configs, logs). Must sanitize sensitive data (DB credentials, salts, API keys) before passing to LLM. Support partial reads (line ranges) for context window limits
+- `write-file` - Edit WordPress files (configs, templates, code fixes). Requires confirmation prompts, creates backups before edits. Sensitive files (wp-config.php) require extra confirmation
+
+**Database (1):**
+- `query-database` - Read-only SQL queries (SELECT only) for inspecting options, post meta, user data. LLM builds query, results get summarized. Sanitize output to avoid leaking sensitive fields
+
+**Cron (1):**
+- `manage-cron` - List all scheduled WP-Cron events with next run times, add/remove cron jobs, diagnose missed or stuck events
+
+**Media (1):**
+- `manage-media` - List/search media library, get details (dimensions, file size, alt text), upload files, bulk update metadata. Could integrate with image optimization
+
+**Web Search (1):**
+- `web-search` - Search the web for documentation, troubleshooting, plugin compatibility. LLM formulates query, results get summarized. Could use SearXNG (self-hosted) or a public search API
+
 **Performance (2):**
 - `opcode-cache-status` - Check PHP OPcache status
 - `slow-query-log` - Read MySQL slow query log
@@ -62,7 +78,24 @@ These features align with CloudFest Hackathon goals and are targeted for impleme
 
 **WP AI Client alignment:** Study WordPress core's AI Client proposal specifications and identify alignment points with our Abilities API. Position WP Agentic Admin as a reference implementation for WordPress AI integration. Ensure long-term compatibility with WordPress ecosystem.
 
+**Edge AI Consultation:** The local LLM acts as a privacy gate — only non-sensitive queries (no PII, no site-specific data) get escalated to the cloud LLM via the WP 7.0 AI Client API. This gives the local model access to deeper reasoning/knowledge without compromising privacy. New ability: `consult-cloud-ai` for general coding questions, best practice lookups, complex reasoning tasks.
+
 **Hackathon Goal:** Broader device compatibility, user choice, and WordPress ecosystem standards compliance.
+
+---
+
+### 4. Local Network LLM Consultation (LAN AI)
+**Mission:** Ability to consult another LLM running on a separate local machine (e.g. Raspberry Pi, mini PC, NAS) on the same network. Everything stays on-premises — no data leaves the local network — while offloading heavier reasoning to a more capable model than what runs in the browser.
+
+**Why:** A Raspberry Pi or mini server running Ollama/llama.cpp can handle 13B+ models that wouldn't fit in WebGPU. Combines the convenience of the browser agent with the power of a local server. Zero cloud dependency.
+
+**Technical:**
+- Connect to a local LLM server (Ollama, llama.cpp, vLLM) via internal IP
+- Configurable endpoint in plugin settings (e.g. `http://192.168.1.x:11434`)
+- Same privacy benefits as the browser model, but with more power
+- New ability: `consult-local-llm`
+
+**Hackathon Goal:** Maximum AI capability with zero cloud dependency.
 
 ---
 
