@@ -164,10 +164,17 @@ function sleep( ms ) {
 // System prompt builder — mirrors react-agent.js buildSystemPromptPromptBased()
 // ---------------------------------------------------------------------------
 
-function buildSystemPrompt( abilities, disableThinking ) {
+function buildSystemPrompt( abilities, disableThinking, multiTurn ) {
 	const toolsList = abilities
 		.map( ( a ) => `- ${ a.id }: ${ a.description || a.label || '' }` )
 		.join( '\n' );
+
+	const multiTurnRules = multiTurn
+		? `- Call ONE tool at a time. After receiving the result, decide what to do next.
+- If the user asks about multiple topics, call a separate tool for EACH topic before giving a final answer.
+- ALWAYS use tools to look up information. Do NOT answer from memory.
+- Only give a final_answer AFTER you have called all necessary tools.`
+		: `- If no tool is needed, answer directly via final_answer.`;
 
 	return `You are a WordPress assistant. Respond with ONLY a JSON object, nothing else.
 
@@ -181,10 +188,10 @@ Final answer: {"action": "final_answer", "content": "Your answer here"}
 
 RULES:
 - One JSON object per response. No text before or after.
+${ multiTurnRules }
 - Summarize tool results for humans. Never copy raw JSON into final_answer.
 - If a tool fails, explain the failure in a final_answer.
 - Never retry a failed tool. Never invent tool names.
-- If no tool is needed, answer directly via final_answer.
 
 EXAMPLE:
 
@@ -343,6 +350,26 @@ async function chatCompletion( messages, model ) {
 // Test evaluation
 // ---------------------------------------------------------------------------
 
+/**
+ * Check if a tool call matches an expected tool ID.
+ * Handles cases where small models omit the namespace prefix
+ * (e.g. "search-wp-hooks" instead of "wp-agentic-admin/search-wp-hooks").
+ *
+ * @param {string|null} toolCalled - The tool ID from the LLM response
+ * @param {string}      expected   - The expected tool ID
+ * @returns {boolean}
+ */
+function toolMatches( toolCalled, expected ) {
+	if ( toolCalled === expected ) {
+		return true;
+	}
+	// Match partial: "search-wp-hooks" matches "wp-agentic-admin/search-wp-hooks"
+	if ( toolCalled && expected.endsWith( `/${ toolCalled }` ) ) {
+		return true;
+	}
+	return false;
+}
+
 function evaluateTest( test, action ) {
 	const toolCalled =
 		action && action.action === 'tool_call' ? action.tool : null;
@@ -352,10 +379,34 @@ function evaluateTest( test, action ) {
 	}
 
 	if ( Array.isArray( test.expectTool ) ) {
-		return { passed: test.expectTool.includes( toolCalled ), toolCalled };
+		return {
+			passed: test.expectTool.some( ( e ) => toolMatches( toolCalled, e ) ),
+			toolCalled,
+		};
 	}
 
-	return { passed: toolCalled === test.expectTool, toolCalled };
+	return { passed: toolMatches( toolCalled, test.expectTool ), toolCalled };
+}
+
+/**
+ * Run post-selection validation if the test defines a validate() function.
+ * The validate function receives the tool args from the LLM response and
+ * should return { passed: boolean, detail: string }.
+ *
+ * @param {object} test   - Test case with optional validate() function
+ * @param {object} action - Parsed LLM action
+ * @returns {Promise<{ passed: boolean, detail: string }|null>}
+ */
+async function runValidation( test, action ) {
+	if ( ! test.validate || ! action || action.action !== 'tool_call' ) {
+		return null;
+	}
+
+	try {
+		return await test.validate( action.args || {} );
+	} catch ( err ) {
+		return { passed: false, detail: `validate error: ${ err.message }` };
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -402,10 +453,16 @@ function printResults( results, totalTime ) {
 		);
 
 		if ( ! r.passed ) {
-			const expectStr = Array.isArray( r.expectTool )
-				? r.expectTool.join( ' | ' )
-				: r.expectTool || '(none)';
-			const expected = pad( ` expected: ${ expectStr }`, COL_TOOL );
+			let failReason;
+			if ( r.validationDetail ) {
+				failReason = r.validationDetail;
+			} else {
+				const expectStr = Array.isArray( r.expectTool )
+					? r.expectTool.join( ' | ' )
+					: r.expectTool || '(none)';
+				failReason = `expected: ${ expectStr }`;
+			}
+			const expected = pad( ` ${ failReason }`, COL_TOOL );
 			console.log(
 				`  ${ pad( '', COL_STATUS ) }│${ pad(
 					'',
@@ -430,6 +487,142 @@ function printResults( results, totalTime ) {
 	console.log( '' );
 
 	return passed === total ? 0 : 1;
+}
+
+// ---------------------------------------------------------------------------
+// Multi-turn ReAct execution
+// ---------------------------------------------------------------------------
+
+/**
+ * Run a multi-turn ReAct test.
+ *
+ * The test must define:
+ * - expectChain: array of expected tool IDs in order, e.g. ['search-wp-blocks', 'get-block-schema']
+ * - resolveTool(toolId, args): async function returning a string tool result
+ * - validate(chain, finalAnswer): optional async function for result validation
+ *
+ * @param {object} test         - Test case
+ * @param {string} sysPrompt   - Multi-turn system prompt
+ * @param {string} model       - Ollama model ID
+ * @returns {Promise<object>}   Result object for the results array
+ */
+async function runMultiTurnTest( test, sysPrompt, model ) {
+	const maxTurns = ( test.expectChain?.length || 2 ) + 2; // chain + final_answer + buffer
+	const messages = [
+		{ role: 'system', content: sysPrompt },
+		{ role: 'user', content: test.input },
+	];
+
+	const toolChain = [];
+	let finalAnswer = null;
+
+	for ( let turn = 0; turn < maxTurns; turn++ ) {
+		const response = await chatCompletion( messages, model );
+		const action = parseActionFromResponse( response );
+
+		if ( ! action ) {
+			return {
+				input: test.input,
+				expectTool: test.expectChain,
+				toolCalled: null,
+				toolChain,
+				passed: false,
+				validationDetail: `parse fail on turn ${ turn + 1 }`,
+			};
+		}
+
+		if ( action.action === 'tool_call' ) {
+			// Normalize tool ID (handle missing namespace)
+			let toolId = action.tool;
+			const fullMatch = test.expectChain.find(
+				( e ) => e === toolId || e.endsWith( `/${ toolId }` )
+			);
+			if ( fullMatch ) {
+				toolId = fullMatch;
+			}
+			toolChain.push( toolId );
+
+			// Get tool result from the test's resolveTool function
+			let toolResult;
+			try {
+				toolResult = await test.resolveTool( toolId, action.args || {} );
+			} catch ( err ) {
+				toolResult = `[Tool error] ${ err.message }`;
+			}
+
+			messages.push( { role: 'assistant', content: response } );
+			messages.push( { role: 'user', content: toolResult } );
+		} else if ( action.action === 'final_answer' ) {
+			finalAnswer =
+				typeof action.content === 'string'
+					? action.content
+					: JSON.stringify( action.content );
+			break;
+		} else {
+			break;
+		}
+	}
+
+	// Evaluate chain match
+	const chainMatches =
+		toolChain.length === test.expectChain.length &&
+		test.expectChain.every( ( expected, idx ) =>
+			toolMatches( toolChain[ idx ], expected )
+		);
+
+	if ( ! chainMatches ) {
+		const expectedStr = test.expectChain
+			.map( ( e ) => e.split( '/' ).pop() )
+			.join( ' → ' );
+		const gotStr =
+			toolChain.map( ( t ) => t.split( '/' ).pop() ).join( ' → ' ) ||
+			'(none)';
+		return {
+			input: test.input,
+			expectTool: test.expectChain,
+			toolCalled: toolChain.join( ' → ' ),
+			toolChain,
+			passed: false,
+			validationDetail: `chain mismatch: expected [${ expectedStr }], got [${ gotStr }]`,
+		};
+	}
+
+	// Run optional validation
+	let validationDetail = null;
+	if ( test.validateChain ) {
+		try {
+			const v = await test.validateChain( toolChain, finalAnswer );
+			if ( ! v.passed ) {
+				return {
+					input: test.input,
+					expectTool: test.expectChain,
+					toolCalled: toolChain.join( ' → ' ),
+					toolChain,
+					passed: false,
+					validationDetail: v.detail,
+				};
+			}
+			validationDetail = v.detail;
+		} catch ( err ) {
+			return {
+				input: test.input,
+				expectTool: test.expectChain,
+				toolCalled: toolChain.join( ' → ' ),
+				toolChain,
+				passed: false,
+				validationDetail: `validateChain error: ${ err.message }`,
+			};
+		}
+	}
+
+	return {
+		input: test.input,
+		expectTool: test.expectChain,
+		toolCalled: toolChain.join( ' → ' ),
+		toolChain,
+		passed: true,
+		validationDetail,
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -493,8 +686,14 @@ function printResults( results, totalTime ) {
 	);
 	console.log( `  Tests:      ${ tests.length }` );
 
+	// Check if any tests use multi-turn (expectChain)
+	const hasMultiTurn = tests.some( ( t ) => t.expectChain );
+
 	// Step 5: Build system prompt
-	const systemPrompt = buildSystemPrompt( abilities, noThink );
+	const systemPrompt = buildSystemPrompt( abilities, noThink, false );
+	const multiTurnSystemPrompt = hasMultiTurn
+		? buildSystemPrompt( abilities, noThink, true )
+		: null;
 
 	if ( verbose ) {
 		console.log( '' );
@@ -520,33 +719,76 @@ function printResults( results, totalTime ) {
 		process.stdout.write( `  [${ label }] "${ test.input }" ... ` );
 
 		try {
-			const messages = [
-				{ role: 'system', content: systemPrompt },
-				{ role: 'user', content: test.input },
-			];
+			if ( test.expectChain ) {
+				// ── Multi-turn ReAct test ──
+				const result = await runMultiTurnTest(
+					test,
+					multiTurnSystemPrompt,
+					modelId
+				);
+				results.push( result );
 
-			const response = await chatCompletion( messages, modelId );
+				if ( result.passed ) {
+					console.log(
+						`✓ (chain: ${ result.toolChain.join( ' → ' ) }${
+							result.validationDetail
+								? ', ' + result.validationDetail
+								: ''
+						})`
+					);
+				} else {
+					console.log( `✗ (${ result.validationDetail })` );
+				}
+			} else {
+				// ── Single-turn tool selection test ──
+				const messages = [
+					{ role: 'system', content: systemPrompt },
+					{ role: 'user', content: test.input },
+				];
 
-			if ( verbose ) {
-				console.log( '' );
-				console.log( `    LLM: ${ response }` );
+				const response = await chatCompletion( messages, modelId );
+
+				if ( verbose ) {
+					console.log( '' );
+					console.log( `    LLM: ${ response }` );
+				}
+
+				const action = parseActionFromResponse( response );
+				let { passed, toolCalled } = evaluateTest( test, action );
+
+				// Run post-selection validation if tool selection passed
+				let validationDetail = null;
+				if ( passed && test.validate ) {
+					const validation = await runValidation( test, action );
+					if ( validation ) {
+						passed = validation.passed;
+						validationDetail = validation.detail;
+					}
+				}
+
+				results.push( {
+					input: test.input,
+					expectTool: test.expectTool,
+					toolCalled,
+					action,
+					rawResponse: response,
+					passed,
+					validationDetail,
+				} );
+
+				if ( passed ) {
+					console.log(
+						validationDetail
+							? `✓ (${ validationDetail })`
+							: '✓'
+					);
+				} else {
+					const reason =
+						validationDetail ||
+						`got: ${ toolCalled || '(none)' }`;
+					console.log( `✗ (${ reason })` );
+				}
 			}
-
-			const action = parseActionFromResponse( response );
-			const { passed, toolCalled } = evaluateTest( test, action );
-
-			results.push( {
-				input: test.input,
-				expectTool: test.expectTool,
-				toolCalled,
-				action,
-				rawResponse: response,
-				passed,
-			} );
-
-			console.log(
-				passed ? '✓' : `✗ (got: ${ toolCalled || '(none)' })`
-			);
 		} catch ( err ) {
 			results.push( {
 				input: test.input,

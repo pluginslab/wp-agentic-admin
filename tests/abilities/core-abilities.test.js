@@ -103,6 +103,24 @@ module.exports = {
 			expectTool: 'core/get-environment-info',
 		},
 
+		// ── Dev docs (WASM) ──────────────────────────────────────
+		{
+			input: 'search for hooks related to login',
+			expectTool: 'wp-agentic-admin/search-wp-hooks',
+		},
+		{
+			input: 'tell me about the init hook',
+			expectTool: 'wp-agentic-admin/get-hook-context',
+		},
+		{
+			input: 'find blocks for images',
+			expectTool: 'wp-agentic-admin/search-wp-blocks',
+		},
+		{
+			input: 'show me the paragraph block schema',
+			expectTool: 'wp-agentic-admin/get-block-schema',
+		},
+
 		// ── No-tool tests (pure knowledge questions) ───────────────
 		{
 			input: 'what is a transient in WordPress?',

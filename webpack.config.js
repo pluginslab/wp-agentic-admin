@@ -13,6 +13,14 @@ const path = require( 'path' );
 module.exports = {
 	...defaultConfig,
 
+	// Mark the optional WASM package as external — it's loaded via dynamic import()
+	// at runtime and should not be bundled. If not installed, the import fails
+	// gracefully in the ability execute() catch block.
+	externals: {
+		...( defaultConfig.externals || {} ),
+		'@pluginslab/wp-devdocs-wasm': 'commonjs @pluginslab/wp-devdocs-wasm',
+	},
+
 	entry: {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),

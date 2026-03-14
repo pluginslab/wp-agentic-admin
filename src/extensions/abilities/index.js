@@ -25,6 +25,12 @@ import { registerRevisionCleanup } from './revision-cleanup';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 
+// Dev docs abilities (require optional @pluginslab/wp-devdocs-wasm package)
+import { registerSearchWpHooks } from './search-wp-hooks';
+import { registerGetHookContext } from './get-hook-context';
+import { registerSearchWpBlocks } from './search-wp-blocks';
+import { registerGetBlockSchema } from './get-block-schema';
+
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
 export { registerCacheFlush } from './cache-flush';
@@ -40,6 +46,10 @@ export { registerRewriteList } from './rewrite-list';
 export { registerRevisionCleanup } from './revision-cleanup';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerSearchWpHooks } from './search-wp-hooks';
+export { registerGetHookContext } from './get-hook-context';
+export { registerSearchWpBlocks } from './search-wp-blocks';
+export { registerGetBlockSchema } from './get-block-schema';
 
 /**
  * Register all abilities.
@@ -69,6 +79,12 @@ export function registerAllAbilities() {
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
 	registerCoreEnvironmentInfo();
+
+	// Dev docs abilities (require optional @pluginslab/wp-devdocs-wasm)
+	registerSearchWpHooks();
+	registerGetHookContext();
+	registerSearchWpBlocks();
+	registerGetBlockSchema();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }
