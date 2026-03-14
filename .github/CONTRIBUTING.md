@@ -14,7 +14,7 @@ Welcome, hackathon contributor! This is a quick-start guide to get you up and ru
 
 ### Requirements
 
-- WordPress 6.7+ / PHP 8.2+ / Node 18+
+- WordPress 6.9+ / PHP 8.2+ / Node 18+
 - Chrome or Edge with WebGPU support
 
 ## What Can I Work On?

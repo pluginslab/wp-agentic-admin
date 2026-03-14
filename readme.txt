@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.8.0
+Stable tag: 0.9.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,6 +38,16 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 
 == Changelog ==
 
+= 0.9.0 =
+* New: CloudFest Hackathon 2026 preparation with 28 GitHub issues across 7 contributor roles
+* New: CLOUDFEST_HACKATHON.md with sharpened goals, team role definitions, and demo flow
+* New: LICENSE file (GPL-2.0-or-later)
+* New: SECURITY.md with vulnerability reporting policy
+* New: GitHub labels for hackathon workflow (php, react-js, ai-ml, ux, docs, devops, testing, writers, ability, workflow, hackathon)
+* New: README.md header image from CloudFest pitch deck
+* Improved: CONTRIBUTING.md version requirement corrected to WordPress 6.9+
+* Fixed: readme.txt changelog version numbering (internal 1.x versions renumbered to public 0.x scheme)
+
 = 0.8.0 =
 * New: `.claude/` project config with CLAUDE.md rules, settings, and 5 contributor skills
 * New: `/release`, `/test`, `/new-ability`, `/update-docs`, `/pr` slash commands for Claude Code
@@ -57,7 +67,7 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 * Removed: `build:test-harness` build step — `npm run test:abilities` runs directly via Node.js
 * Improved: Test runner auto-installs Ollama via Homebrew and pulls models on first run
 
-= 1.2.0 =
+= 0.6.0 =
 * New: 4 WP-CLI-inspired abilities for common maintenance tasks:
   * `transient-flush` - Delete expired or all transients (like `wp transient delete`)
   * `cron-list` - List scheduled cron events with overdue detection (like `wp cron event list`)
@@ -71,7 +81,7 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 * Improved: Total of 14 abilities now available (12 custom + 2 core wrappers)
 * Fixed: HTTP method for destructive abilities (now uses POST as required by Abilities API)
 
-= 1.1.0 =
+= 0.5.0 =
 * New: Multi-step workflow engine for chaining abilities together
 * New: Built-in workflows: Site Cleanup, Performance Check, Plugin Audit, Database Maintenance
 * New: `wp.agenticAdmin.registerWorkflow()` API for third-party workflow registration
@@ -81,5 +91,5 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 * Improved: Confirmation dialog shows all workflow steps before execution
 * Improved: Automatic rollback of completed steps if later step fails
 
-= 1.0.0 =
+= 0.1.0 =
 * Initial release

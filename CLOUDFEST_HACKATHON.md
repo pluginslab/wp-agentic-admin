@@ -1,107 +1,172 @@
-# WP Agentic Admin - CloudFest Hackathon
+# WP Agentic Admin - CloudFest Hackathon 2026
 
-This document captures feature ideas and improvements aligned with CloudFest Hackathon goals. No version numbers, no timelines - what gets built first gets released first.
+## Where We Start
 
----
+A working WordPress plugin (v0.8.0) with:
+- A local AI assistant running Qwen 3 1.7B in the browser via WebGPU (no cloud, no API keys)
+- 14 abilities (error logs, plugin management, caching, database optimization, site health, cron, revisions, etc.)
+- 4 multi-step workflows (site cleanup, performance check, plugin audit, database maintenance)
+- ReAct agent loop with 93-100% tool selection accuracy
+- Service Worker model persistence across page navigations
+- Full test suite (43 unit tests, 18 ability tests)
+- Extensible Abilities API for third-party plugins
 
-## 🏆 Hackathon Priorities
-
-These features align with CloudFest Hackathon goals and are targeted for implementation during the event.
-
-### 1. Chat UI - Right Sidebar
-**Mission:** Move chat interface from settings page to a persistent right sidebar (like WP admin menu on left) that toggles with a button near "howdy USERNAME" at the top right.
-
-**Why:** Makes the AI assistant always accessible without navigating to a specific page. Critical for keeping the Service Worker active across all admin pages, not just the settings page. Natural integration into WordPress admin workflow.
-
-**Hackathon Goal:** Better UX integration for continuous workflow.
+**The chat works, but it lives on its own settings page. The ability set covers SRE basics but misses common admin tasks. The AI only runs locally in WebGPU-capable browsers.**
 
 ---
 
-### 2. Expanded Abilities Library
-**Mission:** Add 25+ new SRE and WordPress-specific abilities based on common admin tasks.
+## Hackathon Goals
 
-**Categories:**
+### Goal 1: Sidebar UI (must-have)
 
-**Site Management (6):**
+Move the chat from its own admin page into a persistent right sidebar accessible from every wp-admin page.
+
+**Starting point:** Chat only works on the Agentic Admin settings page.
+**Done when:** A toggle button (near "Howdy, admin") opens a slide-out chat panel that works on any wp-admin page. The Service Worker keeps the model loaded across page navigations. Chat history persists.
+**Demo:** Open any wp-admin page, click the toggle, ask "check site health", get a response — without ever leaving the page you were on.
+**Skills needed:** React/JS, CSS, UX/Design
+
+---
+
+### Goal 2: Expanded Abilities (must-have)
+
+Go from 14 to 25+ abilities covering the most common WordPress admin tasks.
+
+**Starting point:** 14 abilities focused on SRE (error logs, cache, database, plugins, site health, cron, revisions, rewrites, transients).
+**Done when:** At least 10 new abilities are merged, each with PHP backend, JS chat config, and a passing ability test. The AI can help with themes, users, content, security, and updates — not just SRE.
+**Demo:** Ask the AI to "list users", "check for updates", "show disk usage", "run a security scan" — tasks that currently get no response.
+**Skills needed:** PHP (WordPress plugin developers), Writers (use case definitions), LLM Testers
+
+**Must-have abilities** (highest value, easiest to implement):
 - `theme-list` - List all installed themes with status
-- `theme-activate` - Activate a specific theme
 - `user-list` - List WordPress users with roles
-- `user-role-update` - Change user role (with confirmation)
-- `permalink-update` - Update permalink structure
-- `maintenance-mode` - Enable/disable maintenance mode
-
-**Content Operations (4):**
-- `post-list` - List recent posts by type/status/author
-- `post-publish` - Publish draft post with preview
-- `comment-stats` - Get comment statistics
-- `comment-moderate` - Bulk approve/spam comments
-
-**Security & Diagnostics (5):**
-- `error-log-search` - Search/filter debug.log by severity level (errors vs warnings) and keyword
-- `security-scan` - Basic security checks (permissions, salts, versions)
-- `backup-check` - Verify backup plugin status and last backup
 - `update-check` - Check for WordPress/plugin/theme updates
 - `disk-usage` - Check wp-content disk usage
-
-**Filesystem (2):**
-- `read-file` - Read WordPress files (theme templates, configs, logs). Must sanitize sensitive data (DB credentials, salts, API keys) before passing to LLM. Support partial reads (line ranges) for context window limits
-- `write-file` - Edit WordPress files (configs, templates, code fixes). Requires confirmation prompts, creates backups before edits. Sensitive files (wp-config.php) require extra confirmation
-
-**Database (1):**
-- `query-database` - Read-only SQL queries (SELECT only) for inspecting options, post meta, user data. LLM builds query, results get summarized. Sanitize output to avoid leaking sensitive fields
-
-**Cron (1):**
-- `manage-cron` - List all scheduled WP-Cron events with next run times, add/remove cron jobs, diagnose missed or stuck events
-
-**Media (1):**
-- `manage-media` - List/search media library, get details (dimensions, file size, alt text), upload files, bulk update metadata. Could integrate with image optimization
-
-**Web Search (1):**
-- `web-search` - Search the web for documentation, troubleshooting, plugin compatibility. LLM formulates query, results get summarized. Could use SearXNG (self-hosted) or a public search API
-
-**Performance (2):**
+- `post-list` - List recent posts by type/status/author
+- `comment-stats` - Get comment statistics
+- `security-scan` - Basic security checks (permissions, salts, versions)
+- `error-log-search` - Search/filter debug.log by severity and keyword
 - `opcode-cache-status` - Check PHP OPcache status
+- `backup-check` - Verify backup plugin status and last backup
+
+**Stretch abilities** (higher complexity or narrower use case):
+- `theme-activate` - Activate a specific theme (destructive)
+- `user-role-update` - Change user role (destructive)
+- `maintenance-mode` - Enable/disable maintenance mode
+- `permalink-update` - Update permalink structure
+- `post-publish` - Publish draft post with preview
+- `comment-moderate` - Bulk approve/spam comments
+- `read-file` - Read WordPress files with sensitive data sanitization
+- `write-file` - Edit WordPress files with backup and confirmation
+- `query-database` - Read-only SQL queries with output sanitization
+- `manage-media` - List/search media library
 - `slow-query-log` - Read MySQL slow query log
+- `web-search` - Search the web for docs/troubleshooting
 
-**Bonus:** 3 new workflows (security-audit, content-audit, pre-deployment-check)
-
-**Hackathon Goal:** Expand abilities and workflows.
-
----
-
-### 3. External AI Provider Support
-**Mission:** Integrate external AI API support (Google AI API, WP AI Client proposal) alongside WebLLM for users who prefer cloud-based models or lack WebGPU-capable hardware.
-
-**Why:** Provides fallback option and accessibility for users without modern GPUs. Gives users choice between privacy-first local execution and cloud-based convenience. Serves as the settings/configuration layer for users who don't want to use a local LLM.
-
-**Technical:** Detect WebGPU availability → Offer external AI API as alternative → Same Abilities API, different execution backend.
-
-**WP AI Client alignment:** Study WordPress core's AI Client proposal specifications and identify alignment points with our Abilities API. Position WP Agentic Admin as a reference implementation for WordPress AI integration. Ensure long-term compatibility with WordPress ecosystem.
-
-**Edge AI Consultation:** The local LLM acts as a privacy gate — only non-sensitive queries (no PII, no site-specific data) get escalated to the cloud LLM via the WP 7.0 AI Client API. This gives the local model access to deeper reasoning/knowledge without compromising privacy. New ability: `consult-cloud-ai` for general coding questions, best practice lookups, complex reasoning tasks.
-
-**Hackathon Goal:** Broader device compatibility, user choice, and WordPress ecosystem standards compliance.
+**Stretch workflows:**
+- `security-audit` - security-scan → update-check → error-log-search
+- `content-audit` - post-list → comment-stats → disk-usage
+- `pre-deployment-check` - update-check → backup-check → site-health → error-log-read
 
 ---
 
-### 4. Local Network LLM Consultation (LAN AI)
-**Mission:** Ability to consult another LLM running on a separate local machine (e.g. Raspberry Pi, mini PC, NAS) on the same network. Everything stays on-premises — no data leaves the local network — while offloading heavier reasoning to a more capable model than what runs in the browser.
+### Goal 3: External AI Provider Support (stretch)
 
-**Why:** A Raspberry Pi or mini server running Ollama/llama.cpp can handle 13B+ models that wouldn't fit in WebGPU. Combines the convenience of the browser agent with the power of a local server. Zero cloud dependency.
+Add alternative AI backends for users without WebGPU, so the plugin works on any browser.
 
-**Technical:**
-- Connect to a local LLM server (Ollama, llama.cpp, vLLM) via internal IP
-- Configurable endpoint in plugin settings (e.g. `http://192.168.1.x:11434`)
-- Same privacy benefits as the browser model, but with more power
-- New ability: `consult-local-llm`
+**Starting point:** Only WebLLM (local, WebGPU-only). No fallback.
+**Done when:** Users can configure an external AI provider in settings. The same Abilities API works with both local and cloud models. WebGPU is auto-detected; if missing, the UI guides the user to configure a provider.
+**Demo:** Open the plugin in Firefox (no WebGPU), configure a provider, use the chat normally.
+**Skills needed:** React/JS, AI/ML, DevOps
 
-**Hackathon Goal:** Maximum AI capability with zero cloud dependency.
+**Provider options (any one is a win):**
+- **Google Prompt API (Chrome built-in AI)** — Chrome ships Gemini Nano/Flash locally via `window.ai`. No API key needed, runs on-device. Requires a Chrome extension bridge to access the API from the WordPress admin context. This is the closest to our local-first philosophy — still on-device, just a different runtime.
+- **Google AI API (Gemini)** — Cloud-based, requires API key. Good fallback for non-WebGPU browsers.
+- **WP AI Client API (WordPress 7.0 proposal)** — Align with where WordPress core is heading for AI integration.
+
+**Edge AI Consultation:** The local LLM acts as a privacy gate — only non-sensitive queries (no PII, no site-specific data) get escalated to the cloud LLM. This gives the local model access to deeper reasoning and knowledge without compromising privacy. New ability: `consult-cloud-ai`.
+
+---
+
+### Goal 4: LAN AI Consultation (stretch)
+
+Connect to a local network LLM (Ollama, llama.cpp) for more powerful reasoning without cloud dependency.
+
+**Starting point:** The browser model is the only reasoning engine.
+**Done when:** Users can configure a local LLM endpoint (e.g. `http://192.168.1.x:11434`) in settings. A new `consult-local-llm` ability lets the browser agent escalate questions to the more powerful local model.
+**Demo:** Configure an Ollama endpoint, ask a complex question, see the agent consult the local 13B+ model and return a better answer.
+**Skills needed:** DevOps, AI/ML, PHP
+
+---
+
+### Goal 5: Advanced Abilities (stretch)
+
+Abilities that go beyond read-only diagnostics — the agent can inspect files, query the database, search the web, and edit files.
+
+**Starting point:** All abilities are WordPress API wrappers. The agent can't read arbitrary files, query the database, or access external information.
+**Done when:** At least 2 of these advanced abilities are merged and working.
+**Demo:** "What's in my wp-config.php?" → agent reads the file with credentials redacted. "How many posts have more than 10 comments?" → agent runs a safe SQL query. "How do I fix this error?" → agent searches the web and summarizes the answer.
+**Skills needed:** PHP, AI/ML, DevOps
+
+**Abilities:**
+- `read-file` - Read WordPress files (theme templates, configs, logs). Sanitize sensitive data (DB credentials, salts, API keys) before passing to LLM. Support partial reads for context window limits.
+- `write-file` - Edit WordPress files with confirmation prompts and automatic backups. Sensitive files (wp-config.php) require extra confirmation.
+- `query-database` - Read-only SQL queries (SELECT only) for inspecting options, post meta, user data. LLM builds the query, results get summarized. Sanitize output to avoid leaking sensitive fields.
+- `web-search` - Search the web for documentation, troubleshooting, plugin compatibility. LLM formulates the query, results get summarized. Could use SearXNG (self-hosted) or a public search API.
+
+---
+
+## What Success Looks Like (March 24 Main Stage)
+
+**"We started with an AI assistant locked to one page with 14 tools. Now it's a sidebar on every admin page with 25+ tools. It reads your files, queries your database, searches the web, and works even without WebGPU — with two tiers of local AI and zero cloud required."**
+
+The demo flow:
+1. Open any wp-admin page → click sidebar toggle → AI is there
+2. "Check for updates" → new ability responds (didn't exist before)
+3. "Run a security scan" → new ability responds
+4. "Do a full site cleanup" → existing workflow runs from the sidebar
+5. (If Goal 5 done) "What's in my wp-config.php?" → agent reads file with credentials redacted
+6. (If Goal 5 done) "How do I fix this error?" → agent searches the web and summarizes
+7. (If Goal 3 done) Switch to Firefox → configure provider → same experience
+8. (If Goal 4 done) Complex question → agent consults local 13B+ model on the network
+
+---
+
+## Team Roles
+
+### PHP Developers
+
+As a PHP developer, your job is to implement new abilities. Each ability is a self-contained PHP file in `includes/abilities/` that registers a REST endpoint via `register_agentic_ability()`. You'll work from use cases defined by Writers, follow the patterns in [ABILITIES-GUIDE.md](docs/ABILITIES-GUIDE.md), and coordinate with a JS developer who builds the chat-side counterpart. You know WordPress hooks, REST API, and functions like `get_plugins()`, `wp_count_posts()`, `WP_Debug_Data`.
+
+### React/JS Developers
+
+As a JS developer, your job spans two areas. First: for every new ability, you write the JavaScript file in `src/extensions/abilities/` that registers the chat interface — keywords, label, summarize function, execute function, parseIntent if needed. You pair with the PHP developer building the backend. Second: the sidebar UI — the biggest React task of the hackathon. Moving the chat panel from a dedicated page into a persistent sidebar that works on every wp-admin page. Stack is React via `@wordpress/element` and `@wordpress/scripts`.
+
+### AI Enthusiasts
+
+As an AI enthusiast, your job is to make the ReAct agent smarter. The agent currently sends all 14 tool descriptions to the LLM on every request — this won't scale to 30+. You'll work on tool selection at scale (pre-filtering tools before they hit the LLM), prompt optimization, and the external AI provider architecture. You should be comfortable reading `react-agent.js`, `message-router.js`, and the system prompt construction in `chat-orchestrator.js`. The [AI Fundamentals guide](docs/ai-fundamentals/INDEX.md) covers the full stack.
+
+### LLM Testers
+
+As an LLM tester, your job is to verify that the AI picks the right tool for the right user message. Every new ability needs test cases in `tests/abilities/core-abilities.test.js`. You write the natural language inputs a user would say, define which ability should be selected, and run the test suite against a local Qwen 3 1.7B via Ollama. You work in lockstep with PHP and JS developers — when they ship an ability, you ship the test. Run tests with `npm run test:abilities`.
+
+### UX/Design Passionates
+
+As a UX designer, your job is to make the AI assistant feel trustworthy and natural inside wp-admin. The sidebar interaction pattern (how it opens, how it sits alongside content, how it behaves on different screen sizes), the model loading experience (a 1.2GB download needs clear progress and expectations), confirmation dialogs for destructive actions, and the overall chat UX. You produce designs, mockups, or CSS that React/JS developers implement. Think about the WordPress admin user who has never used AI before.
+
+### Writers
+
+As a writer, your job is to invent new use cases for the AI assistant. Think about what a WordPress site admin does every day and ask: "could the AI help with this?" For each use case you define: what the user would say (natural language triggers), what the AI should do (which WordPress functions/data), what the response should look like, and whether it's read-only or destructive. Your output becomes the spec that PHP and JS developers build from. You don't need to code — you need to understand WordPress admin workflows. If a use case needs a new ability, great — you've just defined one.
+
+### DevOps Experts
+
+As a DevOps expert, your job is to think like a hosting company. You know what site admins and support staff deal with daily — server health, disk space, update cycles, cron issues, backup verification. You bring that operational perspective to the abilities we build and the ones we're missing. You also work on infrastructure: CI/CD workflows (GitHub Actions for linting and testing), the LAN AI feature (connecting to a local Ollama/llama.cpp server on the network), and WP Playground setup for quick testing. If you see an SRE use case we haven't thought of, flag it.
 
 ---
 
 ## 💡 Future Features
 
-Features to pursue after hackathon priorities are complete.
+Features to pursue after hackathon priorities are complete, or who knows still during the hackathon.
 
 ### Model Discovery & Experimentation
 **Mission:** Allow searching, comparing, and swapping different models to find the best fit for various hardware and use cases.
@@ -296,9 +361,9 @@ Embed WordPress documentation in vector database. Use RAG for technical question
 
 ## 📝 Notes
 
-**Hackathon Focus:** Top priorities are the Sidebar UI (#1), Expanded Abilities (#2), and External AI Provider Support (#3).
+**Must-have vs Stretch:** Goals 1 and 2 define hackathon success. Goals 3 and 4 are stretch — impressive if done, but the project is a win without them.
 
-**Philosophy:** No version numbers. No rigid timelines. What gets done first gets released. Focus on making the core experience excellent before adding complexity.
+**How abilities get built:** A Writer defines the use case (what the user says, what should happen, what the response looks like). A PHP dev implements it. An LLM Tester writes the test case. Each ability is self-contained — see `ABILITIES-GUIDE.md`.
 
 **Priority Emerges:** If a feature becomes critical during development, it becomes a priority. Stay flexible.
 

@@ -1,5 +1,7 @@
 # WP-Agentic-Admin
 
+![WP Agentic Admin - CloudFest Hackathon 2026](.github/assets/cloudfest-2026-hackathon.png)
+
 **The Local-First AI Site Reliability Engineer for WordPress**
 
 A privacy-first AI assistant that runs entirely in your browser, helping you diagnose and fix WordPress issues through natural language commands.
