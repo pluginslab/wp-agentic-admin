@@ -31,20 +31,25 @@ const verbose = args.includes( '--verbose' );
 const noThink = args.includes( '--no-think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
-	console.error( 'Usage: node runner.js --file <test-file.js> [--model <ollama-model>]' );
+	console.error(
+		'Usage: node runner.js --file <test-file.js> [--model <ollama-model>]'
+	);
 	console.error( '' );
 	console.error( 'Options:' );
 	console.error( '  --file <path>       Path to test file (required)' );
 	console.error( '  --model <id>        Ollama model (default: qwen3:1.7b)' );
-	console.error( '  --no-think          Append /nothink to disable Qwen 3 thinking' );
+	console.error(
+		'  --no-think          Append /nothink to disable Qwen 3 thinking'
+	);
 	console.error( '  --verbose           Show full LLM responses' );
 	process.exit( 1 );
 }
 
 const testFilePath = path.resolve( args[ fileIndex + 1 ] );
-const modelId = modelIndex !== -1 && args[ modelIndex + 1 ]
-	? args[ modelIndex + 1 ]
-	: 'qwen3:1.7b';
+const modelId =
+	modelIndex !== -1 && args[ modelIndex + 1 ]
+		? args[ modelIndex + 1 ]
+		: 'qwen3:1.7b';
 
 if ( ! fs.existsSync( testFilePath ) ) {
 	console.error( `Test file not found: ${ testFilePath }` );
@@ -68,7 +73,9 @@ function isOllamaInstalled() {
 
 function installOllama() {
 	if ( process.platform !== 'darwin' ) {
-		console.error( 'Auto-install is only supported on macOS via Homebrew.' );
+		console.error(
+			'Auto-install is only supported on macOS via Homebrew.'
+		);
 		console.error( 'Install Ollama manually: https://ollama.com/download' );
 		process.exit( 1 );
 	}
@@ -76,7 +83,9 @@ function installOllama() {
 	try {
 		execSync( 'which brew', { stdio: 'ignore' } );
 	} catch {
-		console.error( 'Homebrew not found. Install Ollama manually: https://ollama.com/download' );
+		console.error(
+			'Homebrew not found. Install Ollama manually: https://ollama.com/download'
+		);
 		process.exit( 1 );
 	}
 
@@ -118,8 +127,11 @@ async function isModelPulled( model ) {
 	try {
 		const res = await fetch( `${ OLLAMA_BASE }/api/tags` );
 		const data = await res.json();
-		return ( data.models || [] ).some( ( m ) =>
-			m.name === model || m.name === `${ model }:latest` || m.name.startsWith( model )
+		return ( data.models || [] ).some(
+			( m ) =>
+				m.name === model ||
+				m.name === `${ model }:latest` ||
+				m.name.startsWith( model )
 		);
 	} catch {
 		return false;
@@ -127,9 +139,13 @@ async function isModelPulled( model ) {
 }
 
 async function pullModel( model ) {
-	console.log( `  Pulling model ${ model } (this may take a few minutes)...` );
+	console.log(
+		`  Pulling model ${ model } (this may take a few minutes)...`
+	);
 	return new Promise( ( resolve, reject ) => {
-		const child = spawn( 'ollama', [ 'pull', model ], { stdio: 'inherit' } );
+		const child = spawn( 'ollama', [ 'pull', model ], {
+			stdio: 'inherit',
+		} );
 		child.on( 'close', ( code ) => {
 			if ( code === 0 ) {
 				resolve();
@@ -179,7 +195,9 @@ User: "list plugins"
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${ disableThinking ? '\n\n/nothink' : '' }`;
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
+		disableThinking ? '\n\n/nothink' : ''
+	}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -326,7 +344,8 @@ async function chatCompletion( messages, model ) {
 // ---------------------------------------------------------------------------
 
 function evaluateTest( test, action ) {
-	const toolCalled = action && action.action === 'tool_call' ? action.tool : null;
+	const toolCalled =
+		action && action.action === 'tool_call' ? action.tool : null;
 
 	if ( test.expectTool === null ) {
 		return { passed: toolCalled === null, toolCalled };
@@ -355,11 +374,18 @@ function printResults( results, totalTime ) {
 	const COL_INPUT = 30;
 	const COL_TOOL = 28;
 
-	const divider = `  ${ '─'.repeat( COL_STATUS ) }┬${ '─'.repeat( COL_INPUT ) }┬${ '─'.repeat( COL_TOOL ) }`;
+	const divider = `  ${ '─'.repeat( COL_STATUS ) }┬${ '─'.repeat(
+		COL_INPUT
+	) }┬${ '─'.repeat( COL_TOOL ) }`;
 
 	console.log( '' );
 	console.log( `  ${ '─'.repeat( COL_STATUS + COL_INPUT + COL_TOOL + 2 ) }` );
-	console.log( `  ${ pad( ' Status', COL_STATUS ) }│${ pad( ' Input', COL_INPUT ) }│${ pad( ' Tool Called', COL_TOOL ) }` );
+	console.log(
+		`  ${ pad( ' Status', COL_STATUS ) }│${ pad(
+			' Input',
+			COL_INPUT
+		) }│${ pad( ' Tool Called', COL_TOOL ) }`
+	);
 	console.log( divider );
 
 	for ( const r of results ) {
@@ -368,14 +394,24 @@ function printResults( results, totalTime ) {
 		const input = pad( ` ${ r.input }`, COL_INPUT );
 		const tool = pad( ` ${ r.toolCalled || '(none)' }`, COL_TOOL );
 
-		console.log( `  ${ pad( ` ${ mark }${ status }`, COL_STATUS ) }│${ input }│${ tool }` );
+		console.log(
+			`  ${ pad(
+				` ${ mark }${ status }`,
+				COL_STATUS
+			) }│${ input }│${ tool }`
+		);
 
 		if ( ! r.passed ) {
 			const expectStr = Array.isArray( r.expectTool )
 				? r.expectTool.join( ' | ' )
 				: r.expectTool || '(none)';
 			const expected = pad( ` expected: ${ expectStr }`, COL_TOOL );
-			console.log( `  ${ pad( '', COL_STATUS ) }│${ pad( '', COL_INPUT ) }│${ expected }` );
+			console.log(
+				`  ${ pad( '', COL_STATUS ) }│${ pad(
+					'',
+					COL_INPUT
+				) }│${ expected }`
+			);
 		}
 	}
 
@@ -386,7 +422,11 @@ function printResults( results, totalTime ) {
 	const pct = total > 0 ? Math.round( ( passed / total ) * 100 ) : 0;
 
 	console.log( '' );
-	console.log( `  ${ passed }/${ total } passed (${ pct }%) in ${ ( totalTime / 1000 ).toFixed( 1 ) }s` );
+	console.log(
+		`  ${ passed }/${ total } passed (${ pct }%) in ${ (
+			totalTime / 1000
+		).toFixed( 1 ) }s`
+	);
 	console.log( '' );
 
 	return passed === total ? 0 : 1;
@@ -418,7 +458,9 @@ function printResults( results, totalTime ) {
 		const running = await waitForOllama();
 		if ( ! running ) {
 			console.error( '  Failed to start Ollama server after 15s.' );
-			console.error( '  Try running `ollama serve` manually in another terminal.' );
+			console.error(
+				'  Try running `ollama serve` manually in another terminal.'
+			);
 			process.exit( 1 );
 		}
 	}
@@ -443,8 +485,12 @@ function printResults( results, totalTime ) {
 	console.log( '' );
 	console.log( `  Model:      ${ modelId }` );
 	console.log( `  Thinking:   ${ noThink ? 'DISABLED' : 'enabled' }` );
-	console.log( `  Test file:  ${ path.relative( process.cwd(), testFilePath ) }` );
-	console.log( `  Abilities:  ${ abilities.map( ( a ) => a.id ).join( ', ' ) }` );
+	console.log(
+		`  Test file:  ${ path.relative( process.cwd(), testFilePath ) }`
+	);
+	console.log(
+		`  Abilities:  ${ abilities.map( ( a ) => a.id ).join( ', ' ) }`
+	);
 	console.log( `  Tests:      ${ tests.length }` );
 
 	// Step 5: Build system prompt
@@ -453,7 +499,12 @@ function printResults( results, totalTime ) {
 	if ( verbose ) {
 		console.log( '' );
 		console.log( '  ── System Prompt ──' );
-		console.log( systemPrompt.split( '\n' ).map( ( l ) => `  │ ${ l }` ).join( '\n' ) );
+		console.log(
+			systemPrompt
+				.split( '\n' )
+				.map( ( l ) => `  │ ${ l }` )
+				.join( '\n' )
+		);
 		console.log( '  ── End ──' );
 	}
 
@@ -493,7 +544,9 @@ function printResults( results, totalTime ) {
 				passed,
 			} );
 
-			console.log( passed ? '✓' : `✗ (got: ${ toolCalled || '(none)' })` );
+			console.log(
+				passed ? '✓' : `✗ (got: ${ toolCalled || '(none)' })`
+			);
 		} catch ( err ) {
 			results.push( {
 				input: test.input,

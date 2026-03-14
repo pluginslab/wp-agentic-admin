@@ -2,6 +2,8 @@
  * Core Abilities — Tool Selection Tests
  *
  * Tests that the LLM correctly selects built-in abilities for various user inputs.
+ * Abilities are loaded from abilities.json (single source of truth).
+ *
  * Run with: npm run test:abilities -- --file tests/abilities/core-abilities.test.js
  *
  * For a minimal template to copy, see example.test.js in this directory.
@@ -9,46 +11,28 @@
  * @since 0.5.0
  */
 
+const { loadAbilities } = require( './load-abilities' );
+const abilities = loadAbilities();
+
 module.exports = {
-	abilities: [
-		{
-			id: 'wp-agentic-admin/error-log-read',
-			label: 'Read error logs',
-			description:
-				'Read the PHP error log (debug.log). Returns error entries, debug logging status, and file existence. Use for errors, crashes, white screens, or debug mode questions.',
-		},
-		{
-			id: 'wp-agentic-admin/plugin-list',
-			label: 'List installed plugins',
-			description:
-				'List all installed WordPress plugins with their active/inactive status, version, and author. Use for questions about installed plugins, plugin counts, or which plugins are active.',
-		},
-		{
-			id: 'wp-agentic-admin/site-health',
-			label: 'Check site health',
-			description:
-				'Run a site health check. Returns PHP version, WordPress version, server software, active theme, memory limit, debug mode, and database size.',
-		},
-		{
-			id: 'wp-agentic-admin/cache-flush',
-			label: 'Flush cache',
-			description:
-				'Clear all WordPress object caches (page cache, object cache, opcode cache). Use when the user wants to flush, clear, purge, or refresh caches.',
-		},
-		{
-			id: 'wp-agentic-admin/db-optimize',
-			label: 'Optimize database',
-			description:
-				'Optimize WordPress database tables to reclaim space and improve query performance. Returns the number of tables optimized and space saved.',
-		},
-	],
+	abilities,
 
 	tests: [
-		// Tool selection tests
+		// ── Plugin management ──────────────────────────────────────
 		{
 			input: 'list all installed plugins',
 			expectTool: 'wp-agentic-admin/plugin-list',
 		},
+		{
+			input: 'activate the WooCommerce plugin',
+			expectTool: 'wp-agentic-admin/plugin-activate',
+		},
+		{
+			input: 'deactivate hello dolly',
+			expectTool: 'wp-agentic-admin/plugin-deactivate',
+		},
+
+		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
 			expectTool: 'wp-agentic-admin/error-log-read',
@@ -66,6 +50,19 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/site-health',
 		},
 		{
+			input: 'what PHP version am I running?',
+			// site-health and get-environment-info both return PHP version;
+			// get-site-info is a reasonable guess since the model may associate
+			// "version" with site info.
+			expectTool: [
+				'wp-agentic-admin/site-health',
+				'core/get-environment-info',
+				'core/get-site-info',
+			],
+		},
+
+		// ── Cache & performance ────────────────────────────────────
+		{
 			input: 'flush the cache',
 			expectTool: 'wp-agentic-admin/cache-flush',
 		},
@@ -73,10 +70,42 @@ module.exports = {
 			input: 'optimize the database',
 			expectTool: 'wp-agentic-admin/db-optimize',
 		},
-
-		// No-tool tests (pure knowledge questions)
 		{
-			input: 'what is a transient?',
+			input: 'clear all transients',
+			expectTool: 'wp-agentic-admin/transient-flush',
+		},
+		{
+			input: 'clean up old post revisions',
+			expectTool: 'wp-agentic-admin/revision-cleanup',
+		},
+
+		// ── Cron & rewrites ────────────────────────────────────────
+		{
+			input: 'show me the scheduled cron jobs',
+			expectTool: 'wp-agentic-admin/cron-list',
+		},
+		{
+			input: 'list all rewrite rules',
+			expectTool: 'wp-agentic-admin/rewrite-list',
+		},
+		{
+			input: 'flush the rewrite rules',
+			expectTool: 'wp-agentic-admin/rewrite-flush',
+		},
+
+		// ── Core WordPress info ────────────────────────────────────
+		{
+			input: 'what is the name of my site?',
+			expectTool: 'core/get-site-info',
+		},
+		{
+			input: 'what environment is this site running on?',
+			expectTool: 'core/get-environment-info',
+		},
+
+		// ── No-tool tests (pure knowledge questions) ───────────────
+		{
+			input: 'what is a transient in WordPress?',
 			expectTool: null,
 		},
 		{

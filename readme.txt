@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.7.0
+Stable tag: 0.7.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,11 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 5. Start chatting!
 
 == Changelog ==
+
+= 0.7.1 =
+* New: Ability metadata auto-loaded from JS source files — no static manifest to maintain
+* New: Test suite expanded to 18 tests covering all 14 abilities (was 8 tests covering 5)
+* Improved: JS lint fixes for test runner and helpers
 
 = 0.7.0 =
 * Changed: Ability test runner now uses Ollama (local LLM server) instead of Puppeteer + WebGPU browser
