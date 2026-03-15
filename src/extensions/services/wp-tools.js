@@ -10,14 +10,14 @@
  * 3. Export it from src/extensions/abilities/index.js
  * 4. The ability will be automatically registered on init
  *
- * HOW TO ADD A NEW WORKFLOW (v1.1):
+ * HOW TO ADD A NEW WORKFLOW:
  * 1. Create a new workflow in src/extensions/workflows/index.js using registerWorkflow()
  * 2. Or use the public API: wp.agenticAdmin.registerWorkflow(...)
  *
  * For third-party plugins, use the public API:
  * - PHP: add_action('wp_agentic_admin_register_abilities', ...)
  * - JS: wp.agenticAdmin.registerAbility(...)
- * - JS: wp.agenticAdmin.registerWorkflow(...) (v1.1)
+ * - JS: wp.agenticAdmin.registerWorkflow(...)
  */
 
 import { exposeGlobalAPI } from './agentic-abilities-api';
@@ -33,7 +33,7 @@ const log = createLogger( 'WPTools' );
  * This function:
  * 1. Exposes the global API (wp.agenticAdmin.registerAbility, registerWorkflow, etc.)
  * 2. Registers all core abilities
- * 3. Registers all core workflows (v1.1)
+ * 3. Registers all core workflows
  *
  * Called during app initialization.
  */
@@ -46,7 +46,7 @@ const registerWPTools = () => {
 	// Register all core abilities
 	registerAllAbilities();
 
-	// Register all core workflows (v1.1)
+	// Register all core workflows
 	registerAllWorkflows();
 
 	log.info( 'WordPress tools initialized' );

@@ -379,7 +379,6 @@ class WorkflowOrchestrator {
 	 * 1. Function-based (fast): includeIf is a JavaScript function
 	 * 2. LLM-based (flexible): includeIf is an object with a prompt template
 	 *
-	 * @since 2.0.0
 	 * @param {Function|Object} includeIf       - The condition to evaluate
 	 * @param {StepResult[]}    previousResults - Results from previous steps
 	 * @param {Object}          initialParams   - Initial workflow parameters
@@ -417,7 +416,6 @@ class WorkflowOrchestrator {
 	 * Calls the LLM with a prompt template, interpolates variables from context,
 	 * and enforces JSON schema: { "execute": boolean, "reason": "string" }
 	 *
-	 * @since 2.0.0
 	 * @param {string}       promptTemplate  - Prompt with {variable} placeholders
 	 * @param {StepResult[]} previousResults - Results from previous steps
 	 * @param {Object}       initialParams   - Initial workflow parameters
@@ -521,7 +519,6 @@ Respond with JSON only: { "execute": true/false, "reason": "brief explanation" }
 	 * Extracts data from completed steps and flattens it into a single context object
 	 * for variable interpolation.
 	 *
-	 * @since 2.0.0
 	 * @param {StepResult[]} previousResults - Results from previous steps
 	 * @param {Object}       initialParams   - Initial workflow parameters
 	 * @return {Object} Context object with variables
@@ -576,7 +573,6 @@ Respond with JSON only: { "execute": true/false, "reason": "brief explanation" }
 	 * Replaces {variableName} placeholders with actual values from context.
 	 * Logs warnings for missing variables but doesn't fail.
 	 *
-	 * @since 2.0.0
 	 * @param {string} template - Prompt template with {variable} placeholders
 	 * @param {Object} context  - Context object with variable values
 	 * @return {string} Interpolated prompt
@@ -612,7 +608,6 @@ Respond with JSON only: { "execute": true/false, "reason": "brief explanation" }
 	/**
 	 * Create a result object for a skipped step
 	 *
-	 * @since 2.0.0
 	 * @param {Object} step      - Step definition
 	 * @param {number} stepIndex - Step index
 	 * @param {number} startTime - Start timestamp

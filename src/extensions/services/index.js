@@ -51,7 +51,7 @@ export { StreamSimulator, streamSimulator } from './stream-simulator';
 export { ChatSession, createSession, MessageType } from './chat-session';
 export { ChatOrchestrator, chatOrchestrator } from './chat-orchestrator';
 
-// ReAct system (v1.5.0)
+// ReAct system
 export { ReactAgent } from './react-agent';
 export { default as messageRouter } from './message-router';
 
@@ -77,7 +77,7 @@ export {
 	hasAbility,
 	executeAbility,
 	exposeGlobalAPI,
-	// Workflows API (v1.1)
+	// Workflows API
 	registerWorkflow,
 	unregisterWorkflow,
 	getWorkflow,

@@ -282,7 +282,7 @@ Removes a registered ability.
 wp.agenticAdmin.unregisterAbility('my-plugin/my-ability');
 ```
 
-### Workflow API (v1.1+)
+### Workflow API
 
 Workflows allow you to chain multiple abilities together as a single operation.
 
@@ -332,7 +332,7 @@ wp.agenticAdmin.registerWorkflow('my-plugin/my-workflow', {
 | `rollback` | function | No | Undo if later step fails |
 | `optional` | boolean | No | Continue if step fails (default: false) |
 | `requiresConfirmation` | boolean | No | Show confirmation before this specific step executes (default: false) |
-| `includeIf` | function\|object | No | ✨ **v1.4.1:** Condition to determine if step should execute (see [Semi-Flexible Workflows](#semi-flexible-workflows-v141)) |
+| `includeIf` | function\|object | No | Condition to determine if step should execute (see [Semi-Flexible Workflows](#semi-flexible-workflows)) |
 
 #### `wp.agenticAdmin.unregisterWorkflow( id )`
 
@@ -370,9 +370,9 @@ if (wp.agenticAdmin.hasWorkflow('my-plugin/my-workflow')) {
 
 > **See Also:** For comprehensive workflow documentation including data passing between steps, rollback handling, and best practices, see the [Workflows Guide](./WORKFLOWS-GUIDE.md).
 
-### Semi-Flexible Workflows (v1.4.1+)
+### Semi-Flexible Workflows
 
-✨ **NEW in v1.4.1:** Workflows can now have conditional step execution using `includeIf`.
+Workflows can have conditional step execution using `includeIf`.
 
 #### Function-Based Conditions (Recommended)
 

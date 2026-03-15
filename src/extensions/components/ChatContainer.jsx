@@ -69,7 +69,7 @@ const ChatContainer = ( {
 	const [ isThinking, setIsThinking ] = useState( false );
 	const [ thinkingText, setThinkingText ] = useState( '' );
 
-	// Workflow state (v1.1)
+	// Workflow state
 	const [ workflowProgress, setWorkflowProgress ] = useState( null );
 	const [ isRunningWorkflow, setIsRunningWorkflow ] = useState( false );
 
@@ -156,7 +156,7 @@ const ChatContainer = ( {
 				const usage = modelLoader.getContextUsage();
 				setContextUsage( usage );
 			},
-			// Workflow callbacks (v1.1)
+			// Workflow callbacks
 			onWorkflowStart: ( workflow ) => {
 				setIsRunningWorkflow( true );
 				setWorkflowProgress( {
@@ -185,7 +185,7 @@ const ChatContainer = ( {
 				setIsRunningWorkflow( false );
 				setWorkflowProgress( null );
 			},
-			// Intent confirmation callback (v1.3.0 - for fuzzy/LLM matches)
+			// Intent confirmation callback
 			onIntentConfirmationRequired: async ( tool, intent ) => {
 				return new Promise( ( resolve ) => {
 					setPendingConfirmation( {
@@ -201,7 +201,7 @@ const ChatContainer = ( {
 			},
 		} );
 
-		// Set up confirmation handler for destructive actions (supports workflows v1.1)
+		// Set up confirmation handler for destructive actions
 		chatOrchestrator.setConfirmationHandler( ( tool ) => {
 			return new Promise( ( resolve ) => {
 				const isWorkflow = tool.isWorkflow || false;
@@ -585,7 +585,7 @@ const ChatContainer = ( {
 				</div>
 			) }
 
-			{ /* Workflow progress indicator (v1.1) */ }
+			{ /* Workflow progress indicator */ }
 			{ isRunningWorkflow && workflowProgress && (
 				<div className="agentic-message agentic-message--workflow">
 					<div className="agentic-timeline">
@@ -636,7 +636,7 @@ const ChatContainer = ( {
 				</div>
 			) }
 
-			{ /* Confirmation Modal for destructive actions and intent confirmation (v1.1, v1.3) */ }
+			{ /* Confirmation Modal for destructive actions and intent confirmation */ }
 			{ pendingConfirmation && (
 				<Modal
 					title={
@@ -652,14 +652,14 @@ const ChatContainer = ( {
 				>
 					{ /* eslint-disable-next-line no-nested-ternary -- clear conditional rendering based on confirmation type */ }
 					{ pendingConfirmation.isIntentConfirmation ? (
-						/* Intent Confirmation UI (NEW in v1.3.0 - fuzzy/LLM matches) */
+						/* Intent Confirmation UI */
 						<p className="wp-agentic-admin-intent-question">
 							Did you mean:{ ' ' }
 							<strong>{ pendingConfirmation.label }</strong>?
 						</p>
 					) : pendingConfirmation.isWorkflow &&
 					  pendingConfirmation.workflowDetails ? (
-						/* Workflow Confirmation UI (v1.1) */
+						/* Workflow Confirmation UI */
 						<>
 							<p>
 								<strong>
@@ -750,7 +750,7 @@ const ChatContainer = ( {
 								) }
 						</>
 					) : (
-						/* Standard Tool Confirmation UI (v1.0) */
+						/* Standard Tool Confirmation UI */
 						<>
 							<p>
 								The AI wants to execute:{ ' ' }

@@ -195,7 +195,7 @@ function buildToolConfig( id, jsConfig ) {
 }
 
 // ============================================================================
-// WORKFLOW API (v1.1)
+// WORKFLOW API
 // ============================================================================
 
 /**
@@ -358,7 +358,7 @@ function hasWorkflow( id ) {
  * - wp.agenticAdmin.hasAbility()
  * - wp.agenticAdmin.executeAbility()
  *
- * Workflows API (v1.1):
+ * Workflows API:
  * - wp.agenticAdmin.registerWorkflow()
  * - wp.agenticAdmin.unregisterWorkflow()
  * - wp.agenticAdmin.getWorkflow()
@@ -377,14 +377,14 @@ function exposeGlobalAPI() {
 	window.wp.agenticAdmin.hasAbility = hasAbility;
 	window.wp.agenticAdmin.executeAbility = executeAbility;
 
-	// Workflows API (v1.1)
+	// Workflows API
 	window.wp.agenticAdmin.registerWorkflow = registerWorkflow;
 	window.wp.agenticAdmin.unregisterWorkflow = unregisterWorkflow;
 	window.wp.agenticAdmin.getWorkflow = getWorkflow;
 	window.wp.agenticAdmin.getWorkflows = getWorkflows;
 	window.wp.agenticAdmin.hasWorkflow = hasWorkflow;
 
-	log.info( 'Global API exposed at wp.agenticAdmin (v1.1 with Workflows)' );
+	log.info( 'Global API exposed at wp.agenticAdmin' );
 }
 
 // Export functions
@@ -398,7 +398,7 @@ export {
 	executeAbility,
 	buildToolConfig,
 	exposeGlobalAPI,
-	// Workflows API (v1.1)
+	// Workflows API
 	registerWorkflow,
 	unregisterWorkflow,
 	getWorkflow,
@@ -415,7 +415,7 @@ export default {
 	hasAbility,
 	executeAbility,
 	exposeGlobalAPI,
-	// Workflows API (v1.1)
+	// Workflows API
 	registerWorkflow,
 	unregisterWorkflow,
 	getWorkflow,

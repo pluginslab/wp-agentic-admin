@@ -7,7 +7,6 @@
  * 2. Page mode (fallback) - Model lives in the page, unloads on navigation
  *
  * @since 0.1.0
- * @since 1.2.0- Added Service Worker support for model persistence
  */
 
 import * as webllm from '@mlc-ai/web-llm';
@@ -17,10 +16,8 @@ const log = createLogger( 'ModelLoader' );
 
 /**
  * Default model configuration
- * Using Qwen2.5-7B-Instruct for strong JSON/FC support and instruction following
+ * Using Qwen3-1.7B for strong JSON/FC support and instruction following
  * See: https://github.com/mlc-ai/web-llm
- *
- * v2.0: Upgraded to 7B models for better JSON output, multi-step reasoning, and error recovery
  */
 const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
 
@@ -56,7 +53,6 @@ const SW_CONFIG = {
  * ModelLoader class for managing WebLLM model lifecycle
  *
  * @since 0.1.0
- * @since 1.2.0- Added Service Worker support
  */
 class ModelLoader {
 	constructor() {
@@ -70,10 +66,9 @@ class ModelLoader {
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
 
-		// Service Worker state (v1.2)
-		// SW mode enabled for Phase 1 testing (v1.3.0)
+		// Service Worker state
 		// Can be disabled via setUseServiceWorker(false) if issues found
-		this.useServiceWorker = true; // Enabled for Phase 1 testing
+		this.useServiceWorker = true;
 		this.swRegistration = null;
 		this.swSupported = null; // null = not checked, true/false = result
 	}
@@ -403,7 +398,6 @@ class ModelLoader {
 	 * Attempts to use Service Worker mode first, falls back to page mode if unavailable.
 	 *
 	 * @since 0.1.0
-	 * @since 1.2.0- Added Service Worker support
 	 * @param {string|null} modelId - Optional model ID override
 	 * @return {Promise<boolean>} True if loaded successfully
 	 */
@@ -693,7 +687,6 @@ class ModelLoader {
 	 * but keeps the SW alive for potential future use.
 	 *
 	 * @since 0.1.0
-	 * @since 1.2.0- Added SW support
 	 */
 	async unload() {
 		if ( this.engine ) {

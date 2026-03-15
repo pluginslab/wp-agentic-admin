@@ -300,7 +300,7 @@ This project includes a `.claude/` folder with project rules, MCP servers, and p
 
 | Skill | Usage | Description |
 |-------|-------|-------------|
-| `/release` | `/release 0.8.0` | Version bump all files, commit, push, and create GitHub release |
+| `/release` | `/release 0.10.0` | Version bump all files, commit, push, and create GitHub release |
 | `/test` | `/test` | Run lint, unit tests, and ability tests in sequence |
 | `/new-ability` | `/new-ability cache-warm` | Scaffold PHP + JS ability files with registration and test case |
 | `/update-docs` | `/update-docs` | Sync all documentation with current codebase state |

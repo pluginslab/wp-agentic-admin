@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,13 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 5. Start chatting!
 
 == Changelog ==
+
+= 0.9.1 =
+* Cleaned up: Removed stale version annotations (v1.0–v2.0) from comments across 11 source files
+* Fixed: model-loader.js comment incorrectly referenced Qwen2.5-7B instead of actual default Qwen3-1.7B
+* Fixed: ARCHITECTURE.md listed v0.7.0 as current version, updated to v0.9.0
+* Fixed: THIRD-PARTY-INTEGRATION.md referenced non-existent v1.4.1 for includeIf feature
+* Improved: README.md release example updated to current versioning
 
 = 0.9.0 =
 * New: CloudFest Hackathon 2026 preparation with 28 GitHub issues across 7 contributor roles

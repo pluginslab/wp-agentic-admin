@@ -419,7 +419,7 @@ See [tests/TESTING.md](../tests/TESTING.md) for the full testing guide.
 - Production-ready code quality overhaul
 - Comprehensive AI Fundamentals documentation (12 topics)
 
-**v0.7.0 (current):**
+**v0.9.0 (current):**
 - Ability test runner replaced: Puppeteer + WebGPU → Ollama (local LLM server)
 - Tests run in ~20s (was 5+ minutes with browser-based harness)
 - Removed Puppeteer dependency, test-harness webpack build, and browser test page

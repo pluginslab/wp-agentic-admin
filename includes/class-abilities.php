@@ -142,7 +142,7 @@ class Abilities {
 			wp_agentic_admin_register_site_health();
 		}
 
-		// v1.2.0: New WP-CLI-inspired abilities.
+		// WP-CLI-inspired abilities.
 		if ( function_exists( 'wp_agentic_admin_register_transient_flush' ) ) {
 			wp_agentic_admin_register_transient_flush();
 		}
