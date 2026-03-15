@@ -103,6 +103,59 @@ Abilities that go beyond read-only diagnostics — the agent can inspect files, 
 
 ---
 
+### Goal 6: WebMCP Integration (stretch)
+
+Expose all abilities and workflows as WebMCP tools so external browser agents can invoke them.
+
+**Starting point:** Abilities only callable via the internal ReAct agent in the sidebar chat.
+**Done when:** Chrome 146's built-in DevTools MCP or other local agents (OpenClaw, Claude Code) can discover and invoke WP Agentic Admin abilities via the native `navigator.modelContext` API.
+**Demo:** From a local agent (OpenClaw/Claude Code), navigate to wp-admin, invoke `site-health` ability via WebMCP, receive structured response. Agent chains multiple abilities (e.g., `site-health` → reads console for errors → `cache-flush` → `db-optimize`) with full browser state visibility (performance traces, network logs, console output).
+**Skills needed:** React/JS, AI/ML, Chrome DevTools
+
+**Implementation approach:**
+- Register each ability via Chrome 146's `navigator.modelContext.registerTool()` imperative API
+- Tool schema auto-generated from existing ability registration (name, description, input schema, execute function)
+- Leverage `SubmitEvent.agentInvoked` to detect external agent calls vs internal chat
+- Security: Only register tools when user is authenticated and on wp-admin pages
+- Enable via `chrome://flags/#enable-webmcp-testing` (dev trial)
+
+**Why this matters:**
+Local agents (OpenClaw, Claude Code, etc.) gain structured access to WordPress operations without DOM scraping or brittle selectors. They can:
+- Navigate to a WordPress site
+- Invoke Lighthouse audit via Chrome's DevTools MCP → get performance report
+- Check console for JS errors
+- Read network trace to diagnose slow REST API calls
+- Take memory snapshot to debug plugin leaks
+- Call WP Agentic Admin abilities for WordPress-specific operations
+- Chain multiple abilities with full browser state feedback
+
+All **local**, all **real-time**, all **structured data** — the missing feedback loop for reliable WordPress automation.
+
+**Stretch workflow example:**
+```
+Local agent task: "Debug why this WordPress site is slow"
+  ↓
+1. Chrome DevTools MCP: run Lighthouse audit
+   → Response: "Largest Contentful Paint 4.2s, 47 orphaned cron events"
+  ↓
+2. WebMCP → WP Agentic Admin: invoke site-health
+   → Response: "Critical: 47 cron events stuck, database size 2.4GB"
+  ↓
+3. Chrome DevTools MCP: read console logs
+   → Response: "PHP Warning: mysql slow query 8.3s on wp_options"
+  ↓
+4. WebMCP → WP Agentic Admin: invoke cron-list
+   → Response: [list of stuck cron events]
+  ↓
+5. WebMCP → WP Agentic Admin: invoke db-optimize
+   → Confirmation prompt → User approves → Response: "Optimized 12 tables, reclaimed 340MB"
+  ↓
+Final answer: "Site slowness caused by stuck cron events and bloated database. 
+Cleared 47 cron events and optimized database. LCP should improve to <2.5s."
+```
+
+---
+
 ## What Success Looks Like (March 24 Main Stage)
 
 **"We started with an AI assistant locked to one page with 14 tools. Now it's a sidebar on every admin page with 25+ tools. It reads your files, queries your database, searches the web, and works even without WebGPU — with two tiers of local AI and zero cloud required."**
