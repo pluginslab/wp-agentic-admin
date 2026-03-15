@@ -13,49 +13,82 @@ Move the chat from its own admin page into a persistent right sidebar accessible
 **Demo:** Open any wp-admin page, click the toggle, ask "check site health", get a response — without ever leaving the page you were on.
 **Skills needed:** React/JS, CSS, UX/Design
 
-**Stretch: Voice + Context Recording**
+---
 
-Add a voice recording mode that captures speech + browser context for richer requests.
+### Goal 1.5: Voice + Context Recording (stretch UI + feature upgrade)
+
+Add voice recording mode that captures speech + browser context for richer agent input.
+
+**Starting point:** Users type text requests. Agent has no visibility into browser state, console errors, or what the user is looking at.
+**Done when:** 🔴 Record button in chat captures audio (speech-to-text) + browser interactions (clicks, scrolls, console errors, network timing). Agent receives rich context and auto-selects abilities without explicit instructions.
+**Demo:** User clicks record, navigates to a slow page, says "this is really slow and keeps throwing errors", clicks around showing the problem. Agent receives transcript + full browser context (URL, console errors, network timing, interaction log), automatically runs diagnostics (site-health, db-optimize, error-log-read), and returns: "Found 2400 post revisions slowing queries. Clean them up?"
+**Skills needed:** React/JS (advanced), Service Workers, transformers.js, Browser APIs
 
 **How it works:**
-- User clicks 🔴 record button in chat
-- Navigates to problem area (slow page, error, etc.)
-- Describes the issue while interacting (clicks, scrolls, selections captured)
-- Clicks stop → agent receives:
-  - Speech transcript (via Whisper tiny in Service Worker)
-  - Current URL, console errors, network timing
-  - Interaction log (what they clicked/scrolled to)
-- Agent uses existing abilities with full context
+1. User clicks 🔴 record button in chat sidebar
+2. MediaRecorder starts capturing audio
+3. Event listeners track clicks, scrolls, text selections (with timestamps)
+4. Console and network monitoring active
+5. User navigates, interacts, describes issue verbally
+6. User clicks stop → recording finalizes
+7. Service Worker processes:
+   - Audio → Whisper tiny (~40MB) → transcript with timestamps
+   - Interaction events → synchronized event stream
+   - Browser state → console errors, network timing, current URL
+8. Agent receives enhanced message:
+   ```json
+   {
+     transcript: "This page is really slow and keeps throwing errors",
+     context: {
+       url: "/wp-admin/edit.php",
+       consoleErrors: ["TypeError at line 42"],
+       timing: {ttfb: 3200, domContentLoaded: 8500},
+       interactions: [
+         {t: 1.2, type: "click", selector: ".error-notice"},
+         {t: 2.8, type: "scroll", y: 350}
+       ]
+     }
+   }
+   ```
+9. Agent's ReAct loop processes as a super-powered text message
+10. Agent auto-selects abilities based on context (no manual tool picking by user)
 
-**Example:**
+**Why this matters:**
+Users can **show** problems instead of **describing** them. Agent sees what they see (errors, slow timing, specific elements) and picks the right diagnostic abilities automatically.
+
+**Traditional flow:**
 ```
-User: 🔴 [navigates to slow Posts page]
-User: "This page is really slow and I keep seeing errors"
-User: [clicks error notice, scrolls to show console]
-Agent receives: {
-  transcript: "This page is really slow and I keep seeing errors",
-  context: {
-    url: "/wp-admin/edit.php",
-    consoleErrors: ["TypeError line 42"],
-    timing: {ttfb: 3200, domContentLoaded: 8500},
-    interactions: [{type: "click", selector: ".error-notice"}]
-  }
-}
-Agent: "I see high TTFB and a JS error. Running diagnostics..."
-→ Automatically runs site-health, db-optimize, error-log-read
-Agent: "Found 2400 post revisions slowing queries. Clean them up?"
+User: "my site is slow"
+Agent: "Let me check site health"
+User: "also check database"
+Agent: "Running db-optimize..."
+User: "and check error logs"
 ```
 
-**Why this matters:** Users can show problems instead of describing them. Agent gets browser state (errors, timing, interactions) automatically — picks the right abilities without explicit instructions.
+**With voice + context:**
+```
+User: 🔴 [navigates to slow page, talks for 30 seconds while clicking around]
+Agent: [sees context: high TTFB, console error, interactions with error notices]
+Agent: [auto-runs: site-health, db-optimize, error-log-read]
+Agent: "Found the issue: 2400 post revisions + JS error in theme. Fix them?"
+```
 
 **Implementation:**
-- Whisper tiny (~40MB) runs in existing Service Worker
-- MediaRecorder + event listeners capture audio + interactions
-- IndexedDB persistence across navigation
-- New abilities: `start-voice-request`, `stop-voice-request`
-- Agent processes recording as enhanced chat message
+- **Service Worker:** Whisper tiny (transformers.js) for local speech-to-text
+- **Page script:** MediaRecorder, event listeners for clicks/scrolls/selections
+- **IndexedDB:** Persist recording across page navigation
+- **New abilities:** `start-voice-request`, `stop-voice-request`
+- **Context injection:** Browser state (console, network, DOM) attached to transcript
+- **Agent processing:** Existing ReAct loop handles enriched message
 
-**Priority:** Nice-to-have for hackathon demo, high impact for real-world UX.
+**Technical challenges:**
+- Service Worker audio processing with Whisper (~40MB model)
+- Synchronized event timestamps across audio and interactions
+- Cross-navigation persistence (user navigates mid-recording)
+- Privacy: keep audio/transcript local, never sent to cloud
+- Performance: real-time transcription without blocking UI
+
+**Priority:** Stretch goal. High impact for UX, significant dev effort. If completed, this would be a killer demo feature.
 
 ---
 
