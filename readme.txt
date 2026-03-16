@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.9.4
+Stable tag: 0.9.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,14 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 5. Start chatting!
 
 == Changelog ==
+
+= 0.9.5 =
+* New: Split Gutenberg Integration into three separate goals — Block Editor Chat Window (Goal 7), Update Post Content Ability (Goal 8), WASM Dev Docs Abilities (Goal 9)
+* New: Goal 9 aligned with existing `feature/wasm-sqlite-devdocs` branch work (4 abilities, 11 tests)
+* New: GitHub issues created for Goals 6-9 (#32-#35)
+* New: Voice + Context Recording separated as Goal 1.5 (stretch)
+* New: WebMCP Integration added as Goal 6 (stretch)
+* Improved: CLOUDFEST_HACKATHON.md — all goals now follow consistent format, code examples stripped from stretch goals
 
 = 0.9.4 =
 * Updated: WebLLM upgraded from 0.2.80 to 0.2.82

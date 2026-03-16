@@ -233,162 +233,54 @@ Cleared 47 cron events and optimized database. LCP should improve to <2.5s."
 
 ---
 
-### Goal 7: Gutenberg Integration (stretch)
+### Goal 7: Block Editor Chat Window (stretch)
 
-Bring AI-powered content editing to the block editor with verified block markup generation.
+Add AI chat to the Gutenberg block editor so users can interact with the assistant while editing content.
 
-**Starting point:** AI chat only works in wp-admin pages. No content editing capabilities. AI hallucinates Gutenberg block markup causing "Attempt Block Recovery" errors.
-**Done when:** Block editor has a chat sidebar that can read and modify post content using verified block schemas from an embedded WASM database. Generated markup passes editor validation with zero recovery errors.
-**Demo:** Open a post in the block editor, chat with the AI, ask it to "add a paragraph after the heading" or "convert this list to a table" — it generates valid markup and updates the content without breaking the editor.
-**Skills needed:** React/JS (advanced), PHP, SQL (SQLite), WASM
+**Starting point:** AI chat only works on wp-admin pages. The block editor has no AI integration.
+**Done when:** A chat sidebar appears in the block editor (via `PluginSidebar` or floating panel), connected to the same WebLLM instance via the existing Service Worker. Users can chat with the AI while editing a post.
+**Demo:** Open a post in the block editor, see the AI chat sidebar, ask "what blocks are on this page?" — get a response without leaving the editor.
+**Skills needed:** React/JS (advanced), PHP
 
-**Sub-goal 7.1: Block Editor Chat Window**
-- Register Gutenberg plugin via `@wordpress/plugins`
-- Use `PluginSidebar` or floating component with `@wordpress/components`
-- Share WebLLM instance between wp-admin and block editor via Service Worker (already persistent)
-- Wire into existing Abilities API — same ReAct loop, different surface
+---
 
-**Implementation:**
-- Add `src/editor-plugin.js` entrypoint
-- Modify `includes/class-admin-page.php` to enqueue editor scripts on `post.php` / `post-new.php`
-- Add editor build target to `webpack.config.js`
+### Goal 8: Update Post Content Ability (stretch)
 
-**Sub-goal 7.2: Update Post Content Ability**
-- New ability: `update-post-content` — read, parse, modify, and save post content with block markup
-- Capabilities:
-  - Read current post content from editor state or REST API
-  - Parse existing blocks using `@wordpress/blocks` parser
-  - Insert / update / delete blocks programmatically
-  - Validate markup before saving (prevent recovery errors)
-  - Save via REST API (`PUT /wp/v2/posts/{id}` with `content` field)
+A new ability that lets the AI read, modify, and save post content with validated block markup.
 
-**Ability registration:**
-```php
-register_agentic_ability( 'update-post-content', [
-    'label'       => 'Update Post Content',
-    'description' => 'Modify post content with validated block markup',
-    'input_schema' => [
-        'post_id'   => [ 'type' => 'integer', 'required' => true ],
-        'operation' => [ 'type' => 'string', 'enum' => [ 'insert', 'replace', 'delete' ] ],
-        'block_markup' => [ 'type' => 'string' ],
-        'position'  => [ 'type' => 'integer' ],
-    ],
-    'callback'    => 'WPAgenticAdmin\Abilities::update_post_content',
-] );
-```
+**Starting point:** The AI can't interact with post content. No ability exists for reading or modifying blocks.
+**Done when:** An `update-post-content` ability can read current post blocks, insert/replace/delete blocks by position, validate markup before saving, and save via REST API. Destructive operations require confirmation.
+**Demo:** In the block editor chat, ask "add a paragraph after the heading with some intro text" — the AI inserts a valid block and the editor updates without recovery errors.
+**Skills needed:** PHP, React/JS
 
-**Implementation:**
-- Add `includes/class-abilities-post-content.php`
-- Use `wp_insert_post()` or REST API internally
-- Validate markup with `parse_blocks()` before saving
-- Return success/error + preview of changes
+**Operations:** insert, replace, delete blocks by position. Reads current content from editor state or REST API. Validates markup with `parse_blocks()` before saving.
 
-**Sub-goal 7.3: WASM Block Markup Database**
-- Embed **wp-blockmarkup-mcp** verified block schema database as WASM/SQLite in the browser
-- AI queries the database before generating block markup — no more hallucinated attributes or invalid patterns
-- Bundle with plugin using sql.js (SQLite compiled to WASM)
+---
+
+### Goal 9: WASM Dev Docs Abilities (stretch)
+
+Give the AI access to WordPress block schemas and hook documentation via an embedded WASM/SQLite database, so it can answer developer questions with verified data instead of hallucinating.
+
+**Starting point:** AI has no access to WordPress developer documentation. Block markup questions produce hallucinated attributes. Hook questions get generic answers.
+**Done when:** Four new abilities — `search-wp-blocks`, `get-block-schema`, `search-wp-hooks`, `get-hook-context` — query the `@pluginslab/wp-devdocs-wasm` package for verified block and hook data. The AI returns real attribute schemas, support configurations, hook parameters, and file locations.
+**Demo:** Ask "what attributes does the heading block have?" — the AI queries the WASM database and returns the real schema with `level`, `content`, `textAlign`, etc. Ask "what hooks fire during login?" — get a list of actual hooks with types and file locations.
+**Skills needed:** React/JS, WASM
+
+**Status:** Partially implemented on the `feature/wasm-sqlite-devdocs` branch (not yet merged). Four abilities built and tested (11 tests, including multi-turn chains). Databases bundled inline via webpack browser entry point — no raw sql.js needed.
 
 **What the database provides:**
-- 121+ core Gutenberg blocks (100% validated)
-- Full attribute schemas (types, defaults, enums, constraints)
+- 121+ core Gutenberg blocks with full attribute schemas (types, defaults, enums, constraints)
 - Support configurations (color, typography, spacing, border, layout)
-- Verified markup examples (validated against block `save()` functions)
+- Verified markup examples validated against block `save()` functions
 - Block variations with pre-configured attributes
+- WordPress action and filter hooks with types, file locations, and parameters
 - WooCommerce, Kadence, and third-party blocks (if indexed)
 
-**Database schema (from wp-blockmarkup-mcp):**
-- `sources` — GitHub repos, local plugins
-- `blocks` — block metadata, validation status, block type (static/dynamic/hybrid)
-- `attributes` — attribute schemas with types and defaults
-- `supports` — feature flags (color, typography, spacing, etc.)
-- `markup_examples` — validated markup examples for different feature combinations
-- `variations` — block variations with attributes and markup
-
-**Implementation steps:**
-1. **Export database from wp-blockmarkup-mcp:**
-   ```bash
-   # Index Gutenberg core blocks
-   npx wp-blocks source:add \
-     --name gutenberg \
-     --type github-public \
-     --repo https://github.com/WordPress/gutenberg \
-     --branch trunk
-   
-   # Copy database to plugin
-   cp ~/.wp-blockmarkup/blocks.db wp-agentic-admin/src/blocks.sqlite
-   ```
-
-2. **Bundle sql.js (SQLite WASM):**
-   ```bash
-   npm install sql.js
-   ```
-
-3. **Load in browser:**
-   ```js
-   import initSqlJs from 'sql.js';
-   
-   const SQL = await initSqlJs({ locateFile: file => `/path/to/${file}` });
-   const db = new SQL.Database(
-     await fetch('/path/to/blocks.sqlite').then(r => r.arrayBuffer())
-   );
-   ```
-
-4. **Query before generating markup:**
-   ```js
-   // AI wants to add a paragraph block
-   const result = db.exec(`
-     SELECT b.block_name, a.name, a.type, a.default_val, me.markup
-     FROM blocks b
-     LEFT JOIN attributes a ON b.id = a.block_id
-     LEFT JOIN markup_examples me ON b.id = me.block_id
-     WHERE b.block_name = 'core/paragraph'
-     AND me.validation_status = 'verified'
-     LIMIT 1
-   `);
-   
-   // Use verified schema and example markup
-   ```
-
-5. **Wire into ReAct loop:**
-   - Add "block-markup-query" as a new tool in the WebLLM system prompt
-   - When AI needs to generate block markup, it queries the database first
-   - Validates generated markup before calling `update-post-content` ability
-   - Zero "Attempt Block Recovery" errors
-
-**Content editing workflow example:**
-```
-User (in block editor): "Add a paragraph after the heading with some intro text"
-  ↓
-AI: Queries WASM database for core/paragraph schema
-  → Retrieves: attributes (content, dropCap, fontSize, etc.), validated example markup
-  ↓
-AI: Generates markup using verified pattern:
-  <!-- wp:paragraph -->
-  <p>Intro text goes here.</p>
-  <!-- /wp:paragraph -->
-  ↓
-AI: Validates markup against database (structural + save function patterns)
-  → Status: verified ✓
-  ↓
-AI: Calls update-post-content ability
-  → Operation: insert, position: 1 (after heading), markup: [validated block]
-  ↓
-Result: "Added paragraph after the heading. No validation errors."
-```
-
-**Why this matters:**
-- **Zero hallucinations:** AI can't invent attributes or use wrong class patterns — it queries real block source code
-- **Third-party block support:** Index WooCommerce, Kadence, ACF blocks, any block-based plugin
-- **Editor reliability:** Generated markup always passes validation — no more yellow recovery bars
-- **Agentic content workflows:** AI can autonomously generate and update post content without breaking the editor
-
-**Technical challenges:**
-- WASM binary size (~5MB for sql.js + database) — lazy load only when block editor chat is active
-- Query performance — index key fields (block_name, validation_status)
-- Database updates — periodic refresh from wp-blockmarkup-mcp when block plugins update
-- Cross-navigation persistence — cache database in IndexedDB after first load
-
-**Priority:** Stretch goal. High impact for content workflows, significant dev effort. If completed, this would differentiate wp-agentic-admin from every other AI WordPress plugin — the only one that generates verified, non-hallucinated block markup.
+**What's remaining:**
+- Merge the `feature/wasm-sqlite-devdocs` branch to main
+- IndexedDB caching — databases currently decoded fresh each session
+- Database refresh mechanism — update when block plugins change
+- Wire block schema lookups into the block editor chat (Goal 8) so the AI validates markup before saving
 
 ---
 
@@ -405,7 +297,7 @@ The demo flow:
 6. (If Goal 5 done) "How do I fix this error?" → agent searches the web and summarizes
 7. (If Goal 3 done) Switch to Firefox → configure provider → same experience
 8. (If Goal 4 done) Complex question → agent consults local 13B+ model on the network
-9. (If Goal 7 done) Open block editor → chat sidebar appears → "add a paragraph after the heading" → AI generates verified markup from WASM database → content updates with zero validation errors
+9. (If Goals 7-9 done) Open block editor → chat sidebar appears → "add a paragraph after the heading" → AI generates verified markup from WASM database → content updates with zero validation errors
 
 ---
 
@@ -614,7 +506,7 @@ Embed WordPress documentation in vector database. Use RAG for technical question
 
 ## 📝 Notes
 
-**Must-have vs Stretch:** Goals 1 and 2 define hackathon success. Goals 3-5 are stretch — impressive if done, but the project is a win without them.
+**Must-have vs Stretch:** Goals 1 and 2 define hackathon success. Goals 3-9 are stretch — impressive if done, but the project is a win without them.
 
 **Priority Emerges:** If a feature becomes critical during development, it becomes a priority. Stay flexible.
 
