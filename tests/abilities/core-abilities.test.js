@@ -96,6 +96,26 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/comment-stats',
 		},
 
+		// ── Security ──────────────────────────────────────────────
+		{
+			input: 'run a security scan on my site',
+			expectTool: 'wp-agentic-admin/security-scan',
+		},
+		{
+			input: 'check for security vulnerabilities',
+			expectTool: 'wp-agentic-admin/security-scan',
+		},
+
+		// ── Post management ───────────────────────────────────────
+		{
+			input: 'list my recent posts',
+			expectTool: 'wp-agentic-admin/post-list',
+		},
+		{
+			input: 'show me all draft posts',
+			expectTool: 'wp-agentic-admin/post-list',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',

@@ -11,14 +11,35 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
 
+### 2 More Abilities + Gutenberg Sidebar Approved! — security-scan, post-list, editor sidebar
+- **security-scan** (PR #57 by @ivdimova) — 6 security checks (WP_DEBUG, file permissions, auth salts, version exposure, directory listing), grouped by severity
+- **post-list** (PR #59 by @ivdimova) — list posts with status/type filters, `parseIntent` for natural language extraction ("show me draft posts")
+- **editor sidebar** (PR #52 by @Stefan0x) — Gutenberg `PluginSidebar` with AI chat, `core/get-editor-blocks` ability, shares WebLLM via Service Worker. Approved, merging after conflict resolution.
+- **f32 fallback model** (PR #61 by @AlexanderMelde) — auto-detect `shader-f16` support and fall back to f32 models. Changes requested on WPCS formatting.
+- **HTTP error message** (PR #50 by @robert81) — specific error when accessing over HTTP. Changes requested to remove debug file.
+
+Full suite **32/33 (97%)** — one pre-existing flaky test. That's **21 abilities**, **8 PRs merged**, and **3 more in review**.
+
+### 4 More PRs Merged! — update-check, disk-usage, comment-stats, debug tooling
+A batch of 4 PRs merged in one round — all tested together against Qwen 3 1.7B via Ollama, **29/29 (100%)** across all abilities:
+- **update-check** (PR #42) — checks for available WordPress core, plugin, and theme updates
+- **disk-usage** (PR #46) — wp-content disk usage breakdown (uploads, plugins, themes, cache) with recursive size calculation and depth limiting
+- **comment-stats** (PR #49) — comment counts by status (approved, pending, spam, trash) via `wp_count_comments()`
+- **system prompt printer** (PR #47) — debug utility to inspect the exact system prompt sent to the LLM
+
+That's **19 abilities** total and **6 PRs merged** on Day 1.
+
 ### Second PR Merged! — user-list ability (PR #41 by @ivdimova)
-Two abilities in one session! A **user-list ability** that lets the AI list all WordPress users with roles, registration dates, and **masked emails** for privacy (e.g., `iv***@example.com`). Uses `list_users` permission check and sorts by registration date (newest first). Merge conflicts with theme-list resolved, full suite passed **23/23 (100%)** against Qwen 3 1.7B. We're now at **16 abilities**.
+A **user-list ability** that lists all WordPress users with roles, registration dates, and **masked emails** for privacy. Full suite **23/23 (100%)**.
 
 ### First PR Merged! — theme-list ability (PR #40 by @ivdimova)
-Our first hackathon contribution is in! ivdimova added a **theme-list ability** that lets the AI list all installed WordPress themes with their active/inactive status, version, and parent theme info. The ability uses `wp_get_themes()` on the PHP side and includes full chat integration (summarize, interpretResult) on the JS side. Three new test cases were added and the full suite passed **21/21 (100%)** against Qwen 3 1.7B via Ollama. This brings us to **15 abilities** total.
+Our first hackathon contribution! A **theme-list ability** listing installed themes with active/inactive status, version, and parent theme info. Full suite **21/21 (100%)**.
 
 ### Contributors
-- ivdimova — theme-list (PR #40), user-list (PR #41), assigned to #29 (web-search)
+- ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59)
+- Stefan0x — editor sidebar (#52)
+- AlexanderMelde — f32 fallback model (#61, in review)
+- robert81 — HTTP error message (#50, in review)
 
 ---
 
@@ -32,8 +53,8 @@ Our first hackathon contribution is in! ivdimova added a **theme-list ability** 
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (16 total)
-- [x] 14 plugin abilities: plugin list/activate/deactivate, theme list, user list, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+### Abilities (21 total)
+- [x] 19 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
 - [x] 2 core WordPress wrappers: get-site-info, get-environment-info
 
 ### Testing

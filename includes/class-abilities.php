@@ -183,6 +183,14 @@ class Abilities {
 			wp_agentic_admin_register_comment_stats();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_security_scan' ) ) {
+			wp_agentic_admin_register_security_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_post_list' ) ) {
+			wp_agentic_admin_register_post_list();
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
 			wp_agentic_admin_register_error_log_search();
 		}
