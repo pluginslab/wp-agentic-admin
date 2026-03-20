@@ -586,7 +586,9 @@ describe( 'ReactAgent', () => {
 
 			expect( prompt ).toContain( 'load_instruction' );
 			expect( prompt ).toContain( 'unload_instruction' );
-			expect( prompt ).toContain( 'AVAILABLE INSTRUCTIONS' );
+			expect( prompt ).toContain(
+				'INSTRUCTIONS (call load_instruction first to unlock their tools)'
+			);
 			expect( prompt ).toContain(
 				'plugins: List, activate, and deactivate plugins'
 			);
@@ -601,9 +603,9 @@ describe( 'ReactAgent', () => {
 			const prompt = reactAgent.buildSystemPromptPromptBased();
 
 			expect( prompt ).toContain( 'ACTIVE INSTRUCTIONS: plugins' );
-			// Plugins should not be in AVAILABLE section
+			// Plugins should not be in INSTRUCTIONS section
 			expect( prompt ).not.toContain(
-				'AVAILABLE INSTRUCTIONS' + '\\n- plugins'
+				'INSTRUCTIONS (call load_instruction first' + '\\n- plugins'
 			);
 			// Cache should still be in AVAILABLE section
 			expect( prompt ).toContain(

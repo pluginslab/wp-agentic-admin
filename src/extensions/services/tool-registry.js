@@ -156,9 +156,7 @@ class ToolRegistry {
 	 * @return {ToolDefinition[]} Matching tools (in the order of ids)
 	 */
 	getByIds( ids ) {
-		return ids
-			.map( ( id ) => this.tools.get( id ) )
-			.filter( Boolean );
+		return ids.map( ( id ) => this.tools.get( id ) ).filter( Boolean );
 	}
 
 	/**

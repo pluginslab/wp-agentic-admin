@@ -76,6 +76,10 @@ const ChatContainer = ( {
 	// Copy feedback state
 	const [ showCopiedSnackbar, setShowCopiedSnackbar ] = useState( false );
 
+	// System prompt modal state
+	const [ showSystemPrompt, setShowSystemPrompt ] = useState( false );
+	const [ systemPromptText, setSystemPromptText ] = useState( '' );
+
 	// Session ref to persist across renders
 	const sessionRef = useRef( null );
 	const initializedRef = useRef( false );
@@ -557,6 +561,16 @@ const ChatContainer = ( {
 					>
 						Clear Chat
 					</Button>
+					<Button
+						variant="tertiary"
+						onClick={ () => {
+							const prompt = chatOrchestrator.getSystemPrompt();
+							setSystemPromptText( prompt );
+							setShowSystemPrompt( true );
+						} }
+					>
+						Show System Prompt
+					</Button>
 				</div>
 			</div>
 
@@ -791,6 +805,47 @@ const ChatContainer = ( {
 				>
 					Conversation copied to clipboard!
 				</Snackbar>
+			) }
+
+			{ /* System prompt debug modal */ }
+			{ showSystemPrompt && (
+				<Modal
+					title="System Prompt"
+					onRequestClose={ () => setShowSystemPrompt( false ) }
+				>
+					<pre
+						style={ {
+							whiteSpace: 'pre-wrap',
+							wordBreak: 'break-word',
+							maxHeight: '60vh',
+							overflow: 'auto',
+							fontSize: '12px',
+							lineHeight: '1.5',
+							padding: '12px',
+							background: '#f0f0f0',
+							borderRadius: '4px',
+						} }
+					>
+						{ systemPromptText }
+					</pre>
+					<div
+						style={ {
+							marginTop: '12px',
+							textAlign: 'right',
+						} }
+					>
+						<Button
+							variant="secondary"
+							onClick={ () => {
+								navigator.clipboard.writeText(
+									systemPromptText
+								);
+							} }
+						>
+							Copy
+						</Button>
+					</div>
+				</Modal>
 			) }
 		</div>
 	);

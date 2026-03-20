@@ -1,123 +1,68 @@
 /**
- * Instruction Definitions
+ * Instruction Definitions — loaded from markdown files
  *
- * Groups existing abilities into domain-specific instruction sets.
- * Each instruction defines which abilities belong to it and what
- * keywords trigger auto-detection from user messages.
+ * Each .md file in this directory defines one instruction set.
+ * See plugins.md for the format. To add a new instruction:
+ *   1. Create a new .md file in this directory
+ *   2. Import it below and add it to the instructionFiles array
  *
  * @since 0.9.6
  */
 
 import instructionRegistry from '../services/instruction-registry';
+import { parseInstruction } from './parse-instruction';
 import { createLogger } from '../utils/logger';
+
+// Import instruction markdown files as raw strings
+// When adding a new instruction, add its import and entry here.
+// eslint-disable-next-line import/no-unresolved
+import pluginsMd from './plugins.md';
+// eslint-disable-next-line import/no-unresolved
+import cacheMd from './cache.md';
+// eslint-disable-next-line import/no-unresolved
+import databaseMd from './database.md';
+// eslint-disable-next-line import/no-unresolved
+import diagnosticsMd from './diagnostics.md';
+// eslint-disable-next-line import/no-unresolved
+import routingMd from './routing.md';
+// eslint-disable-next-line import/no-unresolved
+import cronMd from './cron.md';
+// eslint-disable-next-line import/no-unresolved
+import themesMd from './themes.md';
+// eslint-disable-next-line import/no-unresolved
+import usersMd from './users.md';
 
 const log = createLogger( 'Instructions' );
 
 /**
- * Register all core instruction sets.
+ * All instruction markdown sources.
+ * Add new imports to this array when creating a new instruction.
+ */
+const instructionFiles = [
+	pluginsMd,
+	cacheMd,
+	databaseMd,
+	diagnosticsMd,
+	routingMd,
+	cronMd,
+	themesMd,
+	usersMd,
+];
+
+/**
+ * Register all instruction sets from markdown files.
  *
  * Must be called AFTER registerAllAbilities() so that ability IDs exist.
  */
 export function registerAllInstructions() {
-	instructionRegistry.register( {
-		id: 'plugins',
-		label: 'Plugin Management',
-		description: 'List, activate, and deactivate plugins',
-		keywords: [ 'plugin', 'plugins', 'extensions', 'installed' ],
-		abilityIds: [
-			'wp-agentic-admin/plugin-list',
-			'wp-agentic-admin/plugin-activate',
-			'wp-agentic-admin/plugin-deactivate',
-		],
-		context:
-			'After listing plugins, tell the user how many are active vs inactive. ' +
-			'If they ask to deactivate, confirm the plugin name first. ' +
-			'If a plugin is already inactive, say so instead of trying to deactivate it again.',
-	} );
-
-	instructionRegistry.register( {
-		id: 'cache',
-		label: 'Cache & Transients',
-		description: 'Flush object cache and transients',
-		keywords: [ 'cache', 'transient', 'transients', 'purge' ],
-		abilityIds: [
-			'wp-agentic-admin/cache-flush',
-			'wp-agentic-admin/transient-flush',
-		],
-	} );
-
-	instructionRegistry.register( {
-		id: 'database',
-		label: 'Database Maintenance',
-		description: 'Optimize database tables and clean up revisions',
-		keywords: [ 'database', 'db', 'revision', 'revisions' ],
-		abilityIds: [
-			'wp-agentic-admin/db-optimize',
-			'wp-agentic-admin/revision-cleanup',
-		],
-		context:
-			'Run revision-cleanup before db-optimize — cleaning revisions first makes table optimization more effective. ' +
-			'Report how many revisions were found and how much space can be freed before confirming deletion.',
-	} );
-
-	instructionRegistry.register( {
-		id: 'diagnostics',
-		label: 'Site Diagnostics',
-		description: 'Site health, error logs, and environment info',
-		keywords: [
-			'health',
-			'error',
-			'errors',
-			'log',
-			'logs',
-			'debug',
-			'environment',
-			'diagnostics',
-			'broken',
-			'white screen',
-			'crash',
-			'not working',
-			'slow',
-			'performance',
-			'speed',
-		],
-		abilityIds: [
-			'wp-agentic-admin/site-health',
-			'wp-agentic-admin/error-log-read',
-			'core/get-site-info',
-			'core/get-environment-info',
-		],
-		context:
-			'Start with error-log-read when the user reports something broken — the error log is the fastest way to find the cause. ' +
-			'Use site-health when the user asks about versions, memory, or general status. ' +
-			'If the error log mentions a plugin file path, suggest loading the plugins instruction to investigate further.',
-	} );
-
-	instructionRegistry.register( {
-		id: 'routing',
-		label: 'URL Routing',
-		description: 'List and flush rewrite rules',
-		keywords: [
-			'rewrite',
-			'rewrite rules',
-			'permalink',
-			'permalinks',
-			'url',
-			'routing',
-		],
-		abilityIds: [
-			'wp-agentic-admin/rewrite-list',
-			'wp-agentic-admin/rewrite-flush',
-		],
-	} );
-
-	instructionRegistry.register( {
-		id: 'cron',
-		label: 'Scheduled Tasks',
-		description: 'List WordPress cron jobs and scheduled tasks',
-		keywords: [ 'cron', 'schedule', 'scheduled', 'task', 'tasks' ],
-		abilityIds: [ 'wp-agentic-admin/cron-list' ],
-	} );
+	for ( const raw of instructionFiles ) {
+		try {
+			const instruction = parseInstruction( raw );
+			instructionRegistry.register( instruction );
+		} catch ( err ) {
+			log.error( 'Failed to load instruction:', err );
+		}
+	}
 
 	log.info(
 		`Registered ${ instructionRegistry.getAll().length } instruction sets`

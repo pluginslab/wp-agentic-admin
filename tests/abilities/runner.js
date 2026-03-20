@@ -27,21 +27,35 @@ const fs = require( 'fs' );
 const args = process.argv.slice( 2 );
 const fileIndex = args.indexOf( '--file' );
 const modelIndex = args.indexOf( '--model' );
+const modeIndex = args.indexOf( '--mode' );
 const verbose = args.includes( '--verbose' );
 const noThink = args.includes( '--no-think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
 	console.error(
-		'Usage: node runner.js --file <test-file.js> [--model <ollama-model>]'
+		'Usage: node runner.js --file <test-file.js> [--mode flat|instruction] [--model <ollama-model>]'
 	);
 	console.error( '' );
 	console.error( 'Options:' );
 	console.error( '  --file <path>       Path to test file (required)' );
+	console.error(
+		'  --mode <mode>       flat or instruction (default: auto-detect from test file)'
+	);
 	console.error( '  --model <id>        Ollama model (default: qwen3:1.7b)' );
 	console.error(
 		'  --no-think          Append /nothink to disable Qwen 3 thinking'
 	);
 	console.error( '  --verbose           Show full LLM responses' );
+	process.exit( 1 );
+}
+
+const modeArg =
+	modeIndex !== -1 && args[ modeIndex + 1 ] ? args[ modeIndex + 1 ] : null;
+
+if ( modeArg && modeArg !== 'flat' && modeArg !== 'instruction' ) {
+	console.error(
+		`Invalid --mode: ${ modeArg }. Must be "flat" or "instruction".`
+	);
 	process.exit( 1 );
 }
 
@@ -201,6 +215,93 @@ User: "what is a transient?"
 }
 
 // ---------------------------------------------------------------------------
+// Instruction-aware system prompt builder
+// ---------------------------------------------------------------------------
+
+function buildInstructionSystemPrompt(
+	abilities,
+	instructions,
+	disableThinking
+) {
+	const lines = [];
+
+	// Meta-tools for instruction management
+	lines.push(
+		'- load_instruction: Load an instruction set to access its tools. Args: {"instruction": "instruction-id"}'
+	);
+	lines.push(
+		'- unload_instruction: Unload an instruction set you no longer need. Args: {"instruction": "instruction-id"}'
+	);
+
+	// Ungrouped abilities (not in any instruction)
+	const groupedIds = new Set();
+	for ( const inst of instructions ) {
+		for ( const id of inst.abilityIds ) {
+			groupedIds.add( id );
+		}
+	}
+	for ( const a of abilities ) {
+		if ( ! groupedIds.has( a.id ) ) {
+			lines.push( `- ${ a.id }: ${ a.description || a.label || '' }` );
+		}
+	}
+
+	const toolsList = lines.join( '\n' );
+	const instructionIndex = instructions
+		.map( ( i ) => `- ${ i.id }: ${ i.description }` )
+		.join( '\n' );
+
+	const toolsHeader = 'TOOLS:';
+
+	return `You are a WordPress assistant that manages a live WordPress site. Respond with ONLY a JSON object, nothing else.
+
+${ toolsHeader }
+${ toolsList }
+
+INSTRUCTIONS (call load_instruction to unlock their tools):
+${ instructionIndex }
+
+FORMAT — every response must be exactly one JSON object:
+
+Call a tool: {"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "instruction-id"}}
+Final answer: {"action": "final_answer", "content": "Your answer here"}
+
+RULES:
+- One JSON object per response. No text before or after.
+- IMPORTANT: The ONLY tool you can call is load_instruction. Always set tool to "load_instruction" and put the instruction id in args.
+- For ANY question about THIS site (name, version, PHP, users, plugins, health, cron, etc.) you MUST call load_instruction. Only use final_answer for general WordPress knowledge questions.
+- Pick the instruction whose description best matches. For cron/scheduled tasks use "cron", not "diagnostics".
+
+EXAMPLES:
+
+User: "list all installed plugins"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}
+
+User: "deactivate hello dolly"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}
+
+User: "flush the cache"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "cache"}}
+
+User: "show me the cron jobs"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "cron"}}
+
+User: "flush the rewrite rules"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "routing"}}
+
+User: "what is the name of my site?"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "diagnostics"}}
+
+User: "what PHP version am I running?"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "diagnostics"}}
+
+User: "what is a transient in WordPress?"
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
+		disableThinking ? '\n\n/nothink' : ''
+	}`;
+}
+
+// ---------------------------------------------------------------------------
 // JSON parser — mirrors react-agent.js parseActionFromResponse()
 // ---------------------------------------------------------------------------
 
@@ -352,10 +453,31 @@ function evaluateTest( test, action ) {
 	}
 
 	if ( Array.isArray( test.expectTool ) ) {
-		return { passed: test.expectTool.includes( toolCalled ), toolCalled };
+		if ( ! test.expectTool.includes( toolCalled ) ) {
+			return { passed: false, toolCalled };
+		}
+	} else if ( toolCalled !== test.expectTool ) {
+		return { passed: false, toolCalled };
 	}
 
-	return { passed: toolCalled === test.expectTool, toolCalled };
+	// Check args if specified (e.g., expectArgs: { instruction: 'plugins' })
+	if ( test.expectArgs && action && action.args ) {
+		for ( const [ key, value ] of Object.entries( test.expectArgs ) ) {
+			if ( action.args[ key ] !== value ) {
+				return {
+					passed: false,
+					toolCalled,
+					argMismatch: {
+						key,
+						expected: value,
+						got: action.args[ key ],
+					},
+				};
+			}
+		}
+	}
+
+	return { passed: true, toolCalled };
 }
 
 // ---------------------------------------------------------------------------
@@ -412,6 +534,20 @@ function printResults( results, totalTime ) {
 					COL_INPUT
 				) }│${ expected }`
 			);
+
+			// Show arg mismatch details if present
+			if ( r.argMismatch ) {
+				const argDetail = pad(
+					` arg "${ r.argMismatch.key }": expected "${ r.argMismatch.expected }", got "${ r.argMismatch.got }"`,
+					COL_TOOL
+				);
+				console.log(
+					`  ${ pad( '', COL_STATUS ) }│${ pad(
+						'',
+						COL_INPUT
+					) }│${ argDetail }`
+				);
+			}
 		}
 	}
 
@@ -430,6 +566,41 @@ function printResults( results, totalTime ) {
 	console.log( '' );
 
 	return passed === total ? 0 : 1;
+}
+
+// ---------------------------------------------------------------------------
+// Mode-aware test resolver
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve a test's expectations for the given mode.
+ *
+ * A test can define:
+ *   expectTool       — the expected tool in flat mode (or always, if no expectInstruction)
+ *   expectArgs       — expected args in flat mode
+ *   expectInstruction — { id: 'plugins' } — in instruction mode, becomes
+ *                       expectTool: 'load_instruction', expectArgs: { instruction: id }
+ *
+ * When both expectTool and expectInstruction are present:
+ *   - flat mode uses expectTool/expectArgs
+ *   - instruction mode uses expectInstruction
+ *
+ * When only expectTool is set (e.g., expectTool: null for knowledge questions),
+ * it works the same in both modes.
+ *
+ * @param {Object} test - Test definition from the test file
+ * @param {string} mode - 'flat' or 'instruction'
+ * @return {Object} Resolved test with expectTool and expectArgs set for the mode
+ */
+function resolveTestForMode( test, mode ) {
+	if ( mode === 'instruction' && test.expectInstruction ) {
+		return {
+			...test,
+			expectTool: 'load_instruction',
+			expectArgs: { instruction: test.expectInstruction.id },
+		};
+	}
+	return test;
 }
 
 // ---------------------------------------------------------------------------
@@ -475,6 +646,7 @@ function printResults( results, totalTime ) {
 	// Step 4: Load test file
 	const testConfig = require( testFilePath );
 	const abilities = testConfig.abilities || [ testConfig.ability ];
+	const instructions = testConfig.instructions || [];
 	const tests = testConfig.tests || [];
 
 	if ( ! abilities.length || ! tests.length ) {
@@ -482,19 +654,41 @@ function printResults( results, totalTime ) {
 		process.exit( 1 );
 	}
 
+	// Determine mode: CLI flag overrides, otherwise auto-detect from test file
+	const mode =
+		modeArg || ( instructions.length > 0 ? 'instruction' : 'flat' );
+	const useInstructions = mode === 'instruction';
+
+	if ( useInstructions && instructions.length === 0 ) {
+		console.error(
+			'--mode instruction requires the test file to export "instructions".'
+		);
+		process.exit( 1 );
+	}
+
 	console.log( '' );
 	console.log( `  Model:      ${ modelId }` );
 	console.log( `  Thinking:   ${ noThink ? 'DISABLED' : 'enabled' }` );
+	console.log( `  Mode:       ${ mode }` );
 	console.log(
 		`  Test file:  ${ path.relative( process.cwd(), testFilePath ) }`
 	);
 	console.log(
 		`  Abilities:  ${ abilities.map( ( a ) => a.id ).join( ', ' ) }`
 	);
+	if ( useInstructions ) {
+		console.log(
+			`  Instructions: ${ instructions
+				.map( ( i ) => i.id )
+				.join( ', ' ) }`
+		);
+	}
 	console.log( `  Tests:      ${ tests.length }` );
 
 	// Step 5: Build system prompt
-	const systemPrompt = buildSystemPrompt( abilities, noThink );
+	const systemPrompt = useInstructions
+		? buildInstructionSystemPrompt( abilities, instructions, noThink )
+		: buildSystemPrompt( abilities, noThink );
 
 	if ( verbose ) {
 		console.log( '' );
@@ -517,12 +711,19 @@ function printResults( results, totalTime ) {
 		const test = tests[ i ];
 		const label = `${ i + 1 }/${ tests.length }`;
 
-		process.stdout.write( `  [${ label }] "${ test.input }" ... ` );
+		// Resolve expectations for the current mode.
+		// A test can define mode-specific expectations:
+		//   expectTool: 'wp-agentic-admin/plugin-list'          (flat only)
+		//   expectInstruction: { id: 'plugins' }                (instruction only)
+		// Or both, so the same test file works in either mode.
+		const resolvedTest = resolveTestForMode( test, mode );
+
+		process.stdout.write( `  [${ label }] "${ resolvedTest.input }" ... ` );
 
 		try {
 			const messages = [
 				{ role: 'system', content: systemPrompt },
-				{ role: 'user', content: test.input },
+				{ role: 'user', content: resolvedTest.input },
 			];
 
 			const response = await chatCompletion( messages, modelId );
@@ -533,20 +734,30 @@ function printResults( results, totalTime ) {
 			}
 
 			const action = parseActionFromResponse( response );
-			const { passed, toolCalled } = evaluateTest( test, action );
+			const { passed, toolCalled, argMismatch } = evaluateTest(
+				resolvedTest,
+				action
+			);
 
 			results.push( {
-				input: test.input,
-				expectTool: test.expectTool,
+				input: resolvedTest.input,
+				expectTool: resolvedTest.expectTool,
 				toolCalled,
 				action,
 				rawResponse: response,
 				passed,
+				argMismatch,
 			} );
 
-			console.log(
-				passed ? '✓' : `✗ (got: ${ toolCalled || '(none)' })`
-			);
+			if ( passed ) {
+				console.log( '✓' );
+			} else if ( argMismatch ) {
+				console.log(
+					`✗ (got: ${ toolCalled }, arg "${ argMismatch.key }": "${ argMismatch.got }" != "${ argMismatch.expected }")`
+				);
+			} else {
+				console.log( `✗ (got: ${ toolCalled || '(none)' })` );
+			}
 		} catch ( err ) {
 			results.push( {
 				input: test.input,

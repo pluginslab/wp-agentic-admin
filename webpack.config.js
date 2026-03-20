@@ -13,6 +13,17 @@ const path = require( 'path' );
 module.exports = {
 	...defaultConfig,
 
+	module: {
+		...defaultConfig.module,
+		rules: [
+			...( defaultConfig.module?.rules || [] ),
+			{
+				test: /\.md$/,
+				type: 'asset/source',
+			},
+		],
+	},
+
 	entry: {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),

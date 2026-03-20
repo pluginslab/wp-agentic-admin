@@ -168,6 +168,16 @@ class ReactAgent {
 				role: 'system',
 				content: this.buildSystemPromptPromptBased(),
 			};
+
+			// TODO: Remove after testing — shows system prompt in browser console
+			if ( iteration === 0 ) {
+				// eslint-disable-next-line no-console
+				console.log(
+					'[ReActAgent] System Prompt:\n',
+					messages[ 0 ].content
+				);
+			}
+
 			iteration++;
 			const hasToolResults = toolsUsed.length > 0;
 			log.debug(
@@ -884,24 +894,46 @@ class ReactAgent {
 			instructionSection = this.buildInstructionSection();
 		}
 
-		return `You are a WordPress assistant. Respond with ONLY a JSON object, nothing else.
+		const hasInstructions =
+			this.instructionRegistry &&
+			this.instructionRegistry.getAll().length > 0;
 
-TOOLS:
-${ toolsList }
-${ instructionSection }
-FORMAT — every response must be exactly one JSON object:
+		let instructionRules = '';
+		let examples;
 
-Call a tool: {"action": "tool_call", "tool": "tool-id", "args": {}}
-Final answer: {"action": "final_answer", "content": "Your answer here"}
+		if ( hasInstructions ) {
+			instructionRules = `
+- IMPORTANT: The ONLY tool you can call is load_instruction. Always set tool to "load_instruction" and put the instruction id in args.
+- For ANY question about THIS site (name, version, PHP, users, plugins, health, cron, etc.) you MUST call load_instruction. Only use final_answer for general WordPress knowledge questions.
+- Pick the instruction whose description best matches. For cron/scheduled tasks use "cron", not "diagnostics".`;
 
-RULES:
-- One JSON object per response. No text before or after.
-- Summarize tool results for humans. Never copy raw JSON into final_answer.
-- If a tool fails, explain the failure in a final_answer.
-- Never retry a failed tool. Never invent tool names.
-- If no tool is needed, answer directly via final_answer.
+			examples = `EXAMPLES:
 
-EXAMPLE:
+User: "list all installed plugins"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}
+
+User: "deactivate hello dolly"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}
+
+User: "flush the cache"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "cache"}}
+
+User: "show me the cron jobs"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "cron"}}
+
+User: "flush the rewrite rules"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "routing"}}
+
+User: "what is the name of my site?"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "diagnostics"}}
+
+User: "what PHP version am I running?"
+{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "diagnostics"}}
+
+User: "what is a transient in WordPress?"
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}`;
+		} else {
+			examples = `EXAMPLE:
 
 User: "list plugins"
 {"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
@@ -910,9 +942,31 @@ User: "list plugins"
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
-			this.config.disableThinking ? '\n\n/nothink' : ''
-		}`;
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}`;
+		}
+
+		const siteContext = hasInstructions
+			? 'that manages a live WordPress site'
+			: '';
+
+		return `You are a WordPress assistant${ siteContext }. Respond with ONLY a JSON object, nothing else.
+
+TOOLS:
+${ toolsList }
+${ instructionSection }
+FORMAT — every response must be exactly one JSON object:
+
+Call a tool: {"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "instruction-id"}}
+Final answer: {"action": "final_answer", "content": "Your answer here"}
+
+RULES:
+- One JSON object per response. No text before or after.${ instructionRules }
+- Summarize tool results for humans. Never copy raw JSON into final_answer.
+- If a tool fails, explain the failure in a final_answer.
+- Never retry a failed tool. Never invent tool names.
+- If no tool is needed, answer directly via final_answer.
+
+${ examples }${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
 	}
 
 	/**
@@ -986,7 +1040,7 @@ User: "what is a transient?"
 			const index = inactiveInstructions
 				.map( ( inst ) => `- ${ inst.id }: ${ inst.description }` )
 				.join( '\n' );
-			section += `\nAVAILABLE INSTRUCTIONS (call load_instruction to use):\n${ index }\n`;
+			section += `\nINSTRUCTIONS (call load_instruction first to unlock their tools):\n${ index }\n`;
 		}
 
 		if ( this.activeInstructions.size > 0 ) {

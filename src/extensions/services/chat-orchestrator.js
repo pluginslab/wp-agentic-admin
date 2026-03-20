@@ -378,6 +378,26 @@ class ChatOrchestrator {
 	}
 
 	/**
+	 * Get the current system prompt (for debugging).
+	 * Creates a temporary ReactAgent if one doesn't exist yet.
+	 *
+	 * @return {string} The system prompt the LLM would receive.
+	 */
+	getSystemPrompt() {
+		if ( this.reactAgent ) {
+			return this.reactAgent.buildSystemPromptPromptBased();
+		}
+		// Create a temporary agent to build the prompt
+		const tempAgent = new ReactAgent(
+			modelLoader,
+			toolRegistry,
+			{},
+			instructionRegistry
+		);
+		return tempAgent.buildSystemPromptPromptBased();
+	}
+
+	/**
 	 * Process message with a specific tool (legacy method, kept for workflow support)
 	 *
 	 * @param {string} userMessage - User's message

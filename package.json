@@ -38,5 +38,11 @@
     "abilities-api"
   ],
   "author": "Pluginslab",
-  "license": "GPL-2.0-or-later"
+  "license": "GPL-2.0-or-later",
+  "jest": {
+    "transform": {
+      "\\.[jt]sx?$": "<rootDir>/node_modules/@wordpress/scripts/config/babel-transform",
+      "\\.md$": "<rootDir>/tests/transforms/raw-loader.js"
+    }
+  }
 }
