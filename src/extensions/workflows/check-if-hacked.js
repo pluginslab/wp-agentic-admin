@@ -233,6 +233,26 @@ export function registerCheckIfHackedWorkflow() {
 							lines.push(
 								`- **${ check.name }** — ${ check.count } finding(s)`
 							);
+
+							for ( const f of check.findings.slice(
+								0,
+								5
+							) ) {
+								const score = f.risk_score
+									? ` [risk: ${ f.risk_score }/10]`
+									: '';
+								const detail =
+									formatDbFinding( f );
+								lines.push(
+									`  - ${ detail }${ score }`
+								);
+							}
+
+							if ( check.findings.length > 5 ) {
+								lines.push(
+									`  - ...and ${ check.findings.length - 5 } more`
+								);
+							}
 						}
 					}
 				}
@@ -256,6 +276,40 @@ export function registerCheckIfHackedWorkflow() {
 			return lines.join( '\n' );
 		},
 	} );
+}
+
+/**
+ * Format a single database finding for display.
+ *
+ * @param {Object} f - A finding object.
+ * @return {string} Formatted string.
+ */
+function formatDbFinding( f ) {
+	if ( f.option_name ) {
+		const preview = f.preview
+			? ': ' + ( f.preview.length > 80 ? f.preview.substring( 0, 80 ) + '...' : f.preview )
+			: '';
+		return `\`${ f.option_name }\`${ preview }`;
+	}
+	if ( f.post_id && f.title ) {
+		return `Post #${ f.post_id } "${ f.title }" (${ f.post_type || 'post' }${ f.status ? ', ' + f.status : '' })`;
+	}
+	if ( f.user_id && f.meta_key ) {
+		return `User #${ f.user_id } meta \`${ f.meta_key }\``;
+	}
+	if ( f.login ) {
+		return `${ f.login } (${ f.email }) — registered ${ f.registered }`;
+	}
+	if ( f.hook ) {
+		return `\`${ f.hook }\` next run: ${ f.next_run }`;
+	}
+	if ( f.comment_id ) {
+		return `Comment #${ f.comment_id } on post #${ f.post_id } by "${ f.author }"`;
+	}
+	if ( f.issue ) {
+		return f.issue;
+	}
+	return JSON.stringify( f );
 }
 
 export default registerCheckIfHackedWorkflow;

@@ -78,7 +78,10 @@ export function registerDatabaseCheck() {
 
 					for ( const finding of check.findings.slice( 0, 5 ) ) {
 						const detail = formatFinding( finding );
-						lines.push( `  - ${ detail }` );
+						const score = finding.risk_score
+							? ` [risk: ${ finding.risk_score }/10]`
+							: '';
+						lines.push( `  - ${ detail }${ score }` );
 					}
 
 					if ( check.findings.length > 5 ) {

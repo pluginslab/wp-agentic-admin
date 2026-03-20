@@ -85,7 +85,7 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 	$checks       = array();
 	$total_issues = 0;
-	$high_risk    = 0;
+	$total_raw    = 0;
 
 	// Risk score threshold — only findings at or above this are flagged.
 	$threshold = 6.0;
@@ -99,7 +99,6 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 		'wp_agentic_admin_check_posts_base64_eval',
 		'wp_agentic_admin_check_posts_iframes',
 		'wp_agentic_admin_check_posts_hidden_links',
-		'wp_agentic_admin_check_hidden_spam_pages',
 		'wp_agentic_admin_check_usermeta_injections',
 		'wp_agentic_admin_check_suspicious_admins',
 		'wp_agentic_admin_check_rogue_cron_jobs',
@@ -127,24 +126,33 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 		$result['total_raw']      = count( $all_findings );
 		$result['filtered_below'] = count( $all_findings ) - count( $filtered_findings );
 
+		$total_raw    += count( $all_findings );
 		$total_issues += $result['count'];
-		$high_risk    += $result['count'];
 		$checks[]      = $result;
 	}
 
+	$filtered_out = $total_raw - $total_issues;
+
 	if ( 0 === $total_issues ) {
-		$message = __( 'Database scan complete. No high-risk findings detected (threshold: 6.0/10).', 'wp-agentic-admin' );
+		$message = 0 === $total_raw
+			? __( 'Database scan complete. No findings detected.', 'wp-agentic-admin' )
+			: sprintf(
+				/* translators: %d: number of low-risk findings filtered out */
+				_n(
+					'Database scan complete. No high-risk findings. %d low-risk finding was filtered out (below 6.0/10).',
+					'Database scan complete. No high-risk findings. %d low-risk findings were filtered out (below 6.0/10).',
+					$filtered_out,
+					'wp-agentic-admin'
+				),
+				$filtered_out
+			);
 	} else {
 		$message = sprintf(
-			/* translators: 1: number of high-risk findings, 2: risk threshold */
-			_n(
-				'Database scan complete. Found %1$d high-risk finding (score >= %2$s/10) that needs investigation.',
-				'Database scan complete. Found %1$d high-risk findings (score >= %2$s/10) that need investigation.',
-				$total_issues,
-				'wp-agentic-admin'
-			),
+			/* translators: 1: number of high-risk findings, 2: risk threshold, 3: number filtered out */
+			__( 'Database scan complete. Found %1$d high-risk finding(s) (score >= %2$s/10). %3$d low-risk finding(s) filtered out.', 'wp-agentic-admin' ),
 			$total_issues,
-			number_format( $threshold, 1 )
+			number_format( $threshold, 1 ),
+			$filtered_out
 		);
 	}
 
@@ -152,6 +160,8 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 		'success'        => true,
 		'message'        => $message,
 		'total_issues'   => $total_issues,
+		'total_scanned'  => $total_raw,
+		'filtered_out'   => $filtered_out,
 		'risk_threshold' => $threshold,
 		'checks'         => $checks,
 	);
@@ -459,52 +469,6 @@ function wp_agentic_admin_check_posts_hidden_links(): array {
 }
 
 /**
- * Check for recently modified hidden/draft pages.
- *
- * Attackers create draft or private pages as spam doorways or phishing pages.
- * Shows the 20 most recently modified non-published posts.
- *
- * @return array Check result.
- */
-function wp_agentic_admin_check_hidden_spam_pages(): array {
-	global $wpdb;
-
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-	$rows = $wpdb->get_results(
-		"SELECT ID, post_title, post_status, post_type, post_modified
-		FROM {$wpdb->posts}
-		WHERE post_status IN ('draft','private')
-		AND post_type IN ('post','page')
-		ORDER BY post_modified DESC
-		LIMIT 20"
-	);
-
-	$findings       = array();
-	$seven_days_ago = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days' ) );
-
-	foreach ( $rows as $row ) {
-		// Recently modified drafts are more suspicious than old ones.
-		$is_recent = $row->post_modified > $seven_days_ago;
-
-		$findings[] = array(
-			'post_id'    => (int) $row->ID,
-			'title'      => $row->post_title,
-			'status'     => $row->post_status,
-			'post_type'  => $row->post_type,
-			'modified'   => $row->post_modified,
-			'risk_score' => $is_recent ? 4.5 : 2.0, // Drafts are usually legitimate; low risk.
-		);
-	}
-
-	return array(
-		'name'        => __( 'Hidden/draft pages', 'wp-agentic-admin' ),
-		'description' => __( 'Recently modified draft or private pages — review for spam doorway pages or phishing.', 'wp-agentic-admin' ),
-		'count'       => count( $findings ),
-		'findings'    => $findings,
-	);
-}
-
-/**
  * Check user meta for injected code.
  *
  * Attackers sometimes inject payloads into user meta fields to persist
@@ -549,82 +513,42 @@ function wp_agentic_admin_check_usermeta_injections(): array {
 }
 
 /**
- * Check for suspicious administrator accounts.
+ * Check for recently created administrator accounts.
  *
- * Looks for admin users created recently, with suspicious usernames,
- * or with non-standard email domains. This catches backdoor admin accounts
- * created by attackers.
+ * After gaining access, attackers often create new admin accounts
+ * as a persistent backdoor. Lists all admins created in the last
+ * 30 days for manual review.
  *
  * @return array Check result.
  */
 function wp_agentic_admin_check_suspicious_admins(): array {
-	$findings   = array();
-	$admin_role = 'administrator';
+	$findings = array();
 
-	$admins = get_users(
+	$recent_admins = get_users(
 		array(
-			'role'   => $admin_role,
-			'fields' => array( 'ID', 'user_login', 'user_email', 'user_registered' ),
+			'role'         => 'administrator',
+			'date_query'   => array(
+				array(
+					'after' => '30 days ago',
+				),
+			),
+			'fields'       => array( 'ID', 'user_login', 'user_email', 'user_registered' ),
 		)
 	);
 
-	// Flag admins registered in the last 30 days or with suspicious patterns.
-	$thirty_days_ago    = gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
-	$suspicious_names   = array( 'admin1', 'test', 'backdoor', 'hack', 'wp-admin', 'support', 'manager' );
-	$suspicious_domains = array( 'tempmail.com', 'throwaway.email', 'guerrillamail.com', 'mailinator.com', 'yopmail.com' );
-
-	foreach ( $admins as $admin ) {
-		$flags  = array();
-		$email  = strtolower( $admin->user_email );
-		$login  = strtolower( $admin->user_login );
-		$domain = substr( $email, strpos( $email, '@' ) + 1 );
-
-		// Recently created admin.
-		if ( $admin->user_registered > $thirty_days_ago ) {
-			$flags[] = __( 'created in the last 30 days', 'wp-agentic-admin' );
-		}
-
-		// Suspicious username patterns.
-		foreach ( $suspicious_names as $name ) {
-			if ( str_contains( $login, $name ) ) {
-				$flags[] = sprintf(
-					/* translators: %s: suspicious pattern */
-					__( 'username contains "%s"', 'wp-agentic-admin' ),
-					$name
-				);
-				break;
-			}
-		}
-
-		// Disposable email domains.
-		if ( in_array( $domain, $suspicious_domains, true ) ) {
-			$flags[] = __( 'uses disposable email domain', 'wp-agentic-admin' );
-		}
-
-		if ( ! empty( $flags ) ) {
-			// More flags = higher risk. 1 flag = 6.0, 2 = 7.5, 3+ = 9.0.
-			$flag_count = count( $flags );
-			$risk       = 6.0;
-			if ( $flag_count >= 3 ) {
-				$risk = 9.0;
-			} elseif ( $flag_count >= 2 ) {
-				$risk = 7.5;
-			}
-
-			$findings[] = array(
-				'user_id'    => (int) $admin->ID,
-				'login'      => $admin->user_login,
-				'email'      => $admin->user_email,
-				'registered' => $admin->user_registered,
-				'flags'      => $flags,
-				'risk_score' => $risk,
-			);
-		}
+	foreach ( $recent_admins as $admin ) {
+		$findings[] = array(
+			'user_id'    => (int) $admin->ID,
+			'login'      => $admin->user_login,
+			'email'      => $admin->user_email,
+			'registered' => $admin->user_registered,
+			'risk_score' => 6.5, // Recent admin creation warrants review.
+		);
 	}
 
 	return array(
-		'name'        => __( 'Suspicious admin accounts', 'wp-agentic-admin' ),
-		'description' => __( 'Administrator accounts with suspicious usernames, disposable emails, or created recently.', 'wp-agentic-admin' ),
+		'name'        => __( 'Recently created admins', 'wp-agentic-admin' ),
+		'description' => __( 'Administrator accounts created in the last 30 days — verify these are legitimate.', 'wp-agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -727,11 +651,11 @@ function wp_agentic_admin_check_rogue_cron_jobs(): array {
 function wp_agentic_admin_check_siteurl_integrity(): array {
 	$findings = array();
 
-
-	// TODO: Explain why this is relevant
+	// siteurl and home control where WordPress loads from and where it redirects.
+	// If an attacker changes these, the entire site redirects to a malicious domain
+	// or serves content from an attacker-controlled server.
 	$siteurl = get_option( 'siteurl' );
 	$home    = get_option( 'home' );
-
 
 	// Check for mismatched domains between siteurl and home.
 	$site_host = wp_parse_url( $siteurl, PHP_URL_HOST );
