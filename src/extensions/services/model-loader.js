@@ -299,6 +299,14 @@ class ModelLoader {
 	 * @return {Promise<Object>} Support status and reason if not supported
 	 */
 	async checkWebGPUSupport() {
+		// WebGPU requires a secure context (HTTPS or localhost)
+		if ( ! window.isSecureContext ) {
+			return {
+				supported: false,
+				reason: 'WebGPU is not accessible over HTTP. Please access your website over HTTPS.',
+			};
+		}
+
 		if ( ! navigator.gpu ) {
 			return {
 				supported: false,

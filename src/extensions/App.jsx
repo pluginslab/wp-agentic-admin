@@ -186,7 +186,12 @@ const App = () => {
 			case 'chat':
 				// If WebGPU has a fatal error, show fallback
 				if ( webGPUError && ! modelReady ) {
-					return <WebGPUFallback reason={ webGPUError } />;
+					return (
+						<WebGPUFallback
+							reason={ webGPUError }
+							isInsecureContext={ ! window.isSecureContext }
+						/>
+					);
 				}
 				return (
 					<ChatContainer

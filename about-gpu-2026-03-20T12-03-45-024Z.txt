@@ -1,0 +1,614 @@
+Graphics Feature Status
+=======================
+*   Canvas: Hardware accelerated
+*   Direct Rendering Display Compositor: Disabled
+*   Compositing: Hardware accelerated
+*   Multiple Raster Threads: Enabled
+*   OpenGL: Enabled
+*   Rasterization: Hardware accelerated
+*   Raw Draw: Disabled
+*   Skia Graphite: Enabled
+*   TreesInViz: Disabled
+*   Video Decode: Hardware accelerated
+*   Video Encode: Hardware accelerated
+*   WebGL: Hardware accelerated
+*   WebGPU: Hardware accelerated
+*   WebNN: Disabled
+
+Version Information
+===================
+Data exported              : 2026-03-20T11:56:19.185Z
+Chrome version             : Chrome/146.0.7680.154
+Operating system           : Mac OS X 26.3.1
+Software rendering list URL: https://chromium.googlesource.com/chromium/src/+/1e5cd4f52844384678ae88d53a597a4c05a956da/gpu/config/software_rendering_list.json
+Driver bug list URL        : https://chromium.googlesource.com/chromium/src/+/1e5cd4f52844384678ae88d53a597a4c05a956da/gpu/config/gpu_driver_bug_list.json
+ANGLE commit id            : e05753c6d05b
+2D graphics backend        : Skia/146 3c7c530c115124b415c1f4e0e35694fbaefd2177
+Command Line               : /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --flag-switches-begin --enable-unsafe-webgpu --enable-webgpu-developer-features --ignore-gpu-blocklist --flag-switches-end --origin-trial-disabled-features=CanvasTextNg|WebAssemblyCustomDescriptors
+
+Driver Information
+==================
+Initialization time             : 372
+In-process GPU                  : false
+Skia Backend                    : GraphiteDawnMetal
+Passthrough Command Decoder     : true
+Sandboxed                       : true
+GPU0                            : VENDOR= 0x106b [Google Inc. (Apple)], DEVICE=0x0000 [ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Version 26.3.1 (Build 25D2128))], DRIVER_VENDOR=Apple, DRIVER_VERSION=26.3.1 *ACTIVE*
+Optimus                         : false
+AMD switchable                  : false
+Pixel shader version            : 3.00
+Vertex shader version           : 3.00
+Max. MSAA samples               : 4
+Machine model name              : MacBookPro
+Machine model version           : 18.3
+GL implementation parts         : (gl=egl-angle,angle=metal)
+Display type                    : ANGLE_METAL
+GL_VENDOR                       : Google Inc. (Apple)
+GL_RENDERER                     : ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Version 26.3.1 (Build 25D2128))
+GL_VERSION                      : OpenGL ES 3.0 (ANGLE 2.1.27040 git hash: e05753c6d05b)
+GL_EXTENSIONS                   : GL_AMD_performance_monitor GL_ANGLE_base_vertex_base_instance_shader_builtin GL_ANGLE_blob_cache GL_ANGLE_client_arrays GL_ANGLE_clip_cull_distance GL_ANGLE_compressed_texture_etc GL_ANGLE_depth_texture GL_ANGLE_framebuffer_blit GL_ANGLE_framebuffer_multisample GL_ANGLE_get_serialized_context_string GL_ANGLE_get_tex_level_parameter GL_ANGLE_instanced_arrays GL_ANGLE_memory_size GL_ANGLE_pack_reverse_row_order GL_ANGLE_polygon_mode GL_ANGLE_program_binary_readiness_query GL_ANGLE_program_cache_control GL_ANGLE_provoking_vertex GL_ANGLE_renderability_validation GL_ANGLE_request_extension GL_ANGLE_robust_client_memory GL_ANGLE_shader_pixel_local_storage GL_ANGLE_shader_pixel_local_storage_coherent GL_ANGLE_stencil_texturing GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ANGLE_texture_multisample GL_ANGLE_translated_shader_source GL_APPLE_clip_distance GL_ARM_rgba8 GL_CHROMIUM_bind_generates_resource GL_CHROMIUM_bind_uniform_location GL_CHROMIUM_copy_texture GL_CHROMIUM_lose_context GL_EXT_base_instance GL_EXT_blend_func_extended GL_EXT_blend_minmax GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_compressed_ETC1_RGB8_sub_texture GL_EXT_conservative_depth GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_clamp GL_EXT_discard_framebuffer GL_EXT_disjoint_timer_query GL_EXT_draw_buffers GL_EXT_draw_buffers_indexed GL_EXT_draw_elements_base_vertex GL_EXT_float_blend GL_EXT_frag_depth GL_EXT_instanced_arrays GL_EXT_map_buffer_range GL_EXT_multisampled_render_to_texture GL_EXT_occlusion_query_boolean GL_EXT_polygon_offset_clamp GL_EXT_pvrtc_sRGB GL_EXT_read_format_bgra GL_EXT_render_snorm GL_EXT_robustness GL_EXT_sRGB GL_EXT_shader_texture_lod GL_EXT_texture_compression_bptc GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc_srgb GL_EXT_texture_filter_anisotropic GL_EXT_texture_format_BGRA8888 GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_EXT_texture_rg GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_shadow_lod GL_EXT_texture_storage GL_IMG_texture_compression_pvrtc GL_KHR_debug GL_KHR_parallel_shader_compile GL_KHR_robustness GL_KHR_texture_compression_astc_hdr GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_NV_fence GL_NV_framebuffer_blit GL_NV_pixel_buffer_object GL_NV_shader_noperspective_interpolation GL_OES_EGL_image GL_OES_EGL_sync GL_OES_compressed_EAC_R11_signed_texture GL_OES_compressed_EAC_R11_unsigned_texture GL_OES_compressed_EAC_RG11_signed_texture GL_OES_compressed_EAC_RG11_unsigned_texture GL_OES_compressed_ETC1_RGB8_texture GL_OES_compressed_ETC2_RGB8_texture GL_OES_compressed_ETC2_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_RGBA8_texture GL_OES_compressed_ETC2_punchthroughA_sRGB8_alpha_texture GL_OES_compressed_ETC2_sRGB8_alpha8_texture GL_OES_compressed_ETC2_sRGB8_texture GL_OES_depth24 GL_OES_depth32 GL_OES_depth_texture GL_OES_draw_buffers_indexed GL_OES_draw_elements_base_vertex GL_OES_element_index_uint GL_OES_fbo_render_mipmap GL_OES_get_program_binary GL_OES_mapbuffer GL_OES_packed_depth_stencil GL_OES_required_internalformat GL_OES_rgb8_rgba8 GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_standard_derivatives GL_OES_surfaceless_context GL_OES_texture_3D GL_OES_texture_float GL_OES_texture_float_linear GL_OES_texture_half_float GL_OES_texture_half_float_linear GL_OES_texture_npot GL_OES_texture_stencil8 GL_OES_vertex_array_object GL_QCOM_render_shared_exponent
+Disabled Extensions             : GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent
+Disabled WebGL Extensions       : 
+Window system binding vendor    : 
+Window system binding version   : 
+Window system binding extensions: 
+Direct rendering version        : unknown
+Reset notification strategy     : 0x8261
+GPU process crash count         : 0
+
+Driver Bug Workarounds
+======================
+*   disable_2d_canvas_auto_flush
+*   enable_webgl_timer_query_extensions
+*   disabled_extension_GL_KHR_blend_equation_advanced
+*   disabled_extension_GL_KHR_blend_equation_advanced_coherent
+
+Problems Detected
+=================
+*   Disable KHR_blend_equation_advanced until cc shaders are updated:
+    (http://crbug.com/661715)
+    Applied Workarounds: disable(GL_KHR_blend_equation_advanced),
+        disable(GL_KHR_blend_equation_advanced_coherent)
+
+*   Expose WebGL's disjoint_timer_query extensions on platforms with site isolation:
+    (http://crbug.com/808744), (http://crbug.com/870491)
+    Applied Workarounds: enable_webgl_timer_query_extensions
+
+*   glFlush error on Mac:
+    (http://crbug.com/841755)
+    Applied Workarounds: disable_2d_canvas_auto_flush
+
+ANGLE Features
+==============
+*   allowCompressedFormats (Frontend workarounds): Enabled
+
+*   alwaysEnableEmulatedMultidrawExtensions (Frontend workarounds): Disabled
+
+*   alwaysRunLinkSubJobsThreaded (Frontend features): Disabled
+
+*   cacheCompiledShader (Frontend features): Disabled
+
+*   clipCullDistanceBrokenWithPassthroughShaders (Frontend features): Disabled
+
+*   compileJobIsThreadSafe (Frontend features): Enabled
+
+*   disableAnisotropicFiltering (Frontend workarounds): Disabled
+
+*   disableProgramBinary (Frontend features): Disabled
+
+*   disableProgramCaching (Frontend features): Disabled
+
+*   disableProgramCachingForTransformFeedback (Frontend workarounds): Disabled
+
+*   dumpShaderSource (Frontend features): Disabled
+
+*   dumpTranslatedShaders (Frontend features): Disabled
+
+*   emulatePixelLocalStorage (Frontend features): Enabled
+
+*   enableCaptureLimits (Frontend features): Disabled
+
+*   enableProgramBinaryForCapture (Frontend features): Disabled
+
+*   enableShaderSubstitution (Frontend workarounds): Disabled
+
+*   enableTranslatedShaderSubstitution (Frontend workarounds): Disabled
+
+*   forceDebugContexts (Frontend features): Disabled
+
+*   forceDepthAttachmentInitOnClear (Frontend workarounds): Disabled
+
+*   forceFlushAfterDrawcallUsingShadowmap (Frontend workarounds): Disabled
+
+*   forceGlErrorChecking (Frontend features): Disabled
+
+*   forceInitShaderVariables (Frontend features): Disabled
+
+*   forceMinimumMaxVertexAttributes (Frontend features): Disabled
+
+*   forcePassthroughShaders (Frontend features): Disabled
+
+*   forceRobustResourceInit (Frontend features): Disabled
+
+*   linkJobIsThreadSafe (Frontend features): Enabled
+
+*   loseContextOnOutOfMemory (Frontend workarounds): Enabled
+
+*   noperspectiveInterpolationBrokenWithPassthroughShaders (Frontend features): Disabled
+
+*   singleThreadedTextureDecompression (Frontend workarounds): Disabled
+
+*   uncurrentEglSurfaceUponSurfaceDestroy (Frontend workarounds): Disabled
+
+*   useIr (Frontend features): Disabled
+
+*   allowBufferReadWrite (Metal features): Disabled
+
+*   allowGenMultipleMipsPerPass (Metal features): Enabled
+
+*   allowInlineConstVertexData (Metal features): Disabled
+
+*   allowMultisampleStoreAndResolve (Metal features): Enabled
+
+*   allowRenderpassWithoutAttachment (Metal features): Enabled
+
+*   allowRuntimeSamplerCompareMode (Metal features): Enabled
+
+*   allowSamplerCompareGradient (Metal features): Enabled
+
+*   allowSeparateDepthStencilBuffers (Metal features): Enabled
+
+*   alwaysPreferStagedTextureUploads (Metal features): Enabled
+
+*   alwaysUseManagedStorageModeForBuffers (Metal features): Disabled
+
+*   alwaysUseSharedStorageModeForBuffers (Metal features): Disabled
+
+*   alwaysUseStagedBufferUpdates (Metal features): Disabled
+
+*   avoidStencilTextureSwizzle (Metal features): Disabled
+
+*   copyIOSurfaceToNonIOSurfaceForReadOptimization (Metal workarounds): Disabled
+
+*   copyTextureToBufferForReadOptimization (Metal workarounds): Disabled
+
+*   disableMetalOnNvidia (Metal features): Enabled
+
+*   disableProgrammableBlending (Metal features): Disabled
+
+*   disableRWTextureTier2Support (Metal features): Disabled
+
+*   disableRasterOrderGroups (Metal features): Disabled
+
+*   disableStagedInitializationOfPackedTextureFormats (Metal features): Disabled
+
+*   emulateAlphaToCoverage (Metal workarounds): Disabled
+
+*   emulateDontCareLoadWithRandomClear (Metal features): Disabled
+
+*   emulateTransformFeedback (Metal features): Enabled
+
+*   enableInMemoryMtlLibraryCache (Metal features): Enabled
+
+*   enableMultisampledRenderToTextureOnNonTilers (Metal features): Disabled
+
+*   enableParallelMtlLibraryCompilation (Metal features): Enabled
+
+*   ensureLoopForwardProgress (Metal features): Enabled
+
+*   flushAfterStreamVertexData (Metal features): Disabled
+
+*   forceBufferGPUStorage (Metal features): Disabled
+
+*   forceD24S8AsUnsupported (Metal features): Disabled
+
+*   forceNonCSBaseMipmapGeneration (Metal features): Disabled
+
+*   generateShareableShaders (Metal features): Enabled
+
+*   hasBaseVertexInstancedDraw (Metal features): Enabled
+
+*   hasCheapRenderPass (Metal features): Disabled
+
+*   hasDepthAutoResolve (Metal features): Enabled
+
+*   hasEvents (Metal features): Enabled
+
+*   hasExplicitMemBarrier (Metal features): Disabled
+
+*   hasNonUniformDispatch (Metal features): Enabled
+
+*   hasShaderStencilOutput (Metal features): Enabled
+
+*   hasStencilAutoResolve (Metal features): Enabled
+
+*   hasTextureSwizzle (Metal features): Enabled
+
+*   injectAsmStatementIntoLoopBodies (Metal features): Disabled
+
+*   limitMaxColorTargetBitsForTesting (Metal features): Disabled
+
+*   limitMaxDrawBuffersForTesting (Metal features): Disabled
+
+*   multisampleColorFormatShaderReadWorkaround (Metal workarounds): Disabled
+
+*   preTransformTextureCubeGradDerivatives (Metal workarounds): Enabled
+
+*   preemptivelyStartProvokingVertexCommandBuffer (Metal features): Disabled
+
+*   preferCpuForBuffersubdata (Metal features): Disabled
+
+*   requireGpuFamily2 (Metal features): Enabled
+
+*   rescopeGlobalVariables (Metal features): Enabled
+
+*   uploadDataToIosurfacesWithStagingBuffers (Metal workarounds): Disabled
+
+*   useShadowBuffersWhenAppropriate (Metal features): Disabled
+
+*   writeHelperSampleMask (Metal workarounds): Enabled
+
+Dawn Info
+=========
+
+<Integrated GPU>  Metal backend - Apple M1 Pro
+----------------------------------------------
+
+[WebGPU Status]
+---------------
+*   Available
+
+[Adapter Supported Features]
+----------------------------
+*   core-features-and-limits
+*   depth-clip-control
+*   depth32float-stencil8
+*   texture-compression-bc
+*   texture-compression-bc-sliced-3d
+*   texture-compression-etc2
+*   texture-compression-astc
+*   texture-compression-astc-sliced-3d
+*   timestamp-query
+*   indirect-first-instance
+*   shader-f16
+*   rg11b10ufloat-renderable
+*   bgra8unorm-storage
+*   float32filterable
+*   float32blendable
+*   clip-distances
+*   dual-source-blending
+*   subgroups
+*   texture-formats-tier1
+*   texture-formats-tier2
+*   primitive-index
+*   texture-component-swizzle
+*   dawn-internal-usages
+*   dawn-multi-planar-formats
+*   dawn-native
+*   implicit-device-synchronization
+*   transient-attachments
+*   unorm16texture-formats
+*   multi-planar-format-p010
+*   multi-planar-render-targets
+*   adapter-properties-memory-heaps
+*   dawn-format-capabilities
+*   shared-texture-memory-io-surface
+*   shared-fence-mtl-shared-event
+*   shader-module-compilation-options
+*   dawn-load-resolve-texture
+*   flexible-texture-views
+
+[Enabled Toggle Names]
+----------------------
+*   always_resolve_into_zero_level_and_layer: 
+    (https://crbug.com/dawn/56):
+    When the resolve target is a texture view that is created on the non-zero
+    level or layer of a texture, we first resolve into a temporarily 2D
+    texture with only one mipmap level and one array layer, and copy the
+    result of MSAA resolve into the true resolve target. This workaround is
+    enabled by default on the Metal drivers that have bugs when setting
+    non-zero resolveLevel or resolveSlice. It is also enabled by default on
+    Qualcomm Vulkan drivers, which have similar bugs.
+
+*   lazy_clear_resource_on_first_use: 
+    (https://crbug.com/dawn/145):
+    Clears resource to zero on first usage. This initializes the resource so
+    that no dirty bits from recycled memory is present in the new resource.
+
+*   metal_enable_vertex_pulling: 
+    (https://crbug.com/dawn/480):
+    Uses vertex pulling to protect out-of-bounds reads on Metal
+
+*   disallow_spirv: 
+    (https://crbug.com/1214923):
+    Disallow usage of SPIR-V completely so that only WGSL is used for shader
+    modules. This is useful to prevent a Chromium renderer process from
+    successfully sending SPIR-V code to be compiled in the GPU process.
+
+*   disable_demote_to_helper: 
+    (https://crbug.com/42250787):
+    Disables the conversion of discard to demote to helper thread in the IR
+    transform
+
+*   metal_use_mock_blit_encoder_for_write_timestamp: 
+    (https://crbug.com/dawn/1473):
+    Add mock blit command to blit encoder when encoding writeTimestamp as
+    workaround on Metal.This toggle is enabled by default on Metal backend
+    where GPU counters cannot be stored tosampleBufferAttachments on empty
+    blit encoder.
+
+*   metal_fill_empty_occlusion_queries_with_zero: 
+    (https://crbug.com/dawn/1707):
+    Apple GPUs leave stale results in the visibility result buffer instead of
+    writing zero if an occlusion query is empty. Workaround this by explicitly
+    filling it with zero if there are no draw calls.
+
+*   enable_integer_range_analysis_in_robustness: 
+    (https://crbug.com/348701956):
+    Compute the range of the index with Integer Range Analysis in the
+    robustness transform and skip doing index clamping when the out of bound
+    access cannot happen.
+
+*   blob_cache_hash_validation: 
+    (https://crbug.com/429938352):
+    Enable hash validation when loading/storing from/to the blob cache
+
+*   wait_is_thread_safe: 
+    (https://crbug.com/412761228):
+    WaitFor* functions are thread-safe and can be called without the
+    device-lock if implicit synchronization is enabled.
+
+[WebGPU Required Toggles - enabled]
+-----------------------------------
+*   disallow_spirv: 
+    (https://crbug.com/1214923):
+    Disallow usage of SPIR-V completely so that only WGSL is used for shader
+    modules. This is useful to prevent a Chromium renderer process from
+    successfully sending SPIR-V code to be compiled in the GPU process.
+
+[WebGPU Required Toggles - disabled]
+------------------------------------
+*   timestamp_quantization: 
+    (https://crbug.com/dawn/1800):
+    Enable timestamp queries quantization to reduce the precision of timers
+    that can be created with timestamp queries.
+
+[Skia Required Toggles - enabled]
+---------------------------------
+*   disable_robustness: 
+    (https://crbug.com/dawn/480):
+    Disable robust buffer access
+
+*   skip_validation: 
+    (https://crbug.com/dawn/271):
+    Skip expensive validation of Dawn commands.
+
+*   disable_lazy_clear_for_mapped_at_creation_buffer: 
+    (https://crbug.com/dawn/145):
+    Disable clearing buffers to zero for buffers which are mapped at creation.
+
+<CPU>  Vulkan backend - SwiftShader Device (LLVM 10.0.0)
+--------------------------------------------------------
+
+[WebGPU Status]
+---------------
+*   Blocklisted - crbug.com/40057808: CPU adapters not fully tested or conformant.
+
+[Adapter Supported Features]
+----------------------------
+*   core-features-and-limits
+*   depth-clip-control
+*   depth32float-stencil8
+*   texture-compression-bc
+*   texture-compression-bc-sliced-3d
+*   texture-compression-etc2
+*   texture-compression-astc
+*   texture-compression-astc-sliced-3d
+*   timestamp-query
+*   indirect-first-instance
+*   rg11b10ufloat-renderable
+*   bgra8unorm-storage
+*   float32filterable
+*   float32blendable
+*   clip-distances
+*   subgroups
+*   texture-component-swizzle
+*   dawn-internal-usages
+*   dawn-multi-planar-formats
+*   dawn-native
+*   implicit-device-synchronization
+*   transient-attachments
+*   unorm16texture-formats
+*   adapter-properties-memory-heaps
+*   adapter-properties-vk
+*   dawn-format-capabilities
+*   shared-texture-memory-opaque-fd
+*   dawn-load-resolve-texture
+*   flexible-texture-views
+
+[Enabled Toggle Names]
+----------------------
+*   lazy_clear_resource_on_first_use: 
+    (https://crbug.com/dawn/145):
+    Clears resource to zero on first usage. This initializes the resource so
+    that no dirty bits from recycled memory is present in the new resource.
+
+*   use_temporary_buffer_in_texture_to_texture_copy: 
+    (https://crbug.com/dawn/42):
+    Split texture-to-texture copy into two copies: copy from source texture
+    into a temporary buffer, and copy from the temporary buffer into the
+    destination texture when copying between compressed textures that don't
+    have block-aligned sizes. This workaround is enabled by default on all
+    Vulkan drivers to solve an issue in the Vulkan SPEC about the
+    texture-to-texture copies with compressed formats. See #1005
+    (https://github.com/KhronosGroup/Vulkan-Docs/issues/1005) for more
+    details.
+
+*   vulkan_use_d32s8: 
+    (https://crbug.com/dawn/286):
+    Vulkan mandates support of either D32_FLOAT_S8 or D24_UNORM_S8. When
+    available the backend will use D32S8 (toggle to on) but setting the toggle
+    to off will make it use the D24S8 format when possible.
+
+*   vulkan_use_s8: 
+    (https://crbug.com/dawn/666):
+    Vulkan has a pure stencil8 format but it is not universally available.
+    When this toggle is on, the backend will use S8 for the stencil8 format,
+    otherwise it will fallback to D32S8 or D24S8.
+
+*   disallow_spirv: 
+    (https://crbug.com/1214923):
+    Disallow usage of SPIR-V completely so that only WGSL is used for shader
+    modules. This is useful to prevent a Chromium renderer process from
+    successfully sending SPIR-V code to be compiled in the GPU process.
+
+*   vulkan_use_demote_to_helper_invocation_extension: 
+    (https://crbug.com/42250787):
+    Sets the use of the vulkan demote to helper extension
+
+*   use_placeholder_fragment_in_vertex_only_pipeline: 
+    (https://crbug.com/dawn/136):
+    Use a placeholder empty fragment shader in vertex only render pipeline.
+    This toggle must be enabled for OpenGL ES backend, the Vulkan Backend, and
+    serves as a workaround by default enabled on some Metal devices with Intel
+    GPU to ensure the depth result is correct.
+
+*   use_vulkan_zero_initialize_workgroup_memory_extension: 
+    (https://crbug.com/dawn/1302):
+    Initialize workgroup memory with OpConstantNull on Vulkan when the Vulkan
+    extension VK_KHR_zero_initialize_workgroup_memory is supported.
+
+*   use_vulkan_memory_model: 
+    (https://crbug.com/392606604):
+    Use the Vulkan Memory Model if available.
+
+*   vulkan_direct_variable_access_transform_handle: 
+    (https://crbug.com/387000529):
+    Transform handles using direct variable access.
+
+*   enable_integer_range_analysis_in_robustness: 
+    (https://crbug.com/348701956):
+    Compute the range of the index with Integer Range Analysis in the
+    robustness transform and skip doing index clamping when the out of bound
+    access cannot happen.
+
+*   use_spirv_1_4: 
+    (https://crbug.com/422421915):
+    Use SPIR-V 1.4 if available
+
+*   blob_cache_hash_validation: 
+    (https://crbug.com/429938352):
+    Enable hash validation when loading/storing from/to the blob cache
+
+*   decompose_uniform_buffers: 
+    (https://crbug.com/448452698):
+    Decompose uniform buffers into arrays of vec4<u32> on backends for Vulkan
+    and OpenGL.
+
+*   enable_spirv_validation: 
+    (https://crbug.com/473526415):
+    Enable validation of SPIR-V generated by Tint.
+
+*   vulkan_use_create_render_pass_2: 
+    (https://crbug.com/chromium/463893793):
+    Makes use of VK_KHR_create_renderpass2 when creating VkRenderPass objects.
+    Ignored when vulkan_use_dynamic_rendering is enabled.
+
+*   wait_is_thread_safe: 
+    (https://crbug.com/412761228):
+    WaitFor* functions are thread-safe and can be called without the
+    device-lock if implicit synchronization is enabled.
+
+[WebGPU Required Toggles - enabled]
+-----------------------------------
+*   disallow_spirv: 
+    (https://crbug.com/1214923):
+    Disallow usage of SPIR-V completely so that only WGSL is used for shader
+    modules. This is useful to prevent a Chromium renderer process from
+    successfully sending SPIR-V code to be compiled in the GPU process.
+
+[WebGPU Required Toggles - disabled]
+------------------------------------
+*   timestamp_quantization: 
+    (https://crbug.com/dawn/1800):
+    Enable timestamp queries quantization to reduce the precision of timers
+    that can be created with timestamp queries.
+
+[Skia Required Toggles - enabled]
+---------------------------------
+*   disable_robustness: 
+    (https://crbug.com/dawn/480):
+    Disable robust buffer access
+
+*   skip_validation: 
+    (https://crbug.com/dawn/271):
+    Skip expensive validation of Dawn commands.
+
+*   disable_lazy_clear_for_mapped_at_creation_buffer: 
+    (https://crbug.com/dawn/145):
+    Disable clearing buffers to zero for buffers which are mapped at creation.
+
+*   vulkan_monolithic_pipeline_cache: 
+    (crbug.com/370343334):
+    Use a monolithic VkPipelineCache per device. The embedder is responsible
+    for calling PerformIdleTasks() on the device to serialize VkPipelineCache
+    to BlobCache if needed.
+
+Compositor Information
+======================
+Tile Update Mode: Zero-copy
+Partial Raster  : Enabled
+
+Display(s) Information
+======================
+Info                          : Display[1] bounds=[0,0 1512x982], workarea=[0,33 1512x891], scale=2, rotation=0, panel_rotation=0 internal detected
+Color space (SDR)             : {primaries:P3, transfer:{0.0777*x + 0.0000 if abs(x) < 0.0450 else sign(x)*((0.9495*abs(x) + 0.0495)**2.3955 + 0.0003)}, matrix:RGB, range:FULL}
+Buffer format (SDR)           : BGRA_8888
+Color space (HDR)             : {primaries:BT709, transfer:SRGB_HDR, matrix:RGB, range:FULL}
+Buffer format (HDR)           : RGBA_F16
+Color volume                  : {name:'p3', r:[0.6800, 0.3200], g:[0.2650, 0.6900], b:[0.1500, 0.0600], w:[0.3127, 0.3290]}
+SDR white level in nits       : 203
+HDR relative maximum luminance: 13.278119087219238
+Bits per color component      : 10
+Bits per pixel                : 30
+Refresh Rate in Hz            : 120
+
+Video Acceleration Information
+==============================
+Decoding                      : 
+Decode h264 baseline          : 64x64 to 4096x4096 pixels
+Decode h264 main              : 64x64 to 4096x4096 pixels
+Decode h264 extended          : 64x64 to 4096x4096 pixels
+Decode h264 high              : 64x64 to 4096x4096 pixels
+Decode vp9 profile0           : 64x64 to 4096x4096 pixels
+Decode vp9 profile2           : 64x64 to 4096x4096 pixels
+Decode hevc main              : 16x16 to 8192x8192 pixels
+Decode hevc main 10           : 16x16 to 8192x8192 pixels
+Decode hevc main still-picture: 16x16 to 8192x8192 pixels
+Decode hevc range extensions  : 16x16 to 8192x8192 pixels
+Encoding                      : 
+Encode h264 baseline          : 16x16 to 4096x2304 pixels, and/or 120.000 fps.
+Encode h264 baseline          : 16x16 to 2304x4096 pixels, and/or 120.000 fps.
+Encode h264 baseline          : 16x16 to 4096x2304 pixels, and/or 120.000 fps (software codec).
+Encode h264 baseline          : 16x16 to 2304x4096 pixels, and/or 120.000 fps (software codec).
+Encode h264 main              : 16x16 to 4096x2304 pixels, and/or 120.000 fps.
+Encode h264 main              : 16x16 to 2304x4096 pixels, and/or 120.000 fps.
+Encode h264 main              : 16x16 to 4096x2304 pixels, and/or 120.000 fps (software codec).
+Encode h264 main              : 16x16 to 2304x4096 pixels, and/or 120.000 fps (software codec).
+Encode h264 high              : 16x16 to 4096x2304 pixels, and/or 120.000 fps.
+Encode h264 high              : 16x16 to 2304x4096 pixels, and/or 120.000 fps.
+Encode h264 high              : 16x16 to 4096x2304 pixels, and/or 120.000 fps (software codec).
+Encode h264 high              : 16x16 to 2304x4096 pixels, and/or 120.000 fps (software codec).
+Encode hevc main              : 16x16 to 8192x4352 pixels, and/or 120.000 fps.
+Encode hevc main              : 16x16 to 4352x8192 pixels, and/or 120.000 fps.
+Encode hevc main              : 16x16 to 8192x4352 pixels, and/or 120.000 fps (software codec).
+Encode hevc main              : 16x16 to 4352x8192 pixels, and/or 120.000 fps (software codec).
+
+Vulkan Information
+==================
+
+Device Performance Information
+==============================
+
+Log Messages
+============
