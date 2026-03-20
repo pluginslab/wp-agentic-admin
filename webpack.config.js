@@ -20,6 +20,9 @@ module.exports = {
 		// Block editor sidebar plugin
 		editor: path.resolve( __dirname, 'src/extensions/editor.js' ),
 
+		// Admin-wide chat sidebar (all wp-admin pages)
+		'admin-sidebar': path.resolve( __dirname, 'src/extensions/admin-sidebar.js' ),
+
 		// Service Worker - needs to be a self-contained bundle
 		sw: {
 			import: path.resolve( __dirname, 'src/extensions/sw.js' ),
