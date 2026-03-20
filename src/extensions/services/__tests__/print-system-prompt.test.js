@@ -1,13 +1,10 @@
 /**
- * Utility "test" to print the system prompt to the terminal.
+ * Utility test to print the current system prompt to the terminal.
  *
- * Run with: npm test -- --testPathPattern=print-system-prompt
+ * Run with: npm test -- --testPathPattern=print-system-prompt --silent=false
  */
 
 import { ReactAgent } from '../react-agent';
-import instructionRegistry from '../instruction-registry';
-import { ToolRegistry } from '../tool-registry';
-import { registerAllInstructions } from '../../instructions';
 
 jest.mock( '../../utils/logger', () => ( {
 	createLogger: () => ( {
@@ -18,7 +15,6 @@ jest.mock( '../../utils/logger', () => ( {
 	} ),
 } ) );
 
-// Minimal mock tools matching the ability IDs used by instructions
 const MOCK_TOOLS = [
 	{ id: 'wp-agentic-admin/plugin-list', label: 'List Plugins', description: 'List all installed plugins', keywords: [ 'plugin' ], execute: jest.fn() },
 	{ id: 'wp-agentic-admin/plugin-activate', label: 'Activate Plugin', description: 'Activate a plugin by name', keywords: [ 'activate' ], execute: jest.fn() },
@@ -36,67 +32,23 @@ const MOCK_TOOLS = [
 	{ id: 'wp-agentic-admin/cron-list', label: 'List Cron', description: 'List scheduled cron events', keywords: [ 'cron' ], execute: jest.fn() },
 ];
 
-function makeAgent() {
-	const toolRegistry = new ToolRegistry();
-	MOCK_TOOLS.forEach( ( t ) => toolRegistry.register( t ) );
-
-	return new ReactAgent(
-		{ getEngine: jest.fn() },
-		toolRegistry,
-		{},
-		instructionRegistry
-	);
-}
-
-function printPrompt( label, prompt ) {
-	// Use process.stdout to bypass @wordpress/jest-console
-	process.stdout.write( `\n=== ${ label } ===\n\n${ prompt }\n\n=== END ===\n\n` );
-}
-
-beforeAll( () => {
-	instructionRegistry.clear();
-	registerAllInstructions();
-} );
-
-afterAll( () => {
-	instructionRegistry.clear();
-} );
-
 describe( 'Print System Prompt', () => {
-	it( 'no instructions active', () => {
-		const agent = makeAgent();
-		const prompt = agent.buildSystemPromptPromptBased();
+	it( 'prints the current system prompt', () => {
+		const mockToolRegistry = {
+			getAll: jest.fn( () => MOCK_TOOLS ),
+			get: jest.fn( ( id ) => MOCK_TOOLS.find( ( t ) => t.id === id ) ),
+		};
 
-		printPrompt( 'NO INSTRUCTIONS ACTIVE', prompt );
-
-		expect( prompt ).toContain( 'AVAILABLE INSTRUCTIONS' );
-	} );
-
-	it( 'with "diagnostics" pre-loaded', () => {
-		const agent = makeAgent();
-		agent.activeInstructions.add( 'diagnostics' );
-
-		const prompt = agent.buildSystemPromptPromptBased();
-
-		printPrompt( 'DIAGNOSTICS ACTIVE', prompt );
-
-		expect( prompt ).toContain( 'error-log-read' );
-		expect( prompt ).toContain( 'Start with error-log-read' );
-	} );
-
-	it( 'with "plugins" + "database" pre-loaded', () => {
-		const agent = makeAgent();
-		agent.activeInstructions.add( 'plugins' );
-		agent.activeInstructions.add( 'database' );
-
-		const prompt = agent.buildSystemPromptPromptBased();
-
-		printPrompt( 'PLUGINS + DATABASE ACTIVE', prompt );
-
-		expect( prompt ).toContain( 'plugin-list' );
-		expect( prompt ).toContain( 'revision-cleanup' );
-		expect( prompt ).toContain(
-			'Run revision-cleanup before db-optimize'
+		const agent = new ReactAgent(
+			{ getEngine: jest.fn() },
+			mockToolRegistry
 		);
+
+		const prompt = agent.buildSystemPromptPromptBased();
+		process.stdout.write( `\n=== SYSTEM PROMPT ===\n\n${ prompt }\n\n=== END ===\n\n` );
+
+		expect( prompt ).toContain( 'TOOLS:' );
+		expect( prompt ).toContain( 'FORMAT' );
+		expect( prompt ).toContain( 'RULES:' );
 	} );
 } );
