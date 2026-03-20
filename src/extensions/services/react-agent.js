@@ -316,12 +316,37 @@ class ReactAgent {
 						userMessage
 					);
 
+					// Resolve the actual tool object (handles bare names without namespace).
+					const executedTool =
+						this.toolRegistry.get( toolName ) ||
+						this.toolRegistry.get(
+							`wp-agentic-admin/${ toolName }`
+						);
+
 					toolsUsed.push( toolName );
 					observations.push( {
 						tool: toolName,
 						args: toolArgs,
 						result: toolResult,
 					} );
+
+					// Short-circuit: if the tool handles its own display, skip the
+					// second LLM call and return summarize() output directly.
+					// This prevents the LLM from truncating large results (e.g. file content).
+					if ( executedTool?.preferSummarize && toolResult?.data ) {
+						const summarized = executedTool.summarize(
+							toolResult.data,
+							userMessage
+						);
+						return {
+							success: true,
+							finalAnswer: summarized,
+							skipStreaming: true,
+							iterations: iteration,
+							toolsUsed,
+							observations,
+						};
+					}
 
 					// Truncate result if too large (prevent context window overflow)
 					const resultStr = JSON.stringify( toolResult );
@@ -667,7 +692,18 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
-		const tool = this.toolRegistry.get( toolId );
+		let tool = this.toolRegistry.get( toolId );
+
+		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
+		// of "wp-agentic-admin/read-file"). Try the default namespace before giving up.
+		if ( ! tool && ! toolId.includes( '/' ) ) {
+			tool = this.toolRegistry.get( `wp-agentic-admin/${ toolId }` );
+			if ( tool ) {
+				log.warn(
+					`Tool "${ toolId }" not found — resolved to "wp-agentic-admin/${ toolId }"`
+				);
+			}
+		}
 
 		if ( ! tool ) {
 			log.error( 'Tool not found:', toolId );

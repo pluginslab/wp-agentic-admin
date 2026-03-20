@@ -39,6 +39,140 @@ const formatTime = ( timestamp ) => {
 };
 
 /**
+ * Split message content into text and fenced code block segments.
+ *
+ * @param {string} text - Full message content
+ * @return {Array<{type:'text'|'code', content:string, lang?:string, partial?:boolean}>} Parsed blocks — partial is true for unclosed fences during streaming
+ */
+const parseBlocks = ( text ) => {
+	if ( ! text ) {
+		return [];
+	}
+
+	const blocks = [];
+	const fenceRe = /```(\w*)\n([\s\S]*?)```/g;
+	let lastIndex = 0;
+	let match;
+
+	while ( ( match = fenceRe.exec( text ) ) !== null ) {
+		if ( match.index > lastIndex ) {
+			blocks.push( {
+				type: 'text',
+				content: text.slice( lastIndex, match.index ),
+			} );
+		}
+		blocks.push( {
+			type: 'code',
+			lang: match[ 1 ] || '',
+			content: match[ 2 ],
+			partial: false,
+		} );
+		lastIndex = match.index + match[ 0 ].length;
+	}
+
+	// Handle an in-progress (unclosed) fenced code block during streaming.
+	const remaining = text.slice( lastIndex );
+	const openFence = remaining.match( /```(\w*)\n([\s\S]*)$/ );
+	if ( openFence ) {
+		const textBefore = remaining.slice( 0, openFence.index );
+		if ( textBefore ) {
+			blocks.push( { type: 'text', content: textBefore } );
+		}
+		blocks.push( {
+			type: 'code',
+			lang: openFence[ 1 ] || '',
+			content: openFence[ 2 ],
+			partial: true,
+		} );
+	} else if ( remaining ) {
+		blocks.push( { type: 'text', content: remaining } );
+	}
+
+	return blocks;
+};
+
+/**
+ * Code block component with language badge and copy button.
+ *
+ * @param {Object}  props         - Component props
+ * @param {string}  props.lang    - Language identifier (e.g. 'php', 'apache')
+ * @param {string}  props.code    - Raw code content
+ * @param {boolean} props.partial - True while the block is still streaming
+ * @return {JSX.Element} Rendered code block
+ */
+const CodeBlock = ( { lang, code, partial = false } ) => {
+	const [ codeCopied, setCodeCopied ] = useState( false );
+
+	const handleCodeCopy = async () => {
+		try {
+			await navigator.clipboard.writeText( code );
+			setCodeCopied( true );
+			setTimeout( () => setCodeCopied( false ), 2000 );
+		} catch ( err ) {
+			// Clipboard not available
+		}
+	};
+
+	return (
+		<div className="agentic-code-block">
+			<div className="agentic-code-block__header">
+				<span className="agentic-code-block__lang">
+					{ lang || 'code' }
+				</span>
+				{ ! partial && (
+					<button
+						className={ `agentic-code-block__copy ${
+							codeCopied ? 'agentic-code-block__copy--copied' : ''
+						}` }
+						onClick={ handleCodeCopy }
+						type="button"
+						title={ codeCopied ? 'Copied!' : 'Copy code' }
+					>
+						{ codeCopied ? (
+							<svg
+								width="13"
+								height="13"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+							>
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						) : (
+							<svg
+								width="13"
+								height="13"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<rect
+									x="9"
+									y="9"
+									width="13"
+									height="13"
+									rx="2"
+									ry="2"
+								/>
+								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+							</svg>
+						) }
+						<span className="agentic-code-block__copy-label">
+							{ codeCopied ? 'Copied!' : 'Copy' }
+						</span>
+					</button>
+				) }
+			</div>
+			<pre className="agentic-code-block__body">
+				<code>{ code }</code>
+			</pre>
+		</div>
+	);
+};
+
+/**
  * Parse simple markdown to React elements
  * Supports: **bold**, `code`, and line breaks
  *
@@ -60,7 +194,9 @@ const parseMarkdown = ( text ) => {
 		const boldMatch = remaining.match( /^\*\*(.+?)\*\*/ );
 		if ( boldMatch ) {
 			parts.push(
-				<strong key={ keyIndex++ }>{ boldMatch[ 1 ] }</strong>
+				<strong key={ keyIndex++ }>
+					{ parseMarkdown( boldMatch[ 1 ] ) }
+				</strong>
 			);
 			remaining = remaining.slice( boldMatch[ 0 ].length );
 			continue;
@@ -346,18 +482,34 @@ const MessageItem = ( { message } ) => {
 				<div className="agentic-message__content">
 					{ displayContent && (
 						<div className="agentic-message__text">
-							{ displayContent
-								.split( '\n' )
-								.map( ( line, index ) => {
-									if ( line.trim() === '' ) {
-										return null;
+							{ parseBlocks( displayContent ).map(
+								( block, blockIndex ) => {
+									if ( block.type === 'code' ) {
+										return (
+											<CodeBlock
+												key={ blockIndex }
+												lang={ block.lang }
+												code={ block.content }
+												partial={ block.partial }
+											/>
+										);
 									}
-									return (
-										<p key={ index }>
-											{ parseMarkdown( line ) }
-										</p>
-									);
-								} ) }
+									return block.content
+										.split( '\n' )
+										.map( ( line, lineIndex ) => {
+											if ( line.trim() === '' ) {
+												return null;
+											}
+											return (
+												<p
+													key={ `${ blockIndex }-${ lineIndex }` }
+												>
+													{ parseMarkdown( line ) }
+												</p>
+											);
+										} );
+								}
+							) }
 						</div>
 					) }
 					<div className="agentic-message__footer">

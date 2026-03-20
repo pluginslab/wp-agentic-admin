@@ -29,6 +29,7 @@ import { registerDiskUsage } from './disk-usage';
 import { registerCommentStats } from './comment-stats';
 import { registerSecurityScan } from './security-scan';
 import { registerPostList } from './post-list';
+import { registerReadFile } from './read-file';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 
@@ -52,6 +53,7 @@ export { registerDiskUsage } from './disk-usage';
 export { registerCommentStats } from './comment-stats';
 export { registerSecurityScan } from './security-scan';
 export { registerPostList } from './post-list';
+export { registerReadFile } from './read-file';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
 
@@ -84,6 +86,7 @@ export function registerAllAbilities() {
 	registerCommentStats();
 	registerSecurityScan();
 	registerPostList();
+	registerReadFile();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities

@@ -191,6 +191,10 @@ class Abilities {
 			wp_agentic_admin_register_post_list();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_read_file' ) ) {
+			wp_agentic_admin_register_read_file();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
