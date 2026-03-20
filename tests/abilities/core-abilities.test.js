@@ -136,6 +136,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/backup-check',
 		},
 
+		// ── File writing ──────────────────────────────────────────
+		{
+			input: 'add a line to my functions.php',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+		{
+			input: 'edit the wp-config.php to enable debug mode',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
