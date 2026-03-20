@@ -196,8 +196,8 @@ const ModelStatus = ( {
 	const [ contextUsage, setContextUsage ] = useState( null );
 	const [ isServiceWorkerMode, setIsServiceWorkerMode ] = useState( false );
 
-	// Remote provider state
-	const savedSettings = getSavedProviderSettings();
+	// Remote provider state — lazy initializer to avoid reading localStorage on every render
+	const [ savedSettings ] = useState( getSavedProviderSettings );
 	const [ providerMode, setProviderMode ] = useState(
 		savedSettings.provider
 	);
@@ -571,20 +571,17 @@ const ModelStatus = ( {
 
 					{ status === 'checking' && <Spinner /> }
 
-					{ ( status === 'not-loaded' ||
-						status === 'error' ||
-						status === 'ready' ) &&
-						status === 'ready' && (
-							<div className="wp-agentic-admin-status__controls">
-								<Button
-									variant="secondary"
-									onClick={ handleUnloadModel }
-									className="wp-agentic-admin-load-model"
-								>
-									Unload Model
-								</Button>
-							</div>
-						) }
+					{ status === 'ready' && (
+						<div className="wp-agentic-admin-status__controls">
+							<Button
+								variant="secondary"
+								onClick={ handleUnloadModel }
+								className="wp-agentic-admin-load-model"
+							>
+								Unload Model
+							</Button>
+						</div>
+					) }
 				</div>
 			) }
 
