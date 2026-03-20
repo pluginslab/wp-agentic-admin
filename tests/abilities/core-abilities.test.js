@@ -136,6 +136,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/backup-check',
 		},
 
+		// ── Database queries ──────────────────────────────────────
+		{
+			input: 'how many posts have more than 10 comments?',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+		{
+			input: 'show me the last 5 options changed in the database',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
