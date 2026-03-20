@@ -33,6 +33,7 @@ import { registerErrorLogSearch } from './error-log-search';
 import { registerOpcodeCacheStatus } from './opcode-cache-status';
 import { registerBackupCheck } from './backup-check';
 import { registerWriteFile } from './write-file';
+import { registerQueryDatabase } from './query-database';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerVerifyCoreChecksums } from './verify-core-checksums';
@@ -64,6 +65,7 @@ export { registerErrorLogSearch } from './error-log-search';
 export { registerOpcodeCacheStatus } from './opcode-cache-status';
 export { registerBackupCheck } from './backup-check';
 export { registerWriteFile } from './write-file';
+export { registerQueryDatabase } from './query-database';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerVerifyCoreChecksums } from './verify-core-checksums';
@@ -104,6 +106,7 @@ export function registerAllAbilities() {
 	registerOpcodeCacheStatus();
 	registerBackupCheck();
 	registerWriteFile();
+	registerQueryDatabase();
 
 	// Security abilities
 	registerVerifyCoreChecksums();

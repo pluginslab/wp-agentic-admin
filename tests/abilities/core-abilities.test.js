@@ -146,6 +146,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/write-file',
 		},
 
+		// ── Database queries ──────────────────────────────────────
+		{
+			input: 'run a SQL query to check the wp_options table',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+		{
+			input: 'query the database for autoloaded options',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',

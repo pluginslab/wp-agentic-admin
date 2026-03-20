@@ -235,6 +235,10 @@ class Abilities {
 			wp_agentic_admin_register_write_file();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_query_database' ) ) {
+			wp_agentic_admin_register_query_database();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
