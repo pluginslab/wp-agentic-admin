@@ -86,6 +86,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/disk-usage',
 		},
 
+		// ── OPcache status ────────────────────────────────────────
+		{
+			input: 'what is the opcache status?',
+			expectTool: 'wp-agentic-admin/opcode-cache-status',
+		},
+		{
+			input: 'is PHP opcode caching enabled?',
+			expectTool: 'wp-agentic-admin/opcode-cache-status',
+		},
+
 		// ── Comment stats ─────────────────────────────────────────
 		{
 			input: 'how many comments does my site have?',
