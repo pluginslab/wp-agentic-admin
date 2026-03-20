@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: PHP lint, JS lint, unit tests, build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Cache Composer files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            ~/.cache/composer
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: PHP lint
+        run: composer lint
+
+      - name: JS lint
+        run: npm run lint:js
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build check
+        run: npm run build
+
+  ability-tests:
+    name: Ability tests with Ollama
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Cache Ollama models
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama
+          key: ${{ runner.os }}-ollama-${{ hashFiles('.github/workflows/ci.yml', 'package-lock.json', 'tests/abilities/**') }}
+          restore-keys: |
+            ${{ runner.os }}-ollama-
+
+      - name: Install Ollama
+        run: curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Start Ollama
+        run: |
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:11434/api/tags >/dev/null && exit 0
+            sleep 1
+          done
+          echo "Ollama did not start"
+          cat /tmp/ollama.log || true
+          exit 1
+
+      - name: Pull test model
+        run: ollama pull qwen3:1.7b
+
+      - name: Run ability tests
+        run: npm run test:abilities -- --file tests/abilities/core-abilities.test.js --model qwen3:1.7b
+
+      - name: Dump Ollama log on failure
+        if: failure()
+        run: cat /tmp/ollama.log || true
