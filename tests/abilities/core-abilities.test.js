@@ -32,6 +32,20 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/plugin-deactivate',
 		},
 
+		// ── Theme management ──────────────────────────────────────
+		{
+			input: 'list installed themes',
+			expectTool: 'wp-agentic-admin/theme-list',
+		},
+		{
+			input: 'which theme is active on my site?',
+			expectTool: 'wp-agentic-admin/theme-list',
+		},
+		{
+			input: 'show me all themes',
+			expectTool: 'wp-agentic-admin/theme-list',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
