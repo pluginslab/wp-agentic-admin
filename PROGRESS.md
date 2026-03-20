@@ -11,6 +11,12 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
 
+### AI Sidebar Everywhere + Kebab Menu (PRs #80, #91)
+- **Admin bar sidebar** (PR #80 by @Stefan0x) — AI chat toggle in the WordPress admin bar, available on every wp-admin page. Slide-in panel with overlay, responsive mobile support, separate webpack entry point.
+- **Model unload dropdown** (PR #91) — kebab menu replaces plain "Unload Model" button, room for future model actions.
+
+The AI assistant is now accessible from **3 places**: the plugin settings page, the Gutenberg block editor, and every wp-admin page via the admin bar. **17 PRs merged**.
+
 ### 3 More PRs Merged! — write-file, query-database, website-hacked-check
 - **write-file** (PR #89 by @ivdimova) — edit WordPress files with automatic backup and append mode
 - **query-database** (PR #90 by @ivdimova) — read-only SQL queries for site inspection
