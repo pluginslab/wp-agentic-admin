@@ -25,6 +25,7 @@ import { registerRevisionCleanup } from './revision-cleanup';
 import { registerThemeList } from './theme-list';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerCoreEditorBlocks } from './core-editor-blocks';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -42,6 +43,7 @@ export { registerRevisionCleanup } from './revision-cleanup';
 export { registerThemeList } from './theme-list';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerCoreEditorBlocks } from './core-editor-blocks';
 
 /**
  * Register all abilities.
@@ -72,6 +74,7 @@ export function registerAllAbilities() {
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
 	registerCoreEnvironmentInfo();
+	registerCoreEditorBlocks();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }
