@@ -957,6 +957,27 @@
 		margin-left: auto;
 	}
 
+	.wp-agentic-admin-status__kebab-menu {
+		margin-left: auto;
+		flex-shrink: 0;
+
+		.components-button {
+			color: #646970;
+			min-width: 36px;
+			height: 36px;
+			padding: 0;
+
+			&:hover {
+				color: #1d2327;
+			}
+
+			&:focus {
+				box-shadow: none;
+				outline: 1px dotted #646970;
+			}
+		}
+	}
+
 	.wp-agentic-admin-model-select {
 		padding: 4px 8px;
 		border: 1px solid #8c8f94;

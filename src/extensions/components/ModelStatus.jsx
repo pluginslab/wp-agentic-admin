@@ -6,7 +6,14 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Button, Spinner } from '@wordpress/components';
+import {
+	Button,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
+	Spinner,
+} from '@wordpress/components';
+import { moreVertical } from '@wordpress/icons';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
@@ -273,30 +280,6 @@ const ModelStatus = ( {
 		}
 	};
 
-	/**
-	 * Get button text based on status
-	 */
-	const getButtonText = () => {
-		switch ( status ) {
-			case 'error':
-				return 'Retry';
-			case 'ready':
-				return 'Unload Model';
-			default:
-				return 'Load Model';
-		}
-	};
-
-	/**
-	 * Get button click handler
-	 */
-	const getButtonHandler = () => {
-		if ( status === 'ready' ) {
-			return handleUnloadModel;
-		}
-		return handleLoadModel;
-	};
-
 	// Get current loading stage info - use init values during init phase, otherwise use model loader values
 	const isInInitPhase = initPhase === 'checking';
 	const displayProgress = isInInitPhase ? initProgress : progress;
@@ -427,49 +410,61 @@ const ModelStatus = ( {
 
 					{ status === 'checking' && <Spinner /> }
 
-					{ ( status === 'not-loaded' ||
-						status === 'error' ||
-						status === 'ready' ) && (
-						<div className="wp-agentic-admin-status__controls">
-							{ status !== 'ready' && (
-								<select
-									className="wp-agentic-admin-model-select"
-									value={ selectedModel }
-									onChange={ ( e ) => {
-										const modelId = e.target.value;
-										setSelectedModel( modelId );
-										saveModel( modelId );
-									} }
-									disabled={
-										status === 'loading' ||
-										status === 'checking'
-									}
-								>
-									{ availableModels.map( ( model ) => (
-										<option
-											key={ model.id }
-											value={ model.id }
-										>
-											{ model.name } ({ model.size })
-											{ model.recommended
-												? ' - Recommended'
-												: '' }
-										</option>
-									) ) }
-								</select>
+					{ status === 'ready' && (
+						<DropdownMenu
+							icon={ moreVertical }
+							label="Model options"
+							className="wp-agentic-admin-status__kebab-menu"
+						>
+							{ ( { onClose } ) => (
+								<MenuGroup>
+									<MenuItem
+										onClick={ () => {
+											handleUnloadModel();
+											onClose();
+										} }
+									>
+										Unload model
+									</MenuItem>
+								</MenuGroup>
 							) }
-							<Button
-								variant={
-									status === 'ready' ? 'secondary' : 'primary'
+						</DropdownMenu>
+					) }
+
+					{ ( status === 'not-loaded' || status === 'error' ) && (
+						<div className="wp-agentic-admin-status__controls">
+							<select
+								className="wp-agentic-admin-model-select"
+								value={ selectedModel }
+								onChange={ ( e ) => {
+									const modelId = e.target.value;
+									setSelectedModel( modelId );
+									saveModel( modelId );
+								} }
+								disabled={
+									status === 'loading' ||
+									status === 'checking'
 								}
-								onClick={ getButtonHandler() }
+							>
+								{ availableModels.map( ( model ) => (
+									<option key={ model.id } value={ model.id }>
+										{ model.name } ({ model.size })
+										{ model.recommended
+											? ' - Recommended'
+											: '' }
+									</option>
+								) ) }
+							</select>
+							<Button
+								variant="primary"
+								onClick={ handleLoadModel }
 								disabled={
 									status === 'loading' ||
 									status === 'checking'
 								}
 								className="wp-agentic-admin-load-model"
 							>
-								{ getButtonText() }
+								{ status === 'error' ? 'Retry' : 'Load Model' }
 							</Button>
 						</div>
 					) }
