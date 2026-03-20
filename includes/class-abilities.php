@@ -196,6 +196,14 @@ class Abilities {
 			wp_agentic_admin_register_file_scan();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_uploads_scan' ) ) {
+			wp_agentic_admin_register_uploads_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_role_capabilities_check' ) ) {
+			wp_agentic_admin_register_role_capabilities_check();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *

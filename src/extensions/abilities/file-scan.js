@@ -83,6 +83,13 @@ export function registerFileScan() {
 					`**Themes scanned** (${ result.themes_scanned.length }): ${ names }`
 				);
 			}
+			if ( result.mu_plugins_scanned?.length > 0 ) {
+				lines.push(
+					`**MU-Plugins scanned** (${ result.mu_plugins_scanned.length }): ${ result.mu_plugins_scanned.join( ', ' ) }`
+				);
+			} else {
+				lines.push( '**MU-Plugins scanned:** none found' );
+			}
 
 			// Show findings as a table.
 			if ( result.findings && result.findings.length > 0 ) {

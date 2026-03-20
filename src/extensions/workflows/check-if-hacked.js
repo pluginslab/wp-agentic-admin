@@ -59,6 +59,10 @@ export function registerCheckIfHackedWorkflow() {
 				abilityId: 'wp-agentic-admin/file-scan',
 				label: 'Scan theme and plugin PHP files for malware patterns',
 			},
+			{
+				abilityId: 'wp-agentic-admin/role-capabilities-check',
+				label: 'Check role capabilities for privilege escalation',
+			},
 		],
 
 		// Read-only — no confirmation needed.
@@ -230,6 +234,13 @@ export function registerCheckIfHackedWorkflow() {
 						`Themes (${ fs.themes_scanned.length }): ${ names }`
 					);
 				}
+				if ( fs.mu_plugins_scanned?.length > 0 ) {
+					lines.push(
+						`MU-Plugins (${ fs.mu_plugins_scanned.length }): ${ fs.mu_plugins_scanned.join( ', ' ) }`
+					);
+				} else {
+					lines.push( 'MU-Plugins: none found' );
+				}
 
 				if ( fs.total_hits === 0 ) {
 					lines.push(
@@ -260,10 +271,76 @@ export function registerCheckIfHackedWorkflow() {
 
 			lines.push( '' );
 
+			// --- Role capabilities table ---
+			const roleResult = results.find(
+				( r ) =>
+					r.abilityId ===
+					'wp-agentic-admin/role-capabilities-check'
+			);
+
+			lines.push( '**Role Capabilities**' );
+
+			if ( roleResult?.success && roleResult.result ) {
+				const rc = roleResult.result;
+
+				if (
+					rc.total_issues === 0 &&
+					( ! rc.extra_roles || rc.extra_roles.length === 0 )
+				) {
+					lines.push(
+						'All default roles match expected capabilities.'
+					);
+				} else {
+					const modified = ( rc.roles || [] ).filter(
+						( r ) => r.status === 'modified'
+					);
+
+					if ( modified.length > 0 ) {
+						allClear = false;
+						lines.push( '' );
+						lines.push(
+							'| Role | Added Capabilities | Removed | Risk |'
+						);
+						lines.push( '|---|---|---|---|' );
+
+						for ( const role of modified ) {
+							const added =
+								role.added?.length > 0
+									? role.added.join( ', ' )
+									: '—';
+							const removed =
+								role.removed?.length > 0
+									? role.removed.join( ', ' )
+									: '—';
+							lines.push(
+								`| ${ role.role_name } | ${ added } | ${ removed } | ${ role.risk_score }/10 |`
+							);
+						}
+					}
+
+					if ( rc.extra_roles?.length > 0 ) {
+						const dangerous = rc.extra_roles.filter(
+							( r ) => r.has_admin
+						);
+						if ( dangerous.length > 0 ) {
+							allClear = false;
+							lines.push( '' );
+							lines.push(
+								`Non-default roles with admin access: ${ dangerous.map( ( r ) => `**${ r.role_name }**` ).join( ', ' ) }`
+							);
+						}
+					}
+				}
+			} else {
+				lines.push( 'Could not check role capabilities.' );
+			}
+
+			lines.push( '' );
+
 			// --- Verdict ---
 			if ( allClear ) {
 				lines.push(
-					'**Result:** No signs of tampering detected. Checksums verified, database clean, no malware patterns in files.'
+					'**Result:** No signs of tampering detected. Checksums verified, database clean, no malware patterns in files, roles intact.'
 				);
 			} else {
 				lines.push(

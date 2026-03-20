@@ -205,6 +205,12 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 
 	if ( $scan_plugins ) {
 		$dirs_to_scan[] = WP_PLUGIN_DIR;
+
+		// Also scan must-use plugins if the directory exists.
+		$mu_dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		if ( is_dir( $mu_dir ) ) {
+			$dirs_to_scan[] = $mu_dir;
+		}
 	}
 
 	if ( $scan_themes ) {
@@ -213,8 +219,9 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 
 	$files_scanned   = 0;
 	$findings        = array();
-	$scanned_plugins = array();
-	$scanned_themes  = array();
+	$scanned_plugins    = array();
+	$scanned_themes     = array();
+	$scanned_mu_plugins = array();
 
 	// Directories to skip (build artifacts, vendor dependencies, and this plugin).
 	$skip_dirs = array( 'node_modules', 'vendor', '.git', 'build', 'dist' );
@@ -278,7 +285,10 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 			)
 		);
 
-		$is_plugin_dir = wp_normalize_path( $dir ) === wp_normalize_path( WP_PLUGIN_DIR );
+		$normalized_dir  = wp_normalize_path( $dir );
+		$is_plugin_dir   = $normalized_dir === wp_normalize_path( WP_PLUGIN_DIR );
+		$mu_plugin_dir   = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$is_mu_dir       = $normalized_dir === wp_normalize_path( $mu_plugin_dir );
 
 		foreach ( $iterator as $file_info ) {
 			if ( ! $file_info->isFile() ) {
@@ -295,10 +305,15 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 			$file_path = $file_info->getPathname();
 			$relative  = wp_agentic_admin_get_content_relative_path( $file_path );
 
-			// Track which plugin/theme this file belongs to.
+			// Track which plugin/theme/mu-plugin this file belongs to.
 			$relative_to_dir = substr( $file_path, strlen( $dir ) + 1 );
 			$top_dir         = strstr( $relative_to_dir, '/', true );
-			if ( $top_dir ) {
+
+			if ( $is_mu_dir ) {
+				// MU-plugins can be single files or directories.
+				$mu_name = $top_dir ? $top_dir : $file_info->getFilename();
+				$scanned_mu_plugins[ $mu_name ] = true;
+			} elseif ( $top_dir ) {
 				if ( $is_plugin_dir ) {
 					$scanned_plugins[ $top_dir ] = true;
 				} else {
@@ -360,19 +375,22 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 	}
 
 	// Resolve scanned plugin/theme slugs to names.
-	$plugins_list = wp_agentic_admin_resolve_plugin_names( array_keys( $scanned_plugins ) );
-	$themes_list  = wp_agentic_admin_resolve_theme_names( array_keys( $scanned_themes ) );
+	$plugins_list    = wp_agentic_admin_resolve_plugin_names( array_keys( $scanned_plugins ) );
+	$themes_list     = wp_agentic_admin_resolve_theme_names( array_keys( $scanned_themes ) );
+	$mu_plugins_list = array_keys( $scanned_mu_plugins );
+	sort( $mu_plugins_list );
 
 	return array(
-		'success'         => true,
-		'message'         => $message,
-		'files_scanned'   => $files_scanned,
-		'total_hits'      => $total_hits,
-		'filtered_out'    => $filtered_out,
-		'risk_threshold'  => $risk_threshold,
-		'plugins_scanned' => $plugins_list,
-		'themes_scanned'  => $themes_list,
-		'findings'        => $high_risk_findings,
+		'success'            => true,
+		'message'            => $message,
+		'files_scanned'      => $files_scanned,
+		'total_hits'         => $total_hits,
+		'filtered_out'       => $filtered_out,
+		'risk_threshold'     => $risk_threshold,
+		'plugins_scanned'    => $plugins_list,
+		'themes_scanned'     => $themes_list,
+		'mu_plugins_scanned' => $mu_plugins_list,
+		'findings'           => $high_risk_findings,
 	);
 }
 
