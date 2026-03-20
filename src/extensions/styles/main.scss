@@ -1000,6 +1000,106 @@
 	}
 }
 
+// Provider selection (Local / Remote toggle)
+.wp-agentic-admin-provider {
+	margin-top: 12px;
+
+	&__toggle {
+		display: flex;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		overflow: hidden;
+		margin-bottom: 12px;
+	}
+
+	&__tab {
+		flex: 1;
+		padding: 8px 12px;
+		border: none;
+		background: #fff;
+		color: #50575e;
+		font-size: 13px;
+		cursor: pointer;
+		transition: background 0.15s, color 0.15s;
+
+		&:first-child {
+			border-right: 1px solid #c3c4c7;
+		}
+
+		&:hover {
+			background: #f0f0f1;
+		}
+
+		&.is-active {
+			background: #2271b1;
+			color: #fff;
+			font-weight: 500;
+		}
+	}
+
+	&__field {
+		margin-bottom: 10px;
+
+		label {
+			display: block;
+			font-size: 12px;
+			font-weight: 500;
+			color: #1d2327;
+			margin-bottom: 4px;
+		}
+	}
+
+	&__optional {
+		font-weight: 400;
+		color: #646970;
+	}
+
+	&__url-row {
+		display: flex;
+		gap: 8px;
+	}
+
+	&__input {
+		flex: 1;
+		padding: 6px 8px;
+		border: 1px solid #8c8f94;
+		border-radius: 4px;
+		font-size: 13px;
+		width: 100%;
+		box-sizing: border-box;
+
+		&:focus {
+			border-color: #2271b1;
+			box-shadow: 0 0 0 1px #2271b1;
+			outline: none;
+		}
+	}
+
+	&__fetch-btn {
+		white-space: nowrap;
+	}
+
+	&__error {
+		margin: 4px 0 8px;
+		padding: 8px 12px;
+		background: #fcf0f1;
+		border: 1px solid #d63638;
+		border-radius: 4px;
+		font-size: 13px;
+		color: #d63638;
+	}
+}
+
+.wp-agentic-admin-status__mode-badge--external {
+	background: #dba617;
+	color: #fff;
+	padding: 1px 6px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 500;
+	margin-right: 6px;
+}
+
 // Loading Card - Enhanced progress UI
 .wp-agentic-admin-loading-card {
 	background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);

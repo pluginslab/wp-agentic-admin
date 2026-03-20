@@ -10,6 +10,7 @@
  */
 
 import * as webllm from '@mlc-ai/web-llm';
+import { ExternalEngine } from './external-engine';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ModelLoader' );
@@ -71,6 +72,11 @@ class ModelLoader {
 		this.useServiceWorker = true;
 		this.swRegistration = null;
 		this.swSupported = null; // null = not checked, true/false = result
+
+		// External provider state
+		this.providerMode = 'local'; // 'local' or 'remote'
+		this.externalEndpoint = '';
+		this.externalApiKey = '';
 	}
 
 	/**
@@ -462,6 +468,63 @@ class ModelLoader {
 	}
 
 	/**
+	 * Load an external model via OpenAI-compatible API
+	 *
+	 * @since 0.10.0
+	 * @param {string} endpointUrl - Base URL (e.g. "http://localhost:11434")
+	 * @param {string} modelId     - Model identifier
+	 * @param {string} apiKey      - Optional API key
+	 * @return {Promise<boolean>} True if connected successfully
+	 */
+	async loadExternal( endpointUrl, modelId, apiKey = '' ) {
+		if ( this.isLoading ) {
+			throw new Error( 'Model is already loading' );
+		}
+
+		this.isLoading = true;
+		this.providerMode = 'remote';
+		this.externalEndpoint = endpointUrl;
+		this.externalApiKey = apiKey;
+		this.modelId = modelId;
+
+		try {
+			this.reportStatus(
+				'loading',
+				'Connecting to external provider...'
+			);
+			this.reportProgress( 50, 'Connecting to external provider...' );
+
+			this.engine = new ExternalEngine( endpointUrl, modelId, apiKey );
+
+			this.reportProgress( 100, 'Connected to external provider!' );
+			this.reportStatus( 'ready', 'External model ready' );
+			this.isReady = true;
+			this.isLoading = false;
+
+			log.info( 'External model loaded:', modelId, 'at', endpointUrl );
+			return true;
+		} catch ( err ) {
+			this.isLoading = false;
+			this.isReady = false;
+			this.engine = null;
+			this.providerMode = 'local';
+			this.reportStatus( 'error', `Failed to connect: ${ err.message }` );
+			log.error( 'Failed to load external model:', err );
+			throw err;
+		}
+	}
+
+	/**
+	 * Check if using an external provider
+	 *
+	 * @since 0.10.0
+	 * @return {boolean} True if using external provider
+	 */
+	isExternalProvider() {
+		return this.providerMode === 'remote';
+	}
+
+	/**
 	 * Load the model using Service Worker mode
 	 *
 	 * Model persists across page navigations while any tab is open.
@@ -701,6 +764,9 @@ class ModelLoader {
 		this.isReady = false;
 		this.isLoading = false;
 		this.loadProgress = 0;
+		this.providerMode = 'local';
+		this.externalEndpoint = '';
+		this.externalApiKey = '';
 		this.reportStatus( 'not-loaded', 'Model unloaded' );
 	}
 
@@ -755,6 +821,17 @@ class ModelLoader {
 	getLoadedModelInfo() {
 		if ( ! this.isReady || ! this.modelId ) {
 			return null;
+		}
+
+		// External provider — model isn't in our static list
+		if ( this.isExternalProvider() ) {
+			return {
+				id: this.modelId,
+				name: this.modelId,
+				size: 'Remote',
+				description: `External model via ${ this.externalEndpoint }`,
+				mode: 'external',
+			};
 		}
 
 		const models = ModelLoader.getAvailableModels();
@@ -862,8 +939,10 @@ class ModelLoader {
 			return null;
 		}
 
-		const maxContext =
-			MODEL_CONTEXT_SIZES[ this.modelId ] || MODEL_CONTEXT_SIZES.default;
+		const maxContext = this.isExternalProvider()
+			? this.externalContextSize || 32768
+			: MODEL_CONTEXT_SIZES[ this.modelId ] ||
+			  MODEL_CONTEXT_SIZES.default;
 		const usedTokens = this.lastUsageStats.prompt_tokens || 0;
 		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 
@@ -928,5 +1007,11 @@ class ModelLoader {
 // Create singleton instance
 const modelLoader = new ModelLoader();
 
-export { ModelLoader, modelLoader, DEFAULT_MODEL, MODEL_CONFIG };
+export {
+	ModelLoader,
+	modelLoader,
+	DEFAULT_MODEL,
+	MODEL_CONFIG,
+	ExternalEngine,
+};
 export default modelLoader;
