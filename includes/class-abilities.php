@@ -102,6 +102,17 @@ class Abilities {
 		foreach ( $ability_files as $file ) {
 			require_once $file;
 		}
+
+		// Load abilities from subdirectories.
+		$security_dir = $abilities_dir . 'security/';
+		if ( is_dir( $security_dir ) ) {
+			$security_files = glob( $security_dir . '*.php' );
+			if ( $security_files ) {
+				foreach ( $security_files as $file ) {
+					require_once $file;
+				}
+			}
+		}
 	}
 
 	/**
@@ -161,6 +172,15 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_revision_cleanup' ) ) {
 			wp_agentic_admin_register_revision_cleanup();
+		}
+
+		// Security abilities.
+		if ( function_exists( 'wp_agentic_admin_register_verify_core_checksums' ) ) {
+			wp_agentic_admin_register_verify_core_checksums();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_verify_plugin_checksums' ) ) {
+			wp_agentic_admin_register_verify_plugin_checksums();
 		}
 
 		/**

@@ -24,6 +24,8 @@ import { registerRewriteList } from './rewrite-list';
 import { registerRevisionCleanup } from './revision-cleanup';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerVerifyCoreChecksums } from './verify-core-checksums';
+import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -40,6 +42,8 @@ export { registerRewriteList } from './rewrite-list';
 export { registerRevisionCleanup } from './revision-cleanup';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerVerifyCoreChecksums } from './verify-core-checksums';
+export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 
 /**
  * Register all abilities.
@@ -63,6 +67,10 @@ export function registerAllAbilities() {
 	registerRewriteFlush();
 	registerRewriteList();
 	registerRevisionCleanup();
+
+	// Security abilities
+	registerVerifyCoreChecksums();
+	registerVerifyPluginChecksums();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities
