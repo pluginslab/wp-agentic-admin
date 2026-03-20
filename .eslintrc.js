@@ -30,14 +30,20 @@ module.exports = {
 		'jsdoc/require-param-description': 'warn',
 
 		// JSX type is valid in WordPress component returns
-		'jsdoc/no-undefined-types': [ 'error', {
-			definedTypes: [ 'JSX' ],
-		} ],
+		'jsdoc/no-undefined-types': [
+			'error',
+			{
+				definedTypes: [ 'JSX' ],
+			},
+		],
 
 		// @wordpress/* packages are WordPress-provided externals, not listed in package.json
 		'import/no-extraneous-dependencies': 'off',
-		'import/no-unresolved': [ 'error', {
-			ignore: [ '^@wordpress/' ],
-		} ],
+		'import/no-unresolved': [
+			'error',
+			{
+				ignore: [ '^@wordpress/' ],
+			},
+		],
 	},
 };
