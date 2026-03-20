@@ -86,6 +86,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/comment-stats',
 		},
 
+		// ── Backup check ──────────────────────────────────────────
+		{
+			input: 'do I have a backup plugin installed?',
+			expectTool: 'wp-agentic-admin/backup-check',
+		},
+		{
+			input: 'check my backup status',
+			expectTool: 'wp-agentic-admin/backup-check',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
