@@ -188,6 +188,10 @@ class Abilities {
 			wp_agentic_admin_register_verify_plugin_checksums();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
+			wp_agentic_admin_register_database_check();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *

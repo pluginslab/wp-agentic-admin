@@ -51,6 +51,10 @@ export function registerCheckIfHackedWorkflow() {
 				abilityId: 'wp-agentic-admin/verify-plugin-checksums',
 				label: 'Verify plugin file checksums',
 			},
+			{
+				abilityId: 'wp-agentic-admin/database-check',
+				label: 'Scan database for indicators of compromise',
+			},
 		],
 
 		// Read-only — no confirmation needed.
@@ -203,14 +207,49 @@ export function registerCheckIfHackedWorkflow() {
 
 			lines.push( '' );
 
+			// Database check results.
+			const dbResult = results.find(
+				( r ) =>
+					r.abilityId === 'wp-agentic-admin/database-check'
+			);
+
+			lines.push( '### Database' );
+			if ( dbResult?.success && dbResult.result ) {
+				const db = dbResult.result;
+
+				if ( db.total_issues === 0 ) {
+					lines.push(
+						'No suspicious findings in the database.'
+					);
+				} else {
+					allClear = false;
+					lines.push( db.message );
+
+					if ( db.checks ) {
+						for ( const check of db.checks ) {
+							if ( check.count === 0 ) {
+								continue;
+							}
+							lines.push(
+								`- **${ check.name }** — ${ check.count } finding(s)`
+							);
+						}
+					}
+				}
+			} else {
+				lines.push( 'Could not complete database scan.' );
+			}
+
+			lines.push( '' );
+
 			// Overall verdict.
 			if ( allClear ) {
 				lines.push(
-					'### Result\nNo signs of tampering detected. All verifiable files match their official checksums.'
+					'### Result\nNo signs of tampering detected. Files match official checksums and database is clean.'
 				);
 			} else {
 				lines.push(
-					'### Result\n**Potential tampering detected.** Review the modified and extra files above. If unexpected, your site may be compromised.'
+					'### Result\n**Potential tampering detected.** Review the findings above. If unexpected, your site may be compromised.'
 				);
 			}
 
