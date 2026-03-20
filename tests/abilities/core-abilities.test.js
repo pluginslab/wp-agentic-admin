@@ -56,6 +56,26 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/user-list',
 		},
 
+		// ── Update management ─────────────────────────────────────
+		{
+			input: 'are there any updates available?',
+			expectTool: 'wp-agentic-admin/update-check',
+		},
+		{
+			input: 'check for outdated plugins',
+			expectTool: 'wp-agentic-admin/update-check',
+		},
+
+		// ── Disk usage ────────────────────────────────────────────
+		{
+			input: 'how much disk space is my site using?',
+			expectTool: 'wp-agentic-admin/disk-usage',
+		},
+		{
+			input: 'check storage usage',
+			expectTool: 'wp-agentic-admin/disk-usage',
+		},
+
 		// ── Comment stats ─────────────────────────────────────────
 		{
 			input: 'how many comments does my site have?',
