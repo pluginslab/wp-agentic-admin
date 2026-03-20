@@ -167,6 +167,42 @@ class Abilities {
 			wp_agentic_admin_register_theme_list();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_user_list' ) ) {
+			wp_agentic_admin_register_user_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_update_check' ) ) {
+			wp_agentic_admin_register_update_check();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_disk_usage' ) ) {
+			wp_agentic_admin_register_disk_usage();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_comment_stats' ) ) {
+			wp_agentic_admin_register_comment_stats();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_security_scan' ) ) {
+			wp_agentic_admin_register_security_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_post_list' ) ) {
+			wp_agentic_admin_register_post_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
+			wp_agentic_admin_register_error_log_search();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_opcode_cache_status' ) ) {
+			wp_agentic_admin_register_opcode_cache_status();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_backup_check' ) ) {
+			wp_agentic_admin_register_backup_check();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
