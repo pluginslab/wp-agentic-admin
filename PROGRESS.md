@@ -11,6 +11,9 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
 
+### CI/CD is Live! (PR #78 by @0xLoopTheory)
+GitHub Actions now run on every PR to `dev` and `main` — PHP lint, JS lint, unit tests, and build check as independent matrix jobs. New contributor @0xLoopTheory. **13 PRs merged**, **6 contributors**.
+
 ### Gutenberg Editor Sidebar Merged! (PR #52 by @Stefan0x)
 The biggest feature of the hackathon so far. The AI assistant now lives **inside the block editor** — you can ask questions while editing a post without leaving the page. Built as a `PluginSidebar` with its own webpack entry point, it reuses the existing WebLLM model via the Service Worker. Includes a new `core/get-editor-blocks` ability: ask "what blocks are on this page?" and get a structured summary of the editor contents. **25 abilities** total, **12 PRs merged**.
 
@@ -45,10 +48,11 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 
 ### Contributors
 - ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59), error-log-search (#65), opcode-cache-status (#67), backup-check (#72)
-- Stefan0x — editor sidebar (#52, approved), model unload dropdown (#71, in review)
+- Stefan0x — editor sidebar (#52), model unload dropdown (#71, in review)
 - AlexanderMelde — f32 fallback model (#61, in review)
 - robert81 — HTTP error message (#50, in review)
 - janvogt — feedback thumbs up/down (#70, in review)
+- 0xLoopTheory — CI/CD GitHub Actions (#78)
 
 ---
 
