@@ -11,6 +11,9 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
 
+### Gutenberg Editor Sidebar Merged! (PR #52 by @Stefan0x)
+The biggest feature of the hackathon so far. The AI assistant now lives **inside the block editor** — you can ask questions while editing a post without leaving the page. Built as a `PluginSidebar` with its own webpack entry point, it reuses the existing WebLLM model via the Service Worker. Includes a new `core/get-editor-blocks` ability: ask "what blocks are on this page?" and get a structured summary of the editor contents. **25 abilities** total, **12 PRs merged**.
+
 ### 3 More Abilities Merged! — error-log-search, opcode-cache-status, backup-check
 - **error-log-search** (PR #65) — search/filter the error log by keyword with context lines
 - **opcode-cache-status** (PR #67) — check PHP OPcache status and hit rates
@@ -21,7 +24,7 @@ Full suite **37/39 (95%)** — 2 pre-existing flaky tests. That's **24 abilities
 ### 2 More Abilities + Gutenberg Sidebar Approved! — security-scan, post-list, editor sidebar
 - **security-scan** (PR #57) — 6 security checks grouped by severity
 - **post-list** (PR #59) — list posts with natural language filters
-- **editor sidebar** (PR #52 by @Stefan0x) — Gutenberg `PluginSidebar` with AI chat. Approved, merging after conflict resolution.
+- **editor sidebar** (PR #52 by @Stefan0x) — Gutenberg `PluginSidebar` with AI chat. **Merged!**
 - **f32 fallback model** (PR #61 by @AlexanderMelde) — auto-detect `shader-f16` and fall back to f32. Changes requested on formatting.
 - **HTTP error message** (PR #50 by @robert81) — specific error over HTTP. Changes requested to remove debug file.
 
@@ -59,9 +62,9 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (24 total)
+### Abilities (25 total)
 - [x] 22 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 2 core WordPress wrappers: get-site-info, get-environment-info
+- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)
