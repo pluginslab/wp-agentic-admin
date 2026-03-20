@@ -28,12 +28,15 @@ jobs:
             }
 
             await github.rest.issues.addAssignees({
-              ...issue,
+              owner: issue.owner,
+              repo: issue.repo,
+              issue_number: issue.number,
               assignees: [commenter],
             });
 
             await github.rest.reactions.createForIssueComment({
-              ...issue,
+              owner: issue.owner,
+              repo: issue.repo,
               comment_id: context.payload.comment.id,
               content: '+1',
             });
