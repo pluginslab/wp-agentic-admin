@@ -8,6 +8,7 @@
 
 import { useState } from '@wordpress/element';
 import { createLogger } from '../utils/logger';
+import { getMessageRating } from '../services/feedback';
 
 const log = createLogger( 'MessageItem' );
 
@@ -128,14 +129,23 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * MessageItem component
  *
- * @param {Object} props         - Component props
- * @param {Object} props.message - Message object
+ * @param {Object}        props               - Component props
+ * @param {Object}        props.message       - Message object
+ * @param {boolean}       props.feedbackOptIn - Whether the user has opted in to feedback
+ * @param {Function|null} props.onFeedback    - Called with (messageId, rating) when a thumb is clicked
  * @return {JSX.Element} Rendered message
  */
-const MessageItem = ( { message } ) => {
+const MessageItem = ( {
+	message,
+	feedbackOptIn = false,
+	onFeedback = null,
+} ) => {
 	const { type, content, timestamp, prefillTps, decodeTps } = message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
+	const [ rating, setRating ] = useState( () =>
+		feedbackOptIn ? getMessageRating( message.id ) : null
+	);
 
 	/**
 	 * Copy message content to clipboard
@@ -152,6 +162,19 @@ const MessageItem = ( { message } ) => {
 			setTimeout( () => setCopied( false ), 2000 );
 		} catch ( err ) {
 			log.error( 'Failed to copy:', err );
+		}
+	};
+
+	/**
+	 * Handle thumbs-up / thumbs-down click
+	 *
+	 * @param {string} newRating - 'up' or 'down'
+	 */
+	const handleRating = ( newRating ) => {
+		const next = rating === newRating ? null : newRating;
+		setRating( next );
+		if ( onFeedback ) {
+			onFeedback( message.id, next );
 		}
 	};
 
@@ -371,46 +394,108 @@ const MessageItem = ( { message } ) => {
 								</span>
 							) }
 						</div>
-						<button
-							className={ `agentic-message__copy ${
-								copied ? 'agentic-message__copy--copied' : ''
-							}` }
-							onClick={ handleCopy }
-							type="button"
-							title={ copied ? 'Copied!' : 'Copy to clipboard' }
-						>
-							{ copied ? (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<polyline points="20 6 9 17 4 12" />
-								</svg>
-							) : (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<rect
-										x="9"
-										y="9"
-										width="13"
-										height="13"
-										rx="2"
-										ry="2"
-									/>
-									<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-								</svg>
+						<div className="agentic-message__actions">
+							{ feedbackOptIn && (
+								<div className="agentic-message__feedback">
+									<button
+										type="button"
+										className={ `agentic-message__thumb ${
+											rating === 'up'
+												? 'agentic-message__thumb--active'
+												: ''
+										}` }
+										onClick={ () => handleRating( 'up' ) }
+										title="Good response"
+									>
+										<svg
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill={
+												rating === 'up'
+													? 'currentColor'
+													: 'none'
+											}
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+											<path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+										</svg>
+									</button>
+									<button
+										type="button"
+										className={ `agentic-message__thumb ${
+											rating === 'down'
+												? 'agentic-message__thumb--active agentic-message__thumb--down'
+												: ''
+										}` }
+										onClick={ () => handleRating( 'down' ) }
+										title="Poor response"
+									>
+										<svg
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill={
+												rating === 'down'
+													? 'currentColor'
+													: 'none'
+											}
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z" />
+											<path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+										</svg>
+									</button>
+								</div>
 							) }
-						</button>
+							<button
+								className={ `agentic-message__copy ${
+									copied
+										? 'agentic-message__copy--copied'
+										: ''
+								}` }
+								onClick={ handleCopy }
+								type="button"
+								title={
+									copied ? 'Copied!' : 'Copy to clipboard'
+								}
+							>
+								{ copied ? (
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+									>
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								) : (
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+									>
+										<rect
+											x="9"
+											y="9"
+											width="13"
+											height="13"
+											rx="2"
+											ry="2"
+										/>
+										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+									</svg>
+								) }
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
