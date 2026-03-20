@@ -92,6 +92,11 @@ class Abilities {
 			require_once $shared_helpers;
 		}
 
+		$diff_helpers = $abilities_dir . 'shared/diff-helpers.php';
+		if ( file_exists( $diff_helpers ) ) {
+			require_once $diff_helpers;
+		}
+
 		// Load all PHP files from the abilities directory.
 		$ability_files = glob( $abilities_dir . '*.php' );
 
@@ -101,6 +106,17 @@ class Abilities {
 
 		foreach ( $ability_files as $file ) {
 			require_once $file;
+		}
+
+		// Load abilities from subdirectories.
+		$security_dir = $abilities_dir . 'security/';
+		if ( is_dir( $security_dir ) ) {
+			$security_files = glob( $security_dir . '*.php' );
+			if ( $security_files ) {
+				foreach ( $security_files as $file ) {
+					require_once $file;
+				}
+			}
 		}
 	}
 
@@ -163,6 +179,18 @@ class Abilities {
 			wp_agentic_admin_register_revision_cleanup();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_verify_core_checksums' ) ) {
+			wp_agentic_admin_register_verify_core_checksums();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_verify_plugin_checksums' ) ) {
+			wp_agentic_admin_register_verify_plugin_checksums();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
+			wp_agentic_admin_register_database_check();
+    }
+    
 		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
 			wp_agentic_admin_register_theme_list();
 		}
