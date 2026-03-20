@@ -182,6 +182,7 @@ WP Agentic Admin ships with 14 abilities across different categories:
 |---------|-------------|------|
 | `revision-cleanup` | Remove old post revisions | Destructive |
 | `core/get-site-info` | Get site name/URL/version | Read-only |
+| `core/get-editor-blocks` | List available Gutenberg blocks | Read-only |
 
 ### Hackathon Goal: 17 More Abilities
 

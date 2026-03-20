@@ -1,0 +1,42 @@
+name: Issue Self-Assign
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  assign:
+    if: >
+      !github.event.issue.pull_request &&
+      contains(github.event.comment.body, '/assign')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Assign commenter to issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.issue;
+            const commenter = context.payload.comment.user.login;
+
+            // Check if already assigned
+            const current = context.payload.issue.assignees.map(a => a.login);
+            if (current.includes(commenter)) {
+              console.log(`${commenter} is already assigned.`);
+              return;
+            }
+
+            await github.rest.issues.addAssignees({
+              owner: issue.owner,
+              repo: issue.repo,
+              issue_number: issue.number,
+              assignees: [commenter],
+            });
+
+            await github.rest.reactions.createForIssueComment({
+              owner: issue.owner,
+              repo: issue.repo,
+              comment_id: context.payload.comment.id,
+              content: '+1',
+            });

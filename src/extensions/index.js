@@ -12,7 +12,11 @@ import { createLogger } from './utils/logger';
 const log = createLogger( 'WPAgenticAdmin' );
 
 document.addEventListener( 'DOMContentLoaded', () => {
-	log.info( `Version ${ window.wpAgenticAdmin?.version || 'unknown' } initializing...` );
+	log.info(
+		`Version ${
+			window.wpAgenticAdmin?.version || 'unknown'
+		} initializing...`
+	);
 	const container = document.getElementById( 'wp-agentic-admin-root' );
 
 	if ( ! container ) {

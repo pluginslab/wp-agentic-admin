@@ -113,7 +113,7 @@ class Admin_Page {
 		wp_localize_script(
 			'wp-agentic-admin',
 			'wpAgenticAdmin',
-			$this->get_localized_data()
+			self::get_localized_data()
 		);
 
 		wp_enqueue_script( 'wp-agentic-admin' );
@@ -124,16 +124,18 @@ class Admin_Page {
 	 *
 	 * @return bool True if permalinks are properly configured.
 	 */
-	private function has_pretty_permalinks(): bool {
+	private static function has_pretty_permalinks(): bool {
 		return ! empty( get_option( 'permalink_structure' ) );
 	}
 
 	/**
 	 * Get data to pass to JavaScript.
 	 *
+	 * Shared between the admin page and editor sidebar.
+	 *
 	 * @return array
 	 */
-	private function get_localized_data(): array {
+	public static function get_localized_data(): array {
 		$settings = Settings::get_instance();
 
 		// Get JS configurations for registered abilities.
@@ -149,7 +151,7 @@ class Admin_Page {
 			'pluginUrl'           => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL ),
 			'swUrl'               => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL . 'sw-loader.php' ),
 			'version'             => WP_AGENTIC_ADMIN_VERSION,
-			'hasPrettyPermalinks' => $this->has_pretty_permalinks(),
+			'hasPrettyPermalinks' => self::has_pretty_permalinks(),
 			'permalinksUrl'       => esc_url( admin_url( 'options-permalink.php' ) ),
 			'settings'            => array(
 				'modelId'            => $settings->get_field( 'wp_agentic_admin_model_id', 'Qwen2.5-7B-Instruct-q4f16_1-MLC' ),

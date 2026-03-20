@@ -72,7 +72,9 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-editor-sidebar.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
 
 			// Initialize Utility Hooks (Cache Invalidation).
 			if ( class_exists( '\\WPAgenticAdmin\\Utils' ) ) {
@@ -87,8 +89,17 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 				\WPAgenticAdmin\Admin_Page::get_instance();
 			}
 
+			if ( class_exists( '\\WPAgenticAdmin\\Editor_Sidebar' ) ) {
+				\WPAgenticAdmin\Editor_Sidebar::get_instance();
+			}
+
 			if ( class_exists( '\\WPAgenticAdmin\\Abilities' ) ) {
 				\WPAgenticAdmin\Abilities::get_instance();
+			}
+
+			// Initialize LLM Proxy for external provider support.
+			if ( class_exists( '\\WPAgenticAdmin\\LLM_Proxy' ) ) {
+				\WPAgenticAdmin\LLM_Proxy::init();
 			}
 		}
 

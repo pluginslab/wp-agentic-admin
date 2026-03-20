@@ -179,7 +179,6 @@ class Abilities {
 			wp_agentic_admin_register_revision_cleanup();
 		}
 
-		// Security abilities.
 		if ( function_exists( 'wp_agentic_admin_register_verify_core_checksums' ) ) {
 			wp_agentic_admin_register_verify_core_checksums();
 		}
@@ -190,6 +189,46 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
 			wp_agentic_admin_register_database_check();
+    }
+    
+		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
+			wp_agentic_admin_register_theme_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_user_list' ) ) {
+			wp_agentic_admin_register_user_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_update_check' ) ) {
+			wp_agentic_admin_register_update_check();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_disk_usage' ) ) {
+			wp_agentic_admin_register_disk_usage();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_comment_stats' ) ) {
+			wp_agentic_admin_register_comment_stats();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_security_scan' ) ) {
+			wp_agentic_admin_register_security_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_post_list' ) ) {
+			wp_agentic_admin_register_post_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
+			wp_agentic_admin_register_error_log_search();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_opcode_cache_status' ) ) {
+			wp_agentic_admin_register_opcode_cache_status();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_backup_check' ) ) {
+			wp_agentic_admin_register_backup_check();
 		}
 
 		if ( function_exists( 'wp_agentic_admin_register_file_scan' ) ) {
