@@ -27,6 +27,7 @@ import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
+import { registerFileScan } from './file-scan';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -46,6 +47,7 @@ export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 export { registerDatabaseCheck } from './database-check';
+export { registerFileScan } from './file-scan';
 
 /**
  * Register all abilities.
@@ -74,6 +76,7 @@ export function registerAllAbilities() {
 	registerVerifyCoreChecksums();
 	registerVerifyPluginChecksums();
 	registerDatabaseCheck();
+	registerFileScan();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities

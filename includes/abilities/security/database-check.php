@@ -87,8 +87,16 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 	$total_issues = 0;
 	$total_raw    = 0;
 
-	// Risk score threshold — only findings at or above this are flagged.
-	$threshold = 6.0;
+	/**
+	 * Filters the risk score threshold for the database security check.
+	 *
+	 * Only findings at or above this threshold are included in results.
+	 *
+	 * @since 0.9.6
+	 *
+	 * @param float $threshold Risk score threshold (default 6.0).
+	 */
+	$threshold = apply_filters( 'wp_agentic_admin_db_check_threshold', 6.0 );
 
 	// Run all checks.
 	$check_functions = array(
@@ -106,6 +114,19 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 		'wp_agentic_admin_check_comments_injections',
 		'wp_agentic_admin_check_widgets_injections',
 	);
+
+	/**
+	 * Filters the list of database check functions to run.
+	 *
+	 * Plugins can add their own check functions or remove built-in ones.
+	 * Each function must return an array with keys: name, description, count, findings.
+	 * Each finding must include a 'risk_score' key (float 1.0–10.0).
+	 *
+	 * @since 0.9.6
+	 *
+	 * @param array $check_functions Array of callable function names.
+	 */
+	$check_functions = apply_filters( 'wp_agentic_admin_db_check_functions', $check_functions );
 
 	foreach ( $check_functions as $func ) {
 		$result = $func();

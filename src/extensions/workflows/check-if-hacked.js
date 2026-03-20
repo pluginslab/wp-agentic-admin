@@ -55,6 +55,10 @@ export function registerCheckIfHackedWorkflow() {
 				abilityId: 'wp-agentic-admin/database-check',
 				label: 'Scan database for indicators of compromise',
 			},
+			{
+				abilityId: 'wp-agentic-admin/file-scan',
+				label: 'Scan theme and plugin PHP files for malware patterns',
+			},
 		],
 
 		// Read-only — no confirmation needed.
@@ -76,183 +80,124 @@ export function registerCheckIfHackedWorkflow() {
 					r.abilityId ===
 					'wp-agentic-admin/verify-plugin-checksums'
 			);
+			const dbResult = results.find(
+				( r ) =>
+					r.abilityId === 'wp-agentic-admin/database-check'
+			);
+			const fileScanResult = results.find(
+				( r ) =>
+					r.abilityId === 'wp-agentic-admin/file-scan'
+			);
 
-			const lines = [ '## Security Integrity Check\n' ];
+			const lines = [];
 			let allClear = true;
 
-			// Core checksums results.
-			lines.push( '### WordPress Core Files' );
+			// --- Core checksums table ---
+			lines.push( '**WordPress Core Files**' );
+
 			if ( coreResult?.success && coreResult.result ) {
 				const core = coreResult.result;
 
 				if ( core.success ) {
 					lines.push(
-						`All ${ core.total_files } core files verified for WordPress ${ core.wordpress_version }.`
+						`All ${ core.total_files } files verified for WordPress ${ core.wordpress_version }.`
 					);
 				} else {
 					allClear = false;
-					lines.push( core.message );
+					lines.push( '' );
+					lines.push( '| File | Status |' );
+					lines.push( '|---|---|' );
 
-					if ( core.failed_files ) {
-						for ( const file of core.failed_files ) {
-							if ( file.status === 'modified' ) {
-								lines.push(
-									`- **Modified:** \`${ file.file }\``
-								);
-								if ( file.diff ) {
-									lines.push( '```diff' );
-									const diffLines =
-										file.diff.split( '\n' );
-									if ( diffLines.length > 20 ) {
-										lines.push(
-											diffLines
-												.slice( 0, 20 )
-												.join( '\n' )
-										);
-										lines.push(
-											`... (${ diffLines.length - 20 } more lines)`
-										);
-									} else {
-										lines.push( file.diff );
-									}
-									lines.push( '```' );
-								}
-							} else if ( file.status === 'missing' ) {
-								lines.push(
-									`- **Missing:** \`${ file.file }\``
-								);
-							} else if ( file.status === 'extra' ) {
-								lines.push(
-									`- **Extra (suspicious):** \`${ file.file }\``
-								);
-							}
-						}
+					for ( const file of core.failed_files || [] ) {
+						lines.push(
+							`| \`${ file.file }\` | **${ file.status }** |`
+						);
 					}
 				}
 			} else {
-				lines.push(
-					'Could not verify core checksums. Check your internet connection.'
-				);
+				lines.push( 'Could not verify. Check internet connection.' );
 			}
 
 			lines.push( '' );
 
-			// Plugin checksums results.
-			lines.push( '### Plugins' );
+			// --- Plugin checksums table ---
+			lines.push( '**Plugin Checksums**' );
+
 			if ( pluginResult?.success && pluginResult.result ) {
 				const plugins = pluginResult.result;
-				lines.push( plugins.message );
+				const hasIssues = plugins.results?.some(
+					( p ) => p.status === 'failed'
+				);
 
-				if ( plugins.results ) {
-					for ( const plugin of plugins.results ) {
-						if ( plugin.status === 'failed' ) {
-							allClear = false;
-							const issues = plugin.issues || [];
-							const modified = issues.filter(
-								( i ) => i.status === 'modified'
-							).length;
-							const missing = issues.filter(
-								( i ) => i.status === 'missing'
-							).length;
-							const extra = issues.filter(
-								( i ) => i.status === 'extra'
-							).length;
+				if ( ! hasIssues ) {
+					lines.push( plugins.message );
+				} else {
+					allClear = false;
+					lines.push( '' );
+					lines.push( '| Plugin | File | Status |' );
+					lines.push( '|---|---|---|' );
 
-							const parts = [];
-							if ( modified > 0 ) {
-								parts.push( `${ modified } modified` );
-							}
-							if ( missing > 0 ) {
-								parts.push( `${ missing } missing` );
-							}
-							if ( extra > 0 ) {
-								parts.push( `${ extra } extra` );
-							}
-
+					for ( const plugin of plugins.results || [] ) {
+						if ( plugin.status === 'verified' ) {
 							lines.push(
-								`- **${ plugin.plugin }** — FAILED (${ parts.join( ', ' ) })`
+								`| ${ plugin.plugin } | — | Verified |`
 							);
-
-							for ( const issue of issues ) {
+						} else if ( plugin.status === 'skipped' ) {
+							lines.push(
+								`| ${ plugin.plugin } | — | Skipped (no checksums) |`
+							);
+						} else if ( plugin.status === 'failed' ) {
+							const issues = plugin.issues || [];
+							for ( const issue of issues.slice(
+								0,
+								10
+							) ) {
 								lines.push(
-									`  - \`${ issue.file }\` (${ issue.status })`
+									`| ${ plugin.plugin } | \`${ issue.file }\` | **${ issue.status }** |`
 								);
-								if ( issue.diff ) {
-									lines.push( '```diff' );
-									const diffLines =
-										issue.diff.split( '\n' );
-									if ( diffLines.length > 20 ) {
-										lines.push(
-											diffLines
-												.slice( 0, 20 )
-												.join( '\n' )
-										);
-										lines.push(
-											`... (${ diffLines.length - 20 } more lines)`
-										);
-									} else {
-										lines.push( issue.diff );
-									}
-									lines.push( '```' );
-								}
+							}
+							if ( issues.length > 10 ) {
+								lines.push(
+									`| ${ plugin.plugin } | ...and ${ issues.length - 10 } more | |`
+								);
 							}
 						}
 					}
 				}
 			} else {
-				lines.push(
-					'Could not verify plugin checksums. Check your internet connection.'
-				);
+				lines.push( 'Could not verify. Check internet connection.' );
 			}
 
 			lines.push( '' );
 
-			// Database check results.
-			const dbResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/database-check'
-			);
+			// --- Database check table ---
+			lines.push( '**Database Scan**' );
 
-			lines.push( '### Database' );
 			if ( dbResult?.success && dbResult.result ) {
 				const db = dbResult.result;
 
 				if ( db.total_issues === 0 ) {
-					lines.push(
-						'No suspicious findings in the database.'
-					);
+					lines.push( 'No high-risk findings in the database.' );
 				} else {
 					allClear = false;
-					lines.push( db.message );
+					lines.push( '' );
+					lines.push( '| Check | Finding | Risk |' );
+					lines.push( '|---|---|---|' );
 
-					if ( db.checks ) {
-						for ( const check of db.checks ) {
-							if ( check.count === 0 ) {
-								continue;
-							}
+					for ( const check of db.checks || [] ) {
+						for ( const f of check.findings.slice( 0, 5 ) ) {
+							const detail = formatDbFinding( f );
+							const score = f.risk_score
+								? `${ f.risk_score }/10`
+								: '—';
 							lines.push(
-								`- **${ check.name }** — ${ check.count } finding(s)`
+								`| ${ check.name } | ${ detail } | ${ score } |`
 							);
-
-							for ( const f of check.findings.slice(
-								0,
-								5
-							) ) {
-								const score = f.risk_score
-									? ` [risk: ${ f.risk_score }/10]`
-									: '';
-								const detail =
-									formatDbFinding( f );
-								lines.push(
-									`  - ${ detail }${ score }`
-								);
-							}
-
-							if ( check.findings.length > 5 ) {
-								lines.push(
-									`  - ...and ${ check.findings.length - 5 } more`
-								);
-							}
+						}
+						if ( check.findings.length > 5 ) {
+							lines.push(
+								`| ${ check.name } | ...and ${ check.findings.length - 5 } more | — |`
+							);
 						}
 					}
 				}
@@ -262,14 +207,67 @@ export function registerCheckIfHackedWorkflow() {
 
 			lines.push( '' );
 
-			// Overall verdict.
+			// --- File scan table ---
+			lines.push( '**Theme & Plugin File Scan**' );
+
+			if ( fileScanResult?.success && fileScanResult.result ) {
+				const fs = fileScanResult.result;
+
+				// Show what was scanned.
+				if ( fs.plugins_scanned?.length > 0 ) {
+					const names = fs.plugins_scanned
+						.map( ( p ) => p.name )
+						.join( ', ' );
+					lines.push(
+						`Plugins (${ fs.plugins_scanned.length }): ${ names }`
+					);
+				}
+				if ( fs.themes_scanned?.length > 0 ) {
+					const names = fs.themes_scanned
+						.map( ( t ) => t.name )
+						.join( ', ' );
+					lines.push(
+						`Themes (${ fs.themes_scanned.length }): ${ names }`
+					);
+				}
+
+				if ( fs.total_hits === 0 ) {
+					lines.push(
+						`Scanned ${ fs.files_scanned } PHP files. No high-risk patterns detected.`
+					);
+				} else {
+					allClear = false;
+					lines.push( '' );
+					lines.push( '| File | Pattern | Line | Risk |' );
+					lines.push( '|---|---|---|---|' );
+
+					for ( const finding of fs.findings.slice( 0, 15 ) ) {
+						for ( const p of finding.patterns ) {
+							lines.push(
+								`| \`${ finding.file }\` | ${ p.label } | ${ p.line } | ${ p.risk_score }/10 |`
+							);
+						}
+					}
+					if ( fs.findings.length > 15 ) {
+						lines.push(
+							`| ...and ${ fs.findings.length - 15 } more files | | | |`
+						);
+					}
+				}
+			} else {
+				lines.push( 'Could not complete file scan.' );
+			}
+
+			lines.push( '' );
+
+			// --- Verdict ---
 			if ( allClear ) {
 				lines.push(
-					'### Result\nNo signs of tampering detected. Files match official checksums and database is clean.'
+					'**Result:** No signs of tampering detected. Checksums verified, database clean, no malware patterns in files.'
 				);
 			} else {
 				lines.push(
-					'### Result\n**Potential tampering detected.** Review the findings above. If unexpected, your site may be compromised.'
+					'**Result: Potential tampering detected.** Review the findings above. If unexpected, your site may be compromised.'
 				);
 			}
 
