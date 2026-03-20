@@ -56,6 +56,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/user-list',
 		},
 
+		// ── Update management ─────────────────────────────────────
+		{
+			input: 'are there any updates available?',
+			expectTool: 'wp-agentic-admin/update-check',
+		},
+		{
+			input: 'check for outdated plugins',
+			expectTool: 'wp-agentic-admin/update-check',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
