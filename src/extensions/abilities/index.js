@@ -24,6 +24,9 @@ import { registerRewriteList } from './rewrite-list';
 import { registerRevisionCleanup } from './revision-cleanup';
 import { registerThemeList } from './theme-list';
 import { registerUserList } from './user-list';
+import { registerUpdateCheck } from './update-check';
+import { registerDiskUsage } from './disk-usage';
+import { registerCommentStats } from './comment-stats';
 import { registerSecurityScan } from './security-scan';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
@@ -43,6 +46,9 @@ export { registerRewriteList } from './rewrite-list';
 export { registerRevisionCleanup } from './revision-cleanup';
 export { registerThemeList } from './theme-list';
 export { registerUserList } from './user-list';
+export { registerUpdateCheck } from './update-check';
+export { registerDiskUsage } from './disk-usage';
+export { registerCommentStats } from './comment-stats';
 export { registerSecurityScan } from './security-scan';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
@@ -71,6 +77,9 @@ export function registerAllAbilities() {
 	registerRevisionCleanup();
 	registerThemeList();
 	registerUserList();
+	registerUpdateCheck();
+	registerDiskUsage();
+	registerCommentStats();
 	registerSecurityScan();
 
 	// WordPress 6.9+ core ability wrappers

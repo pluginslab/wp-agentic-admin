@@ -11,14 +11,23 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
 
+### 4 More PRs Merged! — update-check, disk-usage, comment-stats, debug tooling
+A batch of 4 PRs merged in one round — all tested together against Qwen 3 1.7B via Ollama, **29/29 (100%)** across all abilities:
+- **update-check** (PR #42) — checks for available WordPress core, plugin, and theme updates
+- **disk-usage** (PR #46) — wp-content disk usage breakdown (uploads, plugins, themes, cache) with recursive size calculation and depth limiting
+- **comment-stats** (PR #49) — comment counts by status (approved, pending, spam, trash) via `wp_count_comments()`
+- **system prompt printer** (PR #47) — debug utility to inspect the exact system prompt sent to the LLM
+
+That's **19 abilities** total and **6 PRs merged** on Day 1.
+
 ### Second PR Merged! — user-list ability (PR #41 by @ivdimova)
-Two abilities in one session! A **user-list ability** that lets the AI list all WordPress users with roles, registration dates, and **masked emails** for privacy (e.g., `iv***@example.com`). Uses `list_users` permission check and sorts by registration date (newest first). Merge conflicts with theme-list resolved, full suite passed **23/23 (100%)** against Qwen 3 1.7B. We're now at **16 abilities**.
+A **user-list ability** that lists all WordPress users with roles, registration dates, and **masked emails** for privacy. Full suite **23/23 (100%)**.
 
 ### First PR Merged! — theme-list ability (PR #40 by @ivdimova)
-Our first hackathon contribution is in! ivdimova added a **theme-list ability** that lets the AI list all installed WordPress themes with their active/inactive status, version, and parent theme info. The ability uses `wp_get_themes()` on the PHP side and includes full chat integration (summarize, interpretResult) on the JS side. Three new test cases were added and the full suite passed **21/21 (100%)** against Qwen 3 1.7B via Ollama. This brings us to **15 abilities** total.
+Our first hackathon contribution! A **theme-list ability** listing installed themes with active/inactive status, version, and parent theme info. Full suite **21/21 (100%)**.
 
 ### Contributors
-- ivdimova — theme-list (PR #40), user-list (PR #41), assigned to #29 (web-search)
+- ivdimova — theme-list (PR #40), user-list (PR #41), update-check (PR #42), disk-usage (PR #46), comment-stats (PR #49), testing-prompt (PR #47)
 
 ---
 
@@ -32,8 +41,8 @@ Our first hackathon contribution is in! ivdimova added a **theme-list ability** 
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (16 total)
-- [x] 14 plugin abilities: plugin list/activate/deactivate, theme list, user list, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+### Abilities (19 total)
+- [x] 17 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
 - [x] 2 core WordPress wrappers: get-site-info, get-environment-info
 
 ### Testing
