@@ -654,6 +654,21 @@ const ModelStatus = ( {
 								reload needed! No data is sent to external
 								servers.
 							</p>
+							<div className="wp-agentic-admin-performance-tip">
+								<span className="wp-agentic-admin-performance-tip__icon">
+									💡
+								</span>
+								<div className="wp-agentic-admin-performance-tip__content">
+									<strong>Performance Tip</strong>
+									LLM thinking can be slow on integrated GPUs.
+									For better performance in Chrome, visit{ ' ' }
+									<code>
+										chrome://flags/#force-high-performance-gpu
+									</code>{ ' ' }
+									and enable &quot;Force high performance
+									GPU&quot;.
+								</div>
+							</div>
 						</div>
 					) }
 
