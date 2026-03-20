@@ -136,13 +136,23 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/backup-check',
 		},
 
+		// ── File writing ──────────────────────────────────────────
+		{
+			input: 'add a line to my functions.php',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+		{
+			input: 'edit the wp-config.php to enable debug mode',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+
 		// ── Database queries ──────────────────────────────────────
 		{
-			input: 'how many posts have more than 10 comments?',
+			input: 'run a SQL query to check the wp_options table',
 			expectTool: 'wp-agentic-admin/query-database',
 		},
 		{
-			input: 'show me the last 5 options changed in the database',
+			input: 'query the database for autoloaded options',
 			expectTool: 'wp-agentic-admin/query-database',
 		},
 
