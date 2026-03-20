@@ -30,11 +30,22 @@ const MODEL_CONFIG = {
 };
 
 /**
+ * Mapping from f16 model IDs to their f32 equivalents.
+ * Used when the GPU does not support the shader-f16 WebGPU feature.
+ */
+const F16_TO_F32_MODEL_MAP = {
+	'Qwen3-1.7B-q4f16_1-MLC': 'Qwen3-1.7B-q4f32_1-MLC',
+	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
+};
+
+/**
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
 	'Qwen3-1.7B-q4f16_1-MLC': 4096,
+	'Qwen3-1.7B-q4f32_1-MLC': 4096,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
+	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
 	// Default fallback
 	default: 4096,
 };
@@ -65,6 +76,7 @@ class ModelLoader {
 		this.statusCallback = null;
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
+		this.f16Supported = null; // null = not checked, true/false = result
 
 		// Service Worker state
 		// Can be disabled via setUseServiceWorker(false) if issues found
@@ -329,6 +341,13 @@ class ModelLoader {
 
 			log.info( 'WebGPU Adapter:', info );
 
+			// Check for shader-f16 support (required for q4f16 models)
+			this.f16Supported = adapter.features.has( 'shader-f16' );
+			log.info(
+				'WebGPU shader-f16:',
+				this.f16Supported ? 'supported' : 'not supported'
+			);
+
 			// Store adapter info for later use
 			this.gpuAdapterInfo = {
 				vendor: info.vendor || 'Unknown',
@@ -422,6 +441,15 @@ class ModelLoader {
 			const gpuCheck = await this.checkWebGPUSupport();
 			if ( ! gpuCheck.supported ) {
 				throw new Error( gpuCheck.reason );
+			}
+
+			// Auto-fallback: if shader-f16 is not supported, switch to f32 variant
+			if ( ! this.f16Supported && F16_TO_F32_MODEL_MAP[ this.modelId ] ) {
+				const f32Model = F16_TO_F32_MODEL_MAP[ this.modelId ];
+				log.info(
+					`GPU lacks shader-f16, switching from ${ this.modelId } to ${ f32Model }`
+				);
+				this.modelId = f32Model;
 			}
 
 			this.reportProgress(
@@ -663,6 +691,18 @@ class ModelLoader {
 	}
 
 	/**
+	 * Check if the GPU supports shader-f16 (half-precision)
+	 *
+	 * Returns null if not yet checked (call checkWebGPUSupport() first).
+	 *
+	 * @since 0.1.0
+	 * @return {boolean|null} True if f16 supported, false if not, null if unchecked
+	 */
+	hasF16Support() {
+		return this.f16Supported;
+	}
+
+	/**
 	 * Get the loaded engine instance
 	 *
 	 * @return {Object|null} The WebLLM engine or null if not loaded
@@ -894,12 +934,28 @@ class ModelLoader {
 		return [
 			{
 				id: 'Qwen3-1.7B-q4f16_1-MLC',
-				name: 'Qwen 3 1.7B (Q4)',
+				name: 'Qwen 3 1.7B (Q4 F16)',
 				size: '~1.2GB',
 				vram: '~1.5GB',
 				description:
-					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight.',
+					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight. Requires shader-f16.',
 				recommended: true,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'fast inference',
+				],
+			},
+			{
+				id: 'Qwen3-1.7B-q4f32_1-MLC',
+				name: 'Qwen 3 1.7B (Q4 F32)',
+				size: '~1.8GB',
+				vram: '~2GB',
+				description:
+					'Alibaba Qwen 3 1.7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
+				recommended: false,
+				requiresF16: false,
 				capabilities: [
 					'function calling',
 					'JSON output',
@@ -908,12 +964,29 @@ class ModelLoader {
 			},
 			{
 				id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-				name: 'Qwen 2.5 7B (Q4)',
+				name: 'Qwen 2.5 7B (Q4 F16)',
 				size: '~4.5GB',
 				vram: '~5GB',
 				description:
-					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following.',
+					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following. Requires shader-f16.',
 				recommended: false,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'complex workflows',
+					'advanced reasoning',
+					'JSON output',
+				],
+			},
+			{
+				id: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
+				name: 'Qwen 2.5 7B (Q4 F32)',
+				size: '~6.5GB',
+				vram: '~7GB',
+				description:
+					'Alibaba Qwen 2.5 7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
+				recommended: false,
+				requiresF16: false,
 				capabilities: [
 					'function calling',
 					'complex workflows',

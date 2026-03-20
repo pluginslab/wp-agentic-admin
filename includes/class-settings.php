@@ -10,7 +10,7 @@
 
 namespace WPAgenticAdmin;
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit;
 }
 
@@ -21,7 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 0.1.0
  */
-class Settings {
+class Settings
+{
 
 	/**
 	 * Holds the plugin settings.
@@ -42,8 +43,9 @@ class Settings {
 	 *
 	 * @return Settings
 	 */
-	public static function get_instance(): Settings {
-		if ( null === self::$instance ) {
+	public static function get_instance(): Settings
+	{
+		if (null === self::$instance) {
 			self::$instance = new Settings();
 		}
 		return self::$instance;
@@ -52,13 +54,14 @@ class Settings {
 	/**
 	 * Initialize the class.
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$this->init_settings();
 
 		// UX: Add settings link to plugin list table.
 		add_filter(
-			'plugin_action_links_' . plugin_basename( WP_AGENTIC_ADMIN_FILE ),
-			array( $this, 'add_settings_link' )
+			'plugin_action_links_' . plugin_basename(WP_AGENTIC_ADMIN_FILE),
+			array($this, 'add_settings_link')
 		);
 	}
 
@@ -67,8 +70,9 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	private function init_settings(): void {
-		$this->settings = get_option( 'wp_agentic_admin_settings', array() );
+	private function init_settings(): void
+	{
+		$this->settings = get_option('wp_agentic_admin_settings', array());
 	}
 
 	/**
@@ -77,9 +81,10 @@ class Settings {
 	 * @param array $links Existing links.
 	 * @return array
 	 */
-	public function add_settings_link( array $links ): array {
-		$settings_link = '<a href="admin.php?page=wp-agentic-admin">' . __( 'Settings', 'wp-agentic-admin' ) . '</a>';
-		array_unshift( $links, $settings_link );
+	public function add_settings_link(array $links): array
+	{
+		$settings_link = '<a href="admin.php?page=wp-agentic-admin">' . __('Settings', 'wp-agentic-admin') . '</a>';
+		array_unshift($links, $settings_link);
 		return $links;
 	}
 
@@ -88,36 +93,40 @@ class Settings {
 	 *
 	 * @return array
 	 */
-	public function get_settings_config(): array {
+	public function get_settings_config(): array
+	{
 		return array(
-			'model'    => array(
-				'label'  => __( 'AI Model', 'wp-agentic-admin' ),
+			'model' => array(
+				'label' => __('AI Model', 'wp-agentic-admin'),
 				'fields' => array(
 					'wp_agentic_admin_model_id' => array(
-						'label'       => __( 'Model', 'wp-agentic-admin' ),
-						'type'        => 'select',
-						'options'     => array(
-							'Qwen2.5-7B-Instruct-q4f16_1-MLC'     => 'Qwen 2.5 7B (Recommended)',
+						'label' => __('Model', 'wp-agentic-admin'),
+						'type' => 'select',
+						'options' => array(
+							'Qwen2.5-7B-Instruct-q4f16_1-MLC' => 'Qwen 2.5 7B F16 (Recommended)',
+							'Qwen2.5-7B-Instruct-q4f32_1-MLC' => 'Qwen 2.5 7B F32 (No shader-f16 needed)',
+							'Qwen3-1.7B-q4f16_1-MLC' => 'Qwen 3 1.7B F16 (Lightweight)',
+							'Qwen3-1.7B-q4f32_1-MLC' => 'Qwen 3 1.7B F32 (Lightweight, no shader-f16 needed)',
 						),
-						'default'     => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin' ),
+						'default' => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
+						'description' => __('Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin'),
 					),
 				),
 			),
 			'behavior' => array(
-				'label'  => __( 'Behavior', 'wp-agentic-admin' ),
+				'label' => __('Behavior', 'wp-agentic-admin'),
 				'fields' => array(
 					'wp_agentic_admin_confirm_destructive' => array(
-						'label'       => __( 'Confirm destructive actions', 'wp-agentic-admin' ),
-						'type'        => 'checkbox',
-						'default'     => 1,
-						'description' => __( 'Always ask for confirmation before executing destructive abilities.', 'wp-agentic-admin' ),
+						'label' => __('Confirm destructive actions', 'wp-agentic-admin'),
+						'type' => 'checkbox',
+						'default' => 1,
+						'description' => __('Always ask for confirmation before executing destructive abilities.', 'wp-agentic-admin'),
 					),
-					'wp_agentic_admin_max_log_lines'       => array(
-						'label'       => __( 'Max log lines', 'wp-agentic-admin' ),
-						'type'        => 'number',
-						'default'     => 100,
-						'description' => __( 'Maximum number of log lines to read at once.', 'wp-agentic-admin' ),
+					'wp_agentic_admin_max_log_lines' => array(
+						'label' => __('Max log lines', 'wp-agentic-admin'),
+						'type' => 'number',
+						'default' => 100,
+						'description' => __('Maximum number of log lines to read at once.', 'wp-agentic-admin'),
 					),
 				),
 			),
@@ -131,8 +140,9 @@ class Settings {
 	 * @param mixed  $default Default value if field doesn't exist.
 	 * @return mixed
 	 */
-	public function get_field( string $field, $default = '' ) {
-		return $this->settings[ $field ] ?? $default;
+	public function get_field(string $field, $default = '')
+	{
+		return $this->settings[$field] ?? $default;
 	}
 
 	/**
@@ -143,39 +153,40 @@ class Settings {
 	 * @param string $type  Data type (text, email, int, key, url, html, checkbox, select).
 	 * @return void
 	 */
-	public function update_field( string $field, $value, string $type = 'text' ): void {
-		switch ( $type ) {
+	public function update_field(string $field, $value, string $type = 'text'): void
+	{
+		switch ($type) {
 			case 'email':
-				$cleaned = sanitize_email( (string) $value );
+				$cleaned = sanitize_email((string)$value);
 				break;
 			case 'int':
 			case 'number':
-				$cleaned = absint( $value );
+				$cleaned = absint($value);
 				break;
 			case 'url':
-				$cleaned = esc_url_raw( (string) $value );
+				$cleaned = esc_url_raw((string)$value);
 				break;
 			case 'key':
-				$cleaned = sanitize_key( $value );
+				$cleaned = sanitize_key($value);
 				break;
 			case 'html':
-				$cleaned = wp_kses_post( (string) $value );
+				$cleaned = wp_kses_post((string)$value);
 				break;
 			case 'textarea':
-				$cleaned = sanitize_textarea_field( (string) $value );
+				$cleaned = sanitize_textarea_field((string)$value);
 				break;
 			case 'checkbox':
-				$cleaned = (int) ( ! empty( $value ) );
+				$cleaned = (int)(!empty($value));
 				break;
 			case 'select':
-				$cleaned = sanitize_text_field( (string) $value );
+				$cleaned = sanitize_text_field((string)$value);
 				break;
 			case 'text':
 			default:
-				$cleaned = sanitize_text_field( (string) $value );
+				$cleaned = sanitize_text_field((string)$value);
 				break;
 		}
-		$this->settings[ $field ] = $cleaned;
+		$this->settings[$field] = $cleaned;
 	}
 
 	/**
@@ -183,8 +194,9 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public function save(): void {
-		update_option( 'wp_agentic_admin_settings', $this->settings );
+	public function save(): void
+	{
+		update_option('wp_agentic_admin_settings', $this->settings);
 	}
 
 	/**
@@ -192,7 +204,8 @@ class Settings {
 	 *
 	 * @return array
 	 */
-	public function get_all(): array {
+	public function get_all(): array
+	{
 		return $this->settings;
 	}
 }
