@@ -101,6 +101,24 @@ export function registerVerifyPluginChecksums() {
 							lines.push(
 								`  - \`${ issue.file }\` (${ issue.status })`
 							);
+							if ( issue.diff ) {
+								lines.push( '```diff' );
+								const diffLines =
+									issue.diff.split( '\n' );
+								if ( diffLines.length > 30 ) {
+									lines.push(
+										diffLines
+											.slice( 0, 30 )
+											.join( '\n' )
+									);
+									lines.push(
+										`... (${ diffLines.length - 30 } more lines)`
+									);
+								} else {
+									lines.push( issue.diff );
+								}
+								lines.push( '```' );
+							}
 						}
 					}
 				}
@@ -147,10 +165,16 @@ export function registerVerifyPluginChecksums() {
 		 *
 		 * @return {Promise<Object>} The result from the PHP ability.
 		 */
-		execute: async () => {
+		execute: async ( params ) => {
+			const input = {};
+
+			if ( typeof params.include_diffs === 'boolean' ) {
+				input.include_diffs = params.include_diffs;
+			}
+
 			return executeAbility(
 				'wp-agentic-admin/verify-plugin-checksums',
-				{}
+				input
 			);
 		},
 

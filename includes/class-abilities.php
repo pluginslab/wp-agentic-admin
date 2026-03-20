@@ -92,6 +92,11 @@ class Abilities {
 			require_once $shared_helpers;
 		}
 
+		$diff_helpers = $abilities_dir . 'shared/diff-helpers.php';
+		if ( file_exists( $diff_helpers ) ) {
+			require_once $diff_helpers;
+		}
+
 		// Load all PHP files from the abilities directory.
 		$ability_files = glob( $abilities_dir . '*.php' );
 

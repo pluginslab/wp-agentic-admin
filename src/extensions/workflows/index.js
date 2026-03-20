@@ -33,6 +33,7 @@ import { registerSiteCleanupWorkflow } from './site-cleanup';
 import { registerPerformanceCheckWorkflow } from './performance-check';
 import { registerPluginAuditWorkflow } from './plugin-audit';
 import { registerDatabaseMaintenanceWorkflow } from './database-maintenance';
+import { registerCheckIfHackedWorkflow } from './check-if-hacked';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'Workflows' );
@@ -42,6 +43,7 @@ export { registerSiteCleanupWorkflow } from './site-cleanup';
 export { registerPerformanceCheckWorkflow } from './performance-check';
 export { registerPluginAuditWorkflow } from './plugin-audit';
 export { registerDatabaseMaintenanceWorkflow } from './database-maintenance';
+export { registerCheckIfHackedWorkflow } from './check-if-hacked';
 
 /**
  * Register all built-in workflows.
@@ -58,6 +60,7 @@ export function registerAllWorkflows() {
 	registerPerformanceCheckWorkflow();
 	registerPluginAuditWorkflow();
 	registerDatabaseMaintenanceWorkflow();
+	registerCheckIfHackedWorkflow();
 
 	log.info( 'All built-in workflows registered' );
 }

@@ -30,7 +30,13 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'default'              => array(),
-				'properties'           => array(),
+				'properties'           => array(
+					'include_diffs' => array(
+						'type'        => 'boolean',
+						'description' => __( 'Include diffs for modified files by fetching originals from WordPress.org SVN.', 'wp-agentic-admin' ),
+						'default'     => true,
+					),
+				),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
@@ -94,7 +100,8 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
  * @return array
  */
 function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array() ): array {
-	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
+	$include_diffs = isset( $input['include_diffs'] ) ? (bool) $input['include_diffs'] : true;
+
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -142,10 +149,19 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 			}
 
 			if ( ! wp_agentic_admin_verify_file_checksum( $file_path, $hashes ) ) {
-				$issues[] = array(
+				$issue = array(
 					'file'   => $file,
 					'status' => 'modified',
 				);
+
+				if ( $include_diffs ) {
+					$diff = wp_agentic_admin_get_plugin_file_diff( $slug, $version, $file, $file_path );
+					if ( null !== $diff ) {
+						$issue['diff'] = $diff;
+					}
+				}
+
+				$issues[] = $issue;
 			}
 		}
 
@@ -336,4 +352,26 @@ function wp_agentic_admin_get_plugin_files( string $base_dir, bool $is_single, s
 	}
 
 	return $files;
+}
+
+/**
+ * Generate a unified diff between the original plugin file and the local version.
+ *
+ * Fetches the original file from WordPress.org plugin SVN.
+ *
+ * @param string $slug      Plugin slug.
+ * @param string $version   Plugin version.
+ * @param string $file      Relative file path within the plugin.
+ * @param string $file_path Absolute path to the local file.
+ * @return string|null Unified diff string, or null on failure.
+ */
+function wp_agentic_admin_get_plugin_file_diff( string $slug, string $version, string $file, string $file_path ): ?string {
+	$original_url = sprintf(
+		'https://plugins.svn.wordpress.org/%s/tags/%s/%s',
+		rawurlencode( $slug ),
+		rawurlencode( $version ),
+		$file
+	);
+
+	return wp_agentic_admin_get_remote_file_diff( $original_url, $file_path, "a/{$slug}/{$file}", "b/{$slug}/{$file}" );
 }
