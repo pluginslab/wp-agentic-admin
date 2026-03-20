@@ -14,6 +14,7 @@
 
 import workflowRegistry from './workflow-registry';
 import toolRegistry from './tool-registry';
+import instructionRegistry from './instruction-registry';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'MessageRouter' );
@@ -63,9 +64,20 @@ const QUESTION_WORDS = [
 
 /**
  * @typedef {Object} RouteResult
- * @property {'workflow'|'react'|'conversational'} type       - Route type
- * @property {Object}                              [workflow] - Workflow definition (if type is 'workflow')
+ * @property {'workflow'|'react'|'conversational'} type                  - Route type
+ * @property {Object}                              [workflow]            - Workflow definition (if type is 'workflow')
+ * @property {string[]}                            [preloadInstructions] - Instruction IDs to preload before ReAct loop
  */
+
+/**
+ * Detect which instruction keywords match a user message.
+ *
+ * @param {string} message - Lowercased user message
+ * @return {string[]} Matching instruction IDs
+ */
+function matchesInstructionKeywords( message ) {
+	return instructionRegistry.detectInstructions( message );
+}
 
 /**
  * Check if a message matches any tool keywords.
@@ -140,11 +152,12 @@ export function route( userMessage ) {
 	const lower = userMessage.toLowerCase().trim();
 	const hasKeyword = matchesToolKeywords( lower );
 	const hasAction = hasActionIntent( lower );
+	const preloadInstructions = matchesInstructionKeywords( lower );
 
 	// Step 2: Tool keyword + action intent → ReAct without thinking (fast path)
 	if ( hasKeyword && hasAction ) {
 		log.info( 'Routing to ReAct (keyword + action match, no thinking)' );
-		return { type: 'react', disableThinking: true };
+		return { type: 'react', disableThinking: true, preloadInstructions };
 	}
 
 	// Step 3: Tool keyword + knowledge question → skip ReAct entirely
@@ -159,7 +172,7 @@ export function route( userMessage ) {
 	// Step 4: Tool keyword but ambiguous intent → ReAct with thinking
 	if ( hasKeyword ) {
 		log.info( 'Routing to ReAct (keyword match, ambiguous intent)' );
-		return { type: 'react', disableThinking: false };
+		return { type: 'react', disableThinking: false, preloadInstructions };
 	}
 
 	// Step 5: No tool relevance → conversational

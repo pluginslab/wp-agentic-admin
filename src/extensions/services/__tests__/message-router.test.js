@@ -10,10 +10,46 @@
 import { route, isWorkflowQuery } from '../message-router';
 import workflowRegistry from '../workflow-registry';
 import toolRegistry from '../tool-registry'; // eslint-disable-line no-unused-vars -- Required for jest.mock() to resolve.
+import instructionRegistry from '../instruction-registry'; // eslint-disable-line no-unused-vars -- Required for jest.mock() to resolve.
 
 // Mock workflow registry
 jest.mock( '../workflow-registry', () => ( {
 	detectWorkflow: jest.fn(),
+} ) );
+
+// Mock instruction registry
+jest.mock( '../instruction-registry', () => ( {
+	detectInstructions: jest.fn( ( message ) => {
+		const matches = [];
+		if (
+			message.includes( 'plugin' ) ||
+			message.includes( 'extensions' )
+		) {
+			matches.push( 'plugins' );
+		}
+		if ( message.includes( 'cache' ) || message.includes( 'transient' ) ) {
+			matches.push( 'cache' );
+		}
+		if (
+			message.includes( 'health' ) ||
+			message.includes( 'error' ) ||
+			message.includes( 'log' ) ||
+			message.includes( 'slow' )
+		) {
+			matches.push( 'diagnostics' );
+		}
+		if ( message.includes( 'rewrite' ) ) {
+			matches.push( 'routing' );
+		}
+		if (
+			message.includes( 'database' ) ||
+			message.includes( 'db' ) ||
+			message.includes( 'optimize' )
+		) {
+			matches.push( 'database' );
+		}
+		return matches;
+	} ),
 } ) );
 
 // Mock tool registry with representative keywords
@@ -231,6 +267,34 @@ describe( 'MessageRouter', () => {
 			expect( route( 'what is a plugin audit?' ).type ).toBe(
 				'workflow'
 			);
+		} );
+	} );
+
+	describe( 'Instruction Preloading', () => {
+		beforeEach( () => {
+			workflowRegistry.detectWorkflow.mockReturnValue( null );
+		} );
+
+		it( 'should preload plugins instruction for "list plugins"', () => {
+			const r = route( 'list plugins' );
+			expect( r.preloadInstructions ).toContain( 'plugins' );
+		} );
+
+		it( 'should preload multiple instructions for "flush cache and list plugins"', () => {
+			const r = route( 'flush cache and list plugins' );
+			expect( r.preloadInstructions ).toContain( 'plugins' );
+			expect( r.preloadInstructions ).toContain( 'cache' );
+		} );
+
+		it( 'should preload diagnostics for "my site is slow"', () => {
+			const r = route( 'my site is slow' );
+			expect( r.preloadInstructions ).toContain( 'diagnostics' );
+		} );
+
+		it( 'should not include preloadInstructions on conversational route', () => {
+			const r = route( 'hello' );
+			expect( r.type ).toBe( 'conversational' );
+			expect( r.preloadInstructions ).toBeUndefined();
 		} );
 	} );
 

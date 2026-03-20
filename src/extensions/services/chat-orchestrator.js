@@ -12,6 +12,7 @@
 
 import modelLoader from './model-loader';
 import toolRegistry from './tool-registry';
+import instructionRegistry from './instruction-registry';
 import streamSimulator from './stream-simulator';
 import { ChatSession } from './chat-session';
 import workflowRegistry from './workflow-registry';
@@ -258,7 +259,8 @@ class ChatOrchestrator {
 			);
 			return await this.processWithReact(
 				userMessage,
-				route.disableThinking
+				route.disableThinking,
+				route.preloadInstructions
 			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
@@ -279,11 +281,16 @@ class ChatOrchestrator {
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
-	 * @param {string}  userMessage     - User's message
-	 * @param {boolean} disableThinking - Whether to disable model thinking
+	 * @param {string}   userMessage         - User's message
+	 * @param {boolean}  disableThinking     - Whether to disable model thinking
+	 * @param {string[]} preloadInstructions - Instruction IDs to preload
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
-	async processWithReact( userMessage, disableThinking = false ) {
+	async processWithReact(
+		userMessage,
+		disableThinking = false,
+		preloadInstructions = []
+	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -293,7 +300,12 @@ class ChatOrchestrator {
 
 		// Create ReAct agent if not exists
 		if ( ! this.reactAgent ) {
-			this.reactAgent = new ReactAgent( modelLoader, toolRegistry );
+			this.reactAgent = new ReactAgent(
+				modelLoader,
+				toolRegistry,
+				{},
+				instructionRegistry
+			);
 
 			// Wire up callbacks
 			this.reactAgent.setCallbacks( {
@@ -325,6 +337,16 @@ class ChatOrchestrator {
 
 		// Update thinking mode per-request based on router decision
 		this.reactAgent.config.disableThinking = disableThinking;
+
+		// Preload instructions detected by the router
+		if ( preloadInstructions && preloadInstructions.length > 0 ) {
+			for ( const id of preloadInstructions ) {
+				this.reactAgent.activeInstructions.add( id );
+			}
+			log.info(
+				`Preloaded instructions: ${ preloadInstructions.join( ', ' ) }`
+			);
+		}
 
 		// Execute ReAct loop
 		const result = await this.reactAgent.execute(

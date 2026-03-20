@@ -445,4 +445,170 @@ describe( 'ReactAgent', () => {
 			);
 		} );
 	} );
+
+	describe( 'Instruction Loading', () => {
+		let mockInstructionRegistry;
+
+		beforeEach( () => {
+			mockInstructionRegistry = {
+				getAll: jest.fn().mockReturnValue( [
+					{
+						id: 'plugins',
+						label: 'Plugin Management',
+						description: 'List, activate, and deactivate plugins',
+						keywords: [ 'plugin', 'plugins' ],
+						abilityIds: [
+							'wp-agentic-admin/plugin-list',
+							'wp-agentic-admin/plugin-activate',
+						],
+					},
+					{
+						id: 'cache',
+						label: 'Cache & Transients',
+						description: 'Flush object cache and transients',
+						keywords: [ 'cache', 'transient' ],
+						abilityIds: [ 'wp-agentic-admin/cache-flush' ],
+					},
+				] ),
+				get: jest.fn( ( id ) => {
+					const instructions = mockInstructionRegistry.getAll();
+					return instructions.find( ( i ) => i.id === id );
+				} ),
+				has: jest.fn( ( id ) => !! mockInstructionRegistry.get( id ) ),
+			};
+
+			// Add getByIds and getUngrouped to mockToolRegistry
+			mockToolRegistry.getByIds = jest.fn( ( ids ) => {
+				const tools = mockToolRegistry.getAll();
+				return ids
+					.map( ( id ) => tools.find( ( t ) => t.id === id ) )
+					.filter( Boolean );
+			} );
+			mockToolRegistry.getUngrouped = jest.fn( () => [] );
+
+			reactAgent = new ReactAgent(
+				mockModelLoader,
+				mockToolRegistry,
+				{},
+				mockInstructionRegistry
+			);
+			reactAgent.setCallbacks( mockCallbacks );
+		} );
+
+		it( 'should handle load_instruction tool call', async () => {
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}',
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin."}'
+			);
+
+			const result = await reactAgent.execute( 'list plugins', [] );
+
+			expect( result.success ).toBe( true );
+			expect( reactAgent.activeInstructions.has( 'plugins' ) ).toBe(
+				true
+			);
+			expect( result.toolsUsed ).toContain(
+				'wp-agentic-admin/plugin-list'
+			);
+		} );
+
+		it( 'should handle unload_instruction tool call', async () => {
+			reactAgent.activeInstructions.add( 'plugins' );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "unload_instruction", "args": {"instruction": "plugins"}}',
+				'{"action": "final_answer", "content": "Done."}'
+			);
+
+			const result = await reactAgent.execute( 'done with plugins', [] );
+
+			expect( result.success ).toBe( true );
+			expect( reactAgent.activeInstructions.has( 'plugins' ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should handle invalid instruction ID in load_instruction', async () => {
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "nonexistent"}}',
+				'{"action": "final_answer", "content": "Could not find that instruction."}'
+			);
+
+			const result = await reactAgent.execute( 'load something', [] );
+
+			expect( result.success ).toBe( true );
+			expect( reactAgent.activeInstructions.has( 'nonexistent' ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should persist activeInstructions across execute calls', async () => {
+			// First call loads plugins
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "load_instruction", "args": {"instruction": "plugins"}}',
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin."}'
+			);
+			await reactAgent.execute( 'list plugins', [] );
+
+			expect( reactAgent.activeInstructions.has( 'plugins' ) ).toBe(
+				true
+			);
+
+			// Second call — plugins should still be active
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Plugins are still loaded."}'
+			);
+			await reactAgent.execute( 'anything else?', [] );
+
+			expect( reactAgent.activeInstructions.has( 'plugins' ) ).toBe(
+				true
+			);
+		} );
+
+		it( 'should reset activeInstructions on resetSession()', () => {
+			reactAgent.activeInstructions.add( 'plugins' );
+			reactAgent.activeInstructions.add( 'cache' );
+
+			reactAgent.resetSession();
+
+			expect( reactAgent.activeInstructions.size ).toBe( 0 );
+		} );
+
+		it( 'should include instruction index in system prompt', () => {
+			const prompt = reactAgent.buildSystemPromptPromptBased();
+
+			expect( prompt ).toContain( 'load_instruction' );
+			expect( prompt ).toContain( 'unload_instruction' );
+			expect( prompt ).toContain( 'AVAILABLE INSTRUCTIONS' );
+			expect( prompt ).toContain(
+				'plugins: List, activate, and deactivate plugins'
+			);
+			expect( prompt ).toContain(
+				'cache: Flush object cache and transients'
+			);
+		} );
+
+		it( 'should show active instructions in system prompt', () => {
+			reactAgent.activeInstructions.add( 'plugins' );
+
+			const prompt = reactAgent.buildSystemPromptPromptBased();
+
+			expect( prompt ).toContain( 'ACTIVE INSTRUCTIONS: plugins' );
+			// Plugins should not be in AVAILABLE section
+			expect( prompt ).not.toContain(
+				'AVAILABLE INSTRUCTIONS' + '\\n- plugins'
+			);
+			// Cache should still be in AVAILABLE section
+			expect( prompt ).toContain(
+				'cache: Flush object cache and transients'
+			);
+		} );
+	} );
 } );

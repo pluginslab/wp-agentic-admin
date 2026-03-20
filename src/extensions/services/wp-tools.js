@@ -22,6 +22,7 @@
 
 import { exposeGlobalAPI } from './agentic-abilities-api';
 import { registerAllAbilities } from '../abilities';
+import { registerAllInstructions } from '../instructions';
 import { registerAllWorkflows } from '../workflows';
 import { createLogger } from '../utils/logger';
 
@@ -45,6 +46,9 @@ const registerWPTools = () => {
 
 	// Register all core abilities
 	registerAllAbilities();
+
+	// Register all core instructions (must come after abilities)
+	registerAllInstructions();
 
 	// Register all core workflows
 	registerAllWorkflows();

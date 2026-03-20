@@ -47,14 +47,30 @@ class ReactAgent {
 	/**
 	 * Create a new ReAct agent
 	 *
-	 * @param {Object} modelLoader  - ModelLoader instance for LLM access
-	 * @param {Object} toolRegistry - ToolRegistry instance for available tools
-	 * @param {Object} options      - Configuration options
+	 * @param {Object} modelLoader           - ModelLoader instance for LLM access
+	 * @param {Object} toolRegistry          - ToolRegistry instance for available tools
+	 * @param {Object} [options]             - Configuration options
+	 * @param {Object} [instructionRegistry] - InstructionRegistry instance for progressive disclosure
 	 */
-	constructor( modelLoader, toolRegistry, options = {} ) {
+	constructor(
+		modelLoader,
+		toolRegistry,
+		options = {},
+		instructionRegistry = null
+	) {
 		this.modelLoader = modelLoader;
 		this.toolRegistry = toolRegistry;
+		this.instructionRegistry = instructionRegistry;
 		this.config = { ...REACT_CONFIG, ...options };
+
+		/**
+		 * Active instruction IDs. Persists across execute() calls within a session.
+		 * Reset when resetSession() is called.
+		 *
+		 * @type {Set<string>}
+		 */
+		this.activeInstructions = new Set();
+
 		// Callbacks for UI integration
 		this.callbacks = {
 			onToolStart: () => {},
@@ -65,6 +81,14 @@ class ReactAgent {
 			onThinkingEnd: () => {},
 			onConfirmationRequired: async () => true, // Default: auto-confirm
 		};
+	}
+
+	/**
+	 * Reset session state (active instructions).
+	 * Called when a new chat session starts.
+	 */
+	resetSession() {
+		this.activeInstructions.clear();
 	}
 
 	/**
@@ -126,19 +150,24 @@ class ReactAgent {
 	 */
 	async executeWithPromptBased( userMessage, conversationHistory ) {
 		const engine = this.modelLoader.getEngine();
-		const systemPrompt = this.buildSystemPromptPromptBased();
 
 		const observations = [];
 		const toolsUsed = [];
 		let iteration = 0;
 
+		// Build initial system prompt (rebuilt each iteration when instructions change)
 		const messages = [
-			{ role: 'system', content: systemPrompt },
+			{ role: 'system', content: this.buildSystemPromptPromptBased() },
 			...conversationHistory,
 			{ role: 'user', content: userMessage },
 		];
 
 		while ( iteration < this.config.maxIterations ) {
+			// Rebuild system prompt each iteration so load/unload takes effect
+			messages[ 0 ] = {
+				role: 'system',
+				content: this.buildSystemPromptPromptBased(),
+			};
 			iteration++;
 			const hasToolResults = toolsUsed.length > 0;
 			log.debug(
@@ -284,6 +313,59 @@ class ReactAgent {
 					const toolArgs = action.args || {};
 
 					log.info( `LLM requested tool: ${ toolName }`, toolArgs );
+
+					// Handle load_instruction meta-tool
+					if (
+						toolName === 'load_instruction' &&
+						this.instructionRegistry
+					) {
+						const instructionId = toolArgs.instruction;
+						const instruction =
+							this.instructionRegistry.get( instructionId );
+						if ( ! instruction ) {
+							const available = this.instructionRegistry
+								.getAll()
+								.map( ( inst ) => inst.id )
+								.join( ', ' );
+							messages.push( {
+								role: 'assistant',
+								content,
+							} );
+							messages.push( {
+								role: 'user',
+								content: `Error: Instruction "${ instructionId }" not found. Available instructions: ${ available }.\n\nRemember: Respond with ONLY a JSON object.`,
+							} );
+							continue;
+						}
+						this.activeInstructions.add( instructionId );
+						messages.push( {
+							role: 'assistant',
+							content,
+						} );
+						messages.push( {
+							role: 'user',
+							content: `Instruction "${ instructionId }" loaded. Its tools are now available.\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.`,
+						} );
+						continue;
+					}
+
+					// Handle unload_instruction meta-tool
+					if (
+						toolName === 'unload_instruction' &&
+						this.instructionRegistry
+					) {
+						const instructionId = toolArgs.instruction;
+						this.activeInstructions.delete( instructionId );
+						messages.push( {
+							role: 'assistant',
+							content,
+						} );
+						messages.push( {
+							role: 'user',
+							content: `Instruction "${ instructionId }" unloaded.\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.`,
+						} );
+						continue;
+					}
 
 					// Detect repeated tool calls (same tool twice in a row)
 					if (
@@ -779,21 +861,34 @@ class ReactAgent {
 	}
 
 	/**
-	 * Build system prompt for prompt-based mode
+	 * Build system prompt for prompt-based mode.
+	 *
+	 * When an instructionRegistry is available, uses progressive disclosure:
+	 * - Meta-tools (load_instruction, unload_instruction) always listed
+	 * - Ungrouped tools always listed
+	 * - Tools from active instructions listed
+	 * - Available instruction index shown for discovery
+	 *
+	 * Without an instructionRegistry, falls back to listing all tools (legacy).
 	 *
 	 * @return {string} System prompt with JSON instructions
 	 */
 	buildSystemPromptPromptBased() {
-		const tools = this.toolRegistry.getAll();
-		const toolsList = tools
-			.map( ( t ) => `- ${ t.id }: ${ t.description || t.label || '' }` )
-			.join( '\n' );
+		const toolsList = this.buildToolsList();
+
+		let instructionSection = '';
+		if (
+			this.instructionRegistry &&
+			this.instructionRegistry.getAll().length > 0
+		) {
+			instructionSection = this.buildInstructionSection();
+		}
 
 		return `You are a WordPress assistant. Respond with ONLY a JSON object, nothing else.
 
 TOOLS:
 ${ toolsList }
-
+${ instructionSection }
 FORMAT — every response must be exactly one JSON object:
 
 Call a tool: {"action": "tool_call", "tool": "tool-id", "args": {}}
@@ -818,6 +913,99 @@ User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
 			this.config.disableThinking ? '\n\n/nothink' : ''
 		}`;
+	}
+
+	/**
+	 * Build the TOOLS section of the system prompt.
+	 *
+	 * @return {string} Formatted tools list
+	 */
+	buildToolsList() {
+		if (
+			! this.instructionRegistry ||
+			this.instructionRegistry.getAll().length === 0
+		) {
+			// Legacy: list all tools
+			return this.toolRegistry
+				.getAll()
+				.map(
+					( t ) => `- ${ t.id }: ${ t.description || t.label || '' }`
+				)
+				.join( '\n' );
+		}
+
+		const lines = [];
+
+		// Meta-tools for instruction management
+		lines.push(
+			'- load_instruction: Load an instruction set to access its tools. Args: {"instruction": "instruction-id"}'
+		);
+		lines.push(
+			'- unload_instruction: Unload an instruction set you no longer need. Args: {"instruction": "instruction-id"}'
+		);
+
+		// Ungrouped tools (always visible)
+		const ungrouped = this.toolRegistry.getUngrouped(
+			this.instructionRegistry
+		);
+		for ( const t of ungrouped ) {
+			lines.push( `- ${ t.id }: ${ t.description || t.label || '' }` );
+		}
+
+		// Tools from active instructions
+		for ( const instructionId of this.activeInstructions ) {
+			const instruction = this.instructionRegistry.get( instructionId );
+			if ( ! instruction ) {
+				continue;
+			}
+			const tools = this.toolRegistry.getByIds( instruction.abilityIds );
+			for ( const t of tools ) {
+				lines.push(
+					`- ${ t.id }: ${ t.description || t.label || '' }`
+				);
+			}
+		}
+
+		return lines.join( '\n' );
+	}
+
+	/**
+	 * Build the instruction index section of the system prompt.
+	 *
+	 * @return {string} Formatted instruction section
+	 */
+	buildInstructionSection() {
+		const allInstructions = this.instructionRegistry.getAll();
+		const inactiveInstructions = allInstructions.filter(
+			( inst ) => ! this.activeInstructions.has( inst.id )
+		);
+
+		let section = '';
+
+		if ( inactiveInstructions.length > 0 ) {
+			const index = inactiveInstructions
+				.map( ( inst ) => `- ${ inst.id }: ${ inst.description }` )
+				.join( '\n' );
+			section += `\nAVAILABLE INSTRUCTIONS (call load_instruction to use):\n${ index }\n`;
+		}
+
+		if ( this.activeInstructions.size > 0 ) {
+			const activeList = Array.from( this.activeInstructions ).join(
+				', '
+			);
+			section += `\nACTIVE INSTRUCTIONS: ${ activeList }\n(Call unload_instruction if you no longer need one of these)\n`;
+
+			// Inject context guidance from active instructions
+			for ( const instructionId of this.activeInstructions ) {
+				const instruction =
+					this.instructionRegistry.get( instructionId );
+				if ( instruction?.context ) {
+					section += `\n[${ instruction.label }] ${ instruction.context }\n`;
+				}
+			}
+		}
+
+		return section;
 	}
 }
 

@@ -148,6 +148,37 @@ class ToolRegistry {
 	getDestructiveTools() {
 		return this.getAll().filter( ( tool ) => tool.requiresConfirmation );
 	}
+
+	/**
+	 * Get tools matching a list of IDs.
+	 *
+	 * @param {string[]} ids - Array of tool IDs to retrieve
+	 * @return {ToolDefinition[]} Matching tools (in the order of ids)
+	 */
+	getByIds( ids ) {
+		return ids
+			.map( ( id ) => this.tools.get( id ) )
+			.filter( Boolean );
+	}
+
+	/**
+	 * Get tools that are not grouped under any instruction.
+	 *
+	 * These tools are always visible in the system prompt regardless of
+	 * which instructions are active.
+	 *
+	 * @param {Object} instructionRegistry - InstructionRegistry instance
+	 * @return {ToolDefinition[]} Tools not belonging to any instruction
+	 */
+	getUngrouped( instructionRegistry ) {
+		const groupedIds = new Set();
+		for ( const instruction of instructionRegistry.getAll() ) {
+			for ( const id of instruction.abilityIds ) {
+				groupedIds.add( id );
+			}
+		}
+		return this.getAll().filter( ( tool ) => ! groupedIds.has( tool.id ) );
+	}
 }
 
 // Create singleton instance
