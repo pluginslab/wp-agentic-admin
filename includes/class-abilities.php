@@ -203,6 +203,15 @@ class Abilities {
 			wp_agentic_admin_register_backup_check();
 		}
 
+		// Dynamic ability discovery — PoC for calling plugin abilities.
+		if ( function_exists( 'wp_agentic_admin_register_discover_plugin_abilities' ) ) {
+			wp_agentic_admin_register_discover_plugin_abilities();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_run_plugin_ability' ) ) {
+			wp_agentic_admin_register_run_plugin_ability();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
