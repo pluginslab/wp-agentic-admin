@@ -66,6 +66,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/update-check',
 		},
 
+		// ── Error log search ──────────────────────────────────────
+		{
+			input: 'search the error log for fatal errors',
+			expectTool: 'wp-agentic-admin/error-log-search',
+		},
+		{
+			input: 'filter the log for database warnings',
+			expectTool: 'wp-agentic-admin/error-log-search',
+		},
+
 		// ── Disk usage ────────────────────────────────────────────
 		{
 			input: 'how much disk space is my site using?',
@@ -74,6 +84,16 @@ module.exports = {
 		{
 			input: 'check storage usage',
 			expectTool: 'wp-agentic-admin/disk-usage',
+		},
+
+		// ── OPcache status ────────────────────────────────────────
+		{
+			input: 'what is the opcache status?',
+			expectTool: 'wp-agentic-admin/opcode-cache-status',
+		},
+		{
+			input: 'is PHP opcode caching enabled?',
+			expectTool: 'wp-agentic-admin/opcode-cache-status',
 		},
 
 		// ── Comment stats ─────────────────────────────────────────
@@ -104,6 +124,46 @@ module.exports = {
 		{
 			input: 'show me all draft posts',
 			expectTool: 'wp-agentic-admin/post-list',
+		},
+
+		// ── Backup check ──────────────────────────────────────────
+		{
+			input: 'do I have a backup plugin installed?',
+			expectTool: 'wp-agentic-admin/backup-check',
+		},
+		{
+			input: 'check my backup status',
+			expectTool: 'wp-agentic-admin/backup-check',
+		},
+
+		// ── File writing ──────────────────────────────────────────
+		{
+			input: 'add a line to my functions.php',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+		{
+			input: 'edit the wp-config.php to enable debug mode',
+			expectTool: 'wp-agentic-admin/write-file',
+		},
+
+		// ── Database queries ──────────────────────────────────────
+		{
+			input: 'run a SQL query to check the wp_options table',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+		{
+			input: 'query the database for autoloaded options',
+			expectTool: 'wp-agentic-admin/query-database',
+		},
+
+		// ── Web search ───────────────────────────────────────────
+		{
+			input: 'search for how to fix WordPress white screen of death',
+			expectTool: 'wp-agentic-admin/web-search',
+		},
+		{
+			input: 'look up WooCommerce REST API documentation',
+			expectTool: 'wp-agentic-admin/web-search',
 		},
 
 		// ── Diagnostics ────────────────────────────────────────────
@@ -193,6 +253,16 @@ module.exports = {
 		{
 			input: 'what environment is this site running on?',
 			expectTool: 'core/get-environment-info',
+		},
+
+		// ── Editor blocks ─────────────────────────────────────────
+		{
+			input: 'what blocks are on this page?',
+			expectTool: 'core/get-editor-blocks',
+		},
+		{
+			input: 'list the blocks in the editor',
+			expectTool: 'core/get-editor-blocks',
 		},
 
 		// ── No-tool tests (pure knowledge questions) ───────────────

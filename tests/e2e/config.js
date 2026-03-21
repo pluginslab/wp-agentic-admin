@@ -24,6 +24,7 @@ export const config = {
 	// Model configuration
 	models: {
 		default: 'Qwen3-1.7B-q4f16_1-MLC',
+		defaultF32: 'Qwen3-1.7B-q4f32_1-MLC',
 	},
 
 	// CSS selectors for interacting with the plugin UI

@@ -30,8 +30,18 @@ import { registerCommentStats } from './comment-stats';
 import { registerSecurityScan } from './security-scan';
 import { registerPostList } from './post-list';
 import { registerReadFile } from './read-file';
+import { registerErrorLogSearch } from './error-log-search';
+import { registerOpcodeCacheStatus } from './opcode-cache-status';
+import { registerBackupCheck } from './backup-check';
+import { registerWriteFile } from './write-file';
+import { registerQueryDatabase } from './query-database';
+import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerVerifyCoreChecksums } from './verify-core-checksums';
+import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+import { registerDatabaseCheck } from './database-check';
+import { registerCoreEditorBlocks } from './core-editor-blocks';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -54,8 +64,18 @@ export { registerCommentStats } from './comment-stats';
 export { registerSecurityScan } from './security-scan';
 export { registerPostList } from './post-list';
 export { registerReadFile } from './read-file';
+export { registerErrorLogSearch } from './error-log-search';
+export { registerOpcodeCacheStatus } from './opcode-cache-status';
+export { registerBackupCheck } from './backup-check';
+export { registerWriteFile } from './write-file';
+export { registerQueryDatabase } from './query-database';
+export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerVerifyCoreChecksums } from './verify-core-checksums';
+export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+export { registerDatabaseCheck } from './database-check';
+export { registerCoreEditorBlocks } from './core-editor-blocks';
 
 /**
  * Register all abilities.
@@ -87,12 +107,24 @@ export function registerAllAbilities() {
 	registerSecurityScan();
 	registerPostList();
 	registerReadFile();
+	registerErrorLogSearch();
+	registerOpcodeCacheStatus();
+	registerBackupCheck();
+	registerWriteFile();
+	registerQueryDatabase();
+	registerWebSearch();
+
+	// Security abilities
+	registerVerifyCoreChecksums();
+	registerVerifyPluginChecksums();
+	registerDatabaseCheck();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
 	registerCoreEnvironmentInfo();
+	registerCoreEditorBlocks();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }
