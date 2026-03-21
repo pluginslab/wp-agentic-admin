@@ -2,6 +2,17 @@
 
 Live progress for the WP Agentic Admin hackathon project. Updated as milestones are reached.
 
+## Day 2 — March 21
+
+### Web Search + Dev Tooling + UX (PRs #97, #93, #98)
+- **web-search** (PR #97 by @ivdimova) — search the web via DuckDuckGo HTML parsing, no API key needed. The ability @ivdimova was assigned to on Day 1 — now shipped! Closes issue #29.
+- **high-performance notice** (PR #93 by @AlexanderMelde) — tip box suggesting `chrome://flags/#force-high-performance-gpu` for users with integrated GPUs
+- **build-ability skill** (PR #98 by @ivdimova) — Claude Code interview-driven skill for scaffolding new abilities with patterns reference
+
+**31 abilities**, **21 PRs merged**, **8 contributors**.
+
+---
+
 ## Day 1 — March 20 (Hackathon Kickoff)
 
 ### Infrastructure
@@ -60,14 +71,14 @@ A **user-list ability** that lists all WordPress users with roles, registration 
 Our first hackathon contribution! A **theme-list ability** listing installed themes with active/inactive status, version, and parent theme info. Full suite **21/21 (100%)**.
 
 ### Contributors
-- ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59), error-log-search (#65), opcode-cache-status (#67), backup-check (#72), write-file (#89), query-database (#90)
-- Stefan0x — editor sidebar (#52), model unload dropdown (#91, in review)
+- ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59), error-log-search (#65), opcode-cache-status (#67), backup-check (#72), write-file (#89), query-database (#90), web-search (#97), build-ability skill (#98)
+- Stefan0x — editor sidebar (#52), admin bar sidebar (#80), model unload dropdown (#91)
 - tomepajk — website-hacked-check (#88)
 - 0xLoopTheory — CI/CD GitHub Actions (#78)
+- AlexanderMelde — high-performance notice (#93)
+- janvogt — nix flake (#81)
 - BoweFrankema — instruction mode (#77, in review)
-- AlexanderMelde — f32 fallback model (#61, in review)
 - robert81 — HTTP error message (#50, in review)
-- janvogt — feedback thumbs up/down (#70, in review), nix flake (#81, in review)
 
 ---
 
@@ -81,8 +92,8 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (30 total)
-- [x] 27 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+### Abilities (31 total)
+- [x] 28 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
 - [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
 
 ### Testing
