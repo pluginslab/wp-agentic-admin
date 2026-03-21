@@ -335,8 +335,8 @@
 		-webkit-appearance: none;
 
 		&:focus {
-			outline: none;
 			box-shadow: none;
+			outline: 2px solid transparent; // Visible in Windows High Contrast Mode; wrapper :focus-within handles visual indicator
 		}
 
 		&:disabled {
@@ -1289,7 +1289,7 @@
 			&:focus {
 				border-color: #2271b1;
 				box-shadow: 0 0 0 1px #2271b1;
-				outline: none;
+				outline: 2px solid transparent; // Visible in Windows High Contrast Mode
 			}
 		}
 	}
@@ -1734,9 +1734,10 @@
 				color: #1d2327;
 			}
 
-			&:focus {
+			&:focus-visible {
 				box-shadow: none;
-				outline: 1px dotted #646970;
+				outline: 2px solid #2271b1;
+				outline-offset: 2px;
 			}
 		}
 	}
@@ -1892,7 +1893,7 @@
 		&:focus {
 			border-color: #2271b1;
 			box-shadow: 0 0 0 1px #2271b1;
-			outline: none;
+			outline: 2px solid transparent; // Visible in Windows High Contrast Mode
 		}
 	}
 
@@ -3314,6 +3315,44 @@
 	}
 }
 
+// Global focus-visible styles for interactive elements
+.wp-agentic-admin-app,
+#wp-agentic-admin-sidebar {
+
+	button:focus-visible,
+	a:focus-visible,
+	select:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 2px;
+	}
+
+	.agentic-tool__header--clickable:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 1px;
+		background: rgba(0, 0, 0, 0.04);
+	}
+
+	.agentic-message__copy:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 1px;
+	}
+}
+
+// Respect user motion preferences (WCAG 2.3.3)
+@media ( prefers-reduced-motion: reduce ) {
+
+	.wp-agentic-admin-app,
+	#wp-agentic-admin-sidebar {
+
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+}
 
 // Code block rendering (fenced ``` blocks from read-file and similar)
 .agentic-code-block {

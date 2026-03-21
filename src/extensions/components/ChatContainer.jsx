@@ -809,7 +809,11 @@ const ChatContainer = ( {
 						<div className="agentic-timeline__line" />
 						<div className="agentic-timeline__dot agentic-timeline__dot--workflow" />
 					</div>
-					<div className="agentic-workflow-progress">
+					<div
+						className="agentic-workflow-progress"
+						role="status"
+						aria-live="polite"
+					>
 						<div className="agentic-workflow-progress__header">
 							<span className="agentic-workflow-progress__step">
 								Step { workflowProgress.step } of{ ' ' }
@@ -819,7 +823,14 @@ const ChatContainer = ( {
 								{ workflowProgress.label }
 							</span>
 						</div>
-						<div className="agentic-workflow-progress__bar">
+						<div
+							className="agentic-workflow-progress__bar"
+							role="progressbar"
+							aria-valuenow={ workflowProgress.percentage }
+							aria-valuemin={ 0 }
+							aria-valuemax={ 100 }
+							aria-label={ `Workflow progress: ${ workflowProgress.percentage }%` }
+						>
 							<div
 								className="agentic-workflow-progress__fill"
 								style={ {

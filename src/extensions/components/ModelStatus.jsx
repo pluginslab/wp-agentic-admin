@@ -487,7 +487,14 @@ const ModelStatus = ( {
 						</span>
 					</div>
 
-					<div className="wp-agentic-admin-loading-card__progress">
+					<div
+						className="wp-agentic-admin-loading-card__progress"
+						role="progressbar"
+						aria-valuenow={ displayProgress }
+						aria-valuemin={ 0 }
+						aria-valuemax={ 100 }
+						aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
+					>
 						<div
 							className="wp-agentic-admin-loading-card__progress-bar"
 							style={ { width: `${ displayProgress }%` } }
@@ -507,7 +514,17 @@ const ModelStatus = ( {
 				<div className="wp-agentic-admin-status">
 					<span
 						className={ `wp-agentic-admin-status__indicator ${ getStatusClass() }` }
+						aria-hidden="true"
 					/>
+					<span className="screen-reader-text">
+						{ status === 'ready'
+							? 'Ready'
+							: status === 'error'
+							? 'Error'
+							: status === 'loading'
+							? 'Loading'
+							: 'Not loaded' }
+					</span>
 					<div className="wp-agentic-admin-status__info">
 						<span className="wp-agentic-admin-status__text">
 							{ status === 'ready' && loadedModelInfo
@@ -562,7 +579,16 @@ const ModelStatus = ( {
 										<span className="context__label">
 											Context:
 										</span>
-										<span className="context__bar">
+										<span
+											className="context__bar"
+											role="progressbar"
+											aria-valuenow={
+												contextUsage.percentage
+											}
+											aria-valuemin={ 0 }
+											aria-valuemax={ 100 }
+											aria-label={ `Context usage: ${ contextUsage.percentage }%` }
+										>
 											<span
 												className="context__fill"
 												style={ {
@@ -611,9 +637,15 @@ const ModelStatus = ( {
 			{ ( status === 'not-loaded' || status === 'error' ) && (
 				<div className="wp-agentic-admin-provider">
 					{ /* Provider toggle */ }
-					<div className="wp-agentic-admin-provider__toggle">
+					<div
+						className="wp-agentic-admin-provider__toggle"
+						role="tablist"
+						aria-label="Provider selection"
+					>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'local' }
 							className={ `wp-agentic-admin-provider__tab ${
 								providerMode === 'local' ? 'is-active' : ''
 							}` }
@@ -623,6 +655,8 @@ const ModelStatus = ( {
 						</button>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'remote' }
 							className={ `wp-agentic-admin-provider__tab ${
 								providerMode === 'remote' ? 'is-active' : ''
 							}` }
@@ -639,6 +673,7 @@ const ModelStatus = ( {
 								<select
 									className="wp-agentic-admin-model-select"
 									value={ selectedModel }
+									aria-label="Select AI model"
 									onChange={ ( e ) => {
 										const modelId = e.target.value;
 										setSelectedModel( modelId );

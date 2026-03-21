@@ -312,3 +312,15 @@
 		z-index: 1000000 !important;
 	}
 }
+
+// Respect user motion preferences
+@media ( prefers-reduced-motion: reduce ) {
+
+	#wp-agentic-admin-sidebar {
+		transition: none;
+	}
+
+	.wp-agentic-admin-sidebar-overlay {
+		transition: none;
+	}
+}

@@ -34,7 +34,13 @@ const MessageList = ( {
 	}, [ messages ] );
 
 	return (
-		<div className="wp-agentic-admin-messages" ref={ listRef }>
+		<div
+			className="wp-agentic-admin-messages"
+			ref={ listRef }
+			role="log"
+			aria-live="polite"
+			aria-label="Chat messages"
+		>
 			{ messages.map( ( message ) => (
 				<MessageItem
 					key={ message.id }
