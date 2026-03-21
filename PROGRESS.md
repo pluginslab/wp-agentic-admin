@@ -16,7 +16,13 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 - **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
 - **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
 
-**33 abilities**, **24 PRs merged**, **9 contributors**.
+### current-user-role + agent improvements + crash fix (PRs #138, #137, #136, #135)
+- **current-user-role** (PR #138 by @0xLoopTheory) — "who am I logged in as?" / "am I an administrator?" 3/3 tests pass.
+- **think after tool calls** (PR #137 by @AlexanderMelde) — LLM now reasons over raw JSON after tool results for better answers. Improved cron-list output with individual event listing. Tradeoff: slower but smarter.
+- **crash fix** (PR #136 by @ivdimova) — missing closing brace in class-abilities.php caused PHP fatal
+- **branch sync** (PR #135 by @janvogt) — synced nix flake from main into dev
+
+**34 abilities**, **28 PRs merged**, **9 contributors**.
 
 ---
 
