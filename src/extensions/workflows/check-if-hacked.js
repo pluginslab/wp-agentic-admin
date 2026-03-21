@@ -73,8 +73,7 @@ export function registerCheckIfHackedWorkflow() {
 			);
 			const pluginResult = results.find(
 				( r ) =>
-					r.abilityId ===
-					'wp-agentic-admin/verify-plugin-checksums'
+					r.abilityId === 'wp-agentic-admin/verify-plugin-checksums'
 			);
 
 			const lines = [ '## Security Integrity Check\n' ];
@@ -101,8 +100,7 @@ export function registerCheckIfHackedWorkflow() {
 								);
 								if ( file.diff ) {
 									lines.push( '```diff' );
-									const diffLines =
-										file.diff.split( '\n' );
+									const diffLines = file.diff.split( '\n' );
 									if ( diffLines.length > 20 ) {
 										lines.push(
 											diffLines
@@ -110,7 +108,9 @@ export function registerCheckIfHackedWorkflow() {
 												.join( '\n' )
 										);
 										lines.push(
-											`... (${ diffLines.length - 20 } more lines)`
+											`... (${
+												diffLines.length - 20
+											} more lines)`
 										);
 									} else {
 										lines.push( file.diff );
@@ -170,7 +170,9 @@ export function registerCheckIfHackedWorkflow() {
 							}
 
 							lines.push(
-								`- **${ plugin.plugin }** — FAILED (${ parts.join( ', ' ) })`
+								`- **${
+									plugin.plugin
+								}** — FAILED (${ parts.join( ', ' ) })`
 							);
 
 							for ( const issue of issues ) {
@@ -179,8 +181,7 @@ export function registerCheckIfHackedWorkflow() {
 								);
 								if ( issue.diff ) {
 									lines.push( '```diff' );
-									const diffLines =
-										issue.diff.split( '\n' );
+									const diffLines = issue.diff.split( '\n' );
 									if ( diffLines.length > 20 ) {
 										lines.push(
 											diffLines
@@ -188,7 +189,9 @@ export function registerCheckIfHackedWorkflow() {
 												.join( '\n' )
 										);
 										lines.push(
-											`... (${ diffLines.length - 20 } more lines)`
+											`... (${
+												diffLines.length - 20
+											} more lines)`
 										);
 									} else {
 										lines.push( issue.diff );
@@ -209,8 +212,7 @@ export function registerCheckIfHackedWorkflow() {
 
 			// Database check results.
 			const dbResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/database-check'
+				( r ) => r.abilityId === 'wp-agentic-admin/database-check'
 			);
 
 			lines.push( '### Database' );
@@ -218,9 +220,7 @@ export function registerCheckIfHackedWorkflow() {
 				const db = dbResult.result;
 
 				if ( db.total_issues === 0 ) {
-					lines.push(
-						'No suspicious findings in the database.'
-					);
+					lines.push( 'No suspicious findings in the database.' );
 				} else {
 					allClear = false;
 					lines.push( db.message );
@@ -234,23 +234,19 @@ export function registerCheckIfHackedWorkflow() {
 								`- **${ check.name }** — ${ check.count } finding(s)`
 							);
 
-							for ( const f of check.findings.slice(
-								0,
-								5
-							) ) {
+							for ( const f of check.findings.slice( 0, 5 ) ) {
 								const score = f.risk_score
 									? ` [risk: ${ f.risk_score }/10]`
 									: '';
-								const detail =
-									formatDbFinding( f );
-								lines.push(
-									`  - ${ detail }${ score }`
-								);
+								const detail = formatDbFinding( f );
+								lines.push( `  - ${ detail }${ score }` );
 							}
 
 							if ( check.findings.length > 5 ) {
 								lines.push(
-									`  - ...and ${ check.findings.length - 5 } more`
+									`  - ...and ${
+										check.findings.length - 5
+									} more`
 								);
 							}
 						}
@@ -287,12 +283,17 @@ export function registerCheckIfHackedWorkflow() {
 function formatDbFinding( f ) {
 	if ( f.option_name ) {
 		const preview = f.preview
-			? ': ' + ( f.preview.length > 80 ? f.preview.substring( 0, 80 ) + '...' : f.preview )
+			? ': ' +
+			  ( f.preview.length > 80
+					? f.preview.substring( 0, 80 ) + '...'
+					: f.preview )
 			: '';
 		return `\`${ f.option_name }\`${ preview }`;
 	}
 	if ( f.post_id && f.title ) {
-		return `Post #${ f.post_id } "${ f.title }" (${ f.post_type || 'post' }${ f.status ? ', ' + f.status : '' })`;
+		return `Post #${ f.post_id } "${ f.title }" (${
+			f.post_type || 'post'
+		}${ f.status ? ', ' + f.status : '' })`;
 	}
 	if ( f.user_id && f.meta_key ) {
 		return `User #${ f.user_id } meta \`${ f.meta_key }\``;

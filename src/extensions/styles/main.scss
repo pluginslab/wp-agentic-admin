@@ -2037,6 +2037,12 @@
 				}
 			}
 
+			.agentic-message__actions {
+				margin-top: 12px;
+				padding-top: 12px;
+				border-top: 1px solid #f0f0f1;
+			}
+
 			.agentic-message__footer {
 				display: flex;
 				align-items: center;
@@ -2528,6 +2534,178 @@
 	50% {
 		transform: scale(1.2);
 		opacity: 0.7;
+	}
+}
+
+// =============================================================================
+// Ability Picker (interactive tool buttons)
+// =============================================================================
+
+.agentic-ability-picker {
+	padding: 4px 0;
+
+	&__section-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: #646970;
+		margin: 12px 0 8px;
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0 0 0 24px;
+		list-style-type: decimal;
+		counter-reset: none;
+	}
+
+	&__item {
+		margin-bottom: 4px;
+		font-size: 13px;
+		color: #646970;
+
+		&::marker {
+			color: #8c8f94;
+			font-weight: 500;
+		}
+	}
+
+	&__button {
+		background: none;
+		border: none;
+		padding: 4px 8px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #2271b1;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background 0.15s ease, color 0.15s ease;
+		text-align: left;
+
+		&:hover {
+			background: #f0f6fc;
+			color: #135e96;
+		}
+
+		&:active {
+			background: #e2e4e7;
+		}
+
+		&:disabled {
+			color: #a7aaad;
+			cursor: not-allowed;
+
+			&:hover {
+				background: none;
+			}
+		}
+	}
+
+	&__input-row {
+		display: flex;
+		gap: 6px;
+		margin: 4px 0 2px 8px;
+	}
+
+	&__args-input {
+		flex: 1;
+		padding: 4px 8px;
+		font-size: 13px;
+		border: 1px solid #8c8f94;
+		border-radius: 4px;
+		min-width: 0;
+
+		&:focus {
+			border-color: #2271b1;
+			box-shadow: 0 0 0 1px #2271b1;
+			outline: none;
+		}
+
+		&:disabled {
+			background: #f6f7f7;
+			cursor: not-allowed;
+		}
+	}
+
+	&__run-button {
+		padding: 4px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #fff;
+		background: #2271b1;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover {
+			background: #135e96;
+		}
+
+		&:disabled {
+			background: #a7aaad;
+			cursor: not-allowed;
+		}
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: 13px;
+		color: #646970;
+		font-style: italic;
+	}
+}
+
+// =============================================================================
+// Action List (generic interactive buttons from ability results)
+// =============================================================================
+
+.agentic-action-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 0;
+		font-size: 13px;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+
+	&__label {
+		flex: 1;
+		font-weight: 500;
+		color: #1d2327;
+	}
+
+	&__button {
+		padding: 3px 10px;
+		font-size: 12px;
+		font-weight: 500;
+		border-radius: 4px;
+		border: 1px solid #2271b1;
+		background: transparent;
+		color: #2271b1;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+		white-space: nowrap;
+
+		&:hover {
+			background: #2271b1;
+			color: #fff;
+		}
 	}
 }
 
