@@ -562,68 +562,6 @@ function wp_agentic_admin_normalize_mitre_bound( string $bound ): string {
 }
 
 /**
- * Check whether a plugin version is affected by CVE configuration ranges.
- *
- * @param string $plugin_version Installed plugin version.
- * @param array  $cve            CVE payload.
- * @return bool
- */
-function wp_agentic_admin_is_plugin_version_affected( string $plugin_version, array $cve ): bool {
-	if ( '' === trim( $plugin_version ) ) {
-		return true;
-	}
-
-	if ( empty( $cve['configurations'] ) || ! is_array( $cve['configurations'] ) ) {
-		return true;
-	}
-
-	$normalized_version = ltrim( trim( $plugin_version ), 'vV' );
-	$has_cpe_matches    = false;
-
-	foreach ( $cve['configurations'] as $configuration ) {
-		if ( empty( $configuration['nodes'] ) || ! is_array( $configuration['nodes'] ) ) {
-			continue;
-		}
-
-		foreach ( $configuration['nodes'] as $node ) {
-			if ( empty( $node['cpeMatch'] ) || ! is_array( $node['cpeMatch'] ) ) {
-				continue;
-			}
-
-			foreach ( $node['cpeMatch'] as $cpe_match ) {
-				if ( empty( $cpe_match['vulnerable'] ) ) {
-					continue;
-				}
-
-				$has_cpe_matches = true;
-
-				$in_range = true;
-
-				if ( isset( $cpe_match['versionStartIncluding'] ) && version_compare( $normalized_version, (string) $cpe_match['versionStartIncluding'], '<' ) ) {
-					$in_range = false;
-				}
-				if ( isset( $cpe_match['versionStartExcluding'] ) && version_compare( $normalized_version, (string) $cpe_match['versionStartExcluding'], '<=' ) ) {
-					$in_range = false;
-				}
-				if ( isset( $cpe_match['versionEndIncluding'] ) && version_compare( $normalized_version, (string) $cpe_match['versionEndIncluding'], '>' ) ) {
-					$in_range = false;
-				}
-				if ( isset( $cpe_match['versionEndExcluding'] ) && version_compare( $normalized_version, (string) $cpe_match['versionEndExcluding'], '>=' ) ) {
-					$in_range = false;
-				}
-
-				if ( $in_range ) {
-					return true;
-				}
-			}
-		}
-	}
-
-	// If no vulnerable CPE ranges are available, keep a conservative match.
-	return ! $has_cpe_matches;
-}
-
-/**
  * Extract the first English CVE description.
  *
  * @param array $cve CVE payload.
