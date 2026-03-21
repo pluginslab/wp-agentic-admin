@@ -774,7 +774,7 @@ class ReactAgent {
 	buildToolResultMessage( toolResult, truncatedResult ) {
 		let message;
 		if ( toolResult.result_for_llm ) {
-			message = `Tool interpretation: ${ toolResult.result_for_llm }\n\nRaw data: ${ truncatedResult }`;
+			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}

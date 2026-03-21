@@ -156,6 +156,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/query-database',
 		},
 
+		// ── Web search ───────────────────────────────────────────
+		{
+			input: 'search for how to fix WordPress white screen of death',
+			expectTool: 'wp-agentic-admin/web-search',
+		},
+		{
+			input: 'look up WooCommerce REST API documentation',
+			expectTool: 'wp-agentic-admin/web-search',
+		},
+
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
