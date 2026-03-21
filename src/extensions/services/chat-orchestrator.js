@@ -494,7 +494,16 @@ class ChatOrchestrator {
 		}
 
 		if ( needsConfirmation ) {
-			const confirmed = await this.requestConfirmation( tool );
+			// Pass params-aware confirmation message and destructive flag
+			const confirmationMessage = tool.getConfirmationMessage
+				? tool.getConfirmationMessage( params )
+				: tool.confirmationMessage || `Execute ${ tool.id }?`;
+
+			const confirmed = await this.requestConfirmation( {
+				...tool,
+				confirmationMessage,
+				isDestructive: true,
+			} );
 			if ( ! confirmed ) {
 				this.session.addAssistantMessage( 'Action cancelled.' );
 				return { success: true, cancelled: true };
@@ -518,8 +527,8 @@ class ChatOrchestrator {
 		let success = true;
 
 		try {
-			// Pass userMessage to execute so tools can extract parameters
-			result = await tool.execute( { userMessage } );
+			// Pass userMessage and parsed params to execute
+			result = await tool.execute( { userMessage, ...params } );
 			success = isToolResultSuccess( result );
 			this.session.addToolResult( tool.id, result, success );
 		} catch ( error ) {

@@ -73,9 +73,7 @@ export function registerRoleCapabilitiesCheck() {
 
 				for ( const role of result.roles ) {
 					const added =
-						role.added?.length > 0
-							? role.added.join( ', ' )
-							: '—';
+						role.added?.length > 0 ? role.added.join( ', ' ) : '—';
 					const removed =
 						role.removed?.length > 0
 							? role.removed.join( ', ' )
@@ -99,9 +97,7 @@ export function registerRoleCapabilitiesCheck() {
 				lines.push( '' );
 				lines.push( '**Non-Default Roles**' );
 				lines.push( '' );
-				lines.push(
-					'| Role | Capabilities | Admin Access | Risk |'
-				);
+				lines.push( '| Role | Capabilities | Admin Access | Risk |' );
 				lines.push( '|---|---|---|---|' );
 
 				for ( const role of result.extra_roles ) {
@@ -138,12 +134,16 @@ export function registerRoleCapabilitiesCheck() {
 			for ( const role of modified ) {
 				if ( role.added?.length > 0 ) {
 					parts.push(
-						`${ role.role_name } gained: ${ role.added.join( ', ' ) }`
+						`${ role.role_name } gained: ${ role.added.join(
+							', '
+						) }`
 					);
 				}
 				if ( role.removed?.length > 0 ) {
 					parts.push(
-						`${ role.role_name } lost: ${ role.removed.join( ', ' ) }`
+						`${ role.role_name } lost: ${ role.removed.join(
+							', '
+						) }`
 					);
 				}
 			}
@@ -153,7 +153,9 @@ export function registerRoleCapabilitiesCheck() {
 			);
 			if ( dangerousExtras.length > 0 ) {
 				parts.push(
-					`Non-default roles with admin access: ${ dangerousExtras.map( ( r ) => r.role_name ).join( ', ' ) }`
+					`Non-default roles with admin access: ${ dangerousExtras
+						.map( ( r ) => r.role_name )
+						.join( ', ' ) }`
 				);
 			}
 
