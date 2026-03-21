@@ -286,7 +286,7 @@ const ChatContainer = ( {
 	 * @return {Array} Display-formatted messages
 	 */
 	const convertMessagesToDisplay = ( sessionMessages ) => {
-		return sessionMessages.map( ( msg ) => {
+		const display = sessionMessages.map( ( msg ) => {
 			// Map session message types to display format
 			switch ( msg.type ) {
 				case MessageType.USER:
@@ -350,13 +350,12 @@ const ChatContainer = ( {
 			}
 		} );
 
-		// Attach actions from successful tool results to the next assistant message
+		// Attach actions from tool results to the next assistant message
 		for ( let i = 0; i < display.length - 1; i++ ) {
 			const curr = display[ i ];
 			const next = display[ i + 1 ];
 			if (
 				curr.type === 'ability_result' &&
-				curr.success &&
 				next.type === 'assistant' &&
 				curr.result?.actions?.length
 			) {
@@ -769,7 +768,7 @@ const ChatContainer = ( {
 				}
 				onFeedback={ handleFeedback }
 			/>
-			
+
 			{ /* Feedback opt-in banner — shown once, only after the first real exchange */ }
 			{ FEEDBACK_UPLOAD_ENABLED &&
 				feedbackOptIn === null &&
