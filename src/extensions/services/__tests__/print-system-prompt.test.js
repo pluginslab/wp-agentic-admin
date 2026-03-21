@@ -128,7 +128,7 @@ describe( 'Print System Prompt', () => {
 			mockToolRegistry
 		);
 
-		const prompt = agent.buildSystemPromptPromptBased();
+		const prompt = agent.buildSystemPromptPromptBased( MOCK_TOOLS );
 		process.stdout.write(
 			`\n=== SYSTEM PROMPT ===\n\n${ prompt }\n\n=== END ===\n\n`
 		);

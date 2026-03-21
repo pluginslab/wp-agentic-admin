@@ -40,6 +40,70 @@ const formatTime = ( timestamp ) => {
 };
 
 /**
+ * Render markdown content as React elements with block-level support.
+ * Handles ordered lists, unordered lists, paragraphs, bold, and inline code.
+ *
+ * @param {string} text - Markdown text
+ * @return {Array} Array of React elements
+ */
+const renderMarkdownContent = ( text ) => {
+	if ( ! text ) {
+		return null;
+	}
+
+	const lines = text.split( '\n' );
+	const elements = [];
+	let listItems = [];
+	let listType = null; // 'ol' or 'ul'
+	let keyIndex = 0;
+
+	const flushList = () => {
+		if ( listItems.length === 0 ) {
+			return;
+		}
+		const Tag = listType;
+		elements.push(
+			<Tag key={ `list-${ keyIndex++ }` }>
+				{ listItems.map( ( item, i ) => (
+					<li key={ i }>{ parseMarkdown( item ) }</li>
+				) ) }
+			</Tag>
+		);
+		listItems = [];
+		listType = null;
+	};
+
+	lines.forEach( ( line ) => {
+		const orderedMatch = line.match( /^\d+\.\s+(.+)/ );
+		const unorderedMatch = line.match( /^[*-]\s+(.+)/ );
+
+		if ( orderedMatch ) {
+			if ( listType !== 'ol' ) {
+				flushList();
+				listType = 'ol';
+			}
+			listItems.push( orderedMatch[ 1 ] );
+		} else if ( unorderedMatch ) {
+			if ( listType !== 'ul' ) {
+				flushList();
+				listType = 'ul';
+			}
+			listItems.push( unorderedMatch[ 1 ] );
+		} else if ( line.trim() === '' ) {
+			flushList();
+		} else {
+			flushList();
+			elements.push(
+				<p key={ keyIndex++ }>{ parseMarkdown( line ) }</p>
+			);
+		}
+	} );
+
+	flushList();
+	return elements;
+};
+
+/**
  * Parse simple markdown to React elements
  * Supports: **bold**, `code`, and line breaks
  *
@@ -422,18 +486,7 @@ const MessageItem = ( { message, onSuggestionClick } ) => {
 				<div className="agentic-message__content">
 					{ displayContent && (
 						<div className="agentic-message__text">
-							{ displayContent
-								.split( '\n' )
-								.map( ( line, index ) => {
-									if ( line.trim() === '' ) {
-										return null;
-									}
-									return (
-										<p key={ index }>
-											{ parseMarkdown( line ) }
-										</p>
-									);
-								} ) }
+							{ renderMarkdownContent( displayContent ) }
 						</div>
 					) }
 					<div className="agentic-message__footer">
