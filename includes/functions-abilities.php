@@ -162,6 +162,11 @@ function wp_agentic_admin_get_abilities_js_config(): array {
 			$js_config['description'] = $ability['php']['description'];
 		}
 
+		// Include input_schema for WebMCP tool registration.
+		if ( isset( $ability['php']['input_schema'] ) ) {
+			$js_config['inputSchema'] = $ability['php']['input_schema'];
+		}
+
 		$js_configs[ $id ] = $js_config;
 	}
 
