@@ -127,25 +127,6 @@ const App = () => {
 	}, [] );
 
 	/**
-	 * Warn user before leaving page if model is loaded
-	 */
-	useEffect( () => {
-		const handleBeforeUnload = ( e ) => {
-			if ( modelReady ) {
-				const message =
-					'The AI model is loaded. Leaving this page will unload it and require re-initialization on return.';
-				e.preventDefault();
-				e.returnValue = message;
-				return message;
-			}
-		};
-
-		window.addEventListener( 'beforeunload', handleBeforeUnload );
-		return () =>
-			window.removeEventListener( 'beforeunload', handleBeforeUnload );
-	}, [ modelReady ] );
-
-	/**
 	 * Handle model ready callback
 	 */
 	const handleModelReady = useCallback( () => {
