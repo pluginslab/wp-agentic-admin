@@ -43,6 +43,8 @@ import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
+import { registerFileScan } from './file-scan';
+import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
@@ -81,6 +83,8 @@ export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 export { registerDatabaseCheck } from './database-check';
+export { registerFileScan } from './file-scan';
+export { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
 export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 export { registerRunPluginAbility } from './run-plugin-ability';
@@ -127,6 +131,8 @@ export function registerAllAbilities() {
 	registerVerifyCoreChecksums();
 	registerVerifyPluginChecksums();
 	registerDatabaseCheck();
+	registerFileScan();
+	registerRoleCapabilitiesCheck();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities

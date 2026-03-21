@@ -233,6 +233,124 @@ const parseMarkdown = ( text ) => {
 };
 
 /**
+ * Check if a line is a markdown table separator (e.g. |---|---|)
+ *
+ * @param {string} line - Line to check
+ * @return {boolean} True if separator
+ */
+const isTableSeparator = ( line ) => {
+	return /^\|[\s\-:|]+\|$/.test( line.trim() );
+};
+
+/**
+ * Parse a group of markdown table lines into a React table element
+ *
+ * @param {string[]} lines    - Table lines (header, separator, rows)
+ * @param {number}   keyIndex - React key base index
+ * @return {JSX.Element} Table element
+ */
+const parseTable = ( lines, keyIndex ) => {
+	const parseRow = ( line ) =>
+		line
+			.split( '|' )
+			.slice( 1, -1 )
+			.map( ( cell ) => cell.trim() );
+
+	// First line is header, second is separator, rest are body rows.
+	const headerCells = parseRow( lines[ 0 ] );
+	const bodyLines = lines.filter(
+		( line, i ) => i > 0 && ! isTableSeparator( line )
+	);
+
+	return (
+		<div key={ `table-${ keyIndex }` } className="agentic-table-wrap">
+			<table className="agentic-table">
+				<thead>
+					<tr>
+						{ headerCells.map( ( cell, i ) => (
+							<th key={ i }>{ parseMarkdown( cell ) }</th>
+						) ) }
+					</tr>
+				</thead>
+				<tbody>
+					{ bodyLines.map( ( line, rowIdx ) => {
+						const cells = parseRow( line );
+						return (
+							<tr key={ rowIdx }>
+								{ cells.map( ( cell, i ) => (
+									<td key={ i }>{ parseMarkdown( cell ) }</td>
+								) ) }
+							</tr>
+						);
+					} ) }
+				</tbody>
+			</table>
+		</div>
+	);
+};
+
+/**
+ * Parse content into blocks (paragraphs and tables).
+ *
+ * Groups consecutive lines starting with | into table blocks.
+ * Everything else becomes paragraph blocks.
+ *
+ * @param {string} content - Raw message content
+ * @return {Array} Array of React elements
+ */
+const parseContentBlocks = ( content ) => {
+	if ( ! content ) {
+		return null;
+	}
+
+	const lines = content.split( '\n' );
+	const elements = [];
+	let tableBuffer = [];
+	let keyIndex = 0;
+
+	const flushTable = () => {
+		if ( tableBuffer.length >= 2 ) {
+			elements.push( parseTable( tableBuffer, keyIndex++ ) );
+		} else {
+			// Not enough lines for a table, render as paragraphs.
+			tableBuffer.forEach( ( line ) => {
+				elements.push(
+					<p key={ keyIndex++ }>{ parseMarkdown( line ) }</p>
+				);
+			} );
+		}
+		tableBuffer = [];
+	};
+
+	for ( const line of lines ) {
+		const trimmed = line.trim();
+
+		if ( trimmed.startsWith( '|' ) && trimmed.endsWith( '|' ) ) {
+			tableBuffer.push( trimmed );
+		} else {
+			if ( tableBuffer.length > 0 ) {
+				flushTable();
+			}
+
+			if ( trimmed === '' ) {
+				continue;
+			}
+
+			elements.push(
+				<p key={ keyIndex++ }>{ parseMarkdown( trimmed ) }</p>
+			);
+		}
+	}
+
+	// Flush remaining table buffer.
+	if ( tableBuffer.length > 0 ) {
+		flushTable();
+	}
+
+	return elements;
+};
+
+/**
  * Render ability result as formatted output
  *
  * @param {Object} result - Ability execution result
@@ -511,34 +629,7 @@ const MessageItem = ( {
 				<div className="agentic-message__content">
 					{ displayContent && (
 						<div className="agentic-message__text">
-							{ parseBlocks( displayContent ).map(
-								( block, blockIndex ) => {
-									if ( block.type === 'code' ) {
-										return (
-											<CodeBlock
-												key={ blockIndex }
-												lang={ block.lang }
-												code={ block.content }
-												partial={ block.partial }
-											/>
-										);
-									}
-									return block.content
-										.split( '\n' )
-										.map( ( line, lineIndex ) => {
-											if ( line.trim() === '' ) {
-												return null;
-											}
-											return (
-												<p
-													key={ `${ blockIndex }-${ lineIndex }` }
-												>
-													{ parseMarkdown( line ) }
-												</p>
-											);
-										} );
-								}
-							) }
+							{ parseContentBlocks( displayContent ) }
 						</div>
 					) }
 					{ messageActions?.length > 0 && onAction && (
