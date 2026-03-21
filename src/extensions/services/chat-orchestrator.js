@@ -281,23 +281,11 @@ class ChatOrchestrator {
 	}
 
 	/**
-	 * Process message with ReAct loop
+	 * Ensure the ReAct agent is initialized with callbacks wired up.
 	 *
-	 * Uses the ReAct agent to intelligently select and use tools.
-	 *
-	 * @param {string}  userMessage     - User's message
-	 * @param {boolean} disableThinking - Whether to disable model thinking
-	 * @return {Promise<Object>} Result with success status and ReAct execution details.
+	 * Creates the agent on first call; subsequent calls are no-ops.
 	 */
-	async processWithReact( userMessage, disableThinking = false ) {
-		if ( ! this.isLLMReady() ) {
-			this.session.addAssistantMessage(
-				'The AI model is not loaded yet. Please load the model first.'
-			);
-			return { success: false, error: 'Model not loaded' };
-		}
-
-		// Create ReAct agent if not exists
+	ensureReactAgent() {
 		if ( ! this.reactAgent ) {
 			this.reactAgent = new ReactAgent( modelLoader, toolRegistry );
 
@@ -332,6 +320,26 @@ class ChatOrchestrator {
 				},
 			} );
 		}
+	}
+
+	/**
+	 * Process message with ReAct loop
+	 *
+	 * Uses the ReAct agent to intelligently select and use tools.
+	 *
+	 * @param {string}  userMessage     - User's message
+	 * @param {boolean} disableThinking - Whether to disable model thinking
+	 * @return {Promise<Object>} Result with success status and ReAct execution details.
+	 */
+	async processWithReact( userMessage, disableThinking = false ) {
+		if ( ! this.isLLMReady() ) {
+			this.session.addAssistantMessage(
+				'The AI model is not loaded yet. Please load the model first.'
+			);
+			return { success: false, error: 'Model not loaded' };
+		}
+
+		this.ensureReactAgent();
 
 		// Update thinking mode per-request based on router decision
 		this.reactAgent.config.disableThinking = disableThinking;
@@ -363,6 +371,169 @@ class ChatOrchestrator {
 			success: result.success,
 			result,
 		};
+	}
+
+	/**
+	 * Process a suggestion pill click by directly executing the tool,
+	 * then summarizing the result with a single LLM call.
+	 *
+	 * Skips routing, search query extraction, and the full ReAct loop.
+	 *
+	 * @param {string} toolId - The ability ID to execute directly.
+	 * @param {string} label  - The pill label shown as the user message.
+	 * @return {Promise<Object>} Result with success status.
+	 */
+	async processDirectAbility( toolId, label ) {
+		if ( ! this.session ) {
+			throw new Error(
+				'ChatOrchestrator not initialized. Call initialize() first.'
+			);
+		}
+		if ( this.isProcessing ) {
+			return { success: false, error: 'Already processing a message' };
+		}
+
+		// Unknown toolId — delegate before locking isProcessing so processMessage can run normally
+		const tool = this.toolRegistry.get( toolId );
+		if ( ! tool ) {
+			return this.processMessage( label );
+		}
+
+		// Lock
+		this.isProcessing = true;
+		this.currentAbortController = new AbortController();
+		this.callbacks.onStateChange( { isProcessing: true } );
+
+		try {
+			// LLM ready check
+			if ( ! this.isLLMReady() ) {
+				this.session.addAssistantMessage(
+					'The AI model is not loaded yet. Please load the model first.'
+				);
+				return { success: false, error: 'Model not loaded' };
+			}
+
+			// Add user bubble
+			this.session.addUserMessage( label );
+
+			// Init agent
+			this.ensureReactAgent();
+
+			// Execute tool
+			const toolExecutionResult = await this.reactAgent.executeTool(
+				toolId,
+				{},
+				label
+			);
+
+			// Handle non-success (check cancelled before success)
+			if ( toolExecutionResult.cancelled === true ) {
+				this.session.addAssistantMessage( 'Action cancelled.' );
+				return { success: false, cancelled: true };
+			} else if ( toolExecutionResult.success === false ) {
+				this.session.addErrorMessage(
+					toolExecutionResult.error || 'Tool execution failed.'
+				);
+				return { success: false, error: toolExecutionResult.error };
+			}
+
+			// Truncate result
+			const resultStr = JSON.stringify( toolExecutionResult );
+			const truncatedResult =
+				resultStr.length > this.reactAgent.config.maxToolResultLength
+					? resultStr.substring(
+							0,
+							this.reactAgent.config.maxToolResultLength
+					  ) + '...[truncated]'
+					: resultStr;
+
+			// Build system prompt
+			const filteredTools = filterToolsForPrompt(
+				label,
+				this.toolRegistry.getAll(),
+				{
+					max: 10,
+					exclude: 'wp-agentic-admin/search-abilities',
+				}
+			);
+			const systemPrompt =
+				this.reactAgent.buildSystemPromptPromptBased( filteredTools ) ||
+				'You are a WordPress assistant. Summarize the following tool result for the user.';
+
+			// Single-shot LLM summary
+			const engine = modelLoader.getEngine();
+			const summaryMessages = [
+				{ role: 'system', content: systemPrompt },
+				{
+					role: 'user',
+					content: this.reactAgent.buildToolResultMessage(
+						toolExecutionResult,
+						truncatedResult
+					),
+				},
+			];
+			this.callbacks.onStreamStart();
+			const summaryResponse = await engine.chat.completions.create( {
+				messages: summaryMessages,
+				stream: false,
+				temperature: this.reactAgent.config.temperature,
+				max_tokens: this.reactAgent.config.maxTokens,
+			} );
+			const responseContent =
+				summaryResponse.choices[ 0 ]?.message?.content?.trim() || '';
+			this.callbacks.onStreamEnd( responseContent );
+
+			// Parse response
+			const action =
+				this.reactAgent.parseActionFromResponse( responseContent );
+			let rawAnswer;
+			let suggestions;
+			if ( ! action || action.action !== 'final_answer' ) {
+				rawAnswer = "Tool ran but I couldn't summarize the result.";
+				suggestions = [];
+			} else {
+				rawAnswer =
+					action.content || action.answer || 'Task completed.';
+				suggestions = Array.isArray( action.suggestions )
+					? action.suggestions
+					: [];
+			}
+
+			// Suggestion fallback
+			if ( suggestions.length === 0 ) {
+				const matched = filterToolsForPrompt(
+					rawAnswer,
+					this.toolRegistry.getAll(),
+					{
+						max: 3,
+						exclude: 'wp-agentic-admin/search-abilities',
+					}
+				);
+				suggestions = matched.map( ( t ) => ( {
+					label: t.label,
+					tool: t.id,
+				} ) );
+			}
+
+			// Post reply
+			this.session.addAssistantMessage( rawAnswer, {
+				suggestions,
+				...this.getUsageStatsMeta(),
+			} );
+
+			return { success: true };
+		} catch ( error ) {
+			log.error( 'Error in processDirectAbility:', error );
+			this.session.addErrorMessage(
+				'An error occurred while processing your message.'
+			);
+			this.callbacks.onError( error );
+			return { success: false, error: error.message };
+		} finally {
+			this.isProcessing = false;
+			this.currentAbortController = null;
+			this.callbacks.onStateChange( { isProcessing: false } );
+		}
 	}
 
 	/**
