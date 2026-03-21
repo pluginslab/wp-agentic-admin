@@ -12,6 +12,7 @@
  */
 
 import { ReactAgent } from '../react-agent';
+import { filterToolsForPrompt } from '../../abilities/search-abilities';
 
 // Mock dependencies
 jest.mock( '../../utils/logger', () => ( {
@@ -21,6 +22,10 @@ jest.mock( '../../utils/logger', () => ( {
 		error: jest.fn(),
 		debug: jest.fn(),
 	} ),
+} ) );
+
+jest.mock( '../../abilities/search-abilities', () => ( {
+	filterToolsForPrompt: jest.fn( () => [] ),
 } ) );
 
 /**
@@ -121,9 +126,19 @@ describe( 'ReactAgent', () => {
 			onConfirmationRequired: jest.fn().mockResolvedValue( true ),
 		};
 
+		// Default: filterToolsForPrompt returns all registry tools so context tools is non-empty
+		filterToolsForPrompt.mockImplementation( () =>
+			mockToolRegistry.getAll()
+		);
+
 		// Create agent
 		reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry );
 		reactAgent.setCallbacks( mockCallbacks );
+
+		// Short-circuit extractSearchQuery so it does not consume an engine mock call
+		jest.spyOn( reactAgent, 'extractSearchQuery' ).mockResolvedValue(
+			'mocked search query'
+		);
 	} );
 
 	afterEach( () => {
@@ -442,6 +457,52 @@ describe( 'ReactAgent', () => {
 			expect( result.success ).toBe( true );
 			expect( result.toolsUsed ).toContain(
 				'wp-agentic-admin/site-health'
+			);
+		} );
+	} );
+
+	describe( 'Suggestion fallback', () => {
+		it( 'populates suggestions from filterToolsForPrompt when LLM omits them', async () => {
+			// 1st call: context tools for system prompt (must be non-empty)
+			filterToolsForPrompt.mockReturnValueOnce(
+				mockToolRegistry.getAll()
+			);
+			// 2nd call: fallback suggestion search on final answer text
+			filterToolsForPrompt.mockReturnValueOnce( [
+				{ id: 'wp-agentic-admin/cache-flush', label: 'Flush Cache' },
+			] );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You should flush your cache.", "suggestions": []}'
+			);
+
+			const result = await reactAgent.execute( 'flush cache', [] );
+
+			expect( result.suggestions ).toEqual( [
+				{ label: 'Flush Cache', tool: 'wp-agentic-admin/cache-flush' },
+			] );
+		} );
+
+		it( 'keeps LLM suggestions when they are non-empty', async () => {
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Done.", "suggestions": [{"label": "Check Updates", "tool": "wp-agentic-admin/update-check"}]}'
+			);
+
+			const result = await reactAgent.execute( 'done', [] );
+
+			expect( result.suggestions ).toEqual( [
+				{
+					label: 'Check Updates',
+					tool: 'wp-agentic-admin/update-check',
+				},
+			] );
+			expect( filterToolsForPrompt ).not.toHaveBeenCalledWith(
+				expect.any( String ),
+				expect.any( Array ),
+				expect.objectContaining( { max: 3 } )
 			);
 		} );
 	} );

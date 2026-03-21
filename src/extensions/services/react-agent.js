@@ -432,9 +432,26 @@ class ReactAgent {
 					log.info( 'LLM provided final answer' );
 					const rawAnswer =
 						action.content || action.answer || 'Task completed.';
-					const suggestions = Array.isArray( action.suggestions )
+					let suggestions = Array.isArray( action.suggestions )
 						? action.suggestions
 						: [];
+
+					// Fallback: if LLM omitted suggestions, auto-populate from semantic search
+					if ( suggestions.length === 0 ) {
+						const cleanedAnswer = extractContent( rawAnswer );
+						const matched = filterToolsForPrompt(
+							cleanedAnswer,
+							this.toolRegistry.getAll(),
+							{
+								max: 3,
+								exclude: 'wp-agentic-admin/search-abilities',
+							}
+						);
+						suggestions = matched.map( ( t ) => ( {
+							label: t.label,
+							tool: t.id,
+						} ) );
+					}
 
 					return {
 						success: true,
@@ -932,7 +949,7 @@ RULES:
 - If a tool fails, explain the failure in a final_answer.
 - Never retry a failed tool. Never invent tool names.
 - If no tool is needed, answer directly via final_answer.
-- Add a suggestion for every tool you recommend in your answer (up to 6). Use only tool IDs from the TOOLS list.
+- Always include a \`suggestions\` array in every final_answer — never omit it. If you used a tool, called one, or mentioned one by name, add it. If you made recommendations, add the most relevant available tool. Use only tool IDs from the TOOLS list. Up to 6 suggestions.
 
 EXAMPLE:
 
