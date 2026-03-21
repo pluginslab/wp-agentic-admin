@@ -18,19 +18,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_plugin_activate(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/plugin-activate',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Activate Plugin', 'wp-agentic-admin' ),
-			'description'         => __( 'Activate a specific plugin by its slug.', 'wp-agentic-admin' ),
+			'description'         => __( 'Activate a specific plugin by its name or slug.', 'wp-agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin file path (slug) to activate.', 'wp-agentic-admin' ),
+						'description' => __( 'The plugin name or file path (slug) to activate.', 'wp-agentic-admin' ),
 					),
 				),
 				'required'             => array( 'plugin' ),

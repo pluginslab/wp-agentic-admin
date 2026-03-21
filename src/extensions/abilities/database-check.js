@@ -116,7 +116,9 @@ export function registerDatabaseCheck() {
 				.filter( ( c ) => c.count > 0 )
 				.map( ( c ) => `${ c.name }: ${ c.count } finding(s)` );
 
-			return `Database scan found ${ result.total_issues } suspicious finding(s): ${ issues.join( '; ' ) }.`;
+			return `Database scan found ${
+				result.total_issues
+			} suspicious finding(s): ${ issues.join( '; ' ) }.`;
 		},
 
 		/**
@@ -142,12 +144,16 @@ export function registerDatabaseCheck() {
 function formatFinding( finding ) {
 	// Options-based findings.
 	if ( finding.option_name ) {
-		return `\`${ finding.option_name }\`${ finding.preview ? ': ' + truncate( finding.preview, 80 ) : '' }`;
+		return `\`${ finding.option_name }\`${
+			finding.preview ? ': ' + truncate( finding.preview, 80 ) : ''
+		}`;
 	}
 
 	// Post-based findings.
 	if ( finding.post_id ) {
-		return `Post #${ finding.post_id } "${ finding.title }" (${ finding.post_type }${ finding.status ? ', ' + finding.status : '' })`;
+		return `Post #${ finding.post_id } "${ finding.title }" (${
+			finding.post_type
+		}${ finding.status ? ', ' + finding.status : '' })`;
 	}
 
 	// User meta findings.

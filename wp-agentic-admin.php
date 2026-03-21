@@ -66,7 +66,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			$this->define_constants();
 			$this->load_textdomain();
 
-			// Load functions first (provides register_agentic_ability API).
+			// Load functions first (provides wp_agentic_admin_register_ability API).
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
 
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';

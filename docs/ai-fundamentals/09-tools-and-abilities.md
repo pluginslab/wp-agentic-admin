@@ -55,7 +55,7 @@ Both refer to the same underlying operations.
 Abilities are registered with WordPress using the Abilities API:
 
 ```php
-register_agentic_ability(
+wp_agentic_admin_register_ability(
     'wp-agentic-admin/plugin-list',  // Unique ID
     array(
         'label'               => 'List installed plugins',
@@ -495,7 +495,7 @@ Other plugins can register custom abilities:
 
 ```php
 add_action( 'wp_agentic_admin_register_abilities', function() {
-    register_agentic_ability(
+    wp_agentic_admin_register_ability(
         'my-plugin/custom-ability',
         array(
             'label'            => 'My Custom Action',

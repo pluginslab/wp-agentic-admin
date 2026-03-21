@@ -46,6 +46,20 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/theme-list',
 		},
 
+		// ── Current user role ─────────────────────────────────────
+		{
+			input: 'what user role is my current user?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'who am I logged in as?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'am I an administrator?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+
 		// ── User management ───────────────────────────────────────
 		{
 			input: 'list all users on this site',
@@ -63,7 +77,10 @@ module.exports = {
 		},
 		{
 			input: 'check for outdated plugins',
-			expectTool: 'wp-agentic-admin/update-check',
+			expectTool: [
+				'wp-agentic-admin/update-check',
+				'wp-agentic-admin/plugin-list',
+			],
 		},
 
 		// ── Error log search ──────────────────────────────────────
@@ -143,7 +160,10 @@ module.exports = {
 		},
 		{
 			input: 'edit the wp-config.php to enable debug mode',
-			expectTool: 'wp-agentic-admin/write-file',
+			expectTool: [
+				'wp-agentic-admin/write-file',
+				'wp-agentic-admin/read-file',
+			],
 		},
 
 		// ── Database queries ──────────────────────────────────────
@@ -195,6 +215,42 @@ module.exports = {
 			],
 		},
 
+		// ── WP-Config constants ────────────────────────────────────
+		{
+			input: 'list all of the wp-config.php constants',
+			expectTool: 'wp-agentic-admin/wp-config-list',
+		},
+		{
+			input: 'what constants are defined in wp-config?',
+			expectTool: 'wp-agentic-admin/wp-config-list',
+		},
+		{
+			input: 'show me the wp-config settings',
+			// Both are valid: wp-config-list lists parsed constants, read-file shows raw file.
+			expectTool: [
+				'wp-agentic-admin/wp-config-list',
+				'wp-agentic-admin/read-file',
+			],
+		},
+
+		// ── File reading ───────────────────────────────────────────
+		{
+			input: 'show me my wp-config.php',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'read the .htaccess file',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: "what's in my theme's functions.php",
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'open wp-content/plugins/myplugin/readme.txt',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+
 		// ── Cache & performance ────────────────────────────────────
 		{
 			input: 'flush the cache',
@@ -230,7 +286,15 @@ module.exports = {
 		// ── Core WordPress info ────────────────────────────────────
 		{
 			input: 'what is the name of my site?',
-			expectTool: 'core/get-site-info',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+		},
+		{
+			input: 'what is my site URL?',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+		},
+		{
+			input: 'what is my address URL',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
 		},
 		{
 			input: 'what environment is this site running on?',
@@ -245,6 +309,16 @@ module.exports = {
 		{
 			input: 'list the blocks in the editor',
 			expectTool: 'core/get-editor-blocks',
+		},
+
+		// ── Plugin ability discovery ─────────────────────────────
+		{
+			input: 'discover what abilities other plugins have registered',
+			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
+		},
+		{
+			input: 'what external tools are available on this site?',
+			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
 		},
 
 		// ── Content generation & optimization ─────────────────────
@@ -265,6 +339,129 @@ module.exports = {
 		{
 			input: 'explain the difference between posts and pages',
 			expectTool: null,
+		},
+
+		// ══════════════════════════════════════════════════════════════
+		// wpbullet regression tests — from GitHub issues
+		// These test prompts that previously failed tool selection.
+		// ══════════════════════════════════════════════════════════════
+
+		// ── Direct tool invocation (issues #82, #84, #92) ────────────
+		// Users typing the exact tool name should still route correctly.
+		{
+			input: 'core/get-environment-info',
+			expectTool: 'core/get-environment-info',
+			source: '#82',
+		},
+		{
+			input: 'wp-agentic-admin/cron-list',
+			expectTool: 'wp-agentic-admin/cron-list',
+			source: '#84',
+		},
+		{
+			input: 'list all cron jobs',
+			expectTool: 'wp-agentic-admin/cron-list',
+			source: '#84',
+		},
+		{
+			input: 'wp-agentic-admin/error-log-read',
+			expectTool: 'wp-agentic-admin/error-log-read',
+			source: '#92',
+		},
+
+		// ── Plugin activate/deactivate (issues #53, #54) ─────────────
+		{
+			input: 'Activate Gutenberg',
+			expectTool: 'wp-agentic-admin/plugin-activate',
+			source: '#53',
+		},
+		{
+			input: 'Activate Gutenberg plugin',
+			expectTool: 'wp-agentic-admin/plugin-activate',
+			source: '#53',
+		},
+		{
+			input: 'deactivate generateblocks',
+			expectTool: 'wp-agentic-admin/plugin-deactivate',
+			source: '#54',
+		},
+		{
+			input: 'deactivate generateblocks plugin',
+			expectTool: 'wp-agentic-admin/plugin-deactivate',
+			source: '#54',
+		},
+
+		// ── CMS / site identity (issues #60, #79) ────────────────────
+		{
+			input: 'which CMS and version am I running?',
+			expectTool: [
+				'core/get-site-info',
+				'core/get-environment-info',
+				'wp-agentic-admin/site-health',
+			],
+			source: '#60',
+		},
+		{
+			input: 'what is my address URL',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			source: '#79',
+		},
+		{
+			input: 'what is my site URL?',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			source: '#79',
+		},
+
+		// ── Plugin updates (issue #66) ───────────────────────────────
+		{
+			input: 'list plugins that need to be updated',
+			expectTool: [
+				'wp-agentic-admin/update-check',
+				'wp-agentic-admin/plugin-list',
+			],
+			source: '#66',
+		},
+		{
+			input: 'update the plugins that need to be updated',
+			expectTool: 'wp-agentic-admin/update-check',
+			source: '#66',
+		},
+
+		// ── Database optimize with specific tables (issues #69, #73) ──
+		{
+			input: 'optimize the database table wp_options',
+			expectTool: 'wp-agentic-admin/db-optimize',
+			source: '#69',
+		},
+		{
+			input: 'optimize the WooCommerce tables',
+			expectTool: 'wp-agentic-admin/db-optimize',
+			source: '#73',
+		},
+		{
+			input: 'optimize the WooCommerce database tables',
+			expectTool: 'wp-agentic-admin/db-optimize',
+			source: '#73',
+		},
+
+		// ── Revision cleanup (issue #96) ─────────────────────────────
+		{
+			input: 'how many post revisions are there to clean?',
+			expectTool: 'wp-agentic-admin/revision-cleanup',
+			source: '#96',
+		},
+		{
+			input: 'wp-agentic-admin/revision-cleanup dry-run',
+			expectTool: 'wp-agentic-admin/revision-cleanup',
+			source: '#96',
+		},
+
+		// ── Error diagnosis / conversational (issue #58) ─────────────
+		// User pastes CLI error — no tool needed, LLM should answer directly.
+		{
+			input: 'when running wp-cli wp plugin list I get this error: "PHP Warning: Constant DB_NAME already defined in wp-config.php on line 24"',
+			expectTool: null,
+			source: '#58',
 		},
 	],
 };

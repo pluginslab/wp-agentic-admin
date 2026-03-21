@@ -174,12 +174,32 @@
 		padding: 10px;
 		flex-shrink: 0;
 		border-top: 1px solid #c3c4c7;
+	}
+
+	.wp-agentic-admin-input-wrapper {
+		border-radius: 6px;
 
 		.wp-agentic-admin-input {
 			min-height: 44px;
 			font-size: 13px;
 			padding: 8px 10px;
 		}
+	}
+
+	// Input toolbar — compact
+	.wp-agentic-admin-input-toolbar {
+		padding: 2px 6px 6px;
+	}
+
+	.wp-agentic-admin-bundle-trigger,
+	.wp-agentic-admin-websearch-toggle,
+	.wp-agentic-admin-send-button {
+		width: 28px;
+		height: 28px;
+	}
+
+	.wp-agentic-admin-bundle-pill {
+		font-size: 12px;
 	}
 
 	// Stop generation — also fixed at bottom
@@ -290,5 +310,17 @@
 		left: auto !important;
 		bottom: auto !important;
 		z-index: 1000000 !important;
+	}
+}
+
+// Respect user motion preferences
+@media ( prefers-reduced-motion: reduce ) {
+
+	#wp-agentic-admin-sidebar {
+		transition: none;
+	}
+
+	.wp-agentic-admin-sidebar-overlay {
+		transition: none;
 	}
 }

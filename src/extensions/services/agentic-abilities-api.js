@@ -22,6 +22,7 @@
 import toolRegistry from './tool-registry';
 import abilitiesApi from './abilities-api';
 import workflowRegistry from './workflow-registry';
+import webmcpBridge from './webmcp-bridge';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'AgenticAbilitiesAPI' );
@@ -33,7 +34,7 @@ const log = createLogger( 'AgenticAbilitiesAPI' );
  * It can be called after the wp-agentic-admin scripts are loaded.
  *
  * @param {string}   id                                  - Unique ability identifier (e.g., 'my-plugin/my-ability').
- *                                                       Must match the ID used in register_agentic_ability() in PHP.
+ *                                                       Must match the ID used in wp_agentic_admin_register_ability() in PHP.
  * @param {Object}   config                              - Ability configuration.
  * @param {string}   [config.description]                - One-sentence description of what this ability does and what data
  *                                                       it returns. Shown to the LLM to help it decide when to use this tool.
@@ -383,6 +384,14 @@ function exposeGlobalAPI() {
 	window.wp.agenticAdmin.getWorkflow = getWorkflow;
 	window.wp.agenticAdmin.getWorkflows = getWorkflows;
 	window.wp.agenticAdmin.hasWorkflow = hasWorkflow;
+
+	// WebMCP API
+	window.wp.agenticAdmin.webmcp = {
+		isSupported: () => webmcpBridge.isSupported(),
+		isInitialized: () => webmcpBridge._initialized,
+		getRegisteredTools: () =>
+			Array.from( webmcpBridge.registeredTools.keys() ),
+	};
 
 	log.info( 'Global API exposed at wp.agenticAdmin' );
 }

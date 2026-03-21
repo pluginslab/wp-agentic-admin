@@ -317,6 +317,14 @@ class ModelLoader {
 	 * @return {Promise<Object>} Support status and reason if not supported
 	 */
 	async checkWebGPUSupport() {
+		// WebGPU requires a secure context (HTTPS or localhost)
+		if ( ! window.isSecureContext ) {
+			return {
+				supported: false,
+				reason: 'WebGPU is not accessible over HTTP. Please access your website over HTTPS.',
+			};
+		}
+
 		if ( ! navigator.gpu ) {
 			return {
 				supported: false,
@@ -360,6 +368,7 @@ class ModelLoader {
 				architecture: info.architecture || 'Unknown',
 				device: info.device || 'Unknown',
 				description: info.description || '',
+				maxBufferSize: adapter.limits?.maxBufferSize || 0,
 			};
 
 			return {
@@ -961,6 +970,117 @@ class ModelLoader {
 	}
 
 	/**
+	 * Get the effective context window size for a model.
+	 * Checks localStorage override first, then falls back to MODEL_CONTEXT_SIZES.
+	 *
+	 * @param {string} modelId - Model identifier
+	 * @return {number} Context window size in tokens
+	 */
+	static getEffectiveContextSize( modelId ) {
+		try {
+			const saved = localStorage.getItem(
+				'wp_agentic_admin_context_size'
+			);
+			if ( saved ) {
+				const parsed = JSON.parse( saved );
+				if ( parsed[ modelId ] ) {
+					return parsed[ modelId ];
+				}
+			}
+		} catch ( e ) {
+			// Ignore parse errors
+		}
+		return MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+	}
+
+	/**
+	 * Estimate available GPU VRAM from WebGPU adapter limits.
+	 * maxBufferSize is a rough proxy for total GPU memory.
+	 *
+	 * @return {number} Estimated VRAM in GB, or 0 if unknown
+	 */
+	getEstimatedVRAM() {
+		if ( ! this.gpuAdapterInfo?.maxBufferSize ) {
+			return 0;
+		}
+		// maxBufferSize is typically 25-50% of total VRAM.
+		// Use a 2x multiplier as a conservative estimate.
+		const estimatedBytes = this.gpuAdapterInfo.maxBufferSize * 2;
+		return Math.round( ( estimatedBytes / 1024 ** 3 ) * 10 ) / 10;
+	}
+
+	/**
+	 * Get recommended context window size based on estimated VRAM and model.
+	 *
+	 * @param {string} modelId - Model identifier
+	 * @return {Object} Recommendation with size, reasoning, and tier info
+	 */
+	getRecommendedContextSize( modelId ) {
+		const estimatedVRAM = this.getEstimatedVRAM();
+		const model = ModelLoader.getAvailableModels().find(
+			( m ) => m.id === modelId
+		);
+		const modelVRAM = model
+			? parseFloat( model.vram.replace( /[^0-9.]/g, '' ) )
+			: 1.5;
+
+		const remainingVRAM = estimatedVRAM - modelVRAM;
+		const maxBuffer = this.gpuAdapterInfo?.maxBufferSize || 0;
+		const maxBufferGB = Math.round( ( maxBuffer / 1024 ** 3 ) * 100 ) / 100;
+
+		let recommended, tier, reasoning;
+		if ( estimatedVRAM === 0 ) {
+			recommended =
+				MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+			tier = 'unknown';
+			reasoning =
+				'Could not detect GPU memory. Using default context size.';
+		} else if ( remainingVRAM < 1 ) {
+			recommended = 2048;
+			tier = 'minimal';
+			reasoning = `Only ~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights (${ modelVRAM }GB). Minimal context recommended.`;
+		} else if ( remainingVRAM < 2 ) {
+			recommended = 4096;
+			tier = 'conservative';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Conservative context for stable operation.`;
+		} else if ( remainingVRAM < 4 ) {
+			recommended = 8192;
+			tier = 'balanced';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Good balance of context and performance.`;
+		} else if ( remainingVRAM < 8 ) {
+			recommended = 16384;
+			tier = 'generous';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Large context window possible.`;
+		} else {
+			recommended = 32768;
+			tier = 'maximum';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Maximum context window.`;
+		}
+
+		return {
+			recommended,
+			tier,
+			reasoning,
+			estimatedVRAM,
+			modelVRAM,
+			remainingVRAM: Math.max( 0, remainingVRAM ),
+			maxBufferGB,
+			currentDefault:
+				MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default,
+		};
+	}
+
+	/**
 	 * Get GPU adapter info (vendor, architecture, device)
 	 *
 	 * @return {Object|null} GPU info or null if not available
@@ -975,15 +1095,14 @@ class ModelLoader {
 	 * @return {Object|null} Context usage info or null if not available
 	 */
 	getContextUsage() {
-		if ( ! this.lastUsageStats ) {
+		if ( ! this.isReady ) {
 			return null;
 		}
 
 		const maxContext = this.isExternalProvider()
 			? this.externalContextSize || 32768
-			: MODEL_CONTEXT_SIZES[ this.modelId ] ||
-			  MODEL_CONTEXT_SIZES.default;
-		const usedTokens = this.lastUsageStats.prompt_tokens || 0;
+			: ModelLoader.getEffectiveContextSize( this.modelId );
+		const usedTokens = this.lastUsageStats?.prompt_tokens || 0;
 		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 
 		return {
@@ -1085,6 +1204,7 @@ export {
 	modelLoader,
 	DEFAULT_MODEL,
 	MODEL_CONFIG,
+	MODEL_CONTEXT_SIZES,
 	ExternalEngine,
 };
 export default modelLoader;

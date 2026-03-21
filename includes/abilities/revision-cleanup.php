@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_revision_cleanup(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/revision-cleanup',
 		// PHP configuration for WordPress Abilities API.
 		array(

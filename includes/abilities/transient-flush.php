@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_transient_flush(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/transient-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(

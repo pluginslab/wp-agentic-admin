@@ -94,7 +94,9 @@ export function registerVerifyPluginChecksums() {
 						}
 
 						lines.push(
-							`**${ plugin.plugin }** — FAILED (${ parts.join( ', ' ) })`
+							`**${ plugin.plugin }** — FAILED (${ parts.join(
+								', '
+							) })`
 						);
 
 						for ( const issue of issues ) {
@@ -103,16 +105,15 @@ export function registerVerifyPluginChecksums() {
 							);
 							if ( issue.diff ) {
 								lines.push( '```diff' );
-								const diffLines =
-									issue.diff.split( '\n' );
+								const diffLines = issue.diff.split( '\n' );
 								if ( diffLines.length > 30 ) {
 									lines.push(
-										diffLines
-											.slice( 0, 30 )
-											.join( '\n' )
+										diffLines.slice( 0, 30 ).join( '\n' )
 									);
 									lines.push(
-										`... (${ diffLines.length - 30 } more lines)`
+										`... (${
+											diffLines.length - 30
+										} more lines)`
 									);
 								} else {
 									lines.push( issue.diff );
@@ -163,6 +164,7 @@ export function registerVerifyPluginChecksums() {
 		/**
 		 * Execute the ability.
 		 *
+		 * @param  params
 		 * @return {Promise<Object>} The result from the PHP ability.
 		 */
 		execute: async ( params ) => {

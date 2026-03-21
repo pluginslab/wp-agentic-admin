@@ -175,16 +175,18 @@ const getLoadingStage = ( message, progress ) => {
 /**
  * ModelStatus component
  *
- * @param {Object}      props              - Component props
- * @param {Function}    props.onModelReady - Callback when model is ready
- * @param {Function}    props.onModelError - Callback when model loading fails
- * @param {string|null} props.initPhase    - Current initialization phase ('checking', 'loading', or null)
- * @param {string}      props.initMessage  - Message to display during initialization
- * @param {number}      props.initProgress - Progress percentage during initialization
+ * @param {Object}      props               - Component props
+ * @param {Function}    props.onModelReady  - Callback when model is ready
+ * @param {Function}    props.onModelError  - Callback when model loading fails
+ * @param {string|null} props.initPhase     - Current initialization phase ('checking', 'loading', or null)
+ * @param {string}      props.initMessage   - Message to display during initialization
+ * @param {number}      props.initProgress  - Progress percentage during initialization
+ * @param               props.onModelUnload
  */
 const ModelStatus = ( {
 	onModelReady,
 	onModelError,
+	onModelUnload,
 	initPhase,
 	initMessage, // eslint-disable-line no-unused-vars -- Prop passed by parent for future use in status display.
 	initProgress,
@@ -303,10 +305,14 @@ const ModelStatus = ( {
 			const gpu = modelLoader.getGPUInfo();
 			setGpuInfo( gpu );
 
-			// Initial stats fetch
+			// Initial stats and context fetch
 			modelLoader.getMemoryStats().then( ( stats ) => {
 				setMemoryStats( stats );
 			} );
+			const initialContext = modelLoader.getContextUsage();
+			if ( initialContext ) {
+				setContextUsage( initialContext );
+			}
 
 			// Poll for stats updates every 2 seconds to capture post-inference performance
 			const statsInterval = setInterval( () => {
@@ -375,7 +381,10 @@ const ModelStatus = ( {
 		await modelLoader.unload();
 		setProgress( 0 );
 		setIsFromCache( false );
-	}, [] );
+		if ( onModelUnload ) {
+			onModelUnload();
+		}
+	}, [ onModelUnload ] );
 
 	/**
 	 * Fetch models from remote endpoint
@@ -479,7 +488,14 @@ const ModelStatus = ( {
 						</span>
 					</div>
 
-					<div className="wp-agentic-admin-loading-card__progress">
+					<div
+						className="wp-agentic-admin-loading-card__progress"
+						role="progressbar"
+						aria-valuenow={ displayProgress }
+						aria-valuemin={ 0 }
+						aria-valuemax={ 100 }
+						aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
+					>
 						<div
 							className="wp-agentic-admin-loading-card__progress-bar"
 							style={ { width: `${ displayProgress }%` } }
@@ -499,7 +515,17 @@ const ModelStatus = ( {
 				<div className="wp-agentic-admin-status">
 					<span
 						className={ `wp-agentic-admin-status__indicator ${ getStatusClass() }` }
+						aria-hidden="true"
 					/>
+					<span className="screen-reader-text">
+						{ status === 'ready'
+							? 'Ready'
+							: status === 'error'
+							? 'Error'
+							: status === 'loading'
+							? 'Loading'
+							: 'Not loaded' }
+					</span>
 					<div className="wp-agentic-admin-status__info">
 						<span className="wp-agentic-admin-status__text">
 							{ status === 'ready' && loadedModelInfo
@@ -532,8 +558,6 @@ const ModelStatus = ( {
 										{ ' · ' }
 									</span>
 								) }
-								{ loadedModelInfo.mode !== 'external' &&
-									`~${ loadedModelInfo.size } VRAM` }
 								{ memoryStats?.available &&
 									memoryStats?.formatted && (
 										<>
@@ -556,7 +580,16 @@ const ModelStatus = ( {
 										<span className="context__label">
 											Context:
 										</span>
-										<span className="context__bar">
+										<span
+											className="context__bar"
+											role="progressbar"
+											aria-valuenow={
+												contextUsage.percentage
+											}
+											aria-valuemin={ 0 }
+											aria-valuemax={ 100 }
+											aria-label={ `Context usage: ${ contextUsage.percentage }%` }
+										>
 											<span
 												className="context__fill"
 												style={ {
@@ -605,9 +638,15 @@ const ModelStatus = ( {
 			{ ( status === 'not-loaded' || status === 'error' ) && (
 				<div className="wp-agentic-admin-provider">
 					{ /* Provider toggle */ }
-					<div className="wp-agentic-admin-provider__toggle">
+					<div
+						className="wp-agentic-admin-provider__toggle"
+						role="tablist"
+						aria-label="Provider selection"
+					>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'local' }
 							className={ `wp-agentic-admin-provider__tab ${
 								providerMode === 'local' ? 'is-active' : ''
 							}` }
@@ -617,6 +656,8 @@ const ModelStatus = ( {
 						</button>
 						<button
 							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'remote' }
 							className={ `wp-agentic-admin-provider__tab ${
 								providerMode === 'remote' ? 'is-active' : ''
 							}` }
@@ -633,6 +674,7 @@ const ModelStatus = ( {
 								<select
 									className="wp-agentic-admin-model-select"
 									value={ selectedModel }
+									aria-label="Select AI model"
 									onChange={ ( e ) => {
 										const modelId = e.target.value;
 										setSelectedModel( modelId );

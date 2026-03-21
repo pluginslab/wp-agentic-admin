@@ -189,8 +189,8 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
 			wp_agentic_admin_register_database_check();
-    }
-    
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
 			wp_agentic_admin_register_theme_list();
 		}
@@ -219,6 +219,10 @@ class Abilities {
 			wp_agentic_admin_register_post_list();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_read_file' ) ) {
+			wp_agentic_admin_register_read_file();
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
 			wp_agentic_admin_register_error_log_search();
 		}
@@ -231,6 +235,18 @@ class Abilities {
 			wp_agentic_admin_register_backup_check();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_file_scan' ) ) {
+			wp_agentic_admin_register_file_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_uploads_scan' ) ) {
+			wp_agentic_admin_register_uploads_scan();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_role_capabilities_check' ) ) {
+			wp_agentic_admin_register_role_capabilities_check();
+    }
+    
 		if ( function_exists( 'wp_agentic_admin_register_write_file' ) ) {
 			wp_agentic_admin_register_write_file();
 		}
@@ -243,17 +259,26 @@ class Abilities {
 			wp_agentic_admin_register_web_search();
 		}
 
+		// Dynamic ability discovery — PoC for calling plugin abilities.
+		if ( function_exists( 'wp_agentic_admin_register_discover_plugin_abilities' ) ) {
+			wp_agentic_admin_register_discover_plugin_abilities();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_run_plugin_ability' ) ) {
+			wp_agentic_admin_register_run_plugin_ability();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
 		 * Third-party plugins can use this action to register their own abilities
-		 * using the register_agentic_ability() function.
+		 * using the wp_agentic_admin_register_ability() function.
 		 *
 		 * @since 0.1.0
 		 *
 		 * @example
 		 * add_action( 'wp_agentic_admin_register_abilities', function() {
-		 *     register_agentic_ability(
+		 *     wp_agentic_admin_register_ability(
 		 *         'my-plugin/my-ability',
 		 *         array(
 		 *             'label'            => 'My Ability',

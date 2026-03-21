@@ -35,10 +35,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	);
 
 	if ( toggleBtn ) {
+		const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
+		toggleLink.setAttribute( 'aria-expanded', 'false' );
+
 		toggleBtn.addEventListener( 'click', ( e ) => {
 			e.preventDefault();
 			const isOpen = container.classList.toggle( 'is-open' );
 			toggleBtn.classList.toggle( 'is-active', isOpen );
+			toggleLink.setAttribute( 'aria-expanded', String( isOpen ) );
 		} );
 	}
 
@@ -51,9 +55,24 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			container.classList.remove( 'is-open' );
 			if ( toggleBtn ) {
 				toggleBtn.classList.remove( 'is-active' );
+				const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
+				toggleLink.setAttribute( 'aria-expanded', 'false' );
 			}
 		} );
 	}
+
+	// Close sidebar on Escape key and return focus to toggle button.
+	document.addEventListener( 'keydown', ( e ) => {
+		if ( e.key === 'Escape' && container.classList.contains( 'is-open' ) ) {
+			container.classList.remove( 'is-open' );
+			if ( toggleBtn ) {
+				toggleBtn.classList.remove( 'is-active' );
+				const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
+				toggleLink.setAttribute( 'aria-expanded', 'false' );
+				toggleLink.focus();
+			}
+		}
+	} );
 
 	const root = createRoot( container );
 	root.render( <AdminSidebar /> );

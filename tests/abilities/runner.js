@@ -11,6 +11,7 @@
  * Usage:
  *   npm run test:abilities -- --file tests/abilities/core-abilities.test.js
  *   node tests/abilities/runner.js --file tests/abilities/core-abilities.test.js
+ *   node tests/abilities/runner.js --file tests/abilities/core-abilities.test.js --think
  *   node tests/abilities/runner.js --file tests/abilities/core-abilities.test.js --model qwen3:1.7b
  *
  * @since 0.7.0
@@ -28,7 +29,10 @@ const args = process.argv.slice( 2 );
 const fileIndex = args.indexOf( '--file' );
 const modelIndex = args.indexOf( '--model' );
 const verbose = args.includes( '--verbose' );
-const noThink = args.includes( '--no-think' );
+// Default to --no-think to match browser behavior: the router disables
+// thinking for most action commands (keyword + action intent fast path).
+// Use --think to explicitly enable thinking for testing edge cases.
+const noThink = ! args.includes( '--think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
 	console.error(
@@ -39,7 +43,7 @@ if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
 	console.error( '  --file <path>       Path to test file (required)' );
 	console.error( '  --model <id>        Ollama model (default: qwen3:1.7b)' );
 	console.error(
-		'  --no-think          Append /nothink to disable Qwen 3 thinking'
+		'  --think             Enable Qwen 3 thinking (default: off to match browser)'
 	);
 	console.error( '  --verbose           Show full LLM responses' );
 	process.exit( 1 );
@@ -194,6 +198,9 @@ User: "list plugins"
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
+User: "what environment is this?"
+{"action": "tool_call", "tool": "core/get-environment-info", "args": {}}
+
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
 		disableThinking ? '\n\n/nothink' : ''
@@ -344,8 +351,15 @@ async function chatCompletion( messages, model ) {
 // ---------------------------------------------------------------------------
 
 function evaluateTest( test, action ) {
-	const toolCalled =
+	let toolCalled =
 		action && action.action === 'tool_call' ? action.tool : null;
+
+	// Mirror the browser's namespace fallback: if the LLM drops the prefix
+	// (e.g. "rewrite-flush" instead of "wp-agentic-admin/rewrite-flush"),
+	// try the default namespace before declaring a mismatch.
+	if ( toolCalled && ! toolCalled.includes( '/' ) ) {
+		toolCalled = `wp-agentic-admin/${ toolCalled }`;
+	}
 
 	if ( test.expectTool === null ) {
 		return { passed: toolCalled === null, toolCalled };

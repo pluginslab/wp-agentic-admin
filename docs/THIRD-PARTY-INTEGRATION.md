@@ -14,7 +14,7 @@ Hook into `wp_agentic_admin_register_abilities` to register your ability:
 
 ```php
 add_action( 'wp_agentic_admin_register_abilities', function() {
-    register_agentic_ability(
+    wp_agentic_admin_register_ability(
         'my-plugin/my-ability',
         array(
             'label'            => __( 'My Ability', 'my-plugin' ),
@@ -119,7 +119,7 @@ Then register your ability in JavaScript:
 
 ### PHP API
 
-#### `register_agentic_ability( $id, $php_config, $js_config )`
+#### `wp_agentic_admin_register_ability( $id, $php_config, $js_config )`
 
 Registers an ability with both the WordPress Abilities API and the Agentic Admin chat system.
 
@@ -164,44 +164,44 @@ array(
 )
 ```
 
-> **Auto-forwarded PHP values:** The `get_agentic_abilities_js_config()` function automatically forwards the PHP config's `label` and `description` values to the JavaScript frontend as `phpLabel` and `description` keys respectively. This means you do not need to duplicate label/description information in your JS config -- simply set them in the PHP config and they will be available on the JS side automatically.
+> **Auto-forwarded PHP values:** The `wp_agentic_admin_get_abilities_js_config()` function automatically forwards the PHP config's `label` and `description` values to the JavaScript frontend as `phpLabel` and `description` keys respectively. This means you do not need to duplicate label/description information in your JS config -- simply set them in the PHP config and they will be available on the JS side automatically.
 
-#### `unregister_agentic_ability( string $id ): bool`
+#### `wp_agentic_admin_unregister_ability( string $id ): bool`
 
 Removes a previously registered ability. Returns `true` if the ability was found and removed, `false` if it did not exist.
 
 ```php
-$removed = unregister_agentic_ability( 'my-plugin/my-ability' );
+$removed = wp_agentic_admin_unregister_ability( 'my-plugin/my-ability' );
 ```
 
-#### `get_agentic_abilities(): array`
+#### `wp_agentic_admin_get_abilities(): array`
 
 Returns all registered abilities as an associative array keyed by ability ID. Each entry contains `id`, `php` (PHP config), and `js` (JS config) keys.
 
 ```php
-$all_abilities = get_agentic_abilities();
+$all_abilities = wp_agentic_admin_get_abilities();
 foreach ( $all_abilities as $id => $ability ) {
     echo $ability['php']['label'];
 }
 ```
 
-#### `get_agentic_ability( string $id ): ?array`
+#### `wp_agentic_admin_get_ability( string $id ): ?array`
 
 Returns the configuration for a specific ability, or `null` if not found.
 
 ```php
-$ability = get_agentic_ability( 'my-plugin/my-ability' );
+$ability = wp_agentic_admin_get_ability( 'my-plugin/my-ability' );
 if ( $ability ) {
     echo $ability['php']['label'];
 }
 ```
 
-#### `agentic_ability_exists( string $id ): bool`
+#### `wp_agentic_admin_ability_exists( string $id ): bool`
 
 Checks if an ability with the given ID is registered.
 
 ```php
-if ( agentic_ability_exists( 'my-plugin/my-ability' ) ) {
+if ( wp_agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
     // Ability is registered
 }
 ```
@@ -701,11 +701,11 @@ Here's a complete example of a third-party plugin adding an ability:
 
 // Register the ability
 add_action( 'wp_agentic_admin_register_abilities', function() {
-    if ( ! function_exists( 'register_agentic_ability' ) ) {
+    if ( ! function_exists( 'wp_agentic_admin_register_ability' ) ) {
         return;
     }
     
-    register_agentic_ability(
+    wp_agentic_admin_register_ability(
         'my-plugin/count-posts',
         array(
             'label'            => __( 'Count Posts', 'my-plugin' ),
