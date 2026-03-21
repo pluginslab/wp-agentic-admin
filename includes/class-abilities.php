@@ -189,8 +189,8 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
 			wp_agentic_admin_register_database_check();
-    }
-    
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
 			wp_agentic_admin_register_theme_list();
 		}
