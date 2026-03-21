@@ -30,13 +30,7 @@ function wp_agentic_admin_register_rewrite_list(): void {
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'default'              => array(),
-				'properties'           => array(
-					'show_details' => array(
-						'type'        => 'boolean',
-						'description' => __( 'Whether to show detailed rule information.', 'wp-agentic-admin' ),
-						'default'     => false,
-					),
-				),
+				'properties'           => array(),
 				'additionalProperties' => false,
 			),
 			'output_schema'       => array(
@@ -58,9 +52,30 @@ function wp_agentic_admin_register_rewrite_list(): void {
 						'type'        => 'string',
 						'description' => __( 'Current permalink structure.', 'wp-agentic-admin' ),
 					),
-					'rules'               => array(
+					'rule_categories'     => array(
+						'type'                 => 'object',
+						'description'          => __( 'Rewrite rule counts grouped by category.', 'wp-agentic-admin' ),
+						'additionalProperties' => array(
+							'type' => 'integer',
+						),
+					),
+					'rule_sample'         => array(
 						'type'        => 'array',
-						'description' => __( 'Array of rewrite rules (if show_details is true).', 'wp-agentic-admin' ),
+						'description' => __( 'Sample rewrite rules across categories.', 'wp-agentic-admin' ),
+						'items'       => array(
+							'type'       => 'object',
+							'properties' => array(
+								'category' => array(
+									'type' => 'string',
+								),
+								'pattern'  => array(
+									'type' => 'string',
+								),
+								'query'    => array(
+									'type' => 'string',
+								),
+							),
+						),
 					),
 				),
 			),
@@ -86,14 +101,181 @@ function wp_agentic_admin_register_rewrite_list(): void {
 }
 
 /**
+ * Get a normalized rewrite rule query string.
+ *
+ * @param mixed $query Rewrite rule query.
+ * @return string
+ */
+function wp_agentic_admin_get_rewrite_rule_query_string( $query ): string {
+	if ( is_string( $query ) ) {
+		return $query;
+	}
+
+	if ( is_scalar( $query ) ) {
+		return (string) $query;
+	}
+
+	$encoded_query = wp_json_encode( $query );
+
+	return is_string( $encoded_query ) ? $encoded_query : '';
+}
+
+/**
+ * Detect the category for a rewrite rule.
+ *
+ * @param string $pattern Rewrite rule pattern.
+ * @param mixed  $query   Rewrite rule query.
+ * @return string
+ */
+function wp_agentic_admin_get_rewrite_rule_category( string $pattern, $query ): string {
+	$query_string = wp_agentic_admin_get_rewrite_rule_query_string( $query );
+
+	if ( false !== strpos( $pattern, 'wp-sitemap' ) || false !== strpos( $query_string, 'wp-sitemap' ) ) {
+		return 'sitemap';
+	}
+
+	if ( false !== strpos( $pattern, 'robots\.txt' ) ) {
+		return 'robots';
+	}
+
+	if ( false !== strpos( $pattern, 'favicon\.ico' ) ) {
+		return 'favicon';
+	}
+
+	if ( false !== strpos( $pattern, 'wp-json' ) || false !== strpos( $query_string, 'rest_route=' ) ) {
+		return 'rest';
+	}
+
+	if ( false !== strpos( $query_string, 'category_name=' ) || false !== strpos( $query_string, 'category=' ) ) {
+		return 'category';
+	}
+
+	if ( false !== strpos( $query_string, 'tag=' ) || false !== strpos( $query_string, 'tagname=' ) ) {
+		return 'tag';
+	}
+
+	if ( false !== strpos( $query_string, 'taxonomy=' ) || false !== strpos( $query_string, 'term=' ) ) {
+		return 'taxonomy';
+	}
+
+	if ( false !== strpos( $query_string, 'author_name=' ) || false !== strpos( $query_string, 'author=' ) ) {
+		return 'author';
+	}
+
+	if (
+		false !== strpos( $query_string, 'year=' ) ||
+		false !== strpos( $query_string, 'monthnum=' ) ||
+		false !== strpos( $query_string, 'day=' )
+	) {
+		return 'date';
+	}
+
+	if ( false !== strpos( $query_string, 's=' ) ) {
+		return 'search';
+	}
+
+	if ( false !== strpos( $pattern, 'feed' ) || false !== strpos( $query_string, 'feed=' ) ) {
+		return 'feed';
+	}
+
+	if ( false !== strpos( $query_string, 'attachment=' ) ) {
+		return 'attachment';
+	}
+
+	if ( false !== strpos( $query_string, 'pagename=' ) ) {
+		return 'page';
+	}
+
+	if ( false !== strpos( $query_string, 'name=' ) || false !== strpos( $query_string, 'post_type=post' ) ) {
+		return 'post';
+	}
+
+	if ( false !== strpos( $pattern, 'page/?([0-9]{1,})/?$' ) || false !== strpos( $query_string, 'paged=' ) ) {
+		return 'pagination';
+	}
+
+	return 'other';
+}
+
+/**
+ * Build a balanced sample of rewrite rules across categories.
+ *
+ * @param array $categorized_rules Rewrite rules grouped by category.
+ * @param int   $sample_limit      Maximum number of sample rules.
+ * @return array
+ */
+function wp_agentic_admin_get_rewrite_rule_sample( array $categorized_rules, int $sample_limit = 20 ): array {
+	$preferred_order = array(
+		'post',
+		'page',
+		'category',
+		'tag',
+		'taxonomy',
+		'author',
+		'date',
+		'search',
+		'feed',
+		'sitemap',
+		'attachment',
+		'rest',
+		'robots',
+		'favicon',
+		'pagination',
+		'other',
+	);
+
+	$category_names = array();
+
+	foreach ( $preferred_order as $category_name ) {
+		if ( ! empty( $categorized_rules[ $category_name ] ) ) {
+			$category_names[] = $category_name;
+		}
+	}
+
+	foreach ( array_keys( $categorized_rules ) as $category_name ) {
+		if ( ! in_array( $category_name, $category_names, true ) ) {
+			$category_names[] = $category_name;
+		}
+	}
+
+	$sample = array();
+	$index  = 0;
+
+	$sampled_count = count( $sample );
+
+	while ( $sampled_count < $sample_limit ) {
+		$added_rule = false;
+
+		foreach ( $category_names as $category_name ) {
+			if ( ! isset( $categorized_rules[ $category_name ][ $index ] ) ) {
+				continue;
+			}
+
+			$sample[]   = $categorized_rules[ $category_name ][ $index ];
+			$added_rule = true;
+
+			if ( count( $sample ) >= $sample_limit ) {
+				break;
+			}
+		}
+
+		if ( ! $added_rule ) {
+			break;
+		}
+
+		++$index;
+	}
+
+	return $sample;
+}
+
+/**
  * Execute the rewrite-list ability.
  *
  * @param array $input Input parameters.
  * @return array
  */
 function wp_agentic_admin_execute_rewrite_list( array $input = array() ): array {
-	global $wp_rewrite;
-
 	// Get all rewrite rules.
 	$rules       = get_option( 'rewrite_rules' );
 	$rules_count = is_array( $rules ) ? count( $rules ) : 0;
@@ -107,6 +289,32 @@ function wp_agentic_admin_execute_rewrite_list( array $input = array() ): array 
 		$permalink_display = $permalink_structure;
 	}
 
+	$categorized_counts = array();
+	$categorized_rules  = array();
+
+	if ( is_array( $rules ) ) {
+		foreach ( $rules as $pattern => $query ) {
+			$category = wp_agentic_admin_get_rewrite_rule_category( $pattern, $query );
+
+			if ( ! isset( $categorized_counts[ $category ] ) ) {
+				$categorized_counts[ $category ] = 0;
+				$categorized_rules[ $category ]  = array();
+			}
+
+			++$categorized_counts[ $category ];
+
+			$categorized_rules[ $category ][] = array(
+				'category' => $category,
+				'pattern'  => $pattern,
+				'query'    => wp_agentic_admin_get_rewrite_rule_query_string( $query ),
+			);
+		}
+	}
+
+	if ( ! empty( $categorized_counts ) ) {
+		arsort( $categorized_counts );
+	}
+
 	$result = array(
 		'success'             => true,
 		'message'             => sprintf(
@@ -116,20 +324,9 @@ function wp_agentic_admin_execute_rewrite_list( array $input = array() ): array 
 		),
 		'rules_count'         => $rules_count,
 		'permalink_structure' => $permalink_display,
+		'rule_categories'     => $categorized_counts,
+		'rule_sample'         => wp_agentic_admin_get_rewrite_rule_sample( $categorized_rules, 20 ),
 	);
-
-	// Include detailed rules if requested.
-	$show_details = $input['show_details'] ?? false;
-	if ( $show_details && is_array( $rules ) ) {
-		$rules_array = array();
-		foreach ( $rules as $pattern => $query ) {
-			$rules_array[] = array(
-				'pattern' => $pattern,
-				'query'   => $query,
-			);
-		}
-		$result['rules'] = $rules_array;
-	}
 
 	return $result;
 }
