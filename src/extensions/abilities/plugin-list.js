@@ -42,7 +42,7 @@ export function registerPluginList() {
 		// Make it descriptive so the LLM knows when to suggest using this ability.
 		label: 'List installed plugins',
 		description:
-			'List all installed WordPress plugins with their active/inactive status, version, and author. Use for questions about installed plugins, plugin counts, or which plugins are active.',
+			'List all installed WordPress plugins with their active/inactive status, version, and author. Use for questions about installed plugins, plugin counts, or which plugins are active. Do NOT use for checking updates — use update-check instead.',
 
 		// Keywords help the LLM understand when to use this ability.
 		// Include common variations of how users might phrase requests.
