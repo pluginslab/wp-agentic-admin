@@ -356,10 +356,12 @@ const ChatContainer = ( {
 	/**
 	 * Handle sending a user message
 	 *
-	 * @param {string} text - User's message text
+	 * @param {string} text                  - User's message text
+	 * @param {Object} options               - Send options
+	 * @param {Array}  options.bundleToolIds - Tool IDs to constrain the LLM to
 	 */
 	const handleSendMessage = useCallback(
-		async ( text ) => {
+		async ( text, options = {} ) => {
 			if ( ! text.trim() ) {
 				return;
 			}
@@ -406,7 +408,7 @@ const ChatContainer = ( {
 
 			// Process message through orchestrator
 			try {
-				await chatOrchestrator.processMessage( text );
+				await chatOrchestrator.processMessage( text, options );
 			} catch ( error ) {
 				log.error( 'Error processing message:', error );
 			}
