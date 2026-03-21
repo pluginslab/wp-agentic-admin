@@ -195,6 +195,24 @@ module.exports = {
 			],
 		},
 
+		// ── File reading ───────────────────────────────────────────
+		{
+			input: 'show me my wp-config.php',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'read the .htaccess file',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: "what's in my theme's functions.php",
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'open wp-content/plugins/myplugin/readme.txt',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+
 		// ── Cache & performance ────────────────────────────────────
 		{
 			input: 'flush the cache',
