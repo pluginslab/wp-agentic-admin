@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { TabPanel, Notice } from '@wordpress/components';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
+import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
@@ -173,6 +174,11 @@ const App = () => {
 			title: 'Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
+		{
+			name: 'plugin-abilities',
+			title: 'Plugin Abilities',
+			className: 'wp-agentic-admin-tab',
+		},
 	];
 
 	/**
@@ -197,6 +203,8 @@ const App = () => {
 				);
 			case 'abilities':
 				return <AbilityBrowser />;
+			case 'plugin-abilities':
+				return <PluginAbilitiesPanel />;
 			default:
 				return null;
 		}
