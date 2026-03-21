@@ -247,6 +247,16 @@ module.exports = {
 			expectTool: 'core/get-editor-blocks',
 		},
 
+		// ── Content generation & optimization ─────────────────────
+		{
+			input: 'generate content about dog training',
+			expectTool: 'wp-agentic-admin/content-generate',
+		},
+		{
+			input: 'fill this page with content about cooking tips',
+			expectTool: 'wp-agentic-admin/content-generate',
+		},
+
 		// ── No-tool tests (pure knowledge questions) ───────────────
 		{
 			input: 'what is a transient in WordPress?',
