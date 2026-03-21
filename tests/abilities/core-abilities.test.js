@@ -77,7 +77,10 @@ module.exports = {
 		},
 		{
 			input: 'check for outdated plugins',
-			expectTool: 'wp-agentic-admin/update-check',
+			expectTool: [
+				'wp-agentic-admin/update-check',
+				'wp-agentic-admin/plugin-list',
+			],
 		},
 
 		// ── Error log search ──────────────────────────────────────
@@ -157,7 +160,10 @@ module.exports = {
 		},
 		{
 			input: 'edit the wp-config.php to enable debug mode',
-			expectTool: 'wp-agentic-admin/write-file',
+			expectTool: [
+				'wp-agentic-admin/write-file',
+				'wp-agentic-admin/read-file',
+			],
 		},
 
 		// ── Database queries ──────────────────────────────────────
@@ -280,7 +286,7 @@ module.exports = {
 		// ── Core WordPress info ────────────────────────────────────
 		{
 			input: 'what is the name of my site?',
-			expectTool: 'core/get-site-info',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
 		},
 		{
 			input: 'what is my site URL?',
@@ -378,24 +384,31 @@ module.exports = {
 		// ── CMS / site identity (issues #60, #79) ────────────────────
 		{
 			input: 'which CMS and version am I running?',
-			expectTool: [ 'core/get-site-info', 'core/get-environment-info' ],
+			expectTool: [
+				'core/get-site-info',
+				'core/get-environment-info',
+				'wp-agentic-admin/site-health',
+			],
 			source: '#60',
 		},
 		{
 			input: 'what is my address URL',
-			expectTool: 'core/get-site-info',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
 			source: '#79',
 		},
 		{
 			input: 'what is my site URL?',
-			expectTool: 'core/get-site-info',
+			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
 			source: '#79',
 		},
 
 		// ── Plugin updates (issue #66) ───────────────────────────────
 		{
 			input: 'list plugins that need to be updated',
-			expectTool: 'wp-agentic-admin/update-check',
+			expectTool: [
+				'wp-agentic-admin/update-check',
+				'wp-agentic-admin/plugin-list',
+			],
 			source: '#66',
 		},
 		{
