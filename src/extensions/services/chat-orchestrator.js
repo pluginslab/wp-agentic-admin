@@ -24,25 +24,6 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'ChatOrchestrator' );
 
 /**
- * Check whether a tool result indicates business-level success.
- *
- * @param {*} result - The raw result from tool.execute().
- * @return {boolean} True if the result does not indicate failure.
- */
-function isToolResultSuccess( result ) {
-	if ( ! result || typeof result !== 'object' ) {
-		return true;
-	}
-	if ( result.success === false ) {
-		return false;
-	}
-	if ( result.error && ! result.success ) {
-		return false;
-	}
-	return true;
-}
-
-/**
  * Build system prompt for conversational queries
  *
  * Simple prompt used when the LLM is answering questions without tools.
@@ -336,9 +317,8 @@ class ChatOrchestrator {
 				num_results: 5,
 			} );
 
-			const webSuccess = isToolResultSuccess( result );
-			this.callbacks.onToolEnd( toolId, result, webSuccess );
-			this.session.addToolResult( toolId, result, webSuccess );
+			this.callbacks.onToolEnd( toolId, result, true );
+			this.session.addToolResult( toolId, result, true );
 
 			log.info(
 				`Web search pre-step complete: ${ result.total || 0 } results`
@@ -514,8 +494,7 @@ class ChatOrchestrator {
 		try {
 			// Pass userMessage to execute so tools can extract parameters
 			result = await tool.execute( { userMessage } );
-			success = isToolResultSuccess( result );
-			this.session.addToolResult( tool.id, result, success );
+			this.session.addToolResult( tool.id, result, true );
 		} catch ( error ) {
 			result = { error: error.message };
 			success = false;

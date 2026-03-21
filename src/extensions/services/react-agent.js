@@ -15,29 +15,6 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'ReactAgent' );
 
 /**
- * Check whether a tool result indicates business-level success.
- *
- * PHP abilities return { success: false, message } on failure.
- * JS-only abilities may return { error: '...' } instead.
- * Abilities without a success field default to true (backward compatible).
- *
- * @param {*} result - The raw result from tool.execute().
- * @return {boolean} True if the result does not indicate failure.
- */
-function isToolResultSuccess( result ) {
-	if ( ! result || typeof result !== 'object' ) {
-		return true;
-	}
-	if ( result.success === false ) {
-		return false;
-	}
-	if ( result.error && ! result.success ) {
-		return false;
-	}
-	return true;
-}
-
-/**
  * ReAct Agent Configuration
  */
 const REACT_CONFIG = {
@@ -385,9 +362,9 @@ class ReactAgent {
 					const truncatedResult =
 						resultStr.length > this.config.maxToolResultLength
 							? resultStr.substring(
-									0,
-									this.config.maxToolResultLength
-							  ) + '...[truncated]'
+								0,
+								this.config.maxToolResultLength
+							) + '...[truncated]'
 							: resultStr;
 
 					// Add observation to conversation with JSON format reminder
@@ -788,8 +765,7 @@ class ReactAgent {
 			// Execute the tool
 			const result = await tool.execute( { userMessage, ...args } );
 
-			const toolSuccess = isToolResultSuccess( result );
-			this.callbacks.onToolEnd( toolId, result, toolSuccess );
+			this.callbacks.onToolEnd( toolId, result, true );
 
 			// Generate plain-English interpretation for the LLM.
 			// This helps small models understand tool results correctly,
