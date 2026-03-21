@@ -33,33 +33,75 @@ The suggestion data structure from the LLM is already `{ label, tool }`. The `to
 
 - **`MessageItem.jsx`**: pass `{ label, toolId: suggestion.tool }` to `onSuggestionClick` instead of just `suggestion.label`.
 - **`MessageList.jsx`**: no change — already forwards `onSuggestionClick` transparently.
-- **`ChatContainer.jsx`**: `handleSuggestionClick` receives `{ label, toolId }`. If `toolId` is present and exists in the tool registry, calls `orchestrator.processDirectAbility(toolId, label)`. Otherwise falls back to `handleSendMessage(label)` for graceful degradation.
+- **`ChatContainer.jsx`**: `handleSuggestionClick` receives `{ label, toolId }`. If `toolId` is truthy, calls `orchestrator.processDirectAbility(toolId, label)`. If `toolId` is absent or falsy, falls back to `handleSendMessage(label)`. The orchestrator owns the unknown-toolId fallback logic internally.
 
 ### 2. `ChatOrchestrator.processDirectAbility(toolId, label)`
 
-New public method. Follows the same structural pattern as `processMessage` but skips routing.
+New public method. Structure:
 
-**Steps:**
+```
+// Pre-flight checks — before setting isProcessing
+if ( ! this.session ) throw new Error( 'Not initialized' )
+if ( this.isProcessing ) return { success: false, error: 'Already processing a message' }
 
-1. Add user bubble: `session.addMessage({ type: 'user', content: label })`.
-2. Show loading indicator (same loading message as `processMessage`).
-3. Call `ensureReactAgent()` (extracted from `processMessage`) to get the agent instance.
-4. Execute the tool: `reactAgent.executeTool(toolId, {}, label)`. Fires `onToolStart` / `onToolEnd` callbacks so tool request/result bubbles appear normally in the timeline.
-5. If `executeTool` returns `success: false` — post an error message, stop. No LLM call.
-6. Single-shot LLM summary: build a minimal conversation — system prompt (existing `buildSystemPromptPromptBased` with `filterToolsForPrompt` on `label`) + one user message containing the tool result (via existing `buildToolResultMessage`). Call the LLM once with `stream: false`. Parse the `final_answer` response.
-7. Apply the suggestion fallback (see Section 4) to the parsed response.
-8. Post the assistant reply with content, suggestions, and TPS stats — same as today.
+// Unknown toolId — delegate before locking isProcessing so processMessage can run normally
+const tool = this.toolRegistry.get( toolId )
+if ( ! tool ) return this.processMessage( label )
 
-**Helper extraction:** `ensureReactAgent()` replaces the inline lazy-init block inside `processMessage` so both paths share it.
+// Lock
+this.isProcessing = true
+this.currentAbortController = new AbortController()
+this.callbacks.onStateChange( { isProcessing: true } )
+
+try {
+  // ... steps below
+} catch ( error ) {
+  this.session.addErrorMessage( 'An error occurred while processing your message.' )
+  this.callbacks.onError( error )
+  return { success: false, error: error.message }
+} finally {
+  this.isProcessing = false
+  this.currentAbortController = null
+  this.callbacks.onStateChange( { isProcessing: false } )
+}
+```
+
+**Steps inside the try block:**
+
+1. **LLM ready check**: call `this.isLLMReady()`. If not ready, add assistant message "The AI model is not loaded yet. Please load the model first." and return `{ success: false, error: 'Model not loaded' }`.
+2. **Add user bubble**: `this.session.addUserMessage(label)`.
+3. **Add loading indicator**.
+4. **Init agent**: call `ensureReactAgent()` — see below.
+5. **Execute tool**: `const toolExecutionResult = await this.reactAgent.executeTool(toolId, {}, label)`. Fires `onToolStart` / `onToolEnd` callbacks (wired in `ensureReactAgent`) so tool request/result bubbles appear normally.
+6. **Handle non-success** — check `cancelled` before `success` on `toolExecutionResult`:
+   - If `toolExecutionResult.cancelled === true` → post "Action cancelled.", remove loading indicator, return.
+   - Else if `toolExecutionResult.success === false` → post error message, remove loading indicator, return.
+   - In both cases, no LLM call is made.
+7. **Truncate result**: `const resultStr = JSON.stringify(toolExecutionResult); const truncatedResult = resultStr.length > this.reactAgent.config.maxToolResultLength ? resultStr.substring(0, this.reactAgent.config.maxToolResultLength) + '...[truncated]' : resultStr;` Pass `toolExecutionResult` (the full object, not `toolExecutionResult.data`) to `buildToolResultMessage` so that the `result_for_llm` field is preserved for the LLM interpretation.
+8. **Build system prompt**: call `filterToolsForPrompt(label, this.toolRegistry.getAll(), { max: 10, exclude: 'wp-agentic-admin/search-abilities' })` to get `filteredTools`. Call `this.reactAgent.buildSystemPromptPromptBased(filteredTools)`. If it returns `null`, set `systemPrompt` directly to `"You are a WordPress assistant. Summarize the following tool result for the user."` — do not pass this string into `buildSystemPromptPromptBased`.
+9. **Single-shot LLM summary**: build `[{ role: 'system', content: systemPrompt }, { role: 'user', content: this.reactAgent.buildToolResultMessage(toolExecutionResult, truncatedResult) }]`. Note: `buildToolResultMessage` appends `/nothink` when `config.disableThinkingAfterTool` is true (default) — intentional, desirable for fast inference. Fire `this.callbacks.onStreamStart()` before the call. Call `engine.chat.completions.create({ messages, stream: false, temperature: this.reactAgent.config.temperature, max_tokens: this.reactAgent.config.maxTokens })`. Fire `this.callbacks.onStreamEnd(rawAnswer)` after. Since `stream: false`, `onStreamChunk` is never called. Thinking callbacks (`onThinkingStart`, `onThinkingChunk`, `onThinkingEnd`) are also irrelevant here — `stream: false` produces no streamed tokens.
+10. **Parse response**: call `this.reactAgent.parseActionFromResponse(responseContent)`. Handle all cases:
+    - `action === null` → `rawAnswer = "Tool ran but I couldn't summarize the result."`, `suggestions = []`
+    - `action.action === 'final_answer'` → `rawAnswer = action.content`, `suggestions = Array.isArray(action.suggestions) ? action.suggestions : []`
+    - `action.action` is anything else (e.g. `tool_call`) → same fallback as null: `rawAnswer = "Tool ran but I couldn't summarize the result."`, `suggestions = []`
+11. **Suggestion fallback**: apply the fallback described in Section 4, using `extractContent(rawAnswer)` as the query string.
+12. **Post reply**: `this.session.addAssistantMessage({ content: extractContent(rawAnswer), suggestions, ...this.getUsageStatsMeta() })`.
+
+**`ensureReactAgent()`** — extracted from `processWithReact`'s current lazy-init block. Creates the `ReactAgent` instance if not yet created AND wires all callbacks. Both `processWithReact` and `processDirectAbility` call this, sharing the same wired instance. `processDirectAbility` does not call `onContextFiltered` — tool selection was skipped on this path.
 
 ### 3. Error handling
 
 | Failure point | Behaviour |
 |---|---|
-| `toolId` not in registry | Fall back to `handleSendMessage(label)` |
-| `executeTool` returns `success: false` | Post error message, skip LLM summary |
-| LLM summary call throws | Post fallback message: "Tool ran but I couldn't summarize the result." Tool result bubbles remain visible. |
-| LLM returns unparseable JSON | Same fallback as above |
+| Not initialized (`this.session` null) | Throw (same as `processMessage`) |
+| `this.isProcessing` is true | Return `{ success: false, error: 'Already processing a message' }` immediately |
+| `toolId` not in registry | Delegate to `this.processMessage(label)` — before `isProcessing` is set, so `processMessage` runs normally |
+| Model not loaded | Post "model not loaded" message, return `{ success: false }` |
+| `executeTool` returns `cancelled: true` | Post "Action cancelled.", return (checked before `success`) |
+| `executeTool` returns `success: false` | Post error message, return |
+| `buildSystemPromptPromptBased` returns `null` | Use minimal fallback prompt string directly |
+| LLM summary call throws | Caught by outer `catch`, post generic error message |
+| LLM returns unparseable JSON, or non-`final_answer` action | Use fallback answer string, proceed with suggestion fallback |
 
 ### 4. Suggestion generation reliability
 
@@ -71,14 +113,17 @@ Replace the current rule:
 With:
 > "Always include a `suggestions` array in every `final_answer` — never omit it. If you used a tool, called one, or mentioned one by name, add it. If you made recommendations, add the most relevant available tool. Use only tool IDs from the TOOLS list. Up to 6 suggestions."
 
-**Client-side fallback** (in `ReactAgent.executeWithPromptBased`, `final_answer` branch):
+**Client-side fallback** — applied in two places:
+- `ReactAgent.executeWithPromptBased`, `final_answer` branch
+- `ChatOrchestrator.processDirectAbility`, step 11
 
-After parsing the LLM's `final_answer`, if `suggestions` is empty or missing:
-1. Run `filterToolsForPrompt(finalAnswer, allTools, { max: 3, exclude: 'wp-agentic-admin/search-abilities' })`.
-2. Map results to `{ label: tool.label, tool: tool.id }`.
-3. Attach to the result object.
+In both: after parsing, if `suggestions` is empty or missing:
+1. Get the cleaned answer: `const cleanedAnswer = extractContent(rawAnswer)`.
+2. Run `filterToolsForPrompt(cleanedAnswer, this.toolRegistry.getAll(), { max: 3, exclude: 'wp-agentic-admin/search-abilities' })`.
+3. Map results to `{ label: tool.label, tool: tool.id }`.
+4. Use as `suggestions`.
 
-The same fallback runs inside `processDirectAbility` after the single-shot summary call.
+Using the cleaned answer (after `extractContent`) ensures the search query is human-readable text, not escaped JSON.
 
 ---
 
@@ -87,8 +132,8 @@ The same fallback runs inside `processDirectAbility` after the single-shot summa
 | File | Change |
 |---|---|
 | `src/extensions/components/MessageItem.jsx` | Pass `{ label, toolId }` to `onSuggestionClick` |
-| `src/extensions/components/ChatContainer.jsx` | Route pill clicks to `processDirectAbility` when `toolId` present |
-| `src/extensions/services/chat-orchestrator.js` | Add `processDirectAbility`, extract `ensureReactAgent` |
+| `src/extensions/components/ChatContainer.jsx` | Route pill clicks with truthy `toolId` to `processDirectAbility` |
+| `src/extensions/services/chat-orchestrator.js` | Add `processDirectAbility`, extract `ensureReactAgent` with full callback wiring |
 | `src/extensions/services/react-agent.js` | Tighten system prompt rule; add suggestion fallback in `final_answer` branch |
 
 No new files. No PHP changes. No routing or workflow changes.
@@ -97,7 +142,12 @@ No new files. No PHP changes. No routing or workflow changes.
 
 ## Testing
 
-- **Unit test** for `processDirectAbility`: mock `executeTool` + mock LLM, assert message sequence (user bubble → tool request → tool result → assistant reply with suggestions).
-- **Unit test** for suggestion fallback: mock `filterToolsForPrompt`, assert suggestions populated when LLM omits them.
+- **`processDirectAbility` happy path**: mock `executeTool` returning `{ success: true, data: ... }`, mock LLM engine returning `final_answer` JSON. Assert message sequence: user bubble → tool request bubble (via `onToolStart`) → tool result bubble (via `onToolEnd`) → assistant reply with suggestions. Assert `onStreamStart`, `onStreamEnd`, `onStateChange({ isProcessing: true })`, `onStateChange({ isProcessing: false })` are called.
+- **`processDirectAbility` unknown toolId**: assert `processMessage` is called with `label` (and that it is called before `isProcessing` is ever set to `true`).
+- **`processDirectAbility` cancelled tool**: mock `executeTool` returning `{ success: false, cancelled: true }`. Assert no LLM call is made and "Action cancelled." message is posted.
+- **`processDirectAbility` while already processing**: assert early return, no messages added.
+- **`processDirectAbility` unexpected LLM action**: mock LLM returning `{ action: 'tool_call', ... }`. Assert fallback answer string is used.
+- **Suggestion fallback in `executeWithPromptBased`**: mock `filterToolsForPrompt` returning results, assert suggestions populated when LLM response has empty `suggestions` array.
+- **Suggestion fallback in `processDirectAbility`**: separate test — same mock setup, assert fallback also fires on the direct ability path.
 - Existing unit tests cover `processMessage` and the ReAct loop — no changes needed there.
 - Ability tests unaffected.
