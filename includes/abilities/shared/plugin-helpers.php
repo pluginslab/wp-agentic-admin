@@ -109,6 +109,9 @@ function    wp_agentic_admin_resolve_plugin( string $identifier ): array {
 	$all_plugins = get_plugins();
 	$input_lower = strtolower( trim( $identifier ) );
 
+	// Strip trailing "plugin" (e.g. "blocks plugin" → "blocks").
+	$input_lower = preg_replace( '/\s+plugin$/', '', $input_lower );
+
 	if ( '' === $input_lower ) {
 		return array(
 			'plugin_file' => null,
