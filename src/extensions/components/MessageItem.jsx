@@ -7,6 +7,7 @@
  */
 
 import { useState } from '@wordpress/element';
+import AbilityPicker from './AbilityPicker';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'MessageItem' );
@@ -128,11 +129,12 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * MessageItem component
  *
- * @param {Object} props         - Component props
- * @param {Object} props.message - Message object
+ * @param {Object}   props          - Component props
+ * @param {Object}   props.message  - Message object
+ * @param {Function} props.onAction - Callback to execute an ability action
  * @return {JSX.Element} Rendered message
  */
-const MessageItem = ( { message } ) => {
+const MessageItem = ( { message, onAction } ) => {
 	const { type, content, timestamp, prefillTps, decodeTps } = message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
@@ -337,6 +339,9 @@ const MessageItem = ( { message } ) => {
 				.trim();
 		}
 
+		// Actions attached from a preceding tool result
+		const messageActions = message.actions;
+
 		return (
 			<div className="agentic-message agentic-message--assistant">
 				<div className="agentic-timeline">
@@ -358,6 +363,36 @@ const MessageItem = ( { message } ) => {
 										</p>
 									);
 								} ) }
+						</div>
+					) }
+					{ messageActions?.length > 0 && onAction && (
+						<div className="agentic-message__actions">
+							<ol className="agentic-action-list">
+								{ messageActions.map( ( action ) => (
+									<li
+										key={ `${
+											action.action
+										}-${ JSON.stringify( action.args ) }` }
+										className="agentic-action-list__item"
+									>
+										<span className="agentic-action-list__label">
+											{ action.label }
+										</span>
+										<button
+											className="agentic-action-list__button"
+											type="button"
+											onClick={ () =>
+												onAction(
+													action.action,
+													action.args
+												)
+											}
+										>
+											{ action.button_label }
+										</button>
+									</li>
+								) ) }
+							</ol>
 						</div>
 					) }
 					<div className="agentic-message__footer">
@@ -563,6 +598,26 @@ const MessageItem = ( { message } ) => {
 						</svg>
 					</span>
 					<span className="agentic-error__text">{ content }</span>
+				</div>
+			</div>
+		);
+	}
+
+	// Ability picker — interactive numbered list of tools
+	if ( type === 'ability_picker' ) {
+		return (
+			<div className="agentic-message agentic-message--assistant">
+				<div className="agentic-timeline">
+					<div className="agentic-timeline__line" />
+					<div className="agentic-timeline__dot" />
+				</div>
+				<div className="agentic-message__content">
+					<AbilityPicker
+						abilities={ message.abilities || [] }
+						workflows={ message.workflows || [] }
+						onExecute={ message.onExecute }
+						isProcessing={ message.isProcessing }
+					/>
 				</div>
 			</div>
 		);

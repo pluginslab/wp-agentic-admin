@@ -38,7 +38,11 @@ import {
 	registerWPTools,
 	MessageType,
 	modelLoader,
+	getAbilities,
+	getWorkflows,
+	toolRegistry,
 } from '../services';
+import { executeAbility } from '../services/agentic-abilities-api';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ChatContainer' );
@@ -256,7 +260,7 @@ const ChatContainer = ( {
 	 * @return {Array} Display-formatted messages
 	 */
 	const convertMessagesToDisplay = ( sessionMessages ) => {
-		return sessionMessages.map( ( msg ) => {
+		const display = sessionMessages.map( ( msg ) => {
 			// Map session message types to display format
 			switch ( msg.type ) {
 				case MessageType.USER:
@@ -319,6 +323,22 @@ const ChatContainer = ( {
 					};
 			}
 		} );
+
+		// Attach actions from successful tool results to the next assistant message
+		for ( let i = 0; i < display.length - 1; i++ ) {
+			const curr = display[ i ];
+			const next = display[ i + 1 ];
+			if (
+				curr.type === 'ability_result' &&
+				curr.success &&
+				next.type === 'assistant' &&
+				curr.result?.actions?.length
+			) {
+				next.actions = curr.result.actions;
+			}
+		}
+
+		return display;
 	};
 
 	/**
@@ -329,6 +349,37 @@ const ChatContainer = ( {
 	const handleSendMessage = useCallback(
 		async ( text ) => {
 			if ( ! text.trim() ) {
+				return;
+			}
+
+			// Intercept /tools or /abilities slash command
+			const trimmed = text.trim().toLowerCase();
+			if ( trimmed === '/tools' || trimmed === '/abilities' ) {
+				const abilities = getAbilities();
+				const workflows = getWorkflows();
+
+				setMessages( ( prev ) => [
+					...prev,
+					{
+						id: `ability-picker-${ Date.now() }`,
+						type: 'ability_picker',
+						abilities,
+						workflows,
+						onExecute: ( id, args ) => {
+							const tool =
+								abilities.find( ( a ) => a.id === id ) ||
+								workflows.find( ( w ) => w.id === id );
+							if ( tool ) {
+								const label = tool.label || tool.id;
+								handleSendMessage(
+									args ? `${ label } ${ args }` : label
+								);
+							}
+						},
+						isProcessing: isLoading,
+						timestamp: new Date().toISOString(),
+					},
+				] );
 				return;
 			}
 
@@ -348,7 +399,7 @@ const ChatContainer = ( {
 				log.error( 'Error processing message:', error );
 			}
 		},
-		[ modelReady ]
+		[ modelReady, isLoading ]
 	);
 
 	/**
@@ -465,6 +516,47 @@ const ChatContainer = ( {
 	}, [ messages ] );
 
 	/**
+	 * Handle action button clicks from interactive ability results
+	 */
+	const handleAction = useCallback( async ( abilityId, params ) => {
+		const tool = toolRegistry.get( abilityId );
+		const needsConfirmation =
+			typeof tool?.requiresConfirmation === 'function'
+				? tool.requiresConfirmation( params )
+				: tool?.requiresConfirmation;
+
+		if ( needsConfirmation ) {
+			const confirmed = await new Promise( ( resolve ) => {
+				setPendingConfirmation( {
+					toolId: abilityId,
+					label: tool?.label || abilityId,
+					message:
+						tool?.confirmationMessage || `Execute ${ abilityId }?`,
+					resolve,
+				} );
+			} );
+			if ( ! confirmed ) {
+				return;
+			}
+		}
+
+		try {
+			const result = await executeAbility( abilityId, params );
+			const msg =
+				result?.message ||
+				( result?.success
+					? 'Action completed successfully.'
+					: 'Action failed.' );
+			sessionRef.current?.addAssistantMessage( msg );
+		} catch ( error ) {
+			log.error( 'Action execution error:', error );
+			sessionRef.current?.addAssistantMessage(
+				`Action failed: ${ error.message || 'Unknown error' }`
+			);
+		}
+	}, [] );
+
+	/**
 	 * Stop current AI generation
 	 */
 	const handleStopGeneration = useCallback( () => {
@@ -475,7 +567,13 @@ const ChatContainer = ( {
 
 	// Combine messages with loading/streaming indicators for display
 	const displayMessages = useMemo( () => {
-		const msgs = [ ...messages ];
+		const msgs = messages.map( ( msg ) => {
+			// Update ability_picker isProcessing dynamically
+			if ( msg.type === 'ability_picker' ) {
+				return { ...msg, isProcessing: isLoading };
+			}
+			return msg;
+		} );
 
 		// Show loading indicator inline in the message flow
 		const showLoadingDot =
@@ -560,7 +658,10 @@ const ChatContainer = ( {
 				</div>
 			</div>
 
-			<MessageList messages={ displayMessages } />
+			<MessageList
+				messages={ displayMessages }
+				onAction={ handleAction }
+			/>
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (
