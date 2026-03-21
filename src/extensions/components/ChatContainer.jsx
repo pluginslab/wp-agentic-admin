@@ -32,6 +32,7 @@ import {
 import { Button, Modal, Notice, Snackbar } from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
+import FeedbackOptInBanner from './FeedbackOptInBanner';
 import {
 	chatOrchestrator,
 	ChatSession,
@@ -42,6 +43,11 @@ import {
 	getWorkflows,
 	toolRegistry,
 } from '../services';
+import {
+	getFeedbackOptIn,
+	setFeedbackOptIn,
+	saveFeedback,
+} from '../services/feedback';
 import { executeAbility } from '../services/agentic-abilities-api';
 import { createLogger } from '../utils/logger';
 
@@ -79,6 +85,11 @@ const ChatContainer = ( {
 
 	// Copy feedback state
 	const [ showCopiedSnackbar, setShowCopiedSnackbar ] = useState( false );
+
+	// Feedback opt-in state: null = not decided, true = opted in, false = declined
+	const [ feedbackOptIn, setFeedbackOptInState ] = useState( () =>
+		getFeedbackOptIn()
+	);
 
 	// Session ref to persist across renders
 	const sessionRef = useRef( null );
@@ -260,7 +271,7 @@ const ChatContainer = ( {
 	 * @return {Array} Display-formatted messages
 	 */
 	const convertMessagesToDisplay = ( sessionMessages ) => {
-		const display = sessionMessages.map( ( msg ) => {
+		return sessionMessages.map( ( msg ) => {
 			// Map session message types to display format
 			switch ( msg.type ) {
 				case MessageType.USER:
@@ -399,7 +410,7 @@ const ChatContainer = ( {
 				log.error( 'Error processing message:', error );
 			}
 		},
-		[ modelReady, isLoading ]
+		[ modelReady ]
 	);
 
 	/**
@@ -450,6 +461,49 @@ const ChatContainer = ( {
 			"Hey there! I'm your WordPress assistant. Need help with site health, error logs, plugins, caching, or database optimization? Just ask!"
 		);
 	}, [] );
+
+	/**
+	 * Handle feedback opt-in acceptance
+	 */
+	const handleFeedbackAccept = useCallback( () => {
+		setFeedbackOptInState( true );
+		setFeedbackOptIn( true );
+	}, [] );
+
+	/**
+	 * Handle feedback opt-in decline
+	 */
+	const handleFeedbackDecline = useCallback( () => {
+		setFeedbackOptInState( false );
+		setFeedbackOptIn( false );
+	}, [] );
+
+	/**
+	 * Handle thumbs feedback from a message
+	 *
+	 * @param {string}      messageId - ID of the rated message
+	 * @param {string|null} rating    - 'up', 'down', or null (removed)
+	 */
+	const handleFeedback = useCallback(
+		( messageId, rating ) => {
+			if ( ! rating ) {
+				return;
+			}
+			// Collect ability IDs from the messages preceding this assistant response
+			const abilityIds = messages
+				.filter( ( m ) => m.type === 'ability_result' )
+				.map( ( m ) => m.abilityName )
+				.filter( Boolean );
+
+			saveFeedback( {
+				messageId,
+				sessionId: sessionRef.current?.id || '',
+				abilityIds,
+				rating,
+			} );
+		},
+		[ messages ]
+	);
 
 	/**
 	 * Copy all conversation to clipboard
@@ -661,7 +715,17 @@ const ChatContainer = ( {
 			<MessageList
 				messages={ displayMessages }
 				onAction={ handleAction }
+				feedbackOptIn={ feedbackOptIn === true }
+				onFeedback={ handleFeedback }
 			/>
+			
+			{ /* Feedback opt-in banner — shown once, only after the first real exchange */ }
+			{ feedbackOptIn === null && messages.length > 1 && (
+				<FeedbackOptInBanner
+					onAccept={ handleFeedbackAccept }
+					onDecline={ handleFeedbackDecline }
+				/>
+			) }
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (

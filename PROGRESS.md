@@ -9,7 +9,10 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - **high-performance notice** (PR #93 by @AlexanderMelde) — tip box suggesting `chrome://flags/#force-high-performance-gpu` for users with integrated GPUs
 - **build-ability skill** (PR #98 by @ivdimova) — Claude Code interview-driven skill for scaffolding new abilities with patterns reference
 
-**31 abilities**, **21 PRs merged**, **8 contributors**.
+### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
+Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
+
+**31 abilities**, **22 PRs merged**, **8 contributors**.
 
 ---
 

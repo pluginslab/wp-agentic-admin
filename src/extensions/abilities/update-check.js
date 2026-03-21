@@ -18,9 +18,19 @@ export function registerUpdateCheck() {
 	registerAbility( 'wp-agentic-admin/update-check', {
 		label: 'Check for available updates',
 		description:
-			'Check for available WordPress core, plugin, and theme updates. Use when users ask about outdated software or available upgrades.',
+			'Check for available WordPress core, plugin, and theme updates. Use when users ask about outdated software, available upgrades, or which plugins need to be updated.',
 
-		keywords: [ 'update', 'updates', 'outdated', 'upgrade', 'version' ],
+		keywords: [
+			'update',
+			'updates',
+			'outdated',
+			'upgrade',
+			'version',
+			'need to be updated',
+			'needs updating',
+			'out of date',
+			'new version',
+		],
 
 		initialMessage: "I'll check for available updates...",
 
