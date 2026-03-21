@@ -41,7 +41,17 @@ Users can now constrain the AI to curated tool sets via a `+` icon in the input 
 - **Hacked workflow** now chains 5 checks: core checksums → plugin checksums → database → file scan → role capabilities
 - **Action buttons fix** (#145) — buttons now display correctly regardless of success flag
 
-**39 abilities**, **36 PRs merged**, **9 contributors**.
+### Quality + Bug Fixes + Platform Extensions (PRs #157, #155, #154, #153, #152, #151, #159, #50)
+- **Plugin vulnerability scanning** (PR #157 by @Lucisu) — new contributor! NVD + MITRE CVE cross-reference for installed plugins.
+- **WCAG 2.2 AA accessibility** (PR #155 by @Stefan0x) — ARIA roles/labels, keyboard navigation, focus indicators, reduced motion support across entire chat UI.
+- **Fuzzy plugin matching** (PR #154 by @tomepajk) — activate/deactivate now accepts display names with tiered matching and candidate buttons for ambiguous matches. Fixes #53.
+- **Ability result status UI** (PR #153 by @0xLoopTheory) — three-state result display (success/info/error) instead of misleading green checkmark on failures. Fixes #74.
+- **Prefix global functions** (PR #152 by @AlexanderMelde) — all public PHP functions now use `wp_agentic_admin_` prefix. Fixes #120.
+- **Dynamic plugin bundles** (PR #151 by @BoweFrankema) — plugin abilities appear as selectable bundles in the chat dropdown.
+- **Rewrite list categorization** (PR #159 by @Lucisu) — categorized rules with balanced sampling instead of raw dump. Fixes #56.
+- **HTTP WebGPU error** (PR #50 by @robert81) — clear "please use HTTPS" message instead of confusing WebGPU error. Day 1 PR finally merged!
+
+**39 abilities**, **44 PRs merged**, **10 contributors**.
 
 ### Plugin Abilities Platform! (PR #139 by @BoweFrankema)
 Strategically the most important PR of the hackathon. The plugin is now an **open extensibility platform** — any WordPress plugin that registers abilities via the WP Abilities API gets AI support automatically. Includes: discover-plugin-abilities (queries the registry), run-plugin-ability (proxy executor), Plugin Abilities tab with toggle controls and token budget bar, dynamic system prompt integration.
