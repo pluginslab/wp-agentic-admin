@@ -330,13 +330,6 @@ class ChatOrchestrator {
 
 		this.callbacks.onToolStart( toolId );
 
-		// Add tool request first so the history has valid ordering:
-		// user → assistant (tool_request) → assistant (tool_result)
-		this.session.addToolRequest( toolId, {
-			query: userMessage,
-			num_results: 5,
-		} );
-
 		try {
 			const result = await executeAbility( toolId, {
 				query: userMessage,
