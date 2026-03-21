@@ -94,9 +94,7 @@ export function registerRewriteList() {
 		 * @return {Promise<Object>} The result from PHP.
 		 */
 		execute: async ( params ) => {
-			return executeAbility( 'wp-agentic-admin/rewrite-list', {
-				show_details: params.show_details || false,
-			} );
+			return executeAbility( 'wp-agentic-admin/rewrite-list', {} );
 		},
 
 		// Reading rules is safe - no confirmation needed.

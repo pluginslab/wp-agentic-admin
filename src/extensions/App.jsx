@@ -14,6 +14,7 @@ import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
+import webmcpBridge from './services/webmcp-bridge';
 import { createLogger } from './utils/logger';
 
 const log = createLogger( 'App' );
@@ -124,6 +125,15 @@ const App = () => {
 		};
 
 		initializeApp();
+	}, [] );
+
+	/**
+	 * Cleanup WebMCP bridge on unmount.
+	 */
+	useEffect( () => {
+		return () => {
+			webmcpBridge.cleanup();
+		};
 	}, [] );
 
 	/**
