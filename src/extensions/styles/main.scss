@@ -975,6 +975,36 @@
 		}
 	}
 
+	&__tabs {
+		display: flex;
+		gap: 0;
+		margin-bottom: 16px;
+		border-bottom: 1px solid #c3c4c7;
+	}
+
+	&__tab {
+		padding: 8px 16px;
+		border: 1px solid transparent;
+		border-bottom: none;
+		background: none;
+		cursor: pointer;
+		font-size: 13px;
+		color: #646970;
+		margin-bottom: -1px;
+		border-radius: 4px 4px 0 0;
+
+		&:hover {
+			color: #2271b1;
+		}
+
+		&--active {
+			color: #1d2327;
+			font-weight: 600;
+			border-color: #c3c4c7;
+			background: #fff;
+		}
+	}
+
 	&__grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1398,6 +1428,199 @@
 			border-radius: 4px;
 		}
 	}
+}
+
+// Token Budget Bar
+.wp-agentic-admin-token-budget {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px;
+	margin-bottom: 16px;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	&__label {
+		font-weight: 600;
+		font-size: 13px;
+	}
+
+	&__status {
+		font-weight: 600;
+		font-size: 12px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	&__bar-container {
+		height: 12px;
+		background: #f0f0f1;
+		border-radius: 6px;
+		overflow: hidden;
+		margin-bottom: 8px;
+		display: flex;
+	}
+
+	&__bar {
+		height: 100%;
+		transition: width 0.4s ease, background-color 0.4s ease;
+		min-width: 0;
+
+		&--reserve {
+			background-color: #a7aaad;
+			border-radius: 6px 0 0 6px;
+		}
+
+		&--base {
+			background-color: #2271b1;
+		}
+
+		&--external {
+			border-radius: 0 6px 6px 0;
+		}
+	}
+
+	&__info {
+		display: flex;
+		justify-content: space-between;
+		font-size: 12px;
+		color: #646970;
+	}
+
+	&__breakdown {
+		display: flex;
+		justify-content: space-between;
+		font-size: 11px;
+		color: #646970;
+		margin-top: 4px;
+	}
+
+	&__context {
+		font-style: italic;
+	}
+}
+
+// Plugin Abilities Panel
+.wp-agentic-admin-plugin-panel {
+	padding: 20px;
+
+	&--loading,
+	&--error,
+	&--empty {
+		text-align: center;
+		padding: 40px;
+	}
+
+	&__header {
+		margin-bottom: 16px;
+
+		h3 {
+			margin: 0 0 4px;
+		}
+
+		.description {
+			margin: 0;
+			color: #646970;
+		}
+	}
+
+	&__controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 16px;
+		background: #f6f7f7;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		margin-bottom: 12px;
+
+		.components-toggle-control {
+			margin-bottom: 0;
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&__item {
+		background: #fff;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		padding: 12px 16px;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+		&--enabled {
+			border-color: #2271b1;
+			border-left-width: 3px;
+		}
+
+		&:hover {
+			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+		}
+
+		.components-toggle-control {
+			margin-bottom: 0;
+		}
+	}
+
+	&__item-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	&__item-icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 6px;
+		flex-shrink: 0;
+		margin-top: 2px;
+		object-fit: contain;
+
+		&--letter {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: #2271b1;
+			color: #fff;
+			font-weight: 600;
+			font-size: 16px;
+		}
+	}
+
+	&__item-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__item-meta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-top: 8px;
+
+		code {
+			background: #f0f0f1;
+			padding: 2px 6px;
+			border-radius: 3px;
+			font-size: 11px;
+		}
+	}
+
+	&__item-tokens {
+		font-size: 11px;
+		color: #646970;
+		white-space: nowrap;
+	}
+
 }
 
 // Error content in messages

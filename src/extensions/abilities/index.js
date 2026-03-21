@@ -44,6 +44,8 @@ import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
+import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
+import { registerRunPluginAbility } from './run-plugin-ability';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -80,6 +82,8 @@ export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 export { registerDatabaseCheck } from './database-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
+export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
+export { registerRunPluginAbility } from './run-plugin-ability';
 
 /**
  * Register all abilities.
@@ -130,7 +134,10 @@ export function registerAllAbilities() {
 	registerCoreSiteInfo();
 	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
-	registerCoreEditorBlocks();
+
+	// Dynamic ability discovery — PoC for calling plugin abilities
+	registerDiscoverPluginAbilities();
+	registerRunPluginAbility();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }
