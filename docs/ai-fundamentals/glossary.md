@@ -10,7 +10,7 @@ Quick reference for the terms used across the AI Fundamentals chapters. Entries 
 A discrete operation the AI can execute on WordPress — for example, reading error logs or listing plugins. Each ability has an ID, description, input/output schema, execute callback, and permission check. See [Ch. 9](09-tools-and-abilities.md).
 
 **Abilities API**
-The WordPress registration system for tools. PHP abilities are registered with `register_agentic_ability()`, JS abilities with `registerAbility()`. See [Ch. 9](09-tools-and-abilities.md).
+The WordPress registration system for tools. PHP abilities are registered with `wp_agentic_admin_register_ability()`, JS abilities with `registerAbility()`. See [Ch. 9](09-tools-and-abilities.md).
 
 **Activation (Service Worker)**
 The lifecycle phase where a newly installed Service Worker takes control and can start intercepting requests. See [Ch. 7](07-service-worker-persistence.md).

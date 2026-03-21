@@ -40,7 +40,7 @@ $wp_agentic_abilities = array();
  *                           - confirmationMessage: (string) Custom confirmation message.
  * @return bool True on success, false on failure.
  */
-function register_agentic_ability( string $id, array $php_args, array $js_args = array() ): bool {
+function wp_agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool {
 	global $wp_agentic_abilities;
 
 	// Validate ID format.
@@ -89,7 +89,7 @@ function register_agentic_ability( string $id, array $php_args, array $js_args =
  * @param string $id Ability identifier.
  * @return bool True if ability was unregistered, false if it didn't exist.
  */
-function unregister_agentic_ability( string $id ): bool {
+function wp_agentic_admin_unregister_ability( string $id ): bool {
 	global $wp_agentic_abilities;
 
 	if ( ! isset( $wp_agentic_abilities[ $id ] ) ) {
@@ -113,7 +113,7 @@ function unregister_agentic_ability( string $id ): bool {
  *
  * @return array Array of registered abilities.
  */
-function get_agentic_abilities(): array {
+function wp_agentic_admin_get_abilities(): array {
 	global $wp_agentic_abilities;
 	return $wp_agentic_abilities ?? array();
 }
@@ -126,7 +126,7 @@ function get_agentic_abilities(): array {
  * @param string $id Ability identifier.
  * @return array|null Ability configuration or null if not found.
  */
-function get_agentic_ability( string $id ): ?array {
+function wp_agentic_admin_get_ability( string $id ): ?array {
 	global $wp_agentic_abilities;
 	return $wp_agentic_abilities[ $id ] ?? null;
 }
@@ -141,7 +141,7 @@ function get_agentic_ability( string $id ): ?array {
  *
  * @return array Array of JS configurations keyed by ability ID.
  */
-function get_agentic_abilities_js_config(): array {
+function wp_agentic_admin_get_abilities_js_config(): array {
 	global $wp_agentic_abilities;
 
 	$js_configs = array();
@@ -176,7 +176,7 @@ function get_agentic_abilities_js_config(): array {
  * @param string $id Ability identifier.
  * @return bool True if ability exists.
  */
-function agentic_ability_exists( string $id ): bool {
+function wp_agentic_admin_ability_exists( string $id ): bool {
 	global $wp_agentic_abilities;
 	return isset( $wp_agentic_abilities[ $id ] );
 }

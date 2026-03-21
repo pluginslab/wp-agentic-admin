@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_run_plugin_ability(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/run-plugin-ability',
 		array(
 			'label'               => __( 'Run Plugin Ability', 'wp-agentic-admin' ),

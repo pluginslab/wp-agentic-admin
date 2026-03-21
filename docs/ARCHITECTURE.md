@@ -82,7 +82,7 @@ Our design decisions are optimized for these user personas:
 - **Require:** Clear APIs, WordPress coding standards compliance, extensibility
 
 **What they need:**
-- Simple `register_agentic_ability()` API
+- Simple `wp_agentic_admin_register_ability()` API
 - PHP/JavaScript dual registration pattern
 - WordPress Abilities API integration
 - Shared helper functions to avoid duplication
@@ -285,7 +285,7 @@ skills:
 ### WordPress Abilities (Chosen)
 
 ```php
-register_agentic_ability('wp-agentic-admin/db-optimize', [
+wp_agentic_admin_register_ability('wp-agentic-admin/db-optimize', [
     'label' => 'Optimize Database',
     'description' => 'Optimize database tables',
     'category' => 'sre-tools',
