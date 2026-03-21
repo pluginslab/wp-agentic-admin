@@ -87,13 +87,19 @@ class ReactAgent {
 	 *
 	 * @param {string} userMessage         - The user's request
 	 * @param {Array}  conversationHistory - Previous messages (for context)
+	 * @param {Object} options             - Execution options
+	 * @param {Array}  options.toolFilter  - Optional array of tool IDs to constrain the agent
 	 * @return {Promise<ReactResult>} Result with success status, final answer, and execution details.
 	 */
-	async execute( userMessage, conversationHistory = [] ) {
+	async execute( userMessage, conversationHistory = [], options = {} ) {
 		log.info( 'Starting ReAct loop for:', userMessage );
+
+		// Store tool filter for this execution
+		this.currentToolFilter = options.toolFilter || null;
 
 		const engine = this.modelLoader.getEngine();
 		if ( ! engine ) {
+			this.currentToolFilter = null;
 			return {
 				success: false,
 				finalAnswer:
@@ -109,6 +115,9 @@ class ReactAgent {
 			userMessage,
 			conversationHistory
 		);
+
+		// Clean up tool filter
+		this.currentToolFilter = null;
 
 		// Store last result for test observability
 		this.lastResult = result;
@@ -675,6 +684,21 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
+		// Enforce bundle filter — block tools outside the active bundle
+		if (
+			this.currentToolFilter &&
+			this.currentToolFilter.length > 0 &&
+			! this.currentToolFilter.includes( toolId )
+		) {
+			log.warn( `Tool ${ toolId } blocked by active bundle filter` );
+			return {
+				success: false,
+				error: `Tool "${ toolId }" is not available in the current bundle. Available tools: ${ this.currentToolFilter.join(
+					', '
+				) }`,
+			};
+		}
+
 		const tool = this.toolRegistry.get( toolId );
 
 		if ( ! tool ) {
@@ -792,7 +816,15 @@ class ReactAgent {
 	 * @return {string} System prompt with JSON instructions
 	 */
 	buildSystemPromptPromptBased() {
-		const tools = this.toolRegistry.getAll();
+		let tools = this.toolRegistry.getAll();
+
+		// Filter tools when a bundle is active
+		if ( this.currentToolFilter && this.currentToolFilter.length > 0 ) {
+			tools = tools.filter( ( t ) =>
+				this.currentToolFilter.includes( t.id )
+			);
+		}
+
 		const toolsList = tools
 			.map( ( t ) => `- ${ t.id }: ${ t.description || t.label || '' }` )
 			.join( '\n' );
@@ -824,8 +856,10 @@ User: "list plugins"
 
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
-			this.config.disableThinking ? '\n\n/nothink' : ''
-		}`;
+			this.currentToolFilter && this.currentToolFilter.length > 0
+				? '\n\nIMPORTANT: The user has selected a specific tool bundle. You MUST use the available tools to answer. Do not use final_answer without calling a tool first.'
+				: ''
+		}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
 	}
 }
 

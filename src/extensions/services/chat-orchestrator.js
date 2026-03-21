@@ -18,6 +18,7 @@ import workflowRegistry from './workflow-registry';
 import workflowOrchestrator from './workflow-orchestrator';
 import ReactAgent from './react-agent';
 import messageRouter from './message-router';
+import { executeAbility } from './agentic-abilities-api';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ChatOrchestrator' );
@@ -209,13 +210,16 @@ class ChatOrchestrator {
 	 * This is the main entry point for handling user input
 	 *
 	 * Routing logic:
-	 * 1. Check for workflow keyword match → workflow mode
-	 * 2. Default to ReAct loop for everything else (actions AND questions)
+	 * 1. If bundle is active → force ReAct with filtered tools
+	 * 2. Check for workflow keyword match → workflow mode
+	 * 3. Default to ReAct loop for everything else (actions AND questions)
 	 *
-	 * @param {string} userMessage - The user's message
+	 * @param {string} userMessage           - The user's message
+	 * @param {Object} options               - Processing options
+	 * @param {Array}  options.bundleToolIds - Tool IDs to constrain the LLM to
 	 * @return {Promise<Object>} Result with success status and any errors
 	 */
-	async processMessage( userMessage ) {
+	async processMessage( userMessage, options = {} ) {
 		if ( ! this.session ) {
 			throw new Error(
 				'ChatOrchestrator not initialized. Call initialize() first.'
@@ -233,6 +237,24 @@ class ChatOrchestrator {
 		try {
 			// Add user message to session
 			this.session.addUserMessage( userMessage );
+
+			// Web search pre-step: run search first, inject results as context
+			if ( options.webSearch ) {
+				await this.performWebSearchPreStep( userMessage );
+			}
+
+			// If bundle is active, bypass router and force ReAct with filtered tools
+			if ( options.bundleToolIds && options.bundleToolIds.length > 0 ) {
+				log.info(
+					'Bundle active, forcing ReAct with filtered tools:',
+					options.bundleToolIds
+				);
+				return await this.processWithReact(
+					userMessage,
+					false,
+					options.bundleToolIds
+				);
+			}
 
 			// Route the message
 			const route = this.messageRouter.route( userMessage );
@@ -275,15 +297,58 @@ class ChatOrchestrator {
 	}
 
 	/**
+	 * Perform web search as a pre-step before normal routing.
+	 *
+	 * Executes a web search using the user's message as query,
+	 * then injects results into the session so subsequent processing
+	 * has web context available.
+	 *
+	 * @param {string} userMessage - The user's message to search for
+	 */
+	async performWebSearchPreStep( userMessage ) {
+		const toolId = 'wp-agentic-admin/web-search';
+		log.info( 'Web search pre-step for:', userMessage );
+
+		this.callbacks.onToolStart( toolId );
+
+		try {
+			const result = await executeAbility( toolId, {
+				query: userMessage,
+				num_results: 5,
+			} );
+
+			this.callbacks.onToolEnd( toolId, result, true );
+			this.session.addToolResult( toolId, result, true );
+
+			log.info(
+				`Web search pre-step complete: ${ result.total || 0 } results`
+			);
+		} catch ( error ) {
+			log.error( 'Web search pre-step failed:', error );
+			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
+			this.session.addToolResult(
+				toolId,
+				{ error: error.message },
+				false
+			);
+		}
+	}
+
+	/**
 	 * Process message with ReAct loop
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
 	 * @param {string}  userMessage     - User's message
 	 * @param {boolean} disableThinking - Whether to disable model thinking
+	 * @param {Array}   toolFilter      - Optional array of tool IDs to constrain the agent
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
-	async processWithReact( userMessage, disableThinking = false ) {
+	async processWithReact(
+		userMessage,
+		disableThinking = false,
+		toolFilter = null
+	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -329,7 +394,8 @@ class ChatOrchestrator {
 		// Execute ReAct loop
 		const result = await this.reactAgent.execute(
 			userMessage,
-			this.session.getConversationHistory()
+			this.session.getConversationHistory(),
+			{ toolFilter }
 		);
 
 		// Stream the final answer
