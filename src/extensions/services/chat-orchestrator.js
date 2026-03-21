@@ -286,7 +286,7 @@ class ChatOrchestrator {
 				);
 			}
 
-			if ( route.type === 'conversational' ) {
+			if ( route.type === 'conversational' && ! options.webSearch ) {
 				log.info( 'Routing to direct LLM (conversational)' );
 				return await this.processWithLLM();
 			}
