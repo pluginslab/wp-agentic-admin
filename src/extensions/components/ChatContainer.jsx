@@ -274,6 +274,7 @@ const ChatContainer = ( {
 						timestamp: msg.timestamp,
 						prefillTps: msg.meta?.prefillTps,
 						decodeTps: msg.meta?.decodeTps,
+						suggestions: msg.meta?.suggestions || [],
 					};
 				case MessageType.TOOL_REQUEST:
 					return {
@@ -291,6 +292,13 @@ const ChatContainer = ( {
 						abilityName: msg.meta?.toolId,
 						result: msg.meta?.result,
 						success: msg.meta?.success,
+						timestamp: msg.timestamp,
+					};
+				case MessageType.CONTEXT:
+					return {
+						id: msg.id,
+						type: 'context',
+						content: msg.meta?.tools || [],
 						timestamp: msg.timestamp,
 					};
 				case MessageType.THINKING:
@@ -349,6 +357,16 @@ const ChatContainer = ( {
 			}
 		},
 		[ modelReady ]
+	);
+
+	/**
+	 * Handle suggestion pill click — sends the suggestion label as a user message.
+	 */
+	const handleSuggestionClick = useCallback(
+		( label ) => {
+			handleSendMessage( label );
+		},
+		[ handleSendMessage ]
 	);
 
 	/**
@@ -560,7 +578,10 @@ const ChatContainer = ( {
 				</div>
 			</div>
 
-			<MessageList messages={ displayMessages } />
+			<MessageList
+				messages={ displayMessages }
+				onSuggestionClick={ handleSuggestionClick }
+			/>
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (

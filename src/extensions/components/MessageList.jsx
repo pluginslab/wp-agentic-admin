@@ -11,11 +11,12 @@ import MessageItem from './MessageItem';
 /**
  * MessageList component
  *
- * @param {Object} props          - Component props
- * @param {Array}  props.messages - Array of message objects
+ * @param {Object}   props                   - Component props
+ * @param {Array}    props.messages          - Array of message objects
+ * @param {Function} props.onSuggestionClick - Called with suggestion label when a pill is clicked
  * @return {JSX.Element} Rendered message list
  */
-const MessageList = ( { messages } ) => {
+const MessageList = ( { messages, onSuggestionClick } ) => {
 	const listRef = useRef( null );
 
 	// Auto-scroll to bottom when new messages arrive
@@ -28,7 +29,11 @@ const MessageList = ( { messages } ) => {
 	return (
 		<div className="wp-agentic-admin-messages" ref={ listRef }>
 			{ messages.map( ( message ) => (
-				<MessageItem key={ message.id } message={ message } />
+				<MessageItem
+					key={ message.id }
+					message={ message }
+					onSuggestionClick={ onSuggestionClick }
+				/>
 			) ) }
 		</div>
 	);

@@ -1796,7 +1796,47 @@
 					}
 				}
 			}
+
+		.agentic-message__suggestions {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 6px;
+			margin-top: 12px;
+			padding-top: 10px;
+			border-top: 1px solid #f0f0f1;
+
+			&-label {
+				width: 100%;
+				font-size: 11px;
+				font-weight: 600;
+				color: #8c8f94;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+				margin-bottom: 2px;
+			}
 		}
+	}
+
+	.agentic-suggestion-pill {
+		display: inline-flex;
+		align-items: center;
+		padding: 4px 12px;
+		background: #f0f6fc;
+		border: 1px solid #c8d8e8;
+		border-radius: 12px;
+		font-size: 12px;
+		color: #2271b1;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		white-space: nowrap;
+
+		&:hover {
+			background: #2271b1;
+			border-color: #2271b1;
+			color: #fff;
+		}
+	}
 
 		// System message - welcome/intro
 		&--system {

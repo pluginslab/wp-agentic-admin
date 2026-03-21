@@ -21,6 +21,7 @@ const MessageType = {
 	SYSTEM: 'system',
 	ABILITY_REQUEST: 'ability_request',
 	ABILITY_RESULT: 'ability_result',
+	CONTEXT: 'context',
 	ERROR: 'error',
 };
 
@@ -128,12 +129,14 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * MessageItem component
  *
- * @param {Object} props         - Component props
- * @param {Object} props.message - Message object
+ * @param {Object}   props                   - Component props
+ * @param {Object}   props.message           - Message object
+ * @param {Function} props.onSuggestionClick - Called with suggestion label when a pill is clicked
  * @return {JSX.Element} Rendered message
  */
-const MessageItem = ( { message } ) => {
-	const { type, content, timestamp, prefillTps, decodeTps } = message;
+const MessageItem = ( { message, onSuggestionClick } ) => {
+	const { type, content, timestamp, prefillTps, decodeTps, suggestions } =
+		message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
 
@@ -173,6 +176,79 @@ const MessageItem = ( { message } ) => {
 				</div>
 				<div className="agentic-message__time">
 					{ formatTime( timestamp ) }
+				</div>
+			</div>
+		);
+	}
+
+	// Context block — shows which tools were loaded for this request
+	if ( type === 'context' ) {
+		const tools = Array.isArray( content ) ? content : [];
+		const label =
+			tools.length === 1
+				? 'Using 1 tool'
+				: `Using ${ tools.length } tools`;
+
+		return (
+			<div className="agentic-message agentic-message--tool">
+				<div className="agentic-timeline">
+					<div className="agentic-timeline__line" />
+					<div className="agentic-timeline__dot agentic-timeline__dot--tool" />
+				</div>
+				<div className="agentic-tool agentic-tool--thinking-done">
+					<button
+						className="agentic-tool__header agentic-tool__header--clickable"
+						onClick={ () => setIsExpanded( ! isExpanded ) }
+						type="button"
+					>
+						<span className="agentic-tool__icon">
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<circle cx="11" cy="11" r="8" />
+								<line x1="21" y1="21" x2="16.65" y2="16.65" />
+							</svg>
+						</span>
+						<span className="agentic-tool__label">{ label }</span>
+						<span
+							className={ `agentic-tool__expand ${
+								isExpanded ? 'agentic-tool__expand--open' : ''
+							}` }
+						>
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<polyline points="6 9 12 15 18 9" />
+							</svg>
+						</span>
+					</button>
+					{ isExpanded && (
+						<div className="agentic-tool__result agentic-tool__result--thinking">
+							<ul className="agentic-context__tools">
+								{ tools.map( ( tool ) => (
+									<li
+										key={ tool.id }
+										className="agentic-context__tool"
+									>
+										<strong>{ tool.label }</strong>
+										{ tool.description && (
+											<span>: { tool.description }</span>
+										) }
+									</li>
+								) ) }
+							</ul>
+						</div>
+					) }
 				</div>
 			</div>
 		);
@@ -412,6 +488,29 @@ const MessageItem = ( { message } ) => {
 							) }
 						</button>
 					</div>
+					{ suggestions &&
+						suggestions.length > 0 &&
+						onSuggestionClick && (
+							<div className="agentic-message__suggestions">
+								<span className="agentic-message__suggestions-label">
+									Suggested actions:
+								</span>
+								{ suggestions.map( ( suggestion, index ) => (
+									<button
+										key={ index }
+										type="button"
+										className="agentic-suggestion-pill"
+										onClick={ () =>
+											onSuggestionClick(
+												suggestion.label
+											)
+										}
+									>
+										{ suggestion.label }
+									</button>
+								) ) }
+							</div>
+						) }
 				</div>
 			</div>
 		);
