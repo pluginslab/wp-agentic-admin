@@ -46,6 +46,20 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/theme-list',
 		},
 
+		// ── Current user role ─────────────────────────────────────
+		{
+			input: 'what user role is my current user?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'who am I logged in as?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'am I an administrator?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+
 		// ── User management ───────────────────────────────────────
 		{
 			input: 'list all users on this site',
