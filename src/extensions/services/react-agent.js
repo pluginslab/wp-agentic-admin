@@ -724,7 +724,6 @@ class ReactAgent {
 			};
 		}
 
-		const tool = this.toolRegistry.get( toolId );
 		let tool = this.toolRegistry.get( toolId );
 
 		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
