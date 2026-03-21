@@ -833,7 +833,7 @@ const MessageItem = ( {
 
 		const statusLabel = {
 			success: 'Task completed successfully',
-			info: 'Finished processing but failed to complete the task',
+			info: 'Finished processing but could not perform the task',
 			error: 'Failed',
 		};
 
