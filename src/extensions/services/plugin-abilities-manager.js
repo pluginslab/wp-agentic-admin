@@ -60,18 +60,11 @@ function estimateAbilityTokens( ability ) {
  * @return {number} Max context tokens.
  */
 function getMaxContext() {
-	// Import dynamically to avoid circular deps
-	const MODEL_CONTEXT_SIZES = {
-		'Qwen3-1.7B-q4f16_1-MLC': 4096,
-		'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
-		default: 4096,
-	};
-
-	// Try to get current model from the global
+	// Use ModelLoader's effective context size which respects localStorage overrides
+	const { ModelLoader } = require( './model-loader' );
 	const settings = window.wpAgenticAdmin || {};
 	const modelId = settings.currentModel || '';
-
-	return MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+	return ModelLoader.getEffectiveContextSize( modelId );
 }
 
 /**

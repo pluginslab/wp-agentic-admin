@@ -3356,3 +3356,89 @@
 	margin-left: 4px;
 	color: inherit;
 }
+
+/* Settings Tab */
+.wp-agentic-admin-settings-tab {
+	padding: 16px;
+
+	.components-card {
+		margin-bottom: 16px;
+	}
+
+	h3 {
+		margin: 24px 0 8px;
+	}
+
+	&__description {
+		color: #646970;
+		margin-bottom: 16px;
+	}
+
+	&__gpu-table {
+		width: 100%;
+		border-collapse: collapse;
+
+		td {
+			padding: 6px 12px 6px 0;
+			border-bottom: 1px solid #f0f0f0;
+		}
+
+		td:first-child {
+			width: 160px;
+			color: #646970;
+		}
+	}
+
+	&__model-card {
+		margin-bottom: 16px;
+	}
+
+	&__model-size {
+		font-weight: normal;
+		font-size: 13px;
+		color: #646970;
+		margin-left: 8px;
+	}
+
+	&__recommendation {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 8px;
+		padding: 8px 12px;
+		background: #f0f6fc;
+		border-radius: 4px;
+	}
+
+	&__tier-badge {
+		display: inline-block;
+		padding: 2px 8px;
+		border-radius: 3px;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: #fff;
+		letter-spacing: 0.5px;
+	}
+
+	&__rec-text {
+		flex: 1;
+		font-size: 13px;
+	}
+
+	&__reasoning {
+		font-size: 13px;
+		color: #646970;
+		margin: 0 0 12px;
+	}
+
+	&__controls {
+		max-width: 400px;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}
