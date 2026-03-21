@@ -18,7 +18,7 @@ export function registerCurrentUserRole() {
 	registerAbility( 'wp-agentic-admin/current-user-role', {
 		label: 'Get current user role',
 		description:
-			"Get the current logged-in user's role, username, and account details. Use when the user asks about their own role, permissions, or identity.",
+			'Check the role, username, email, and permissions of the current logged-in user. Use when users ask about their own role, who they are logged in as, or whether they are an administrator.',
 
 		keywords: [
 			'role',
@@ -29,6 +29,8 @@ export function registerCurrentUserRole() {
 			'my account',
 			'my permissions',
 			'logged in',
+			'admin',
+			'administrator',
 		],
 
 		initialMessage: 'Checking your user account...',
