@@ -29,6 +29,7 @@ import { registerDiskUsage } from './disk-usage';
 import { registerCommentStats } from './comment-stats';
 import { registerSecurityScan } from './security-scan';
 import { registerPostList } from './post-list';
+import { registerReadFile } from './read-file';
 import { registerErrorLogSearch } from './error-log-search';
 import { registerOpcodeCacheStatus } from './opcode-cache-status';
 import { registerBackupCheck } from './backup-check';
@@ -36,6 +37,7 @@ import { registerWriteFile } from './write-file';
 import { registerQueryDatabase } from './query-database';
 import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
+import { registerCoreSiteUrl } from './core-site-url';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
@@ -62,6 +64,7 @@ export { registerDiskUsage } from './disk-usage';
 export { registerCommentStats } from './comment-stats';
 export { registerSecurityScan } from './security-scan';
 export { registerPostList } from './post-list';
+export { registerReadFile } from './read-file';
 export { registerErrorLogSearch } from './error-log-search';
 export { registerOpcodeCacheStatus } from './opcode-cache-status';
 export { registerBackupCheck } from './backup-check';
@@ -69,6 +72,7 @@ export { registerWriteFile } from './write-file';
 export { registerQueryDatabase } from './query-database';
 export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
+export { registerCoreSiteUrl } from './core-site-url';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
@@ -104,6 +108,7 @@ export function registerAllAbilities() {
 	registerCommentStats();
 	registerSecurityScan();
 	registerPostList();
+	registerReadFile();
 	registerErrorLogSearch();
 	registerOpcodeCacheStatus();
 	registerBackupCheck();
@@ -120,6 +125,7 @@ export function registerAllAbilities() {
 	// These provide chat-friendly interfaces for WordPress core abilities
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
+	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
 	registerCoreEditorBlocks();
 

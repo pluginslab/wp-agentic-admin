@@ -11,11 +11,17 @@ import MessageItem from './MessageItem';
 /**
  * MessageList component
  *
- * @param {Object} props          - Component props
- * @param {Array}  props.messages - Array of message objects
+ * @param {Object}        props               - Component props
+ * @param {Array}         props.messages      - Array of message objects
+ * @param {boolean}       props.feedbackOptIn - Whether the user has opted in to feedback
+ * @param {Function|null} props.onFeedback    - Called with (messageId, rating) on thumb click
  * @return {JSX.Element} Rendered message list
  */
-const MessageList = ( { messages } ) => {
+const MessageList = ( {
+	messages,
+	feedbackOptIn = false,
+	onFeedback = null,
+} ) => {
 	const listRef = useRef( null );
 
 	// Auto-scroll to bottom when new messages arrive
@@ -28,7 +34,12 @@ const MessageList = ( { messages } ) => {
 	return (
 		<div className="wp-agentic-admin-messages" ref={ listRef }>
 			{ messages.map( ( message ) => (
-				<MessageItem key={ message.id } message={ message } />
+				<MessageItem
+					key={ message.id }
+					message={ message }
+					feedbackOptIn={ feedbackOptIn }
+					onFeedback={ onFeedback }
+				/>
 			) ) }
 		</div>
 	);

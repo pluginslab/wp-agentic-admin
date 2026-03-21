@@ -398,18 +398,43 @@ class ChatOrchestrator {
 			{ toolFilter }
 		);
 
-		// Stream the final answer
+		// For tools that prefer to display their own summary (e.g. read-file),
+		// use tool.summarize() directly instead of the LLM's final_answer.
+		let displayAnswer = result.finalAnswer;
+		if ( result.toolsUsed.length === 1 ) {
+			const lastToolId = result.toolsUsed[ 0 ];
+			// Apply namespace fallback: LLM sometimes drops the "wp-agentic-admin/" prefix.
+			const lastTool =
+				toolRegistry.get( lastToolId ) ||
+				toolRegistry.get( `wp-agentic-admin/${ lastToolId }` );
+			const lastObservation = result.observations[ 0 ];
+			if ( lastTool?.preferSummarize && lastObservation?.result?.data ) {
+				displayAnswer = lastTool.summarize(
+					lastObservation.result.data,
+					userMessage
+				);
+			}
+		}
+
+		// Display the final answer.
+		// For pre-computed summaries (preferSummarize tools), skip the stream
+		// simulator — the content is already fully available so instant display
+		// is correct and avoids unnecessary char-by-char delay.
 		this.callbacks.onStreamStart();
-		await this.streamSimulator.stream( result.finalAnswer, {
-			...this.streamOptions,
-			onChunk: ( char, text ) =>
-				this.callbacks.onStreamChunk( char, text ),
-		} );
+		if ( result.skipStreaming ) {
+			this.callbacks.onStreamChunk( '', displayAnswer );
+		} else {
+			await this.streamSimulator.stream( displayAnswer, {
+				...this.streamOptions,
+				onChunk: ( char, text ) =>
+					this.callbacks.onStreamChunk( char, text ),
+			} );
+		}
 		this.session.addAssistantMessage(
-			result.finalAnswer,
+			displayAnswer,
 			this.getUsageStatsMeta()
 		);
-		this.callbacks.onStreamEnd( result.finalAnswer );
+		this.callbacks.onStreamEnd( displayAnswer );
 
 		log.info(
 			`ReAct completed: ${ result.iterations } iterations, ${ result.toolsUsed.length } tools used`
@@ -483,7 +508,7 @@ class ChatOrchestrator {
 		// Otherwise, fall back to the ability's summarize function
 		const engine = modelLoader.getEngine();
 
-		if ( engine && success ) {
+		if ( engine && success && ! tool.preferSummarize ) {
 			// Use LLM to generate contextual summary (pass intent for typo context)
 			await this.generateLLMSummary(
 				userMessage,

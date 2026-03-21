@@ -13,3 +13,4 @@ build-extensions/
 *.swo
 hackathon-teasers.md
 hackathon-todo.md
+.direnv

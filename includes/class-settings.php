@@ -60,6 +60,8 @@ class Settings {
 			'plugin_action_links_' . plugin_basename( WP_AGENTIC_ADMIN_FILE ),
 			array( $this, 'add_settings_link' )
 		);
+
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 	}
 
 	/**
@@ -125,6 +127,57 @@ class Settings {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Register REST API routes for settings updates from the JS app.
+	 *
+	 * @return void
+	 */
+	public function register_rest_routes(): void {
+		register_rest_route(
+			'wp-agentic-admin/v1',
+			'/settings',
+			array(
+				'methods'             => \WP_REST_Server::EDITABLE,
+				'callback'            => array( $this, 'update_settings_rest' ),
+				'permission_callback' => function () {
+					return current_user_can( 'manage_options' );
+				},
+				'args'                => array(
+					'feedback_optin' => array(
+						'type'              => 'boolean',
+						'sanitize_callback' => 'rest_sanitize_boolean',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Handle REST settings update request.
+	 *
+	 * Only whitelisted fields are accepted.
+	 *
+	 * @param \WP_REST_Request $request Incoming request.
+	 * @return \WP_REST_Response
+	 */
+	public function update_settings_rest( \WP_REST_Request $request ): \WP_REST_Response {
+		$allowed = array( 'feedback_optin' );
+		$updated = false;
+
+		foreach ( $allowed as $key ) {
+			if ( $request->has_param( $key ) ) {
+				$this->settings[ $key ] = rest_sanitize_boolean( $request->get_param( $key ) );
+				$updated                = true;
+			}
+		}
+
+		if ( $updated ) {
+			$this->save();
+		}
+
+		return new \WP_REST_Response( array( 'success' => true ), 200 );
 	}
 
 	/**
