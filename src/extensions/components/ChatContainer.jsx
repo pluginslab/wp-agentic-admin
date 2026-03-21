@@ -95,6 +95,7 @@ const ChatContainer = ( {
 	// Session ref to persist across renders
 	const sessionRef = useRef( null );
 	const initializedRef = useRef( false );
+	const prevModelReadyRef = useRef( modelReady );
 
 	/**
 	 * Initialize the chat framework on mount
@@ -264,6 +265,19 @@ const ChatContainer = ( {
 			session.save();
 		};
 	}, [ setIsLoading ] );
+
+	/**
+	 * Clear chat when model is unloaded (modelReady transitions true → false)
+	 */
+	useEffect( () => {
+		if ( prevModelReadyRef.current && ! modelReady ) {
+			if ( sessionRef.current ) {
+				sessionRef.current.clear();
+				setMessages( [] );
+			}
+		}
+		prevModelReadyRef.current = modelReady;
+	}, [ modelReady ] );
 
 	/**
 	 * Convert session messages to display format for MessageList

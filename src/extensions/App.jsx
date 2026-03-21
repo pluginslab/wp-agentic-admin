@@ -9,6 +9,7 @@ import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
 import FeedbackTab from './components/FeedbackTab';
+import SettingsTab from './components/SettingsTab';
 import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
@@ -153,6 +154,13 @@ const App = () => {
 	}, [] );
 
 	/**
+	 * Handle model unload callback — resets ready state
+	 */
+	const handleModelUnload = useCallback( () => {
+		setModelReady( false );
+	}, [] );
+
+	/**
 	 * Handle model error callback
 	 */
 	const handleModelError = useCallback( ( errorMessage ) => {
@@ -217,6 +225,11 @@ const App = () => {
 			title: 'Plugin Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
+		{
+			name: 'settings',
+			title: 'Settings',
+			className: 'wp-agentic-admin-tab',
+		},
 		...( FEEDBACK_UPLOAD_ENABLED
 			? [
 					{
@@ -252,6 +265,8 @@ const App = () => {
 				return <AbilityBrowser />;
 			case 'plugin-abilities':
 				return <PluginAbilitiesPanel />;
+			case 'settings':
+				return <SettingsTab />;
 			case 'feedback':
 				return <FeedbackTab />;
 			default:
@@ -278,6 +293,7 @@ const App = () => {
 			<ModelStatus
 				onModelReady={ handleModelReady }
 				onModelError={ handleModelError }
+				onModelUnload={ handleModelUnload }
 				initPhase={ initPhase }
 				initMessage={ initMessage }
 				initProgress={ initProgress }
