@@ -30,7 +30,10 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 - **action buttons** (PR #134 by @tomepajk) — any ability can return an `actions` array and get interactive buttons in the chat. Plugin-list now shows Activate/Deactivate buttons inline. Bypasses LLM, respects confirmation modals. Also adds `/tools` slash command with AbilityPicker.
 - **feedback upload** (PR #142 by @janvogt) — opted-in ratings (with full conversation context) are uploaded anonymously to S3 for model fine-tuning. Privacy copy updated. Closes issue #75.
 
-**34 abilities**, **32 PRs merged**, **9 contributors**.
+### Prompt UX — Ability Bundles + Web Search Toggle (PR #140 by @Stefan0x)
+Users can now constrain the AI to curated tool sets via a `+` icon in the input area — 6 bundles: Plugins & Themes, Performance, Security, Troubleshooting, Content & Users, Site Overview. Globe icon toggles web search as a pre-step. Send button appears when text is typed. `toolFilter` in ReAct agent constrains the system prompt without mutating global state.
+
+**34 abilities**, **33 PRs merged**, **9 contributors**.
 
 ---
 
