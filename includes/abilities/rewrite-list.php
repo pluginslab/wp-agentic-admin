@@ -241,9 +241,7 @@ function wp_agentic_admin_get_rewrite_rule_sample( array $categorized_rules, int
 	$sample = array();
 	$index  = 0;
 
-	$sampled_count = count( $sample );
-
-	while ( $sampled_count < $sample_limit ) {
+	while ( count( $sample ) < $sample_limit ) { // phpcs:ignore
 		$added_rule = false;
 
 		foreach ( $category_names as $category_name ) {
@@ -272,10 +270,9 @@ function wp_agentic_admin_get_rewrite_rule_sample( array $categorized_rules, int
 /**
  * Execute the rewrite-list ability.
  *
- * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_rewrite_list( array $input = array() ): array {
+function wp_agentic_admin_execute_rewrite_list(): array {
 	// Get all rewrite rules.
 	$rules       = get_option( 'rewrite_rules' );
 	$rules_count = is_array( $rules ) ? count( $rules ) : 0;
