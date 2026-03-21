@@ -132,7 +132,24 @@ export function registerCronList() {
 			if ( total === 0 ) {
 				return 'No cron events are currently scheduled.';
 			}
-			let text = `Found ${ total } scheduled cron events.`;
+
+			const events = result.events || [];
+			const eventLines = events
+				.slice( 0, 15 )
+				.map( ( e ) => {
+					const time = e.is_overdue
+						? `${ e.next_run_diff } ago (OVERDUE)`
+						: `in ${ e.next_run_diff }`;
+					return `- ${ e.hook }: ${ e.schedule }, ${ time }`;
+				} )
+				.join( '\n' );
+
+			let text = `Found ${ total } scheduled cron events:\n${ eventLines }`;
+
+			if ( events.length > 15 ) {
+				text += `\n...and ${ events.length - 15 } more events.`;
+			}
+
 			if ( overdue > 0 ) {
 				text += ` WARNING: ${ overdue } events are overdue, which may indicate wp-cron is not running properly.`;
 			} else {
