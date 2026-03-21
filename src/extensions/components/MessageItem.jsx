@@ -131,7 +131,7 @@ const getAbilityLabel = ( abilityId ) => {
  *
  * @param {Object}   props                   - Component props
  * @param {Object}   props.message           - Message object
- * @param {Function} props.onSuggestionClick - Called with suggestion label when a pill is clicked
+ * @param {Function} props.onSuggestionClick - Called with { label, toolId } when a pill is clicked
  * @return {JSX.Element} Rendered message
  */
 const MessageItem = ( { message, onSuggestionClick } ) => {
@@ -501,9 +501,10 @@ const MessageItem = ( { message, onSuggestionClick } ) => {
 										type="button"
 										className="agentic-suggestion-pill"
 										onClick={ () =>
-											onSuggestionClick(
-												suggestion.label
-											)
+											onSuggestionClick( {
+												label: suggestion.label,
+												toolId: suggestion.tool,
+											} )
 										}
 									>
 										{ suggestion.label }

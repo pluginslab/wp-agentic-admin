@@ -363,8 +363,12 @@ const ChatContainer = ( {
 	 * Handle suggestion pill click — sends the suggestion label as a user message.
 	 */
 	const handleSuggestionClick = useCallback(
-		( label ) => {
-			handleSendMessage( label );
+		( { label, toolId } ) => {
+			if ( toolId ) {
+				chatOrchestrator.processDirectAbility( toolId, label );
+			} else {
+				handleSendMessage( label );
+			}
 		},
 		[ handleSendMessage ]
 	);
