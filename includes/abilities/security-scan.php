@@ -34,11 +34,11 @@ function wp_agentic_admin_register_security_scan(): void {
 			'output_schema'       => array(
 				'type'       => 'object',
 				'properties' => array(
-					'checks'   => array(
+					'checks'  => array(
 						'type'        => 'array',
 						'description' => __( 'List of security check results.', 'wp-agentic-admin' ),
 					),
-					'summary'  => array(
+					'summary' => array(
 						'type'        => 'object',
 						'description' => __( 'Count by severity.', 'wp-agentic-admin' ),
 					),
@@ -110,7 +110,7 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 	}
 
 	// 4. Check for default auth salts.
-	$salt      = wp_salt( 'auth' );
+	$salt       = wp_salt( 'auth' );
 	$is_default = ( 'put your unique phrase here' === $salt );
 	$checks[]   = array(
 		'check'    => 'Authentication salts',
@@ -136,8 +136,8 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 	$uploads_path = $uploads_dir['basedir'];
 	$htaccess     = $uploads_path . '/.htaccess';
 	$index_file   = $uploads_path . '/index.php';
-	$has_protect   = file_exists( $htaccess ) || file_exists( $index_file );
-	$checks[]      = array(
+	$has_protect  = file_exists( $htaccess ) || file_exists( $index_file );
+	$checks[]     = array(
 		'check'    => 'Uploads directory listing',
 		'status'   => $has_protect ? 'pass' : 'fail',
 		'severity' => 'warning',
@@ -146,7 +146,22 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 			: 'Uploads directory may allow directory listing.',
 	);
 
-	// Summary by severity.
+	$vulnerabilities = wp_agentic_admin_scan_for_vulnerabilities();
+
+	$checks[] = array(
+		'check'    => 'Plugin vulnerabilities',
+		'status'   => ! empty( $vulnerabilities['total_vulnerabilities'] ) ? 'fail' : 'pass',
+		'severity' => 'critical',
+		'message'  => ! empty( $vulnerabilities['total_vulnerabilities'] )
+			? sprintf(
+				/* translators: 1: vulnerabilities count, 2: affected plugin count */
+				__( 'Detected %1$d known vulnerabilities across %2$d plugin(s).', 'wp-agentic-admin' ),
+				(int) $vulnerabilities['total_vulnerabilities'],
+				(int) $vulnerabilities['plugins_with_issues']
+			)
+			: __( 'No known plugin vulnerabilities detected for scanned plugins.', 'wp-agentic-admin' ),
+	);
+
 	$summary = array(
 		'critical' => 0,
 		'warning'  => 0,
@@ -165,7 +180,8 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 	}
 
 	return array(
-		'checks'  => $checks,
-		'summary' => $summary,
+		'checks'          => $checks,
+		'summary'         => $summary,
+		'vulnerabilities' => $vulnerabilities,
 	);
 }
