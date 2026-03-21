@@ -310,7 +310,9 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 			continue;
 		}
 
-		foreach ( $decoded['vulnerabilities'] as $vulnerability ) {
+		$vulnerabilities = array_reverse( array_slice( $decoded['vulnerabilities'], -30 ) );
+
+		foreach ( $vulnerabilities as $vulnerability ) {
 			if ( empty( $vulnerability['cve'] ) || ! is_array( $vulnerability['cve'] ) ) {
 				continue;
 			}
@@ -350,6 +352,8 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 				'vector'                  => isset( $cvss['vector'] ) ? $cvss['vector'] : '',
 				'affected_version_source' => 'mitre',
 			);
+
+			break;
 		}
 
 		$plugins[ $index ]['vulnerability_count'] = count( $plugins[ $index ]['vulnerabilities'] );
