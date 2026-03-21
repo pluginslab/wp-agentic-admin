@@ -67,10 +67,14 @@ export function registerPluginActivate() {
 		 * @return {string} Human-readable summary.
 		 */
 		summarize: ( result ) => {
-			return formatPluginActionResult(
+			const base = formatPluginActionResult(
 				result,
 				'Plugin has been activated successfully.'
 			);
+			if ( result.certainty && result.success ) {
+				return `${ base } (match confidence: ${ result.certainty }/10)`;
+			}
+			return base;
 		},
 
 		/**
@@ -83,7 +87,12 @@ export function registerPluginActivate() {
 			if ( result.error ) {
 				return `Plugin activation failed: ${ result.error }.`;
 			}
-			return result.message || 'The plugin was activated successfully.';
+			let msg =
+				result.message || 'The plugin was activated successfully.';
+			if ( result.certainty ) {
+				msg += ` Match confidence: ${ result.certainty }/10.`;
+			}
+			return msg;
 		},
 
 		// Export extractParams so it can be tested or reused.

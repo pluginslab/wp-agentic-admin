@@ -88,28 +88,19 @@ export function extractPluginParams( userMessage, actionKeywords = [] ) {
 		}
 	}
 
-	// Third, try to extract plugin name with regex patterns using the action keywords.
+	// Third, try to extract the plugin name from the message and pass it
+	// directly to PHP for fuzzy resolution (PHP has the full plugin list).
 	if ( actionKeywords.length > 0 ) {
 		const keywordPattern = actionKeywords.join( '|' );
-		const patterns = [
-			new RegExp(
-				`( ?: ${ keywordPattern } )\\s + ( ?: the\\s + ) ? ( ?: plugin\\s + ) ? ["']?([a-z0-9-_ ]+)["'] ? `,
-				'i'
-			),
-		];
+		const pattern = new RegExp(
+			`(?:${ keywordPattern })\\s+(?:the\\s+)?(?:plugin\\s+)?["']?([a-z0-9][a-z0-9-_ ]+[a-z0-9])["']?`,
+			'i'
+		);
 
-		for ( const pattern of patterns ) {
-			const match = userMessage.match( pattern );
-			if ( match && match[ 1 ] ) {
-				// Convert to slug format: lowercase, replace spaces with hyphens.
-				const slug = match[ 1 ]
-					.trim()
-					.toLowerCase()
-					.replace( /\s+/g, '-' );
-
-				// Guess common plugin path format: plugin-name/plugin-name.php
-				return { plugin: `${ slug } / ${ slug }.php` };
-			}
+		const match = userMessage.match( pattern );
+		if ( match && match[ 1 ] ) {
+			// Pass the raw name to PHP — it will resolve against installed plugins.
+			return { plugin: match[ 1 ].trim() };
 		}
 	}
 

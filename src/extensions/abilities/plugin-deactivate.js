@@ -82,10 +82,14 @@ export function registerPluginDeactivate() {
 		 * @return {string} Human-readable summary.
 		 */
 		summarize: ( result ) => {
-			return formatPluginActionResult(
+			const base = formatPluginActionResult(
 				result,
 				'Plugin has been deactivated successfully.'
 			);
+			if ( result.certainty && result.success ) {
+				return `${ base } (match confidence: ${ result.certainty }/10)`;
+			}
+			return base;
 		},
 
 		/**
@@ -98,7 +102,12 @@ export function registerPluginDeactivate() {
 			if ( result.error ) {
 				return `Plugin deactivation failed: ${ result.error }.`;
 			}
-			return result.message || 'The plugin was deactivated successfully.';
+			let msg =
+				result.message || 'The plugin was deactivated successfully.';
+			if ( result.certainty ) {
+				msg += ` Match confidence: ${ result.certainty }/10.`;
+			}
+			return msg;
 		},
 
 		// Export extractParams so it can be tested or reused.
