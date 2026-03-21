@@ -8,6 +8,7 @@
 
 // WP-Agentic-Admin custom abilities
 import { createLogger } from '../utils/logger';
+import webmcpBridge from '../services/webmcp-bridge';
 import { registerErrorLogRead } from './error-log-read';
 
 const log = createLogger( 'Abilities' );
@@ -146,6 +147,11 @@ export function registerAllAbilities() {
 	registerRunPluginAbility();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
+
+	// Bridge registered abilities to WebMCP for external AI agents
+	if ( webmcpBridge.isSupported() ) {
+		webmcpBridge.initialize();
+	}
 }
 
 export default registerAllAbilities;
