@@ -2515,6 +2515,48 @@
 						color: inherit;
 					}
 				}
+
+				.agentic-table-wrap {
+					overflow-x: auto;
+					margin: 8px 0 12px;
+				}
+
+				.agentic-table {
+					width: 100%;
+					border-collapse: collapse;
+					font-size: 13px;
+					line-height: 1.4;
+
+					th,
+					td {
+						padding: 6px 10px;
+						border: 1px solid #e2e4e7;
+						text-align: left;
+						vertical-align: top;
+					}
+
+					th {
+						background: #f6f7f7;
+						font-weight: 600;
+						color: #1d2327;
+						white-space: nowrap;
+					}
+
+					td {
+						color: #2c3338;
+					}
+
+					tbody tr:hover {
+						background: #f9f9f9;
+					}
+
+					code {
+						font-size: 12px;
+						padding: 1px 4px;
+						background: #f0f0f1;
+						border-radius: 3px;
+					}
+				}
 			}
 
 			.agentic-message__actions {
