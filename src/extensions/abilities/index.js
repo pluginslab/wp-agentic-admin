@@ -46,7 +46,6 @@ import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
 import { registerFileScan } from './file-scan';
 import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
-import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
 import { registerWpConfigList } from './wp-config-list';
