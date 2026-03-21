@@ -81,16 +81,13 @@ export function registerCheckIfHackedWorkflow() {
 			);
 			const pluginResult = results.find(
 				( r ) =>
-					r.abilityId ===
-					'wp-agentic-admin/verify-plugin-checksums'
+					r.abilityId === 'wp-agentic-admin/verify-plugin-checksums'
 			);
 			const dbResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/database-check'
+				( r ) => r.abilityId === 'wp-agentic-admin/database-check'
 			);
 			const fileScanResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/file-scan'
+				( r ) => r.abilityId === 'wp-agentic-admin/file-scan'
 			);
 
 			const lines = [];
@@ -152,17 +149,16 @@ export function registerCheckIfHackedWorkflow() {
 							);
 						} else if ( plugin.status === 'failed' ) {
 							const issues = plugin.issues || [];
-							for ( const issue of issues.slice(
-								0,
-								10
-							) ) {
+							for ( const issue of issues.slice( 0, 10 ) ) {
 								lines.push(
 									`| ${ plugin.plugin } | \`${ issue.file }\` | **${ issue.status }** |`
 								);
 							}
 							if ( issues.length > 10 ) {
 								lines.push(
-									`| ${ plugin.plugin } | ...and ${ issues.length - 10 } more | |`
+									`| ${ plugin.plugin } | ...and ${
+										issues.length - 10
+									} more | |`
 								);
 							}
 						}
@@ -200,7 +196,9 @@ export function registerCheckIfHackedWorkflow() {
 						}
 						if ( check.findings.length > 5 ) {
 							lines.push(
-								`| ${ check.name } | ...and ${ check.findings.length - 5 } more | — |`
+								`| ${ check.name } | ...and ${
+									check.findings.length - 5
+								} more | — |`
 							);
 						}
 					}
@@ -236,7 +234,9 @@ export function registerCheckIfHackedWorkflow() {
 				}
 				if ( fs.mu_plugins_scanned?.length > 0 ) {
 					lines.push(
-						`MU-Plugins (${ fs.mu_plugins_scanned.length }): ${ fs.mu_plugins_scanned.join( ', ' ) }`
+						`MU-Plugins (${
+							fs.mu_plugins_scanned.length
+						}): ${ fs.mu_plugins_scanned.join( ', ' ) }`
 					);
 				} else {
 					lines.push( 'MU-Plugins: none found' );
@@ -261,7 +261,9 @@ export function registerCheckIfHackedWorkflow() {
 					}
 					if ( fs.findings.length > 15 ) {
 						lines.push(
-							`| ...and ${ fs.findings.length - 15 } more files | | | |`
+							`| ...and ${
+								fs.findings.length - 15
+							} more files | | | |`
 						);
 					}
 				}
@@ -274,8 +276,7 @@ export function registerCheckIfHackedWorkflow() {
 			// --- Role capabilities table ---
 			const roleResult = results.find(
 				( r ) =>
-					r.abilityId ===
-					'wp-agentic-admin/role-capabilities-check'
+					r.abilityId === 'wp-agentic-admin/role-capabilities-check'
 			);
 
 			lines.push( '**Role Capabilities**' );
@@ -326,7 +327,9 @@ export function registerCheckIfHackedWorkflow() {
 							allClear = false;
 							lines.push( '' );
 							lines.push(
-								`Non-default roles with admin access: ${ dangerous.map( ( r ) => `**${ r.role_name }**` ).join( ', ' ) }`
+								`Non-default roles with admin access: ${ dangerous
+									.map( ( r ) => `**${ r.role_name }**` )
+									.join( ', ' ) }`
 							);
 						}
 					}
@@ -362,12 +365,17 @@ export function registerCheckIfHackedWorkflow() {
 function formatDbFinding( f ) {
 	if ( f.option_name ) {
 		const preview = f.preview
-			? ': ' + ( f.preview.length > 80 ? f.preview.substring( 0, 80 ) + '...' : f.preview )
+			? ': ' +
+			  ( f.preview.length > 80
+					? f.preview.substring( 0, 80 ) + '...'
+					: f.preview )
 			: '';
 		return `\`${ f.option_name }\`${ preview }`;
 	}
 	if ( f.post_id && f.title ) {
-		return `Post #${ f.post_id } "${ f.title }" (${ f.post_type || 'post' }${ f.status ? ', ' + f.status : '' })`;
+		return `Post #${ f.post_id } "${ f.title }" (${
+			f.post_type || 'post'
+		}${ f.status ? ', ' + f.status : '' })`;
 	}
 	if ( f.user_id && f.meta_key ) {
 		return `User #${ f.user_id } meta \`${ f.meta_key }\``;

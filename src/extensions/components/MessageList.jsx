@@ -15,7 +15,7 @@ import MessageItem from './MessageItem';
  * @param {Array}         props.messages      - Array of message objects
  * @param {boolean}       props.feedbackOptIn - Whether the user has opted in to feedback
  * @param {Function|null} props.onFeedback    - Called with (messageId, rating) on thumb click
- * @param {Function} props.onAction - Callback to execute an ability action
+ * @param {Function}      props.onAction      - Callback to execute an ability action
  * @return {JSX.Element} Rendered message list
  */
 const MessageList = ( {

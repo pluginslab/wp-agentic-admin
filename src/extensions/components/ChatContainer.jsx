@@ -230,6 +230,10 @@ const ChatContainer = ( {
 					label: tool.label || tool.id,
 					message:
 						tool.confirmationMessage || `Execute ${ tool.id }?`,
+					isDestructive:
+						tool.isDestructive !== undefined
+							? tool.isDestructive
+							: true,
 					isWorkflow,
 					workflowDetails,
 					resolve,
@@ -1006,7 +1010,8 @@ const ChatContainer = ( {
 						<Button
 							variant="primary"
 							isDestructive={
-								! pendingConfirmation.isIntentConfirmation
+								! pendingConfirmation.isIntentConfirmation &&
+								pendingConfirmation.isDestructive !== false
 							}
 							onClick={ handleConfirm }
 						>

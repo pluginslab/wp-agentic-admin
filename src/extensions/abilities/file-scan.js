@@ -85,7 +85,9 @@ export function registerFileScan() {
 			}
 			if ( result.mu_plugins_scanned?.length > 0 ) {
 				lines.push(
-					`**MU-Plugins scanned** (${ result.mu_plugins_scanned.length }): ${ result.mu_plugins_scanned.join( ', ' ) }`
+					`**MU-Plugins scanned** (${
+						result.mu_plugins_scanned.length
+					}): ${ result.mu_plugins_scanned.join( ', ' ) }`
 				);
 			} else {
 				lines.push( '**MU-Plugins scanned:** none found' );
@@ -127,7 +129,9 @@ export function registerFileScan() {
 			const files = result.findings
 				.map(
 					( f ) =>
-						`${ f.file } (${ f.patterns.map( ( p ) => p.label ).join( ', ' ) })`
+						`${ f.file } (${ f.patterns
+							.map( ( p ) => p.label )
+							.join( ', ' ) })`
 				)
 				.join( '; ' );
 

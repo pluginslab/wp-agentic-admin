@@ -83,7 +83,10 @@ export function registerPluginDeactivate() {
 		 */
 		summarize: ( result ) => {
 			if ( result.actions?.length ) {
-				return result.message || 'Multiple plugins matched. Please select one:';
+				return (
+					result.message ||
+					'Multiple plugins matched. Please select one:'
+				);
 			}
 			const base = formatPluginActionResult(
 				result,
@@ -103,7 +106,9 @@ export function registerPluginDeactivate() {
 		 */
 		interpretResult: ( result ) => {
 			if ( result.actions?.length ) {
-				const names = result.actions.map( ( a ) => a.label ).join( ', ' );
+				const names = result.actions
+					.map( ( a ) => a.label )
+					.join( ', ' );
 				return `Multiple plugins matched. Candidates: ${ names }. Ask the user which one to deactivate.`;
 			}
 			if ( result.error ) {

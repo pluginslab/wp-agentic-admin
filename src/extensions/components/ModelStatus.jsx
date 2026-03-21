@@ -175,12 +175,13 @@ const getLoadingStage = ( message, progress ) => {
 /**
  * ModelStatus component
  *
- * @param {Object}      props              - Component props
- * @param {Function}    props.onModelReady - Callback when model is ready
- * @param {Function}    props.onModelError - Callback when model loading fails
- * @param {string|null} props.initPhase    - Current initialization phase ('checking', 'loading', or null)
- * @param {string}      props.initMessage  - Message to display during initialization
- * @param {number}      props.initProgress - Progress percentage during initialization
+ * @param {Object}      props               - Component props
+ * @param {Function}    props.onModelReady  - Callback when model is ready
+ * @param {Function}    props.onModelError  - Callback when model loading fails
+ * @param {string|null} props.initPhase     - Current initialization phase ('checking', 'loading', or null)
+ * @param {string}      props.initMessage   - Message to display during initialization
+ * @param {number}      props.initProgress  - Progress percentage during initialization
+ * @param               props.onModelUnload
  */
 const ModelStatus = ( {
 	onModelReady,
