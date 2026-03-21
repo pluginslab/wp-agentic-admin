@@ -254,13 +254,18 @@ class ChatOrchestrator {
 		this.callbacks.onStateChange( { isProcessing: true } );
 
 		try {
-			// Add user message to session
-			this.session.addUserMessage( userMessage );
-
-			// Web search pre-step: run search first, inject results as context
+			// Web search pre-step: run search first, append results to user message
+			let enrichedMessage = userMessage;
 			if ( options.webSearch ) {
-				await this.performWebSearchPreStep( userMessage );
+				const webContext =
+					await this.performWebSearchPreStep( userMessage );
+				if ( webContext ) {
+					enrichedMessage = userMessage + webContext;
+				}
 			}
+
+			// Add (possibly enriched) user message to session
+			this.session.addUserMessage( enrichedMessage );
 
 			// If bundle is active, bypass router and force ReAct with filtered tools
 			if ( options.bundleToolIds && options.bundleToolIds.length > 0 ) {
@@ -269,24 +274,24 @@ class ChatOrchestrator {
 					options.bundleToolIds
 				);
 				return await this.processWithReact(
-					userMessage,
+					enrichedMessage,
 					false,
 					options.bundleToolIds
 				);
 			}
 
-			// Route the message
+			// Route the message (use original message for routing, not enriched)
 			const route = this.messageRouter.route( userMessage );
 
 			if ( route.type === 'workflow' ) {
 				log.info( 'Routing to workflow:', route.workflow.id );
 				return await this.processWithWorkflow(
-					userMessage,
+					enrichedMessage,
 					route.workflow
 				);
 			}
 
-			if ( route.type === 'conversational' && ! options.webSearch ) {
+			if ( route.type === 'conversational' ) {
 				log.info( 'Routing to direct LLM (conversational)' );
 				return await this.processWithLLM();
 			}
@@ -298,7 +303,7 @@ class ChatOrchestrator {
 				})`
 			);
 			return await this.processWithReact(
-				userMessage,
+				enrichedMessage,
 				route.disableThinking
 			);
 		} catch ( error ) {
@@ -318,11 +323,13 @@ class ChatOrchestrator {
 	/**
 	 * Perform web search as a pre-step before normal routing.
 	 *
-	 * Executes a web search using the user's message as query,
-	 * then injects results into the session so subsequent processing
-	 * has web context available.
+	 * Executes a web search and returns formatted results as a string
+	 * to be appended to the user message. This keeps the session history
+	 * clean (no orphaned tool results) so both conversational and ReAct
+	 * paths work correctly.
 	 *
 	 * @param {string} userMessage - The user's message to search for
+	 * @return {Promise<string>} Formatted search context, or empty string on failure
 	 */
 	async performWebSearchPreStep( userMessage ) {
 		const toolId = 'wp-agentic-admin/web-search';
@@ -338,19 +345,26 @@ class ChatOrchestrator {
 
 			const webSuccess = isToolResultSuccess( result );
 			this.callbacks.onToolEnd( toolId, result, webSuccess );
-			this.session.addToolResult( toolId, result, webSuccess );
 
 			log.info(
 				`Web search pre-step complete: ${ result.total || 0 } results`
 			);
+
+			// Format results as context string
+			if ( result.results && result.results.length > 0 ) {
+				const formatted = result.results
+					.map(
+						( r, i ) =>
+							`${ i + 1 }. ${ r.title }\n   ${ r.snippet }`
+					)
+					.join( '\n' );
+				return `\n\n[Web search results]\n${ formatted }`;
+			}
+			return '';
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
 			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
-			this.session.addToolResult(
-				toolId,
-				{ error: error.message },
-				false
-			);
+			return '';
 		}
 	}
 
