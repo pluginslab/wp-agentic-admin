@@ -863,7 +863,7 @@ const MessageItem = ( {
 						type="button"
 						aria-expanded={ isExpanded }
 						aria-label={ `Toggle ${
-							isSuccess ? 'completed' : 'failed'
+							resultStatus === 'success' ? 'completed' : 'failed'
 						} result details for ${ meta?.abilityId }` }
 					>
 						<span className="agentic-tool__icon">
