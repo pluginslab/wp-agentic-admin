@@ -22,6 +22,7 @@
             php83
             php83Packages.composer
             minio
+            minio-client
           ];
         };
       }
