@@ -146,23 +146,6 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 			: 'Uploads directory may allow directory listing.',
 	);
 
-	$summary = array(
-		'critical' => 0,
-		'warning'  => 0,
-		'info'     => 0,
-		'passed'   => 0,
-		'failed'   => 0,
-	);
-
-	foreach ( $checks as $check ) {
-		if ( 'fail' === $check['status'] ) {
-			++$summary['failed'];
-			++$summary[ $check['severity'] ];
-		} else {
-			++$summary['passed'];
-		}
-	}
-
 	$vulnerabilities = wp_agentic_admin_scan_for_vulnerabilities();
 
 	$checks[] = array(
