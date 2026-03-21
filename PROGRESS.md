@@ -22,7 +22,11 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 - **crash fix** (PR #136 by @ivdimova) — missing closing brace in class-abilities.php caused PHP fatal
 - **branch sync** (PR #135 by @janvogt) — synced nix flake from main into dev
 
-**34 abilities**, **28 PRs merged**, **9 contributors**.
+### Remote Provider Fixes (PRs #119, #112)
+- **wp-now WASM fallback** (PR #119 by @AlexanderMelde) — LLM proxy falls back to `wp_remote_post` when cURL is unavailable (wp-now/Playground). Streaming degrades gracefully.
+- **auto-reconnect remote** (PR #112 by @0xLoopTheory) — page load now respects saved provider preference. If you last used a remote model, it auto-connects instead of loading local WebLLM.
+
+**34 abilities**, **30 PRs merged**, **9 contributors**.
 
 ---
 
