@@ -26,18 +26,9 @@
 				<element value="WPAgenticAdmin"/>
 			</property>
 		</properties>
-		<!-- Exclude public API functions - intentionally unprefixed for clean developer experience -->
-		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
 	</rule>
 
-	<!-- Allow unprefixed public API functions in abilities API -->
-	<!-- These are intentionally unprefixed for third-party developer experience -->
-	<!-- Example: register_agentic_ability() is cleaner than wp_agentic_admin_register_agentic_ability() -->
-	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound">
-		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
-	</rule>
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
-		<exclude-pattern>includes/functions-abilities\.php</exclude-pattern>
 		<!-- Allow WordPress core variables in uninstall.php (e.g., $sites, $site from get_sites()) -->
 		<exclude-pattern>uninstall\.php</exclude-pattern>
 	</rule>

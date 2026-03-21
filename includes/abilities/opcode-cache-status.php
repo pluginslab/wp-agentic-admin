@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_opcode_cache_status(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/opcode-cache-status',
 		// PHP configuration for WordPress Abilities API.
 		array(

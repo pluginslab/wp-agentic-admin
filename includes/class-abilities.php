@@ -260,13 +260,13 @@ class Abilities {
 		 * Fires after core abilities are registered.
 		 *
 		 * Third-party plugins can use this action to register their own abilities
-		 * using the register_agentic_ability() function.
+		 * using the wp_agentic_admin_register_ability() function.
 		 *
 		 * @since 0.1.0
 		 *
 		 * @example
 		 * add_action( 'wp_agentic_admin_register_abilities', function() {
-		 *     register_agentic_ability(
+		 *     wp_agentic_admin_register_ability(
 		 *         'my-plugin/my-ability',
 		 *         array(
 		 *             'label'            => 'My Ability',

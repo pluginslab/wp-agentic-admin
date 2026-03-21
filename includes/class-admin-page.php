@@ -140,8 +140,8 @@ class Admin_Page {
 
 		// Get JS configurations for registered abilities.
 		$abilities_js_config = array();
-		if ( function_exists( 'get_agentic_abilities_js_config' ) ) {
-			$abilities_js_config = get_agentic_abilities_js_config();
+		if ( function_exists( 'wp_agentic_admin_get_abilities_js_config' ) ) {
+			$abilities_js_config = wp_agentic_admin_get_abilities_js_config();
 		}
 
 		$feedback_optin_raw = $settings->get_field( 'feedback_optin', null );

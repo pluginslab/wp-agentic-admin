@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_query_database(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/query-database',
 		// PHP configuration for WordPress Abilities API.
 		array(

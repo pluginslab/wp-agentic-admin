@@ -248,7 +248,7 @@ wp-agentic-admin/
 ├── wp-agentic-admin.php              # Main plugin file
 ├── uninstall.php                     # Clean uninstall (multisite-aware)
 ├── includes/
-│   ├── functions-abilities.php      # Public API: register_agentic_ability()
+│   ├── functions-abilities.php      # Public API: wp_agentic_admin_register_ability()
 │   ├── class-abilities.php          # Ability registration orchestrator
 │   ├── class-admin-page.php         # Admin page & assets
 │   ├── class-settings.php           # Plugin settings (model selection, etc.)
