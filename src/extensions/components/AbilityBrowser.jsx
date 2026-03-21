@@ -243,27 +243,17 @@ const AbilityBrowser = () => {
 		setError( null );
 
 		try {
-			// Fetch ALL abilities (no category filter) so we get both
-			// wp-agentic-admin/* and core/* abilities
 			const data = await abilitiesApi.listAbilities();
+			const all = Array.isArray( data ) ? data : [];
 
-			// Filter to our plugin's abilities AND WordPress core abilities
-			const filtered = Array.isArray( data )
-				? data.filter(
-						( a ) =>
-							a.name?.startsWith( 'wp-agentic-admin/' ) ||
-							a.name?.startsWith( 'core/' )
-				  )
-				: [];
-
-			// eslint-disable-next-line no-nested-ternary -- clear fallback chain for filtered data
-			setAbilities(
-				filtered.length > 0
-					? filtered
-					: Array.isArray( data )
-					? data
-					: []
+			// Show only our own abilities (wp-agentic-admin/* and core/*)
+			const filtered = all.filter(
+				( a ) =>
+					a.name?.startsWith( 'wp-agentic-admin/' ) ||
+					a.name?.startsWith( 'core/' )
 			);
+
+			setAbilities( filtered.length > 0 ? filtered : all );
 		} catch ( err ) {
 			setError( err.message || 'Failed to load abilities' );
 		} finally {

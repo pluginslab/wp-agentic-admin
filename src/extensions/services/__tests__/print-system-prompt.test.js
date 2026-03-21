@@ -1,10 +1,13 @@
 /**
- * Utility test to print the current system prompt to the terminal.
+ * Utility test to print the system prompt to the terminal.
  *
  * Run with: npm test -- --testPathPattern=print-system-prompt --silent=false
  */
 
 import { ReactAgent } from '../react-agent';
+import { ToolRegistry } from '../tool-registry';
+import instructionRegistry from '../instruction-registry';
+import { registerAllInstructions } from '../../instructions';
 
 jest.mock( '../../utils/logger', () => ( {
 	createLogger: () => ( {
@@ -116,25 +119,72 @@ const MOCK_TOOLS = [
 	},
 ];
 
-describe( 'Print System Prompt', () => {
-	it( 'prints the current system prompt', () => {
-		const mockToolRegistry = {
-			getAll: jest.fn( () => MOCK_TOOLS ),
-			get: jest.fn( ( id ) => MOCK_TOOLS.find( ( t ) => t.id === id ) ),
-		};
+function makeAgent() {
+	const toolRegistry = new ToolRegistry();
+	MOCK_TOOLS.forEach( ( t ) => toolRegistry.register( t ) );
 
-		const agent = new ReactAgent(
-			{ getEngine: jest.fn() },
-			mockToolRegistry
+	return new ReactAgent(
+		{ getEngine: jest.fn() },
+		toolRegistry,
+		{},
+		instructionRegistry
+	);
+}
+
+function print( label, prompt ) {
+	process.stdout.write(
+		`\n=== ${ label } ===\n\n${ prompt }\n\n=== END ===\n\n`
+	);
+}
+
+beforeAll( () => {
+	instructionRegistry.clear();
+	registerAllInstructions();
+} );
+
+afterAll( () => {
+	instructionRegistry.clear();
+} );
+
+describe( 'Print System Prompt', () => {
+	it( 'no instructions active (cold start)', () => {
+		const agent = makeAgent();
+		const prompt = agent.buildSystemPromptPromptBased();
+
+		print( 'NO INSTRUCTIONS ACTIVE', prompt );
+
+		expect( prompt ).toContain( 'load_instruction' );
+		expect( prompt ).toContain(
+			'INSTRUCTIONS (call load_instruction first to unlock their tools)'
 		);
+	} );
+
+	it( 'with "diagnostics" pre-loaded', () => {
+		const agent = makeAgent();
+		agent.activeInstructions.add( 'diagnostics' );
 
 		const prompt = agent.buildSystemPromptPromptBased();
 		process.stdout.write(
 			`\n=== SYSTEM PROMPT ===\n\n${ prompt }\n\n=== END ===\n\n`
 		);
 
-		expect( prompt ).toContain( 'TOOLS:' );
-		expect( prompt ).toContain( 'FORMAT' );
-		expect( prompt ).toContain( 'RULES:' );
+		print( 'DIAGNOSTICS ACTIVE', prompt );
+
+		expect( prompt ).toContain( 'error-log-read' );
+		expect( prompt ).toContain( 'Start with error-log-read' );
+	} );
+
+	it( 'with "plugins" + "database" pre-loaded', () => {
+		const agent = makeAgent();
+		agent.activeInstructions.add( 'plugins' );
+		agent.activeInstructions.add( 'database' );
+
+		const prompt = agent.buildSystemPromptPromptBased();
+
+		print( 'PLUGINS + DATABASE ACTIVE', prompt );
+
+		expect( prompt ).toContain( 'plugin-list' );
+		expect( prompt ).toContain( 'revision-cleanup' );
+		expect( prompt ).toContain( 'Run revision-cleanup before db-optimize' );
 	} );
 } );

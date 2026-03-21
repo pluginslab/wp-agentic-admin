@@ -202,6 +202,28 @@ class AbilitiesAPI {
 	}
 
 	/**
+	 * Build default input values from an ability's input_schema.
+	 *
+	 * @param {Object} ability - Ability metadata object
+	 * @return {Object|null} Default values or null if none
+	 */
+	buildSchemaDefaults( ability ) {
+		const props = ability?.input_schema?.properties;
+		if ( ! props || typeof props !== 'object' ) {
+			return null;
+		}
+
+		const defaults = {};
+		Object.entries( props ).forEach( ( [ key, schema ] ) => {
+			if ( schema.default !== undefined ) {
+				defaults[ key ] = schema.default;
+			}
+		} );
+
+		return Object.keys( defaults ).length > 0 ? defaults : null;
+	}
+
+	/**
 	 * Execute an ability
 	 *
 	 * @param {string} namespace - Ability namespace

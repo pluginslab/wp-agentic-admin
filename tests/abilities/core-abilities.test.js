@@ -287,6 +287,16 @@ module.exports = {
 			expectTool: 'core/get-editor-blocks',
 		},
 
+		// ── Plugin ability discovery ─────────────────────────────
+		{
+			input: 'discover what abilities other plugins have registered',
+			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
+		},
+		{
+			input: 'what external tools are available on this site?',
+			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
+		},
+
 		// ── No-tool tests (pure knowledge questions) ───────────────
 		{
 			input: 'what is a transient in WordPress?',
