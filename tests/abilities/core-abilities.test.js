@@ -251,6 +251,14 @@ module.exports = {
 			expectTool: 'core/get-site-info',
 		},
 		{
+			input: 'what is my site URL?',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+		},
+		{
+			input: 'what is my address URL',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+		},
+		{
 			input: 'what environment is this site running on?',
 			expectTool: 'core/get-environment-info',
 		},

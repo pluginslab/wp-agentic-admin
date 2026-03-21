@@ -37,6 +37,7 @@ import { registerWriteFile } from './write-file';
 import { registerQueryDatabase } from './query-database';
 import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
+import { registerCoreSiteUrl } from './core-site-url';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
@@ -71,6 +72,7 @@ export { registerWriteFile } from './write-file';
 export { registerQueryDatabase } from './query-database';
 export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
+export { registerCoreSiteUrl } from './core-site-url';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
@@ -123,6 +125,7 @@ export function registerAllAbilities() {
 	// These provide chat-friendly interfaces for WordPress core abilities
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
+	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
 	registerCoreEditorBlocks();
 
