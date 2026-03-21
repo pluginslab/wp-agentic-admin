@@ -254,17 +254,13 @@ class ChatOrchestrator {
 		this.callbacks.onStateChange( { isProcessing: true } );
 
 		try {
-			// Add clean user message to session (for UI display)
+			// Add user message to session
 			this.session.addUserMessage( userMessage );
 
-			// Web search pre-step: get results as context for LLM only
-			let webContext = '';
+			// Web search pre-step: adds tool_request + tool_result to session
 			if ( options.webSearch ) {
-				webContext = await this.performWebSearchPreStep( userMessage );
+				await this.performWebSearchPreStep( userMessage );
 			}
-			const enrichedMessage = webContext
-				? userMessage + webContext
-				: userMessage;
 
 			// If bundle is active, bypass router and force ReAct with filtered tools
 			if ( options.bundleToolIds && options.bundleToolIds.length > 0 ) {
@@ -273,26 +269,26 @@ class ChatOrchestrator {
 					options.bundleToolIds
 				);
 				return await this.processWithReact(
-					enrichedMessage,
+					userMessage,
 					false,
 					options.bundleToolIds
 				);
 			}
 
-			// Route the message (use original message for routing, not enriched)
+			// Route the message
 			const route = this.messageRouter.route( userMessage );
 
 			if ( route.type === 'workflow' ) {
 				log.info( 'Routing to workflow:', route.workflow.id );
 				return await this.processWithWorkflow(
-					enrichedMessage,
+					userMessage,
 					route.workflow
 				);
 			}
 
 			if ( route.type === 'conversational' ) {
 				log.info( 'Routing to direct LLM (conversational)' );
-				return await this.processWithLLM( webContext );
+				return await this.processWithLLM();
 			}
 
 			// Default: ReAct loop for actions
@@ -302,7 +298,7 @@ class ChatOrchestrator {
 				})`
 			);
 			return await this.processWithReact(
-				enrichedMessage,
+				userMessage,
 				route.disableThinking
 			);
 		} catch ( error ) {
@@ -322,19 +318,24 @@ class ChatOrchestrator {
 	/**
 	 * Perform web search as a pre-step before normal routing.
 	 *
-	 * Executes a web search and returns formatted results as a string
-	 * to be appended to the user message. This keeps the session history
-	 * clean (no orphaned tool results) so both conversational and ReAct
-	 * paths work correctly.
+	 * Executes a web search and adds both a tool_request and tool_result
+	 * to the session so the UI shows the search in the timeline AND the
+	 * conversation history has valid message ordering for the LLM.
 	 *
 	 * @param {string} userMessage - The user's message to search for
-	 * @return {Promise<string>} Formatted search context, or empty string on failure
 	 */
 	async performWebSearchPreStep( userMessage ) {
 		const toolId = 'wp-agentic-admin/web-search';
 		log.info( 'Web search pre-step for:', userMessage );
 
 		this.callbacks.onToolStart( toolId );
+
+		// Add tool request first so the history has valid ordering:
+		// user → assistant (tool_request) → assistant (tool_result)
+		this.session.addToolRequest( toolId, {
+			query: userMessage,
+			num_results: 5,
+		} );
 
 		try {
 			const result = await executeAbility( toolId, {
@@ -344,26 +345,23 @@ class ChatOrchestrator {
 
 			const webSuccess = isToolResultSuccess( result );
 			this.callbacks.onToolEnd( toolId, result, webSuccess );
+			this.session.addToolResult( toolId, result, webSuccess );
 
 			log.info(
 				`Web search pre-step complete: ${ result.total || 0 } results`
 			);
-
-			// Format results as context string
-			if ( result.results && result.results.length > 0 ) {
-				const formatted = result.results
-					.map(
-						( r, i ) =>
-							`${ i + 1 }. ${ r.title }\n   ${ r.snippet }`
-					)
-					.join( '\n' );
-				return `\n\n[Web search results]\n${ formatted }`;
-			}
-			return '';
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
-			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
-			return '';
+			this.callbacks.onToolEnd(
+				toolId,
+				{ error: error.message },
+				false
+			);
+			this.session.addToolResult(
+				toolId,
+				{ error: error.message },
+				false
+			);
 		}
 	}
 
@@ -727,7 +725,7 @@ Explain what went wrong and suggest what the user might try next.`;
 	 * @param {string} extraContext - Optional extra context (e.g. web search results) to append to the last user message
 	 * @return {Promise<Object>} Result with success status and LLM response text.
 	 */
-	async processWithLLM( extraContext = '' ) {
+	async processWithLLM() {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -741,22 +739,9 @@ Explain what went wrong and suggest what the user might try next.`;
 		}
 
 		// Build messages for LLM
-		const history = [ ...this.session.getConversationHistory() ];
-
-		// Inject extra context into the last user message (for LLM only, not stored in session)
-		if ( extraContext && history.length > 0 ) {
-			const lastIdx = history.length - 1;
-			if ( history[ lastIdx ].role === 'user' ) {
-				history[ lastIdx ] = {
-					...history[ lastIdx ],
-					content: history[ lastIdx ].content + extraContext,
-				};
-			}
-		}
-
 		const messages = [
 			{ role: 'system', content: this.getSystemPrompt() },
-			...history,
+			...this.session.getConversationHistory(),
 		];
 
 		// Stream from LLM
