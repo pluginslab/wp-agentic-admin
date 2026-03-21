@@ -12,7 +12,11 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 ### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
 Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
 
-**31 abilities**, **22 PRs merged**, **8 contributors**.
+### read-file + core/get-site-url (PRs #99, #104)
+- **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
+- **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
+
+**33 abilities**, **24 PRs merged**, **9 contributors**.
 
 ---
 
@@ -95,9 +99,9 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (31 total)
-- [x] 28 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
+### Abilities (33 total)
+- [x] 29 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, read file, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+- [x] 4 core WordPress wrappers: get-site-info, get-site-url, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)
