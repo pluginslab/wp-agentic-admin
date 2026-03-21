@@ -56,7 +56,12 @@ Users can now constrain the AI to curated tool sets via a `+` icon in the input 
 - **wp-config-list** (PR #160 by @moritzbappert) — JS-only ability that reads wp-config.php via read-file (gets redaction for free), parses `define()` calls, categorizes into 8 groups. Fixes #51.
 - **Rewrite sampling fix** (PR #162 by @Lucisu) — fixes infinite loop bug in sampling logic from #159.
 
-**40 abilities**, **47 PRs merged**, **10 contributors**.
+### Bug Fixes (PRs #164, #163, #50)
+- **Remove beforeunload popup** (PR #164 by @tomepajk) — model persists via Service Worker, popup was firing constantly with admin bar sidebar.
+- **Dry-run confirmation fix** (PR #163 by @ivdimova) — non-destructive operations no longer show red destructive button. Params-aware confirmation messages.
+- **HTTP WebGPU error** (PR #50 by @robert81) — clear "please use HTTPS" message. Day 1 PR finally merged!
+
+**40 abilities**, **49 PRs merged**, **10 contributors**.
 
 ### Plugin Abilities Platform! (PR #139 by @BoweFrankema)
 Strategically the most important PR of the hackathon. The plugin is now an **open extensibility platform** — any WordPress plugin that registers abilities via the WP Abilities API gets AI support automatically. Includes: discover-plugin-abilities (queries the registry), run-plugin-ability (proxy executor), Plugin Abilities tab with toggle controls and token budget bar, dynamic system prompt integration.
