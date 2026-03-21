@@ -99,8 +99,11 @@ export function extractPluginParams( userMessage, actionKeywords = [] ) {
 
 		const match = userMessage.match( pattern );
 		if ( match && match[ 1 ] ) {
-			// Pass the raw name to PHP — it will resolve against installed plugins.
-			return { plugin: match[ 1 ].trim() };
+			// Strip trailing "plugin" (e.g. "blocks plugin" → "blocks").
+			const name = match[ 1 ].trim().replace( /\s+plugin$/i, '' );
+			if ( name ) {
+				return { plugin: name };
+			}
 		}
 	}
 

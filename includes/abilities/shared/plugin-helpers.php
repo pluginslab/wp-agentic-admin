@@ -101,7 +101,7 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
  *     @type array       $candidates  Top candidates with their certainty scores.
  * }
  */
-function wp_agentic_admin_resolve_plugin( string $identifier ): array {
+function    wp_agentic_admin_resolve_plugin( string $identifier ): array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}

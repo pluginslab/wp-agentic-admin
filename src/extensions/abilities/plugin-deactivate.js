@@ -82,6 +82,9 @@ export function registerPluginDeactivate() {
 		 * @return {string} Human-readable summary.
 		 */
 		summarize: ( result ) => {
+			if ( result.actions?.length ) {
+				return result.message || 'Multiple plugins matched. Please select one:';
+			}
 			const base = formatPluginActionResult(
 				result,
 				'Plugin has been deactivated successfully.'
@@ -99,6 +102,10 @@ export function registerPluginDeactivate() {
 		 * @return {string} Plain-English interpretation.
 		 */
 		interpretResult: ( result ) => {
+			if ( result.actions?.length ) {
+				const names = result.actions.map( ( a ) => a.label ).join( ', ' );
+				return `Multiple plugins matched. Candidates: ${ names }. Ask the user which one to deactivate.`;
+			}
 			if ( result.error ) {
 				return `Plugin deactivation failed: ${ result.error }.`;
 			}

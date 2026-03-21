@@ -67,6 +67,9 @@ export function registerPluginActivate() {
 		 * @return {string} Human-readable summary.
 		 */
 		summarize: ( result ) => {
+			if ( result.actions?.length ) {
+				return result.message || 'Multiple plugins matched. Please select one:';
+			}
 			const base = formatPluginActionResult(
 				result,
 				'Plugin has been activated successfully.'
@@ -84,6 +87,10 @@ export function registerPluginActivate() {
 		 * @return {string} Plain-English interpretation.
 		 */
 		interpretResult: ( result ) => {
+			if ( result.actions?.length ) {
+				const names = result.actions.map( ( a ) => a.label ).join( ', ' );
+				return `Multiple plugins matched. Candidates: ${ names }. Ask the user which one to activate.`;
+			}
 			if ( result.error ) {
 				return `Plugin activation failed: ${ result.error }.`;
 			}
