@@ -22,7 +22,7 @@ const REACT_CONFIG = {
 	temperature: 0.3, // 7B models are more reliable, lower temp for consistency
 	maxTokens: 1024, // 7B models produce richer reasoning
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
-	maxToolResultLength: 2000, // 7B models handle more context
+	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
 	disableThinkingAfterTool: true, // Skip thinking on iterations after tool results
 };
@@ -328,9 +328,9 @@ class ReactAgent {
 					const truncatedResult =
 						resultStr.length > this.config.maxToolResultLength
 							? resultStr.substring(
-									0,
-									this.config.maxToolResultLength
-							  ) + '...[truncated]'
+								0,
+								this.config.maxToolResultLength
+							) + '...[truncated]'
 							: resultStr;
 
 					// Add observation to conversation with JSON format reminder
@@ -774,7 +774,7 @@ class ReactAgent {
 	buildToolResultMessage( toolResult, truncatedResult ) {
 		let message;
 		if ( toolResult.result_for_llm ) {
-			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
+			message = `Tool interpretation: ${ toolResult.result_for_llm }\n\nRaw data: ${ truncatedResult }`;
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
