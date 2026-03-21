@@ -20,6 +20,7 @@ import {
 	info,
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
+import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 
 /**
  * Map of bundle icon names to @wordpress/icons components.
@@ -52,7 +53,17 @@ const ChatInput = ( {
 	const [ message, setMessage ] = useState( '' );
 	const [ selectedBundle, setSelectedBundle ] = useState( null );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
+	const [ pluginBundles, setPluginBundles ] = useState( [] );
 	const textareaRef = useRef( null );
+
+	// Subscribe to plugin abilities manager for dynamic bundles
+	useEffect( () => {
+		const refresh = () => {
+			setPluginBundles( pluginAbilitiesManager.getPluginBundles() );
+		};
+		refresh();
+		return pluginAbilitiesManager.subscribe( refresh );
+	}, [] );
 
 	// Focus textarea on mount if not disabled
 	useEffect( () => {
@@ -78,6 +89,7 @@ const ChatInput = ( {
 
 		onSend( trimmedMessage, {
 			bundleToolIds: selectedBundle?.abilities || null,
+			pluginNamespace: selectedBundle?.pluginNamespace || null,
 			webSearch: webSearchEnabled,
 		} );
 		setMessage( '' );
@@ -184,6 +196,55 @@ const ChatInput = ( {
 											</span>
 										</button>
 									) ) }
+									{ pluginBundles.length > 0 && (
+										<>
+											<div className="wp-agentic-admin-bundle-menu__separator">
+												<span>Plugin Abilities</span>
+											</div>
+											{ pluginBundles.map( ( bundle ) => (
+												<button
+													type="button"
+													key={ bundle.id }
+													className={ `wp-agentic-admin-bundle-menu__item${
+														selectedBundle?.id ===
+														bundle.id
+															? ' wp-agentic-admin-bundle-menu__item--selected'
+															: ''
+													}` }
+													onClick={ () => {
+														setSelectedBundle(
+															bundle
+														);
+														onClose();
+													} }
+												>
+													{ bundle.icon ? (
+														<img
+															src={ bundle.icon }
+															alt={ bundle.label }
+															className="wp-agentic-admin-bundle-menu__plugin-icon"
+														/>
+													) : (
+														<Icon
+															icon={ plugins }
+															size={ 18 }
+														/>
+													) }
+													<span className="wp-agentic-admin-bundle-menu__label">
+														{ bundle.label }
+													</span>
+													<span className="wp-agentic-admin-bundle-menu__count">
+														{
+															bundle
+																.pluginAbilityIds
+																.length
+														}{ ' ' }
+														tools
+													</span>
+												</button>
+											) ) }
+										</>
+									) }
 								</div>
 							) }
 						/>

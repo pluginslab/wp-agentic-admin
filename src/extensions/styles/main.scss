@@ -594,6 +594,33 @@
 		font-size: 11px;
 		color: #6e6e6e;
 	}
+
+	&__separator {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 12px 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: #6e6e6e;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+
+		&::after {
+			content: "";
+			flex: 1;
+			height: 1px;
+			background: #c3c4c7;
+		}
+	}
+
+	&__plugin-icon {
+		width: 18px;
+		height: 18px;
+		border-radius: 3px;
+		flex-shrink: 0;
+		object-fit: contain;
+	}
 }
 
 // Status Bar

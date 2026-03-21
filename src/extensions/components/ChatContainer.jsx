@@ -50,6 +50,7 @@ import {
 	FEEDBACK_UPLOAD_ENABLED,
 } from '../services/feedback';
 import { executeAbility } from '../services/agentic-abilities-api';
+import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ChatContainer' );
@@ -419,11 +420,20 @@ const ChatContainer = ( {
 				return;
 			}
 
+			// Scope plugin abilities when a plugin bundle is active
+			if ( options.pluginNamespace ) {
+				pluginAbilitiesManager.scopeToPlugin( options.pluginNamespace );
+			}
+
 			// Process message through orchestrator
 			try {
 				await chatOrchestrator.processMessage( text, options );
 			} catch ( error ) {
 				log.error( 'Error processing message:', error );
+			} finally {
+				if ( options.pluginNamespace ) {
+					pluginAbilitiesManager.clearPluginScope();
+				}
 			}
 		},
 		[ modelReady ]

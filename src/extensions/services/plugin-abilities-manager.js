@@ -384,6 +384,102 @@ class PluginAbilitiesManager {
 		);
 		return ability ? estimateAbilityTokens( ability ) : 0;
 	}
+
+	/**
+	 * Get dynamic bundles grouped by plugin namespace.
+	 *
+	 * Groups all enabled plugin abilities by their namespace (e.g. "woocommerce")
+	 * and returns bundle objects compatible with ABILITY_BUNDLES.
+	 *
+	 * @return {Object[]} Array of bundle objects.
+	 */
+	getPluginBundles() {
+		const groups = {};
+
+		for ( const id of this.enabledIds ) {
+			const ability = this.discoveredAbilities.find(
+				( a ) => ( a.name || a.id ) === id
+			);
+			if ( ! ability ) {
+				continue;
+			}
+
+			const namespace = id.split( '/' )[ 0 ];
+			if ( ! groups[ namespace ] ) {
+				groups[ namespace ] = {
+					abilities: [],
+					icon: ability.icon || null,
+					label: namespace,
+				};
+			}
+			groups[ namespace ].abilities.push( ability );
+		}
+
+		return Object.entries( groups ).map( ( [ namespace, group ] ) => ( {
+			id: `plugin-${ namespace }`,
+			label: group.label,
+			icon: group.icon,
+			isPluginBundle: true,
+			pluginNamespace: namespace,
+			description: `${ group.abilities.length } abilities from ${ namespace }`,
+			abilities: [ 'wp-agentic-admin/run-plugin-ability' ],
+			pluginAbilityIds: group.abilities.map( ( a ) => a.name || a.id ),
+		} ) );
+	}
+
+	/**
+	 * Temporarily scope the run-plugin-ability description to a single plugin.
+	 *
+	 * Call this before sending a message with a plugin bundle active,
+	 * then call clearPluginScope() after the message completes.
+	 *
+	 * @param {string} namespace - Plugin namespace to scope to.
+	 */
+	scopeToPlugin( namespace ) {
+		const runTool = toolRegistry.get(
+			'wp-agentic-admin/run-plugin-ability'
+		);
+		if ( ! runTool ) {
+			return;
+		}
+
+		// Save original description for restoration.
+		if ( ! this._savedDescription ) {
+			this._savedDescription = runTool.description;
+		}
+
+		const lines = [];
+		for ( const id of this.enabledIds ) {
+			if ( ! id.startsWith( namespace + '/' ) ) {
+				continue;
+			}
+			const ability = this.discoveredAbilities.find(
+				( a ) => ( a.name || a.id ) === id
+			);
+			if ( ability ) {
+				lines.push(
+					`${ id }: ${ ability.description || ability.label }`
+				);
+			}
+		}
+
+		runTool.description =
+			'Run a plugin ability. Pass ability_id and args. Available: ' +
+			lines.join( '; ' );
+	}
+
+	/**
+	 * Restore the run-plugin-ability description after plugin-scoped request.
+	 */
+	clearPluginScope() {
+		const runTool = toolRegistry.get(
+			'wp-agentic-admin/run-plugin-ability'
+		);
+		if ( runTool && this._savedDescription ) {
+			runTool.description = this._savedDescription;
+			this._savedDescription = null;
+		}
+	}
 }
 
 // Singleton
