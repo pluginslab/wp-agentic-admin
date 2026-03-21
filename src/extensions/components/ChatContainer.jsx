@@ -47,6 +47,7 @@ import {
 	getFeedbackOptIn,
 	setFeedbackOptIn,
 	saveFeedback,
+	FEEDBACK_UPLOAD_ENABLED,
 } from '../services/feedback';
 import { executeAbility } from '../services/agentic-abilities-api';
 import { createLogger } from '../utils/logger';
@@ -495,11 +496,43 @@ const ChatContainer = ( {
 				.map( ( m ) => m.abilityName )
 				.filter( Boolean );
 
+			// Full conversation up to and including the rated message
+			const msgIdx = messages.findIndex( ( m ) => m.id === messageId );
+			const conversation =
+				msgIdx !== -1
+					? messages
+							.slice( 0, msgIdx + 1 )
+							.filter(
+								( m ) =>
+									m.type === 'user' || m.type === 'assistant'
+							)
+							.map( ( m ) => ( {
+								role: m.type,
+								content: m.content,
+							} ) )
+					: [];
+
+			const model =
+				modelLoader.getModelId() ||
+				window.wpAgenticAdmin?.settings?.modelId ||
+				'';
+
+			const systemPrompt = chatOrchestrator.getSystemPrompt?.() || '';
+			const { temperature, maxTokens } =
+				chatOrchestrator.llmOptions || {};
+
 			saveFeedback( {
 				messageId,
 				sessionId: sessionRef.current?.id || '',
 				abilityIds,
 				rating,
+				systemPrompt,
+				conversation,
+				model,
+				generationConfig: {
+					temperature: temperature ?? null,
+					maxTokens: maxTokens ?? null,
+				},
 			} );
 		},
 		[ messages ]
@@ -715,17 +748,21 @@ const ChatContainer = ( {
 			<MessageList
 				messages={ displayMessages }
 				onAction={ handleAction }
-				feedbackOptIn={ feedbackOptIn === true }
+				feedbackOptIn={
+					FEEDBACK_UPLOAD_ENABLED && feedbackOptIn === true
+				}
 				onFeedback={ handleFeedback }
 			/>
 			
 			{ /* Feedback opt-in banner — shown once, only after the first real exchange */ }
-			{ feedbackOptIn === null && messages.length > 1 && (
-				<FeedbackOptInBanner
-					onAccept={ handleFeedbackAccept }
-					onDecline={ handleFeedbackDecline }
-				/>
-			) }
+			{ FEEDBACK_UPLOAD_ENABLED &&
+				feedbackOptIn === null &&
+				messages.length > 1 && (
+					<FeedbackOptInBanner
+						onAccept={ handleFeedbackAccept }
+						onDecline={ handleFeedbackDecline }
+					/>
+				) }
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (

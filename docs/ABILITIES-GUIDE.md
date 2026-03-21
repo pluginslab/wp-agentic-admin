@@ -537,6 +537,50 @@ registerWorkflow('my-plugin/audit', {
 });
 ```
 
+## Bypassing the LLM for Display: `preferSummarize`
+
+By default, after a single ability runs, the LLM generates a natural-language summary of the result. This is ideal for most abilities, but harmful for abilities that return large structured content (file contents, logs, raw data) because:
+
+- The LLM has a 512-token output limit — large content gets truncated.
+- The LLM may reformat or paraphrase content, losing accuracy.
+- The round-trip to the LLM adds unnecessary latency.
+
+Set `preferSummarize: true` on the JS ability to bypass the LLM entirely. The orchestrator will call `tool.summarize()` directly and display the result instantly, without streaming.
+
+```javascript
+registerAbility('wp-agentic-admin/my-ability', {
+    // ...
+
+    summarize: (result) => {
+        // This output is shown directly — make it complete and well-formatted.
+        return `**\`${result.file_path}\`**\n\n\`\`\`php\n${result.content}\n\`\`\``;
+    },
+
+    interpretResult: (result, userMessage) => {
+        // Still called — gives context to the LLM for multi-tool chains.
+        // Keep it brief; the LLM will NOT show this to the user.
+        return `File \`${result.file_path}\` was read successfully.`;
+    },
+
+    // Bypasses LLM for display; uses summarize() output directly.
+    preferSummarize: true,
+});
+```
+
+### When to use `preferSummarize`
+
+| Use it when… | Don't use it when… |
+|---|---|
+| Result contains large verbatim content (files, logs) | Result is a status or count the LLM can narrate naturally |
+| Accurate formatting matters (code, tables) | You want the LLM to answer follow-up questions from the result |
+| You want instant display without LLM latency | The ability is one step in a multi-tool chain |
+
+### How it works
+
+The ReAct agent short-circuits after the tool call — it skips the second LLM pass and returns `summarize()` output as the `finalAnswer`, tagged with `skipStreaming: true`. The chat orchestrator then renders it immediately without the char-by-char stream simulator.
+
+`interpretResult` is still called and its output is still passed to the LLM in multi-tool ReAct chains. Keep it concise — it should confirm what happened, not reproduce the full content.
+
 ## Confirmation for Destructive Actions
 
 For abilities that modify or delete data:

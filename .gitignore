@@ -13,3 +13,7 @@ build-extensions/
 *.swo
 hackathon-teasers.md
 hackathon-todo.md
+.direnv
+minio-data/
+feedback-export/
+.env

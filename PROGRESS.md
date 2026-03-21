@@ -12,7 +12,21 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 ### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
 Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
 
-**31 abilities**, **22 PRs merged**, **8 contributors**.
+### read-file + core/get-site-url (PRs #99, #104)
+- **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
+- **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
+
+### current-user-role + agent improvements + crash fix (PRs #138, #137, #136, #135)
+- **current-user-role** (PR #138 by @0xLoopTheory) — "who am I logged in as?" / "am I an administrator?" 3/3 tests pass.
+- **think after tool calls** (PR #137 by @AlexanderMelde) — LLM now reasons over raw JSON after tool results for better answers. Improved cron-list output with individual event listing. Tradeoff: slower but smarter.
+- **crash fix** (PR #136 by @ivdimova) — missing closing brace in class-abilities.php caused PHP fatal
+- **branch sync** (PR #135 by @janvogt) — synced nix flake from main into dev
+
+### Remote Provider Fixes (PRs #119, #112)
+- **wp-now WASM fallback** (PR #119 by @AlexanderMelde) — LLM proxy falls back to `wp_remote_post` when cURL is unavailable (wp-now/Playground). Streaming degrades gracefully.
+- **auto-reconnect remote** (PR #112 by @0xLoopTheory) — page load now respects saved provider preference. If you last used a remote model, it auto-connects instead of loading local WebLLM.
+
+**34 abilities**, **30 PRs merged**, **9 contributors**.
 
 ---
 
@@ -95,9 +109,9 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (31 total)
-- [x] 28 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
+### Abilities (33 total)
+- [x] 29 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, read file, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+- [x] 4 core WordPress wrappers: get-site-info, get-site-url, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)

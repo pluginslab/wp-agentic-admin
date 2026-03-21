@@ -22,9 +22,9 @@ const REACT_CONFIG = {
 	temperature: 0.3, // 7B models are more reliable, lower temp for consistency
 	maxTokens: 1024, // 7B models produce richer reasoning
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
-	maxToolResultLength: 2000, // 7B models handle more context
+	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
-	disableThinkingAfterTool: true, // Skip thinking on iterations after tool results
+	disableThinkingAfterTool: false, // Skip thinking on iterations after tool results
 };
 
 /**
@@ -316,6 +316,13 @@ class ReactAgent {
 						userMessage
 					);
 
+					// Resolve the actual tool object (handles bare names without namespace).
+					const executedTool =
+						this.toolRegistry.get( toolName ) ||
+						this.toolRegistry.get(
+							`wp-agentic-admin/${ toolName }`
+						);
+
 					toolsUsed.push( toolName );
 					observations.push( {
 						tool: toolName,
@@ -323,14 +330,32 @@ class ReactAgent {
 						result: toolResult,
 					} );
 
+					// Short-circuit: if the tool handles its own display, skip the
+					// second LLM call and return summarize() output directly.
+					// This prevents the LLM from truncating large results (e.g. file content).
+					if ( executedTool?.preferSummarize && toolResult?.data ) {
+						const summarized = executedTool.summarize(
+							toolResult.data,
+							userMessage
+						);
+						return {
+							success: true,
+							finalAnswer: summarized,
+							skipStreaming: true,
+							iterations: iteration,
+							toolsUsed,
+							observations,
+						};
+					}
+
 					// Truncate result if too large (prevent context window overflow)
 					const resultStr = JSON.stringify( toolResult );
 					const truncatedResult =
 						resultStr.length > this.config.maxToolResultLength
 							? resultStr.substring(
-									0,
-									this.config.maxToolResultLength
-							  ) + '...[truncated]'
+								0,
+								this.config.maxToolResultLength
+							) + '...[truncated]'
 							: resultStr;
 
 					// Add observation to conversation with JSON format reminder
@@ -675,7 +700,18 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
-		const tool = this.toolRegistry.get( toolId );
+		let tool = this.toolRegistry.get( toolId );
+
+		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
+		// of "wp-agentic-admin/read-file"). Try the default namespace before giving up.
+		if ( ! tool && ! toolId.includes( '/' ) ) {
+			tool = this.toolRegistry.get( `wp-agentic-admin/${ toolId }` );
+			if ( tool ) {
+				log.warn(
+					`Tool "${ toolId }" not found — resolved to "wp-agentic-admin/${ toolId }"`
+				);
+			}
+		}
 
 		if ( ! tool ) {
 			log.error( 'Tool not found:', toolId );
@@ -775,6 +811,9 @@ class ReactAgent {
 		let message;
 		if ( toolResult.result_for_llm ) {
 			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
+			if ( ! this.config.disableThinkingAfterTool ) {
+				message += `\n\nRaw data: ${ truncatedResult }`;
+			}
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}

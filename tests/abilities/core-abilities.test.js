@@ -46,6 +46,20 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/theme-list',
 		},
 
+		// ── Current user role ─────────────────────────────────────
+		{
+			input: 'what user role is my current user?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'who am I logged in as?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+		{
+			input: 'am I an administrator?',
+			expectTool: 'wp-agentic-admin/current-user-role',
+		},
+
 		// ── User management ───────────────────────────────────────
 		{
 			input: 'list all users on this site',
@@ -195,6 +209,24 @@ module.exports = {
 			],
 		},
 
+		// ── File reading ───────────────────────────────────────────
+		{
+			input: 'show me my wp-config.php',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'read the .htaccess file',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: "what's in my theme's functions.php",
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+		{
+			input: 'open wp-content/plugins/myplugin/readme.txt',
+			expectTool: 'wp-agentic-admin/read-file',
+		},
+
 		// ── Cache & performance ────────────────────────────────────
 		{
 			input: 'flush the cache',
@@ -231,6 +263,14 @@ module.exports = {
 		{
 			input: 'what is the name of my site?',
 			expectTool: 'core/get-site-info',
+		},
+		{
+			input: 'what is my site URL?',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+		},
+		{
+			input: 'what is my address URL',
+			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
 		},
 		{
 			input: 'what environment is this site running on?',
