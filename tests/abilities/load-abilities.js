@@ -42,7 +42,7 @@ function extractAbility( filePath ) {
 
 	// Extract description — may span multiple lines via string concatenation or template
 	// Pattern: description: 'single line' or description:\n\t\t\t'multi line',
-	const descMatch = src.match( /description:\s*\n?\s*'([^']+)'/ );
+	const descMatch = src.match( /description:\s*\n?\s*(['"])(.+?)\1/ );
 
 	if ( ! labelMatch || ! descMatch ) {
 		return null;
@@ -51,7 +51,7 @@ function extractAbility( filePath ) {
 	return {
 		id: idMatch[ 1 ],
 		label: labelMatch[ 1 ],
-		description: descMatch[ 1 ],
+		description: descMatch[ 2 ],
 	};
 }
 

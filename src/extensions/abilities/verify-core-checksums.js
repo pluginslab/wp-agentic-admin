@@ -91,7 +91,9 @@ export function registerVerifyCoreChecksums() {
 									diffLines.slice( 0, 30 ).join( '\n' )
 								);
 								lines.push(
-									`... (${ diffLines.length - 30 } more lines)`
+									`... (${
+										diffLines.length - 30
+									} more lines)`
 								);
 							} else {
 								lines.push( file.diff );
@@ -101,9 +103,7 @@ export function registerVerifyCoreChecksums() {
 					} else if ( file.status === 'missing' ) {
 						lines.push( `**Missing:** \`${ file.file }\`` );
 					} else if ( file.status === 'extra' ) {
-						lines.push(
-							`**Extra (unknown):** \`${ file.file }\``
-						);
+						lines.push( `**Extra (unknown):** \`${ file.file }\`` );
 					}
 				}
 			}
@@ -137,7 +137,9 @@ export function registerVerifyCoreChecksums() {
 					.filter( ( f ) => f.status === 'modified' )
 					.map( ( f ) => f.file );
 				parts.push(
-					`${ modified } modified file(s): ${ modifiedFiles.join( ', ' ) }`
+					`${ modified } modified file(s): ${ modifiedFiles.join(
+						', '
+					) }`
 				);
 			}
 
@@ -146,7 +148,9 @@ export function registerVerifyCoreChecksums() {
 					.filter( ( f ) => f.status === 'missing' )
 					.map( ( f ) => f.file );
 				parts.push(
-					`${ result.missing_count } missing file(s): ${ missingFiles.join( ', ' ) }`
+					`${
+						result.missing_count
+					} missing file(s): ${ missingFiles.join( ', ' ) }`
 				);
 			}
 
@@ -155,11 +159,15 @@ export function registerVerifyCoreChecksums() {
 					.filter( ( f ) => f.status === 'extra' )
 					.map( ( f ) => f.file );
 				parts.push(
-					`${ result.extra_count } extra unknown file(s): ${ extraFiles.join( ', ' ) }`
+					`${
+						result.extra_count
+					} extra unknown file(s): ${ extraFiles.join( ', ' ) }`
 				);
 			}
 
-			return `Checksum verification for WordPress ${ result.wordpress_version } found issues: ${ parts.join( '; ' ) }.`;
+			return `Checksum verification for WordPress ${
+				result.wordpress_version
+			} found issues: ${ parts.join( '; ' ) }.`;
 		},
 
 		/**
@@ -175,7 +183,10 @@ export function registerVerifyCoreChecksums() {
 				input.include_diffs = params.include_diffs;
 			}
 
-			return executeAbility( 'wp-agentic-admin/verify-core-checksums', input );
+			return executeAbility(
+				'wp-agentic-admin/verify-core-checksums',
+				input
+			);
 		},
 
 		// Read-only - no confirmation needed.

@@ -185,6 +185,7 @@ const getLoadingStage = ( message, progress ) => {
 const ModelStatus = ( {
 	onModelReady,
 	onModelError,
+	onModelUnload,
 	initPhase,
 	initMessage, // eslint-disable-line no-unused-vars -- Prop passed by parent for future use in status display.
 	initProgress,
@@ -303,10 +304,14 @@ const ModelStatus = ( {
 			const gpu = modelLoader.getGPUInfo();
 			setGpuInfo( gpu );
 
-			// Initial stats fetch
+			// Initial stats and context fetch
 			modelLoader.getMemoryStats().then( ( stats ) => {
 				setMemoryStats( stats );
 			} );
+			const initialContext = modelLoader.getContextUsage();
+			if ( initialContext ) {
+				setContextUsage( initialContext );
+			}
 
 			// Poll for stats updates every 2 seconds to capture post-inference performance
 			const statsInterval = setInterval( () => {
@@ -375,7 +380,10 @@ const ModelStatus = ( {
 		await modelLoader.unload();
 		setProgress( 0 );
 		setIsFromCache( false );
-	}, [] );
+		if ( onModelUnload ) {
+			onModelUnload();
+		}
+	}, [ onModelUnload ] );
 
 	/**
 	 * Fetch models from remote endpoint
@@ -532,8 +540,6 @@ const ModelStatus = ( {
 										{ ' · ' }
 									</span>
 								) }
-								{ loadedModelInfo.mode !== 'external' &&
-									`~${ loadedModelInfo.size } VRAM` }
 								{ memoryStats?.available &&
 									memoryStats?.formatted && (
 										<>
@@ -670,6 +676,21 @@ const ModelStatus = ( {
 								reload needed! No data is sent to external
 								servers.
 							</p>
+							<div className="wp-agentic-admin-performance-tip">
+								<span className="wp-agentic-admin-performance-tip__icon">
+									💡
+								</span>
+								<div className="wp-agentic-admin-performance-tip__content">
+									<strong>Performance Tip</strong>
+									LLM thinking can be slow on integrated GPUs.
+									For better performance in Chrome, visit{ ' ' }
+									<code>
+										chrome://flags/#force-high-performance-gpu
+									</code>{ ' ' }
+									and enable &quot;Force high performance
+									GPU&quot;.
+								</div>
+							</div>
 						</div>
 					) }
 

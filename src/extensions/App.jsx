@@ -7,6 +7,10 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
 import { TabPanel, Notice } from '@wordpress/components';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
+import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
+import FeedbackTab from './components/FeedbackTab';
+import SettingsTab from './components/SettingsTab';
+import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
@@ -58,7 +62,43 @@ const App = () => {
 					return;
 				}
 
-				// Check if model is cached
+				// Check saved provider preference
+				const savedProvider = localStorage.getItem(
+					'wp_agentic_admin_provider'
+				);
+
+				if ( savedProvider === 'remote' ) {
+					const url = localStorage.getItem(
+						'wp_agentic_admin_remote_url'
+					);
+					const remoteModel = localStorage.getItem(
+						'wp_agentic_admin_remote_model'
+					);
+					const apiKey =
+						localStorage.getItem(
+							'wp_agentic_admin_remote_api_key'
+						) || '';
+					if ( url && remoteModel ) {
+						log.info( 'Remote provider saved, auto-connecting...' );
+						setInitPhase( 'loading' );
+						setInitMessage( 'Connecting to remote provider...' );
+						setInitProgress( 35 );
+						try {
+							await modelLoader.loadExternal(
+								url,
+								remoteModel,
+								apiKey
+							);
+							setModelReady( true );
+						} catch ( loadErr ) {
+							log.error( 'Auto-connect remote failed:', loadErr );
+						}
+					}
+					setInitPhase( null );
+					return;
+				}
+
+				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );
 				const isCached = await modelLoader.isModelCached();
@@ -111,6 +151,13 @@ const App = () => {
 	const handleModelReady = useCallback( () => {
 		setModelReady( true );
 		setWebGPUError( null );
+	}, [] );
+
+	/**
+	 * Handle model unload callback — resets ready state
+	 */
+	const handleModelUnload = useCallback( () => {
+		setModelReady( false );
 	}, [] );
 
 	/**
@@ -173,6 +220,25 @@ const App = () => {
 			title: 'Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
+		{
+			name: 'plugin-abilities',
+			title: 'Plugin Abilities',
+			className: 'wp-agentic-admin-tab',
+		},
+		{
+			name: 'settings',
+			title: 'Settings',
+			className: 'wp-agentic-admin-tab',
+		},
+		...( FEEDBACK_UPLOAD_ENABLED
+			? [
+					{
+						name: 'feedback',
+						title: 'Feedback',
+						className: 'wp-agentic-admin-tab',
+					},
+			  ]
+			: [] ),
 	];
 
 	/**
@@ -197,6 +263,12 @@ const App = () => {
 				);
 			case 'abilities':
 				return <AbilityBrowser />;
+			case 'plugin-abilities':
+				return <PluginAbilitiesPanel />;
+			case 'settings':
+				return <SettingsTab />;
+			case 'feedback':
+				return <FeedbackTab />;
 			default:
 				return null;
 		}
@@ -221,6 +293,7 @@ const App = () => {
 			<ModelStatus
 				onModelReady={ handleModelReady }
 				onModelError={ handleModelError }
+				onModelUnload={ handleModelUnload }
 				initPhase={ initPhase }
 				initMessage={ initMessage }
 				initProgress={ initProgress }

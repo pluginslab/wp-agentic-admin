@@ -215,38 +215,82 @@ class LLM_Proxy {
 		header( 'Connection: keep-alive' );
 		header( 'X-Accel-Buffering: no' );
 
-		$curl_headers = array( 'Content-Type: application/json' );
-		if ( isset( $headers['Authorization'] ) ) {
-			$curl_headers[] = 'Authorization: ' . $headers['Authorization'];
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_init -- wp_remote_post does not support streaming responses.
-		$ch = curl_init( $url );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt( $ch, CURLOPT_POST, true );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $body ) );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt( $ch, CURLOPT_HTTPHEADER, $curl_headers );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt( $ch, CURLOPT_TIMEOUT, 120 );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-		curl_setopt(
-			$ch,
-			CURLOPT_WRITEFUNCTION,
-			function ( $ch, $data ) {
-				echo $data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SSE pass-through from trusted external API.
-				if ( ob_get_level() ) {
-					ob_flush();
-				}
-				flush();
-				return strlen( $data );
+		if ( function_exists( 'curl_init' ) ) {
+			$curl_headers = array(
+				'Content-Type: application/json',
+				'Accept: text/event-stream',
+			);
+			if ( isset( $headers['Authorization'] ) ) {
+				$curl_headers[] = 'Authorization: ' . $headers['Authorization'];
 			}
-		);
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
-		curl_exec( $ch );
+
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_init -- wp_remote_post does not support streaming responses.
+			$ch = curl_init( $url );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $ch, CURLOPT_POST, true );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $body ) );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $ch, CURLOPT_HTTPHEADER, $curl_headers );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt( $ch, CURLOPT_TIMEOUT, 120 );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+			curl_setopt(
+				$ch,
+				CURLOPT_WRITEFUNCTION,
+				function ( $ch, $data ) {
+					echo $data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SSE pass-through from trusted external API.
+					if ( ob_get_level() ) {
+						ob_flush();
+					}
+					flush();
+					return strlen( $data );
+				}
+			);
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
+			curl_exec( $ch );
+		} else {
+			// Fallback for environments without CURL (like wp-now WASM).
+			// Uses wp_remote_post which is the only HTTP method available in WASM.
+			// True streaming is not possible, so we fetch the full response
+			// and then output it as-is (the SSE data).
+			$wp_headers = array(
+				'Content-Type' => 'application/json',
+				'Accept'       => 'text/event-stream',
+			);
+			if ( isset( $headers['Authorization'] ) ) {
+				$wp_headers['Authorization'] = $headers['Authorization'];
+			}
+
+			$response = \wp_remote_post(
+				$url,
+				array(
+					'headers' => $wp_headers,
+					'body'    => wp_json_encode( $body ),
+					'timeout' => 120,
+				)
+			);
+
+			if ( \is_wp_error( $response ) ) {
+				header( 'Content-Type: application/json', true, 502 );
+				echo wp_json_encode(
+					array(
+						'error' => 'LLM proxy request failed: ' . $response->get_error_message(),
+						'url'   => $url,
+					)
+				);
+				exit;
+			}
+
+			$response_body = \wp_remote_retrieve_body( $response );
+			echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			if ( ob_get_level() ) {
+				ob_flush();
+			}
+			flush();
+		}
 
 		exit;
 	}

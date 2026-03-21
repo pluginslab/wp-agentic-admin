@@ -189,8 +189,8 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
 			wp_agentic_admin_register_database_check();
-    }
-    
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
 			wp_agentic_admin_register_theme_list();
 		}
@@ -217,6 +217,10 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_post_list' ) ) {
 			wp_agentic_admin_register_post_list();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_read_file' ) ) {
+			wp_agentic_admin_register_read_file();
 		}
 
 		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
@@ -249,6 +253,19 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_query_database' ) ) {
 			wp_agentic_admin_register_query_database();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_web_search' ) ) {
+			wp_agentic_admin_register_web_search();
+		}
+
+		// Dynamic ability discovery — PoC for calling plugin abilities.
+		if ( function_exists( 'wp_agentic_admin_register_discover_plugin_abilities' ) ) {
+			wp_agentic_admin_register_discover_plugin_abilities();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_run_plugin_ability' ) ) {
+			wp_agentic_admin_register_run_plugin_ability();
 		}
 
 		/**

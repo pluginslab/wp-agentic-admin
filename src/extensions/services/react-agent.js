@@ -22,9 +22,9 @@ const REACT_CONFIG = {
 	temperature: 0.3, // 7B models are more reliable, lower temp for consistency
 	maxTokens: 1024, // 7B models produce richer reasoning
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
-	maxToolResultLength: 2000, // 7B models handle more context
+	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
-	disableThinkingAfterTool: true, // Skip thinking on iterations after tool results
+	disableThinkingAfterTool: false, // Skip thinking on iterations after tool results
 };
 
 /**
@@ -87,13 +87,19 @@ class ReactAgent {
 	 *
 	 * @param {string} userMessage         - The user's request
 	 * @param {Array}  conversationHistory - Previous messages (for context)
+	 * @param {Object} options             - Execution options
+	 * @param {Array}  options.toolFilter  - Optional array of tool IDs to constrain the agent
 	 * @return {Promise<ReactResult>} Result with success status, final answer, and execution details.
 	 */
-	async execute( userMessage, conversationHistory = [] ) {
+	async execute( userMessage, conversationHistory = [], options = {} ) {
 		log.info( 'Starting ReAct loop for:', userMessage );
+
+		// Store tool filter for this execution
+		this.currentToolFilter = options.toolFilter || null;
 
 		const engine = this.modelLoader.getEngine();
 		if ( ! engine ) {
+			this.currentToolFilter = null;
 			return {
 				success: false,
 				finalAnswer:
@@ -109,6 +115,9 @@ class ReactAgent {
 			userMessage,
 			conversationHistory
 		);
+
+		// Clean up tool filter
+		this.currentToolFilter = null;
 
 		// Store last result for test observability
 		this.lastResult = result;
@@ -316,6 +325,13 @@ class ReactAgent {
 						userMessage
 					);
 
+					// Resolve the actual tool object (handles bare names without namespace).
+					const executedTool =
+						this.toolRegistry.get( toolName ) ||
+						this.toolRegistry.get(
+							`wp-agentic-admin/${ toolName }`
+						);
+
 					toolsUsed.push( toolName );
 					observations.push( {
 						tool: toolName,
@@ -323,14 +339,32 @@ class ReactAgent {
 						result: toolResult,
 					} );
 
+					// Short-circuit: if the tool handles its own display, skip the
+					// second LLM call and return summarize() output directly.
+					// This prevents the LLM from truncating large results (e.g. file content).
+					if ( executedTool?.preferSummarize && toolResult?.data ) {
+						const summarized = executedTool.summarize(
+							toolResult.data,
+							userMessage
+						);
+						return {
+							success: true,
+							finalAnswer: summarized,
+							skipStreaming: true,
+							iterations: iteration,
+							toolsUsed,
+							observations,
+						};
+					}
+
 					// Truncate result if too large (prevent context window overflow)
 					const resultStr = JSON.stringify( toolResult );
 					const truncatedResult =
 						resultStr.length > this.config.maxToolResultLength
 							? resultStr.substring(
-									0,
-									this.config.maxToolResultLength
-							  ) + '...[truncated]'
+								0,
+								this.config.maxToolResultLength
+							) + '...[truncated]'
 							: resultStr;
 
 					// Add observation to conversation with JSON format reminder
@@ -675,7 +709,33 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
-		const tool = this.toolRegistry.get( toolId );
+		// Enforce bundle filter — block tools outside the active bundle
+		if (
+			this.currentToolFilter &&
+			this.currentToolFilter.length > 0 &&
+			! this.currentToolFilter.includes( toolId )
+		) {
+			log.warn( `Tool ${ toolId } blocked by active bundle filter` );
+			return {
+				success: false,
+				error: `Tool "${ toolId }" is not available in the current bundle. Available tools: ${ this.currentToolFilter.join(
+					', '
+				) }`,
+			};
+		}
+
+		let tool = this.toolRegistry.get( toolId );
+
+		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
+		// of "wp-agentic-admin/read-file"). Try the default namespace before giving up.
+		if ( ! tool && ! toolId.includes( '/' ) ) {
+			tool = this.toolRegistry.get( `wp-agentic-admin/${ toolId }` );
+			if ( tool ) {
+				log.warn(
+					`Tool "${ toolId }" not found — resolved to "wp-agentic-admin/${ toolId }"`
+				);
+			}
+		}
 
 		if ( ! tool ) {
 			log.error( 'Tool not found:', toolId );
@@ -774,7 +834,10 @@ class ReactAgent {
 	buildToolResultMessage( toolResult, truncatedResult ) {
 		let message;
 		if ( toolResult.result_for_llm ) {
-			message = `Tool interpretation: ${ toolResult.result_for_llm }\n\nRaw data: ${ truncatedResult }`;
+			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
+			if ( ! this.config.disableThinkingAfterTool ) {
+				message += `\n\nRaw data: ${ truncatedResult }`;
+			}
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
@@ -792,7 +855,15 @@ class ReactAgent {
 	 * @return {string} System prompt with JSON instructions
 	 */
 	buildSystemPromptPromptBased() {
-		const tools = this.toolRegistry.getAll();
+		let tools = this.toolRegistry.getAll();
+
+		// Filter tools when a bundle is active
+		if ( this.currentToolFilter && this.currentToolFilter.length > 0 ) {
+			tools = tools.filter( ( t ) =>
+				this.currentToolFilter.includes( t.id )
+			);
+		}
+
 		const toolsList = tools
 			.map( ( t ) => `- ${ t.id }: ${ t.description || t.label || '' }` )
 			.join( '\n' );
@@ -822,10 +893,15 @@ User: "list plugins"
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
+User: "what environment is this?"
+{"action": "tool_call", "tool": "core/get-environment-info", "args": {}}
+
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
-			this.config.disableThinking ? '\n\n/nothink' : ''
-		}`;
+			this.currentToolFilter && this.currentToolFilter.length > 0
+				? '\n\nIMPORTANT: The user has selected a specific tool bundle. You MUST use the available tools to answer. Do not use final_answer without calling a tool first.'
+				: ''
+		}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
 	}
 }
 
