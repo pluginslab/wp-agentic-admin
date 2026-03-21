@@ -5,8 +5,10 @@
  *
  * Opt-in preference is persisted on the server (WordPress options) via the
  * wp-agentic-admin/v1/settings REST endpoint, and cached in localStorage for
- * synchronous reads. Feedback ratings are stored in localStorage only —
- * nothing leaves the browser.
+ * synchronous reads. Feedback ratings are stored in localStorage. When
+ * FEEDBACK_S3_ENDPOINT is configured at build time and the user has opted in,
+ * each rating (including the conversation turn) is also uploaded anonymously
+ * to an S3-compatible bucket for model fine-tuning.
  *
  */
 
@@ -16,6 +18,15 @@ const log = createLogger( 'Feedback' );
 
 const OPTIN_CACHE_KEY = 'wp-agentic-admin-feedback-optin';
 const FEEDBACK_KEY = 'wp-agentic-admin-feedback';
+
+// S3 endpoint inlined at build time via dotenv-webpack. Empty string = disabled.
+const FEEDBACK_S3_ENDPOINT = process.env.FEEDBACK_S3_ENDPOINT || '';
+
+/**
+ * Whether feedback collection is enabled at build time.
+ * False when FEEDBACK_S3_ENDPOINT was not set — the opt-in UI is hidden.
+ */
+export const FEEDBACK_UPLOAD_ENABLED = Boolean( FEEDBACK_S3_ENDPOINT );
 
 // ─── Opt-in ──────────────────────────────────────────────────────────────────
 
@@ -100,22 +111,59 @@ export const setFeedbackOptIn = async ( optIn ) => {
 // ─── Feedback data ───────────────────────────────────────────────────────────
 
 /**
- * Save a feedback entry to localStorage.
+ * Save a feedback entry to localStorage and optionally upload to S3.
  *
- * @param {Object} entry            - Feedback entry
- * @param {string} entry.messageId  - ID of the rated assistant message
- * @param {string} entry.sessionId  - Chat session ID
- * @param {Array}  entry.abilityIds - Abilities used in the turn
- * @param {string} entry.rating     - 'up' or 'down'
- * @param {string} [entry.comment]  - Optional free-form comment
+ * When FEEDBACK_S3_ENDPOINT is configured at build time, the entry is also
+ * PUT to `{endpoint}/feedback/{sessionId}/{messageId}.json` so it can be
+ * collected for model fine-tuning. Upload errors are silently ignored.
+ *
+ * @param {Object} entry                    - Feedback entry
+ * @param {string} entry.messageId          - ID of the rated assistant message
+ * @param {string} entry.sessionId          - Chat session ID
+ * @param {Array}  entry.abilityIds         - Abilities used in the turn
+ * @param {string} entry.rating             - 'up' or 'down'
+ * @param {string} [entry.comment]          - Optional free-form comment
+ * @param {string} [entry.systemPrompt]     - System prompt active at rating time
+ * @param {Array}  [entry.conversation]     - Full conversation up to the rated message,
+ *                                          each item `{ role: 'user'|'assistant', content: string }`
+ * @param {string} [entry.model]            - Model ID that produced the response
+ * @param {Object} [entry.generationConfig] - Generation parameters (temperature, maxTokens)
+ * @return {Promise<void>}
  */
-export const saveFeedback = ( {
+export const saveFeedback = async ( {
 	messageId,
 	sessionId,
 	abilityIds,
 	rating,
 	comment = '',
+	systemPrompt = '',
+	conversation = [],
+	model = '',
+	generationConfig = null,
 } ) => {
+	const entry = {
+		messageId,
+		sessionId,
+		abilityIds: abilityIds || [],
+		rating,
+		comment,
+		timestamp: new Date().toISOString(),
+	};
+
+	if ( systemPrompt ) {
+		entry.systemPrompt = systemPrompt;
+	}
+	if ( conversation.length > 0 ) {
+		entry.conversation = conversation;
+	}
+	if ( model ) {
+		entry.model = model;
+	}
+	if ( generationConfig ) {
+		entry.generationConfig = generationConfig;
+	}
+
+	// Persist to localStorage
 	try {
 		const existing = JSON.parse(
 			localStorage.getItem( FEEDBACK_KEY ) || '[]'
@@ -123,14 +171,6 @@ export const saveFeedback = ( {
 
 		// Update existing entry for this message, or push a new one
 		const idx = existing.findIndex( ( e ) => e.messageId === messageId );
-		const entry = {
-			messageId,
-			sessionId,
-			abilityIds: abilityIds || [],
-			rating,
-			comment,
-			timestamp: new Date().toISOString(),
-		};
 
 		if ( idx !== -1 ) {
 			existing[ idx ] = entry;
@@ -141,6 +181,22 @@ export const saveFeedback = ( {
 		localStorage.setItem( FEEDBACK_KEY, JSON.stringify( existing ) );
 	} catch {
 		// Silently ignore storage errors
+	}
+
+	// Upload to S3 if endpoint is configured (silently skip on error)
+	if ( FEEDBACK_S3_ENDPOINT ) {
+		try {
+			await fetch(
+				`${ FEEDBACK_S3_ENDPOINT }/feedback/${ sessionId }/${ messageId }.json`,
+				{
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify( entry ),
+				}
+			);
+		} catch {
+			// Silently ignore upload errors
+		}
 	}
 };
 

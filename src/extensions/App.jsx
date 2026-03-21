@@ -8,6 +8,7 @@ import { TabPanel, Notice } from '@wordpress/components';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import FeedbackTab from './components/FeedbackTab';
+import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
@@ -174,11 +175,15 @@ const App = () => {
 			title: 'Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
-		{
-			name: 'feedback',
-			title: 'Feedback',
-			className: 'wp-agentic-admin-tab',
-		},
+		...( FEEDBACK_UPLOAD_ENABLED
+			? [
+					{
+						name: 'feedback',
+						title: 'Feedback',
+						className: 'wp-agentic-admin-tab',
+					},
+			  ]
+			: [] ),
 	];
 
 	/**
