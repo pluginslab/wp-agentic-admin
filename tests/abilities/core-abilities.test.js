@@ -209,6 +209,24 @@ module.exports = {
 			],
 		},
 
+		// ── WP-Config constants ────────────────────────────────────
+		{
+			input: 'list all of the wp-config.php constants',
+			expectTool: 'wp-agentic-admin/wp-config-list',
+		},
+		{
+			input: 'what constants are defined in wp-config?',
+			expectTool: 'wp-agentic-admin/wp-config-list',
+		},
+		{
+			input: 'show me the wp-config settings',
+			// Both are valid: wp-config-list lists parsed constants, read-file shows raw file.
+			expectTool: [
+				'wp-agentic-admin/wp-config-list',
+				'wp-agentic-admin/read-file',
+			],
+		},
+
 		// ── File reading ───────────────────────────────────────────
 		{
 			input: 'show me my wp-config.php',

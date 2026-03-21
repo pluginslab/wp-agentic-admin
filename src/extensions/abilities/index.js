@@ -48,6 +48,7 @@ import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
+import { registerWpConfigList } from './wp-config-list';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -88,6 +89,7 @@ export { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
 export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 export { registerRunPluginAbility } from './run-plugin-ability';
+export { registerWpConfigList } from './wp-config-list';
 
 /**
  * Register all abilities.
@@ -144,6 +146,9 @@ export function registerAllAbilities() {
 	// Dynamic ability discovery — PoC for calling plugin abilities
 	registerDiscoverPluginAbilities();
 	registerRunPluginAbility();
+
+	// WP-Config constants listing
+	registerWpConfigList();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }
