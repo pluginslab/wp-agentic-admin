@@ -45,6 +45,9 @@ const ACTION_WORDS = [
 	'regenerate',
 	'reset',
 	'view',
+	'search',
+	'find',
+	'index',
 ];
 
 /**

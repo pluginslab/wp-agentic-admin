@@ -217,6 +217,28 @@ module.exports = {
 			expectTool: 'core/get-editor-blocks',
 		},
 
+		// ── Codebase RAG ─────────────────────────────────────────────
+		{
+			input: 'index codebase',
+			expectTool: 'wp-agentic-admin/codebase-index',
+		},
+		{
+			input: 'reindex the site code',
+			expectTool: 'wp-agentic-admin/codebase-index',
+		},
+		{
+			input: 'search code for authentication',
+			expectTool: 'wp-agentic-admin/code-search',
+		},
+		{
+			input: 'find the function that handles login',
+			expectTool: 'wp-agentic-admin/code-search',
+		},
+		{
+			input: 'where is the payment processing class?',
+			expectTool: 'wp-agentic-admin/code-search',
+		},
+
 		// ── No-tool tests (pure knowledge questions) ───────────────
 		{
 			input: 'what is a transient in WordPress?',

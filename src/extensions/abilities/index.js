@@ -35,6 +35,8 @@ import { registerBackupCheck } from './backup-check';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
+import { registerCodebaseIndex } from './codebase-index';
+import { registerCodeSearch } from './code-search';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -62,6 +64,8 @@ export { registerBackupCheck } from './backup-check';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
+export { registerCodebaseIndex } from './codebase-index';
+export { registerCodeSearch } from './code-search';
 
 /**
  * Register all abilities.
@@ -102,6 +106,10 @@ export function registerAllAbilities() {
 	registerCoreSiteInfo();
 	registerCoreEnvironmentInfo();
 	registerCoreEditorBlocks();
+
+	// RAG abilities — local codebase indexing and search
+	registerCodebaseIndex();
+	registerCodeSearch();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }

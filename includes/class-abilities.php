@@ -203,6 +203,10 @@ class Abilities {
 			wp_agentic_admin_register_backup_check();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_codebase_extract' ) ) {
+			wp_agentic_admin_register_codebase_extract();
+		}
+
 		/**
 		 * Fires after core abilities are registered.
 		 *
