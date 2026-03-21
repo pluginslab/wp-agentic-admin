@@ -51,7 +51,12 @@ Users can now constrain the AI to curated tool sets via a `+` icon in the input 
 - **Rewrite list categorization** (PR #159 by @Lucisu) — categorized rules with balanced sampling instead of raw dump. Fixes #56.
 - **HTTP WebGPU error** (PR #50 by @robert81) — clear "please use HTTPS" message instead of confusing WebGPU error. Day 1 PR finally merged!
 
-**39 abilities**, **44 PRs merged**, **10 contributors**.
+### Late Day 2 — WebMCP, wp-config, rewrite fix (PRs #161, #160, #162)
+- **WebMCP bridge** (PR #161 by @ivdimova) — hackathon goal #32! All abilities exposed to external AI agents via Chrome's `navigator.modelContext` API. 19 unit tests, graceful degradation, two-step confirmation for destructive tools.
+- **wp-config-list** (PR #160 by @moritzbappert) — JS-only ability that reads wp-config.php via read-file (gets redaction for free), parses `define()` calls, categorizes into 8 groups. Fixes #51.
+- **Rewrite sampling fix** (PR #162 by @Lucisu) — fixes infinite loop bug in sampling logic from #159.
+
+**40 abilities**, **47 PRs merged**, **10 contributors**.
 
 ### Plugin Abilities Platform! (PR #139 by @BoweFrankema)
 Strategically the most important PR of the hackathon. The plugin is now an **open extensibility platform** — any WordPress plugin that registers abilities via the WP Abilities API gets AI support automatically. Includes: discover-plugin-abilities (queries the registry), run-plugin-ability (proxy executor), Plugin Abilities tab with toggle controls and token budget bar, dynamic system prompt integration.
