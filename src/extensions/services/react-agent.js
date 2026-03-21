@@ -24,7 +24,7 @@ const REACT_CONFIG = {
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
 	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
-	disableThinkingAfterTool: true, // Skip thinking on iterations after tool results
+	disableThinkingAfterTool: false, // Skip thinking on iterations after tool results
 };
 
 /**
@@ -774,7 +774,10 @@ class ReactAgent {
 	buildToolResultMessage( toolResult, truncatedResult ) {
 		let message;
 		if ( toolResult.result_for_llm ) {
-			message = `Tool interpretation: ${ toolResult.result_for_llm }\n\nRaw data: ${ truncatedResult }`;
+			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
+			if ( ! this.config.disableThinkingAfterTool ) {
+				message += `\n\nRaw data: ${ truncatedResult }`;
+			}
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
