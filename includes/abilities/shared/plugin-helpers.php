@@ -411,12 +411,14 @@ function wp_agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_
 	$normalized_slug    = strtolower( trim( $plugin_slug ) );
 	$evaluated_ranges   = false;
 	$matched_package    = false;
+	$normalized_name    = trim( $plugin_name );
 
 	foreach ( $mitre_record['containers']['cna']['affected'] as $affected ) {
-		$collection_url = isset( $affected['collectionURL'] ) ? trim( (string) $affected['collectionURL'] ) : '';
-		$package_name   = isset( $affected['packageName'] ) ? strtolower( trim( (string) $affected['packageName'] ) ) : '';
+		$collection_url   = isset( $affected['collectionURL'] ) ? trim( (string) $affected['collectionURL'] ) : '';
+		$package_name     = isset( $affected['packageName'] ) ? strtolower( trim( (string) $affected['packageName'] ) ) : '';
+		$affected_product = isset( $affected['product'] ) ? trim( (string) $affected['product'] ) : '';
 
-		if ( trim( $plugin_name ) !== trim( $affected['product'] ) ) {
+		if ( $normalized_name !== $affected_product ) {
 			if ( 'https://wordpress.org/plugins' !== $collection_url ) {
 				continue;
 			}
