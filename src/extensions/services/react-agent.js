@@ -15,6 +15,71 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'ReactAgent' );
 
 /**
+ * Human-readable names for common WordPress admin screen IDs.
+ */
+const SCREEN_LABELS = {
+	dashboard: 'Dashboard',
+	plugins: 'Plugins',
+	themes: 'Themes',
+	users: 'Users',
+	'users-network': 'Network Users',
+	options: 'Settings',
+	'options-general': 'General Settings',
+	'options-writing': 'Writing Settings',
+	'options-reading': 'Reading Settings',
+	'options-discussion': 'Discussion Settings',
+	'options-media': 'Media Settings',
+	'options-permalink': 'Permalink Settings',
+	upload: 'Media Library',
+	'media-new': 'Add New Media',
+	edit: 'Posts list',
+	'edit-page': 'Pages list',
+	'edit-comments': 'Comments',
+	post: 'Post editor',
+	'site-health': 'Site Health',
+	tools: 'Tools',
+	'import-export': 'Import/Export',
+	'update-core': 'Updates',
+	'nav-menus': 'Menus',
+	widgets: 'Widgets',
+	customize: 'Customizer',
+};
+
+/**
+ * Build a human-readable page context string from wpAgenticAdmin.pageContext.
+ *
+ * @return {string} Context line for the system prompt, or empty string if unavailable.
+ */
+function getPageContextString() {
+	const ctx = window?.wpAgenticAdmin?.pageContext;
+	if ( ! ctx || ! ctx.pagenow ) {
+		return '';
+	}
+
+	const screenId = ctx.screenId || '';
+	const postType = ctx.postType || '';
+
+	let result;
+
+	// Editor pages: "The user is editing a "page" in the block editor."
+	if ( ctx.screenBase === 'post' && postType ) {
+		result = `The user is editing a "${ postType }" in the block editor.`;
+	} else {
+		// Look up a human-readable name from our map
+		const label = SCREEN_LABELS[ screenId ] || '';
+
+		if ( label ) {
+			result = `The user is currently on the WordPress "${ label }" admin page (${ ctx.pagenow }).`;
+		} else {
+			// Fallback: use pagenow directly
+			result = `The user is currently on the WordPress admin page: ${ ctx.pagenow }.`;
+		}
+	}
+
+	return result;
+}
+
+/**
  * ReAct Agent Configuration
  */
 const REACT_CONFIG = {
@@ -863,10 +928,12 @@ User: "what environment is this?"
 
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
-			this.config.disableThinking ? '\n\n/nothink' : ''
-		}`;
+			getPageContextString()
+				? `\n\nCONTEXT:\n${ getPageContextString() }`
+				: ''
+		}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
 	}
 }
 
-export { ReactAgent, REACT_CONFIG };
+export { ReactAgent, REACT_CONFIG, getPageContextString };
 export default ReactAgent;

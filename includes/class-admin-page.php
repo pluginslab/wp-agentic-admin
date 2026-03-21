@@ -147,6 +147,16 @@ class Admin_Page {
 		$feedback_optin_raw = $settings->get_field( 'feedback_optin', null );
 		$feedback_optin     = null === $feedback_optin_raw ? null : (bool) $feedback_optin_raw;
 
+		// Build page context for the AI agent.
+		$screen       = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$page_context = array(
+			'pagenow'    => isset( $GLOBALS['pagenow'] ) ? $GLOBALS['pagenow'] : '',
+			'screenId'   => $screen ? $screen->id : '',
+			'screenBase' => $screen ? $screen->base : '',
+			'postType'   => $screen ? $screen->post_type : '',
+			'adminUrl'   => isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '',
+		);
+
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'settingsUrl'         => esc_url_raw( rest_url( 'wp-agentic-admin/v1/settings' ) ),
@@ -164,6 +174,7 @@ class Admin_Page {
 				'feedbackOptIn'      => $feedback_optin,
 			),
 			'browserRequirements' => Utils::get_browser_requirements(),
+			'pageContext'         => $page_context,
 			'abilities'           => $abilities_js_config,
 			'i18n'                => array(
 				'loading'            => __( 'Loading AI model...', 'wp-agentic-admin' ),

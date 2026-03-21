@@ -16,7 +16,7 @@ import streamSimulator from './stream-simulator';
 import { ChatSession } from './chat-session';
 import workflowRegistry from './workflow-registry';
 import workflowOrchestrator from './workflow-orchestrator';
-import ReactAgent from './react-agent';
+import ReactAgent, { getPageContextString } from './react-agent';
 import messageRouter from './message-router';
 import { createLogger } from '../utils/logger';
 
@@ -49,6 +49,8 @@ function buildSystemPrompt() {
 		} )
 		.join( '\n' );
 
+	const pageContext = getPageContextString();
+
 	return `You are a WordPress assistant. You can help users with questions about WordPress and suggest available tools.
 
 Available abilities:
@@ -67,7 +69,9 @@ You: "A transient is temporary cached data in WordPress that's stored in the dat
 User: "How do I check my site's health?"
 You: "I have a 'Site Health' tool that can run comprehensive diagnostics on your WordPress site. It checks database health, file permissions, plugin compatibility, and more. Would you like me to run it? Just say 'check site health'."
 
-Be helpful and conversational.`;
+Be helpful and conversational.${
+		pageContext ? `\n\nCONTEXT:\n${ pageContext }` : ''
+	}`;
 }
 
 /**
