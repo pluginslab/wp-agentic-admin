@@ -819,34 +819,24 @@ const MessageItem = ( {
 		);
 	}
 
-	// Ability result - collapsible with success/info state
+	// Ability result - collapsible with success/error state
 	if ( type === MessageType.ABILITY_RESULT ) {
-		// Two visual states:
-		//   'success' — tool ran and task succeeded (green, checkmark)
-		//   'info'    — tool ran but task goal not achieved (blue, eye)
-		const resultStatus =
-			meta?.success === false ||
-			( meta?.success === undefined &&
-				( meta?.result?.success === false || meta?.result?.error ) )
-				? 'info'
-				: 'success';
-
-		const statusLabel = {
-			success: 'Task completed successfully',
-			info: 'Finished processing but failed to complete the task',
-			error: 'Failed',
-		};
+		const isSuccess = meta?.success;
 
 		return (
 			<div className="agentic-message agentic-message--tool">
 				<div className="agentic-timeline">
 					<div className="agentic-timeline__line" />
 					<div
-						className={ `agentic-timeline__dot agentic-timeline__dot--${ resultStatus }` }
+						className={ `agentic-timeline__dot agentic-timeline__dot--${
+							isSuccess ? 'success' : 'error'
+						}` }
 					/>
 				</div>
 				<div
-					className={ `agentic-tool agentic-tool--${ resultStatus }` }
+					className={ `agentic-tool agentic-tool--${
+						isSuccess ? 'success' : 'error'
+					}` }
 				>
 					<button
 						className="agentic-tool__header agentic-tool__header--clickable"
@@ -854,7 +844,7 @@ const MessageItem = ( {
 						type="button"
 					>
 						<span className="agentic-tool__icon">
-							{ resultStatus === 'success' && (
+							{ isSuccess ? (
 								<svg
 									width="14"
 									height="14"
@@ -865,21 +855,7 @@ const MessageItem = ( {
 								>
 									<polyline points="20 6 9 17 4 12" />
 								</svg>
-							) }
-							{ resultStatus === 'info' && (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-									<circle cx="12" cy="12" r="3" />
-								</svg>
-							) }
-							{ resultStatus === 'error' && (
+							) : (
 								<svg
 									width="14"
 									height="14"
@@ -895,10 +871,23 @@ const MessageItem = ( {
 							) }
 						</span>
 						<span className="agentic-tool__label">
-							{ statusLabel[ resultStatus ] }
+							{ isSuccess ? 'Completed' : 'Failed' }
 						</span>
-						<span className="agentic-tool__expand">
-							{ isExpanded ? 'Hide details' : 'Show details' }
+						<span
+							className={ `agentic-tool__expand ${
+								isExpanded ? 'agentic-tool__expand--open' : ''
+							}` }
+						>
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<polyline points="6 9 12 15 18 9" />
+							</svg>
 						</span>
 						<span className="agentic-tool__id">
 							{ meta?.abilityId }

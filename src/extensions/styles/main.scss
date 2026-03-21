@@ -2785,10 +2785,6 @@
 				background: #00a32a;
 			}
 
-			&--info {
-				background: #2271b1;
-			}
-
 			&--error {
 				background: #d63638;
 			}
@@ -2823,11 +2819,6 @@
 		&--success {
 			border-color: #b8e6bf;
 			background: #f7fcf8;
-		}
-
-		&--info {
-			border-color: #b8d4e6;
-			background: #f0f6fc;
 		}
 
 		&--error {
@@ -2868,10 +2859,6 @@
 				color: #00a32a;
 			}
 
-			.agentic-tool--info & {
-				color: #2271b1;
-			}
-
 			.agentic-tool--error & {
 				color: #d63638;
 			}
@@ -2902,12 +2889,13 @@
 		}
 
 		&__expand {
-			font-size: 12px;
-			color: #2271b1;
-			margin-left: 8px;
+			display: flex;
+			align-items: center;
+			color: #8c8f94;
+			transition: transform 0.2s ease;
 
-			&:hover {
-				text-decoration: underline;
+			&--open {
+				transform: rotate(180deg);
 			}
 		}
 
