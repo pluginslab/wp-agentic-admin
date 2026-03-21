@@ -152,10 +152,11 @@ docker run --rm \
   minio/mc cors set local/wp-agentic-feedback /tmp/cors.xml
 ```
 
-## Building with feedback enabled
+## Building with a local MinIO endpoint
 
-Set `FEEDBACK_S3_ENDPOINT` before building. When this variable is empty (the
-default), the opt-in UI is hidden entirely — no banner, no thumbs buttons.
+By default, production builds upload to the shared DigitalOcean Spaces bucket.
+To redirect uploads to your local MinIO instance instead, set
+`FEEDBACK_S3_ENDPOINT` before building:
 
 ```bash
 # .env  (gitignored — never commit this file)
@@ -170,8 +171,8 @@ npm run build
 npm run watch
 ```
 
-The endpoint URL is inlined at build time by dotenv-webpack. Changing `.env`
-requires a rebuild.
+The endpoint URL is inlined at build time. Changing `.env` requires a rebuild.
+Set `FEEDBACK_S3_ENDPOINT=` (empty) to disable uploads entirely.
 
 ## Verifying uploads
 

@@ -5,10 +5,11 @@
  *
  * Opt-in preference is persisted on the server (WordPress options) via the
  * wp-agentic-admin/v1/settings REST endpoint, and cached in localStorage for
- * synchronous reads. Feedback ratings are stored in localStorage. When
- * FEEDBACK_S3_ENDPOINT is configured at build time and the user has opted in,
- * each rating (including the conversation turn) is also uploaded anonymously
- * to an S3-compatible bucket for model fine-tuning.
+ * synchronous reads. Feedback ratings are stored in localStorage. When the
+ * user has opted in, each rating (including the full conversation) is also
+ * uploaded anonymously to the production S3 bucket for model fine-tuning.
+ * Set FEEDBACK_S3_ENDPOINT at build time to override the endpoint (e.g. for
+ * local MinIO dev).
  *
  */
 
@@ -19,12 +20,15 @@ const log = createLogger( 'Feedback' );
 const OPTIN_CACHE_KEY = 'wp-agentic-admin-feedback-optin';
 const FEEDBACK_KEY = 'wp-agentic-admin-feedback';
 
-// S3 endpoint inlined at build time via dotenv-webpack. Empty string = disabled.
-const FEEDBACK_S3_ENDPOINT = process.env.FEEDBACK_S3_ENDPOINT || '';
+// Production S3 endpoint. Override at build time via FEEDBACK_S3_ENDPOINT
+// (e.g. for local MinIO dev: FEEDBACK_S3_ENDPOINT=http://localhost:9000/wp-agentic-feedback npm run build).
+const FEEDBACK_S3_ENDPOINT =
+	process.env.FEEDBACK_S3_ENDPOINT ||
+	'https://wp-agentic-feedback.ams3.digitaloceanspaces.com';
 
 /**
- * Whether feedback collection is enabled at build time.
- * False when FEEDBACK_S3_ENDPOINT was not set — the opt-in UI is hidden.
+ * Whether feedback upload is enabled. Always true in production builds;
+ * can be disabled by setting FEEDBACK_S3_ENDPOINT to an empty string at build time.
  */
 export const FEEDBACK_UPLOAD_ENABLED = Boolean( FEEDBACK_S3_ENDPOINT );
 
