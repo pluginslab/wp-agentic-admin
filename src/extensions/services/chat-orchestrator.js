@@ -462,17 +462,13 @@ class ChatOrchestrator {
 
 			// Single-shot LLM summary
 			const engine = modelLoader.getEngine();
+			const toolMessageContent = toolExecutionResult.result_for_llm
+				? `Tool interpretation: ${ toolExecutionResult.result_for_llm }`
+				: `Tool result: ${ truncatedResult }`;
 			const summaryMessages = [
 				{ role: 'system', content: systemPrompt },
-				{
-					role: 'user',
-					content: this.reactAgent.buildToolResultMessage(
-						toolExecutionResult,
-						truncatedResult
-					),
-				},
+				{ role: 'user', content: toolMessageContent },
 			];
-			this.callbacks.onStreamStart();
 			const summaryResponse = await engine.chat.completions.create( {
 				messages: summaryMessages,
 				stream: false,
@@ -481,7 +477,6 @@ class ChatOrchestrator {
 			} );
 			const responseContent =
 				summaryResponse.choices[ 0 ]?.message?.content?.trim() || '';
-			this.callbacks.onStreamEnd( responseContent );
 
 			// Parse response
 			const action =
@@ -515,11 +510,18 @@ class ChatOrchestrator {
 				} ) );
 			}
 
-			// Post reply
+			// Stream reply
+			this.callbacks.onStreamStart();
+			await this.streamSimulator.stream( rawAnswer, {
+				...this.streamOptions,
+				onChunk: ( char, text ) =>
+					this.callbacks.onStreamChunk( char, text ),
+			} );
 			this.session.addAssistantMessage( rawAnswer, {
 				suggestions,
 				...this.getUsageStatsMeta(),
 			} );
+			this.callbacks.onStreamEnd( rawAnswer );
 
 			return { success: true };
 		} catch ( error ) {
