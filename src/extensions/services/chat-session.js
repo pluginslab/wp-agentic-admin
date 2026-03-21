@@ -20,6 +20,7 @@ export const MessageType = {
 	TOOL_REQUEST: 'tool_request',
 	TOOL_RESULT: 'tool_result',
 	THINKING: 'thinking',
+	CONTEXT: 'context',
 	ERROR: 'error',
 };
 
@@ -160,6 +161,18 @@ class ChatSession {
 					: 'Tool execution failed',
 				{ toolId, result, success }
 			)
+		);
+	}
+
+	/**
+	 * Add a context message showing which tools were loaded for the request.
+	 *
+	 * @param {Object[]} tools - Array of tool definitions that were injected into the prompt.
+	 * @return {Object} The added message
+	 */
+	addContextMessage( tools ) {
+		return this.addMessage(
+			this.createMessage( MessageType.CONTEXT, '', { tools } )
 		);
 	}
 

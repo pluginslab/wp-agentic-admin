@@ -19,6 +19,7 @@ import workflowOrchestrator from './workflow-orchestrator';
 import ReactAgent from './react-agent';
 import messageRouter from './message-router';
 import { createLogger } from '../utils/logger';
+import { filterToolsForPrompt } from '../abilities/search-abilities';
 
 const log = createLogger( 'ChatOrchestrator' );
 
@@ -28,13 +29,17 @@ const log = createLogger( 'ChatOrchestrator' );
  * Simple prompt used when the LLM is answering questions without tools.
  * Tools are handled by the ReAct agent with its own specialized prompt.
  *
+ * @param {string} userMessage - The user's message, used to filter relevant tools.
  * @return {string} System prompt
  */
-function buildSystemPrompt() {
-	const tools = toolRegistry.getAll();
+function buildSystemPrompt( userMessage ) {
+	const tools = filterToolsForPrompt( userMessage, toolRegistry.getAll(), {
+		max: 10,
+		exclude: 'wp-agentic-admin/search-abilities',
+	} );
 
 	if ( tools.length === 0 ) {
-		return `You are a WordPress assistant. No tools are currently available. Let the user know they need to wait for abilities to load or check their configuration.`;
+		return `You are a WordPress assistant. You can help users with questions about WordPress and suggest available tools.`;
 	}
 
 	// Build a simple list of available abilities
@@ -180,10 +185,11 @@ class ChatOrchestrator {
 	 * Get the current system prompt
 	 * Uses custom prompt if provided, otherwise builds dynamically from registered tools
 	 *
+	 * @param {string} userMessage - The user's message, used to filter relevant tools.
 	 * @return {string} The system prompt for conversational mode.
 	 */
-	getSystemPrompt() {
-		return this.customSystemPrompt || buildSystemPrompt();
+	getSystemPrompt( userMessage ) {
+		return this.customSystemPrompt || buildSystemPrompt( userMessage );
 	}
 
 	/**
@@ -247,7 +253,7 @@ class ChatOrchestrator {
 
 			if ( route.type === 'conversational' ) {
 				log.info( 'Routing to direct LLM (conversational)' );
-				return await this.processWithLLM();
+				return await this.processWithLLM( userMessage );
 			}
 
 			// Default: ReAct loop for actions
@@ -317,6 +323,10 @@ class ChatOrchestrator {
 					}
 					this.callbacks.onThinkingEnd?.( thinkContent );
 				},
+				onContextFiltered: ( tools ) => {
+					this.session.addContextMessage( tools );
+					this.callbacks.onContextFiltered?.( tools );
+				},
 				onConfirmationRequired: async ( tool ) => {
 					return await this.requestConfirmation( tool );
 				},
@@ -339,10 +349,10 @@ class ChatOrchestrator {
 			onChunk: ( char, text ) =>
 				this.callbacks.onStreamChunk( char, text ),
 		} );
-		this.session.addAssistantMessage(
-			result.finalAnswer,
-			this.getUsageStatsMeta()
-		);
+		this.session.addAssistantMessage( result.finalAnswer, {
+			...this.getUsageStatsMeta(),
+			suggestions: result.suggestions || [],
+		} );
 		this.callbacks.onStreamEnd( result.finalAnswer );
 
 		log.info(
@@ -584,9 +594,10 @@ Explain what went wrong and suggest what the user might try next.`;
 	/**
 	 * Process message with pure LLM (no tool)
 	 *
+	 * @param {string} userMessage - The user's message, used to filter tools for the system prompt.
 	 * @return {Promise<Object>} Result with success status and LLM response text.
 	 */
-	async processWithLLM() {
+	async processWithLLM( userMessage ) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -601,7 +612,7 @@ Explain what went wrong and suggest what the user might try next.`;
 
 		// Build messages for LLM
 		const messages = [
-			{ role: 'system', content: this.getSystemPrompt() },
+			{ role: 'system', content: this.getSystemPrompt( userMessage ) },
 			...this.session.getConversationHistory(),
 		];
 

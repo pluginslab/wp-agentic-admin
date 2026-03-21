@@ -41,6 +41,7 @@ import { registerVerifyCoreChecksums } from './verify-core-checksums';
 import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
+import { registerSearchAbilities } from './search-abilities';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -74,6 +75,7 @@ export { registerVerifyCoreChecksums } from './verify-core-checksums';
 export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 export { registerDatabaseCheck } from './database-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
+export { registerSearchAbilities } from './search-abilities';
 
 /**
  * Register all abilities.
@@ -122,6 +124,7 @@ export function registerAllAbilities() {
 	registerCoreSiteInfo();
 	registerCoreEnvironmentInfo();
 	registerCoreEditorBlocks();
+	registerSearchAbilities();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 }

@@ -11,8 +11,60 @@
  */
 
 import { createLogger } from '../utils/logger';
+import { filterToolsForPrompt } from '../abilities/search-abilities';
 
 const log = createLogger( 'ReactAgent' );
+
+/**
+ * Extract the human-readable content from a potentially JSON-wrapped LLM response.
+ *
+ * Handles three cases:
+ * 1. Plain text — returned as-is
+ * 2. Complete JSON envelope — content field extracted via JSON.parse
+ * 3. Truncated JSON (hit max_tokens) — content field extracted via regex
+ *
+ * @param {string} text - Raw LLM output or already-extracted answer string.
+ * @return {string} Clean human-readable content.
+ */
+/**
+ * Normalize list formatting — insert newlines before list items that the LLM
+ * concatenated without separators (e.g. "step one1. step two2. step three").
+ *
+ * @param {string} text - Extracted content string.
+ * @return {string} Content with newlines before list markers.
+ */
+function normalizeListFormatting( text ) {
+	return (
+		text
+			// Numbered lists: insert \n before "1." "2." etc. when not already preceded by \n
+			.replace( /([^\n])(\d+\.\s)/g, '$1\n$2' )
+			// Bullet lists: insert \n before "- " or "* " markers
+			.replace( /([^\n])([-*]\s)/g, '$1\n$2' )
+	);
+}
+
+function extractContent( text ) {
+	if ( ! text || ! text.trim().startsWith( '{' ) ) {
+		return normalizeListFormatting( text );
+	}
+	try {
+		const parsed = JSON.parse( text );
+		return normalizeListFormatting( parsed.content || text );
+	} catch {
+		// Truncated JSON — regex-extract everything after "content": "
+		const match = text.match( /"content"\s*:\s*"([\s\S]+)/ );
+		if ( match ) {
+			return normalizeListFormatting(
+				match[ 1 ]
+					.replace( /\\n/g, '\n' )
+					.replace( /\\"/g, '"' )
+					.replace( /["\s}]*$/, '' ) // strip trailing quote/brace from truncation
+					.trim()
+			);
+		}
+		return text;
+	}
+}
 
 /**
  * ReAct Agent Configuration
@@ -20,7 +72,7 @@ const log = createLogger( 'ReactAgent' );
 const REACT_CONFIG = {
 	maxIterations: 10, // Safety limit to prevent infinite loops
 	temperature: 0.3, // 7B models are more reliable, lower temp for consistency
-	maxTokens: 1024, // 7B models produce richer reasoning
+	maxTokens: 800, // response budget — keep below half the 4096 context window to avoid truncation
 	confirmationTimeout: 30000, // 30s timeout for user confirmations
 	maxToolResultLength: 2000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
@@ -63,6 +115,7 @@ class ReactAgent {
 			onThinkingStart: () => {},
 			onThinkingChunk: () => {},
 			onThinkingEnd: () => {},
+			onContextFiltered: () => {}, // Called with filtered tools before LLM call
 			onConfirmationRequired: async () => true, // Default: auto-confirm
 		};
 	}
@@ -126,7 +179,28 @@ class ReactAgent {
 	 */
 	async executeWithPromptBased( userMessage, conversationHistory ) {
 		const engine = this.modelLoader.getEngine();
-		const systemPrompt = this.buildSystemPromptPromptBased();
+
+		const searchQuery = await this.extractSearchQuery(
+			engine,
+			userMessage
+		);
+		const contextTools = filterToolsForPrompt(
+			searchQuery,
+			this.toolRegistry.getAll(),
+			{ max: 10, exclude: 'wp-agentic-admin/search-abilities' }
+		);
+		const systemPrompt = this.buildSystemPromptPromptBased( contextTools );
+
+		if ( ! systemPrompt ) {
+			return {
+				finalAnswer:
+					"I couldn't find any tools relevant to your request. Could you rephrase or be more specific about what you'd like to do?",
+				toolsUsed: [],
+				iterations: 0,
+			};
+		}
+
+		this.callbacks.onContextFiltered( contextTools );
 
 		const observations = [];
 		const toolsUsed = [];
@@ -245,21 +319,25 @@ class ReactAgent {
 
 					// If we've already used tools and LLM is responding naturally, accept it
 					if ( toolsUsed.length > 0 ) {
-						// Try to extract clean content if it looks like a JSON envelope
-						let answer = content;
-						if ( content.trim().startsWith( '{' ) ) {
-							try {
-								const parsed = JSON.parse( content );
-								if ( parsed.content ) {
-									answer = parsed.content;
-								}
-							} catch ( e ) {
-								// Not valid JSON, use raw content
+						// Attempt to salvage suggestions from malformed JSON
+						// (e.g. model emitted valid JSON but with wrong/missing "action" key)
+						let salvaged = null;
+						try {
+							const jsonStart = content.indexOf( '{' );
+							if ( jsonStart !== -1 ) {
+								salvaged = JSON.parse(
+									content.substring( jsonStart )
+								);
 							}
+						} catch {
+							// Not parseable — no suggestions to recover
 						}
 						return {
 							success: true,
-							finalAnswer: answer,
+							finalAnswer: extractContent( content ),
+							suggestions: Array.isArray( salvaged?.suggestions )
+								? salvaged.suggestions
+								: [],
 							iterations: iteration,
 							toolsUsed,
 							observations,
@@ -352,27 +430,16 @@ class ReactAgent {
 				// Case 2: Final answer
 				if ( action.action === 'final_answer' ) {
 					log.info( 'LLM provided final answer' );
-					let answer =
+					const rawAnswer =
 						action.content || action.answer || 'Task completed.';
-
-					// Unwrap double-encoded JSON envelope if model wrapped the answer twice
-					if (
-						typeof answer === 'string' &&
-						answer.trim().startsWith( '{' )
-					) {
-						try {
-							const inner = JSON.parse( answer );
-							if ( inner.content ) {
-								answer = inner.content;
-							}
-						} catch ( e ) {
-							// Not double-encoded, keep as-is
-						}
-					}
+					const suggestions = Array.isArray( action.suggestions )
+						? action.suggestions
+						: [];
 
 					return {
 						success: true,
-						finalAnswer: answer,
+						finalAnswer: extractContent( rawAnswer ),
+						suggestions,
 						iterations: iteration,
 						toolsUsed,
 						observations,
@@ -787,12 +854,63 @@ class ReactAgent {
 	}
 
 	/**
+	 * Use the LLM to extract optimized search keywords from the user's message.
+	 *
+	 * Builds a vocabulary from the actual registered tools (labels + keywords)
+	 * and asks the LLM to map the user's message onto that vocabulary. This
+	 * approach is self-updating as tools are added and avoids hardcoded synonym
+	 * tables. Falls back to the raw message if the LLM call fails.
+	 *
+	 * @param {Object} engine      - LLM engine instance.
+	 * @param {string} userMessage - The raw user message.
+	 * @return {Promise<string>} Optimized search query string.
+	 */
+	async extractSearchQuery( engine, userMessage ) {
+		try {
+			const response = await engine.chat.completions.create( {
+				messages: [
+					{
+						role: 'system',
+						content:
+							"You are a WordPress admin assistant. Rephrase the user's request as a neutral technical search query. Describe what the user wants to do and which WordPress admin areas are relevant — do not assume causes or diagnose the problem. Mention relevant areas such as cache, database, plugins, disk, health, error logs, performance where appropriate. Output ONLY the rephrased query, nothing else.\n\n/nothink",
+					},
+					{ role: 'user', content: userMessage },
+				],
+				temperature: 0,
+				max_tokens: 150,
+				stream: false,
+			} );
+
+			const raw = response.choices[ 0 ]?.message?.content?.trim() || '';
+
+			// Strip any <think>...</think> blocks the model may emit despite /nothink
+			const optimized = raw
+				.replace( /<think>[\s\S]*?<\/think>/g, '' )
+				.replace( /<think>[\s\S]*/g, '' )
+				.trim();
+
+			log.info( 'Optimized search query:', optimized );
+			return optimized || userMessage;
+		} catch ( error ) {
+			log.warn(
+				'Search query extraction failed, using raw message:',
+				error
+			);
+			return userMessage;
+		}
+	}
+
+	/**
 	 * Build system prompt for prompt-based mode
 	 *
-	 * @return {string} System prompt with JSON instructions
+	 * @param {Object[]} tools - Pre-filtered and ranked tool definitions to include.
+	 * @return {string|null} System prompt with JSON instructions, or null if no tools matched.
 	 */
-	buildSystemPromptPromptBased() {
-		const tools = this.toolRegistry.getAll();
+	buildSystemPromptPromptBased( tools ) {
+		if ( tools.length === 0 ) {
+			return null;
+		}
+
 		const toolsList = tools
 			.map( ( t ) => `- ${ t.id }: ${ t.description || t.label || '' }` )
 			.join( '\n' );
@@ -806,6 +924,7 @@ FORMAT — every response must be exactly one JSON object:
 
 Call a tool: {"action": "tool_call", "tool": "tool-id", "args": {}}
 Final answer: {"action": "final_answer", "content": "Your answer here"}
+Final answer with suggestions: {"action": "final_answer", "content": "Your answer here", "suggestions": [{"label": "Flush cache", "tool": "wp-agentic-admin/cache-flush"}]}
 
 RULES:
 - One JSON object per response. No text before or after.
@@ -813,6 +932,7 @@ RULES:
 - If a tool fails, explain the failure in a final_answer.
 - Never retry a failed tool. Never invent tool names.
 - If no tool is needed, answer directly via final_answer.
+- Add a suggestion for every tool you recommend in your answer (up to 6). Use only tool IDs from the TOOLS list.
 
 EXAMPLE:
 
@@ -820,10 +940,10 @@ User: "list plugins"
 {"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
 
 [Tool returns data]
-{"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
+{"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive).", "suggestions": [{"label": "Check for updates", "tool": "wp-agentic-admin/update-check"}]}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress...", "suggestions": [{"label": "Flush transients", "tool": "wp-agentic-admin/transient-flush"}]}${
 			this.config.disableThinking ? '\n\n/nothink' : ''
 		}`;
 	}
