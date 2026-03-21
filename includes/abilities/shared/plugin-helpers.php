@@ -225,8 +225,8 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_file ): arra
 /**
  * Scan plugins for known vulnerabilities using the NVD API.
  *
- * TODO: This is a solution that does not required any API key, authentication, or an setup,
- * but it is not an extremely accurate wa for checking vulenrabilities and may produce false positives/negatives.
+ * TODO: This is a solution that does not require any API key, authentication, or setup,
+ * but it is not an extremely accurate way of checking vulnerabilities and may produce false positives/negatives.
  * In the future we can consider integrating with a more reliable service via a partnership.
  *
  * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'all'.
