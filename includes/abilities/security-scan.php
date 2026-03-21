@@ -163,16 +163,6 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 		}
 	}
 
-	$vulnerabilities = array(
-		'plugins'               => array(),
-		'total'                 => 0,
-		'active'                => 0,
-		'total_vulnerabilities' => 0,
-		'plugins_with_issues'   => 0,
-		'scan_errors'           => 0,
-		'scanned_at'            => gmdate( 'c' ),
-	);
-
 	$vulnerabilities = wp_agentic_admin_scan_for_vulnerabilities();
 
 	$checks[] = array(
