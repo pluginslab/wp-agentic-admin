@@ -233,7 +233,7 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_file ): arra
  * false positives/negatives. In the future we can consider integrating with a more
  * reliable service via a partnership.
  *
- * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'all'.
+ * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'active'.
  * @return array Array with plugins and their vulnerabilities.
  */
 function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'active' ): array {
