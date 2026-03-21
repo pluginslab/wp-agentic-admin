@@ -223,11 +223,15 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_file ): arra
 }
 
 /**
- * Scan plugins for known vulnerabilities using the NVD API.
+ * Scan plugins for known vulnerabilities using public CVE data sources.
+ *
+ * This function currently queries the NVD API and additionally uses MITRE CVE
+ * records (where available) to help determine affected versions of plugins.
  *
  * TODO: This is a solution that does not require any API key, authentication, or setup,
- * but it is not an extremely accurate way of checking vulnerabilities and may produce false positives/negatives.
- * In the future we can consider integrating with a more reliable service via a partnership.
+ * but it is not an extremely accurate way of checking vulnerabilities and may produce
+ * false positives/negatives. In the future we can consider integrating with a more
+ * reliable service via a partnership.
  *
  * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'all'.
  * @return array Array with plugins and their vulnerabilities.
