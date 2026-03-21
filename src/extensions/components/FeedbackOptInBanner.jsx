@@ -2,7 +2,8 @@
  * FeedbackOptInBanner Component
  *
  * Shown once when the user has not yet decided whether to enable response feedback.
- * All collected feedback stays in localStorage — nothing leaves the browser.
+ * Opted-in ratings (including the conversation turn) are uploaded anonymously
+ * to help improve the model. No PII is included.
  *
  */
 
@@ -37,8 +38,9 @@ const FeedbackOptInBanner = ( { onAccept, onDecline } ) => {
 				<p className="agentic-feedback-banner__text">
 					Would you like to rate responses with a thumbs up or down?{ ' ' }
 					<span className="agentic-feedback-banner__note">
-						Feedback stays in your browser — nothing is sent
-						externally.
+						Opted-in ratings (including the conversation turn) are
+						uploaded anonymously to help improve the model. No
+						personal information is included.
 					</span>
 				</p>
 			</div>

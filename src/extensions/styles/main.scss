@@ -295,47 +295,304 @@
 .wp-agentic-admin-input-area {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
 	padding: 15px;
 	border-top: 1px solid #c3c4c7;
 	background: #fff;
+}
+
+// Unified wrapper — single border around textarea + toolbar
+.wp-agentic-admin-input-wrapper {
+	border: 1px solid #c3c4c7;
+	border-radius: 8px;
+	background: #fff;
+	overflow: hidden;
+	transition: border-color 0.2s ease;
+
+	&:focus-within {
+		border-color: #2271b1;
+		box-shadow: 0 0 0 1px #2271b1;
+	}
+
+	&--disabled {
+		background: #f6f7f7;
+		opacity: 0.6;
+	}
 
 	.wp-agentic-admin-input {
+		display: block;
 		width: 100%;
-		resize: vertical;
+		resize: none;
 		min-height: 60px;
 		max-height: 200px;
 		padding: 12px;
-		border: 1px solid #8c8f94;
-		border-radius: 4px;
+		border: none;
+		border-radius: 0;
+		background: transparent;
 		font-size: 14px;
 		line-height: 1.5;
-		transition:
-			border-color 0.2s ease,
-			box-shadow 0.2s ease;
+		outline: none;
+		box-shadow: none;
+		-webkit-appearance: none;
 
 		&:focus {
-			border-color: #2271b1;
-			box-shadow: 0 0 0 1px #2271b1;
 			outline: none;
+			box-shadow: none;
 		}
 
 		&:disabled {
-			background: #f6f7f7;
 			cursor: not-allowed;
-			opacity: 0.6;
 		}
 
 		&::placeholder {
 			color: #a0a0a0;
 		}
 	}
+}
 
-	.wp-agentic-admin-input-hint {
+.wp-agentic-admin-input-hint {
+	font-size: 12px;
+	color: #6e6e6e;
+	padding: 0 4px;
+	text-align: left;
+}
+
+// Input Toolbar (below textarea, inside unified wrapper)
+.wp-agentic-admin-input-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 8px 8px;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+	}
+}
+
+// Web search toggle
+.wp-agentic-admin-websearch-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	margin-right: 4px;
+	position: relative;
+	transition: color 0.15s ease;
+
+	// CSS tooltip — stays visible on hover regardless of clicks
+	&::before {
+		content: attr(data-tooltip);
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 4px 8px;
+		background: #1d2327;
+		color: #fff;
 		font-size: 12px;
-		color: #6e6e6e;
-		padding: 0 4px;
+		font-weight: 400;
+		white-space: nowrap;
+		border-radius: 4px;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.1s ease;
+		margin-bottom: 6px;
+	}
+
+	&:hover::before {
+		opacity: 1;
+	}
+
+	&:hover {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&--active {
+		color: #2271b1;
+
+		svg {
+			fill: #2271b1;
+		}
+	}
+
+	&:disabled {
+		color: #a0a0a0;
+		cursor: not-allowed;
+
+		&:hover {
+			background: none;
+			color: #a0a0a0;
+		}
+
+		&:hover::before {
+			opacity: 0;
+		}
+	}
+}
+
+// Bundle trigger button (plus icon)
+.wp-agentic-admin-bundle-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	transition: color 0.15s ease, background 0.15s ease;
+
+	&:hover {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&--active {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&:disabled {
+		color: #a0a0a0;
+		cursor: not-allowed;
+
+		&:hover {
+			background: none;
+			color: #a0a0a0;
+		}
+	}
+}
+
+// Send button (arrow icon) — fades in when text is present
+.wp-agentic-admin-send-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: #2271b1;
+	color: #fff;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	opacity: 1;
+	transform: scale(1);
+	transition:
+		background 0.15s ease,
+		opacity 0.2s ease,
+		transform 0.2s ease;
+
+	svg {
+		fill: #fff;
+	}
+
+	&:hover {
+		background: #135e96;
+	}
+
+	&:disabled {
+		opacity: 0;
+		transform: scale(0.8);
+		pointer-events: none;
+	}
+}
+
+// Bundle pill — label + dismiss
+.wp-agentic-admin-bundle-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	background: none;
+	border: none;
+	padding: 4px 0;
+	font-size: 13px;
+	color: #2271b1;
+	line-height: 1;
+
+	&__label {
+		white-space: nowrap;
+		font-weight: 600;
+	}
+
+	&__remove {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border: none;
+		background: none;
+		color: #50575e;
+		cursor: pointer;
+		padding: 0;
+		border-radius: 50%;
+		transition: color 0.15s ease, background 0.15s ease;
+
+		&:hover {
+			background: #f0f0f1;
+			color: #d63638;
+		}
+	}
+}
+
+// Bundle dropdown menu
+.wp-agentic-admin-bundle-menu {
+	min-width: 200px;
+	padding: 4px 0;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		padding: 8px 12px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		font-size: 13px;
+		color: #1d2327;
 		text-align: left;
+		transition: background 0.1s ease;
+
+		&:hover {
+			background: #f0f0f1;
+		}
+
+		&--selected {
+			background: #f0f6fc;
+		}
+
+		svg {
+			fill: #2271b1;
+			flex-shrink: 0;
+		}
+	}
+
+	&__label {
+		flex: 1;
+	}
+
+	&__count {
+		font-size: 11px;
+		color: #6e6e6e;
 	}
 }
 
@@ -2260,6 +2517,12 @@
 				}
 			}
 
+			.agentic-message__actions {
+				margin-top: 12px;
+				padding-top: 12px;
+				border-top: 1px solid #f0f0f1;
+			}
+
 			.agentic-message__footer {
 				display: flex;
 				align-items: center;
@@ -2751,6 +3014,178 @@
 	50% {
 		transform: scale(1.2);
 		opacity: 0.7;
+	}
+}
+
+// =============================================================================
+// Ability Picker (interactive tool buttons)
+// =============================================================================
+
+.agentic-ability-picker {
+	padding: 4px 0;
+
+	&__section-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: #646970;
+		margin: 12px 0 8px;
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0 0 0 24px;
+		list-style-type: decimal;
+		counter-reset: none;
+	}
+
+	&__item {
+		margin-bottom: 4px;
+		font-size: 13px;
+		color: #646970;
+
+		&::marker {
+			color: #8c8f94;
+			font-weight: 500;
+		}
+	}
+
+	&__button {
+		background: none;
+		border: none;
+		padding: 4px 8px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #2271b1;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background 0.15s ease, color 0.15s ease;
+		text-align: left;
+
+		&:hover {
+			background: #f0f6fc;
+			color: #135e96;
+		}
+
+		&:active {
+			background: #e2e4e7;
+		}
+
+		&:disabled {
+			color: #a7aaad;
+			cursor: not-allowed;
+
+			&:hover {
+				background: none;
+			}
+		}
+	}
+
+	&__input-row {
+		display: flex;
+		gap: 6px;
+		margin: 4px 0 2px 8px;
+	}
+
+	&__args-input {
+		flex: 1;
+		padding: 4px 8px;
+		font-size: 13px;
+		border: 1px solid #8c8f94;
+		border-radius: 4px;
+		min-width: 0;
+
+		&:focus {
+			border-color: #2271b1;
+			box-shadow: 0 0 0 1px #2271b1;
+			outline: none;
+		}
+
+		&:disabled {
+			background: #f6f7f7;
+			cursor: not-allowed;
+		}
+	}
+
+	&__run-button {
+		padding: 4px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #fff;
+		background: #2271b1;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover {
+			background: #135e96;
+		}
+
+		&:disabled {
+			background: #a7aaad;
+			cursor: not-allowed;
+		}
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: 13px;
+		color: #646970;
+		font-style: italic;
+	}
+}
+
+// =============================================================================
+// Action List (generic interactive buttons from ability results)
+// =============================================================================
+
+.agentic-action-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 0;
+		font-size: 13px;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+
+	&__label {
+		flex: 1;
+		font-weight: 500;
+		color: #1d2327;
+	}
+
+	&__button {
+		padding: 3px 10px;
+		font-size: 12px;
+		font-weight: 500;
+		border-radius: 4px;
+		border: 1px solid #2271b1;
+		background: transparent;
+		color: #2271b1;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+		white-space: nowrap;
+
+		&:hover {
+			background: #2271b1;
+			color: #fff;
+		}
 	}
 }
 

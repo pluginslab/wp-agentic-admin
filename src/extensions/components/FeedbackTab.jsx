@@ -12,6 +12,7 @@ import {
 	getFeedbackOptIn,
 	setFeedbackOptIn,
 	getAllFeedback,
+	FEEDBACK_UPLOAD_ENABLED,
 } from '../services/feedback';
 
 /**
@@ -73,58 +74,74 @@ const FeedbackTab = () => {
 				</h3>
 				<p className="wp-agentic-feedback__intro">
 					Rate AI responses with a thumbs up or down after each reply.
-					Feedback helps you track where the assistant performs well
-					and where it struggles — entirely within your browser.{ ' ' }
-					<strong>No data is ever sent to external servers.</strong>
+					Opted-in ratings — including the conversation turn — are
+					uploaded anonymously to help improve the local model. No
+					personal information is included.
 				</p>
 			</div>
 
-			{ /* ── Opt-in toggle card ── */ }
-			<div className="wp-agentic-feedback__card">
-				<div className="wp-agentic-feedback__card-body">
-					<div className="wp-agentic-feedback__toggle-row">
-						<div className="wp-agentic-feedback__toggle-info">
-							<span className="wp-agentic-feedback__toggle-title">
-								Enable response ratings
-							</span>
-							<span className="wp-agentic-feedback__toggle-desc">
-								Shows 👍 / 👎 buttons below each assistant
-								reply.
-							</span>
+			{ /* ── Opt-in toggle card — only shown when upload endpoint is configured ── */ }
+			{ FEEDBACK_UPLOAD_ENABLED ? (
+				<div className="wp-agentic-feedback__card">
+					<div className="wp-agentic-feedback__card-body">
+						<div className="wp-agentic-feedback__toggle-row">
+							<div className="wp-agentic-feedback__toggle-info">
+								<span className="wp-agentic-feedback__toggle-title">
+									Enable response ratings
+								</span>
+								<span className="wp-agentic-feedback__toggle-desc">
+									Shows 👍 / 👎 buttons below each assistant
+									reply.
+								</span>
+							</div>
+							<button
+								type="button"
+								className={ `wp-agentic-feedback__toggle ${
+									optIn
+										? 'wp-agentic-feedback__toggle--on'
+										: ''
+								}` }
+								onClick={ () => handleToggle( ! optIn ) }
+								disabled={ saving }
+								aria-pressed={ !! optIn }
+								aria-label="Enable response ratings"
+							>
+								<span className="wp-agentic-feedback__toggle-knob" />
+							</button>
 						</div>
-						<button
-							type="button"
-							className={ `wp-agentic-feedback__toggle ${
-								optIn ? 'wp-agentic-feedback__toggle--on' : ''
-							}` }
-							onClick={ () => handleToggle( ! optIn ) }
-							disabled={ saving }
-							aria-pressed={ !! optIn }
-							aria-label="Enable response ratings"
-						>
-							<span className="wp-agentic-feedback__toggle-knob" />
-						</button>
-					</div>
 
-					<p
-						className={ `wp-agentic-feedback__status ${
-							optIn
-								? 'wp-agentic-feedback__status--on'
-								: 'wp-agentic-feedback__status--off'
-						}` }
-					>
-						{ /* eslint-disable-next-line no-nested-ternary -- clear three-state status message */ }
-						{ saving
-							? 'Saving…'
-							: optIn
-							? 'Ratings are enabled. Thumbs icons appear on each assistant response.'
-							: 'Ratings are disabled. Enable to start collecting response feedback.' }
-					</p>
+						<p
+							className={ `wp-agentic-feedback__status ${
+								optIn
+									? 'wp-agentic-feedback__status--on'
+									: 'wp-agentic-feedback__status--off'
+							}` }
+						>
+							{ /* eslint-disable-next-line no-nested-ternary -- clear three-state status message */ }
+							{ saving
+								? 'Saving…'
+								: optIn
+								? 'Ratings are enabled. Thumbs icons appear on each assistant response.'
+								: 'Ratings are disabled. Enable to start collecting response feedback.' }
+						</p>
+					</div>
 				</div>
-			</div>
+			) : (
+				<div className="wp-agentic-feedback__card">
+					<div className="wp-agentic-feedback__card-body">
+						<p className="wp-agentic-feedback__status wp-agentic-feedback__status--off">
+							Feedback collection is not configured in this build.
+							Set <code>FEEDBACK_S3_ENDPOINT</code> in{ ' ' }
+							<code>.env</code> and rebuild to enable ratings. See{ ' ' }
+							<code>docs/FEEDBACK-DEV.md</code> for setup
+							instructions.
+						</p>
+					</div>
+				</div>
+			) }
 
 			{ /* ── Stats ── */ }
-			{ optIn && (
+			{ FEEDBACK_UPLOAD_ENABLED && optIn && (
 				<div className="wp-agentic-feedback__card">
 					<h4 className="wp-agentic-feedback__card-title">
 						Collected ratings
@@ -174,9 +191,11 @@ const FeedbackTab = () => {
 					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
 				</svg>
 				<span>
-					Ratings are stored only in your browser&apos;s local
-					storage. They are never transmitted to Pluginslab,
-					WordPress.org, or any third party.
+					Ratings are saved in your browser. When opted in, each
+					rating (including the conversation turn) is also uploaded
+					anonymously to help fine-tune the local model. No personal
+					information — names, emails, or site URLs — is ever
+					included.
 				</span>
 			</div>
 		</div>

@@ -39,12 +39,17 @@ import {
 	registerWPTools,
 	MessageType,
 	modelLoader,
+	getAbilities,
+	getWorkflows,
+	toolRegistry,
 } from '../services';
 import {
 	getFeedbackOptIn,
 	setFeedbackOptIn,
 	saveFeedback,
+	FEEDBACK_UPLOAD_ENABLED,
 } from '../services/feedback';
+import { executeAbility } from '../services/agentic-abilities-api';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ChatContainer' );
@@ -330,16 +335,65 @@ const ChatContainer = ( {
 					};
 			}
 		} );
+
+		// Attach actions from successful tool results to the next assistant message
+		for ( let i = 0; i < display.length - 1; i++ ) {
+			const curr = display[ i ];
+			const next = display[ i + 1 ];
+			if (
+				curr.type === 'ability_result' &&
+				curr.success &&
+				next.type === 'assistant' &&
+				curr.result?.actions?.length
+			) {
+				next.actions = curr.result.actions;
+			}
+		}
+
+		return display;
 	};
 
 	/**
 	 * Handle sending a user message
 	 *
-	 * @param {string} text - User's message text
+	 * @param {string} text                  - User's message text
+	 * @param {Object} options               - Send options
+	 * @param {Array}  options.bundleToolIds - Tool IDs to constrain the LLM to
 	 */
 	const handleSendMessage = useCallback(
-		async ( text ) => {
+		async ( text, options = {} ) => {
 			if ( ! text.trim() ) {
+				return;
+			}
+
+			// Intercept /tools or /abilities slash command
+			const trimmed = text.trim().toLowerCase();
+			if ( trimmed === '/tools' || trimmed === '/abilities' ) {
+				const abilities = getAbilities();
+				const workflows = getWorkflows();
+
+				setMessages( ( prev ) => [
+					...prev,
+					{
+						id: `ability-picker-${ Date.now() }`,
+						type: 'ability_picker',
+						abilities,
+						workflows,
+						onExecute: ( id, args ) => {
+							const tool =
+								abilities.find( ( a ) => a.id === id ) ||
+								workflows.find( ( w ) => w.id === id );
+							if ( tool ) {
+								const label = tool.label || tool.id;
+								handleSendMessage(
+									args ? `${ label } ${ args }` : label
+								);
+							}
+						},
+						isProcessing: isLoading,
+						timestamp: new Date().toISOString(),
+					},
+				] );
 				return;
 			}
 
@@ -354,7 +408,7 @@ const ChatContainer = ( {
 
 			// Process message through orchestrator
 			try {
-				await chatOrchestrator.processMessage( text );
+				await chatOrchestrator.processMessage( text, options );
 			} catch ( error ) {
 				log.error( 'Error processing message:', error );
 			}
@@ -444,11 +498,43 @@ const ChatContainer = ( {
 				.map( ( m ) => m.abilityName )
 				.filter( Boolean );
 
+			// Full conversation up to and including the rated message
+			const msgIdx = messages.findIndex( ( m ) => m.id === messageId );
+			const conversation =
+				msgIdx !== -1
+					? messages
+							.slice( 0, msgIdx + 1 )
+							.filter(
+								( m ) =>
+									m.type === 'user' || m.type === 'assistant'
+							)
+							.map( ( m ) => ( {
+								role: m.type,
+								content: m.content,
+							} ) )
+					: [];
+
+			const model =
+				modelLoader.getModelId() ||
+				window.wpAgenticAdmin?.settings?.modelId ||
+				'';
+
+			const systemPrompt = chatOrchestrator.getSystemPrompt?.() || '';
+			const { temperature, maxTokens } =
+				chatOrchestrator.llmOptions || {};
+
 			saveFeedback( {
 				messageId,
 				sessionId: sessionRef.current?.id || '',
 				abilityIds,
 				rating,
+				systemPrompt,
+				conversation,
+				model,
+				generationConfig: {
+					temperature: temperature ?? null,
+					maxTokens: maxTokens ?? null,
+				},
 			} );
 		},
 		[ messages ]
@@ -519,6 +605,47 @@ const ChatContainer = ( {
 	}, [ messages ] );
 
 	/**
+	 * Handle action button clicks from interactive ability results
+	 */
+	const handleAction = useCallback( async ( abilityId, params ) => {
+		const tool = toolRegistry.get( abilityId );
+		const needsConfirmation =
+			typeof tool?.requiresConfirmation === 'function'
+				? tool.requiresConfirmation( params )
+				: tool?.requiresConfirmation;
+
+		if ( needsConfirmation ) {
+			const confirmed = await new Promise( ( resolve ) => {
+				setPendingConfirmation( {
+					toolId: abilityId,
+					label: tool?.label || abilityId,
+					message:
+						tool?.confirmationMessage || `Execute ${ abilityId }?`,
+					resolve,
+				} );
+			} );
+			if ( ! confirmed ) {
+				return;
+			}
+		}
+
+		try {
+			const result = await executeAbility( abilityId, params );
+			const msg =
+				result?.message ||
+				( result?.success
+					? 'Action completed successfully.'
+					: 'Action failed.' );
+			sessionRef.current?.addAssistantMessage( msg );
+		} catch ( error ) {
+			log.error( 'Action execution error:', error );
+			sessionRef.current?.addAssistantMessage(
+				`Action failed: ${ error.message || 'Unknown error' }`
+			);
+		}
+	}, [] );
+
+	/**
 	 * Stop current AI generation
 	 */
 	const handleStopGeneration = useCallback( () => {
@@ -529,7 +656,13 @@ const ChatContainer = ( {
 
 	// Combine messages with loading/streaming indicators for display
 	const displayMessages = useMemo( () => {
-		const msgs = [ ...messages ];
+		const msgs = messages.map( ( msg ) => {
+			// Update ability_picker isProcessing dynamically
+			if ( msg.type === 'ability_picker' ) {
+				return { ...msg, isProcessing: isLoading };
+			}
+			return msg;
+		} );
 
 		// Show loading indicator inline in the message flow
 		const showLoadingDot =
@@ -616,17 +749,22 @@ const ChatContainer = ( {
 
 			<MessageList
 				messages={ displayMessages }
-				feedbackOptIn={ feedbackOptIn === true }
+				onAction={ handleAction }
+				feedbackOptIn={
+					FEEDBACK_UPLOAD_ENABLED && feedbackOptIn === true
+				}
 				onFeedback={ handleFeedback }
 			/>
-
+			
 			{ /* Feedback opt-in banner — shown once, only after the first real exchange */ }
-			{ feedbackOptIn === null && messages.length > 1 && (
-				<FeedbackOptInBanner
-					onAccept={ handleFeedbackAccept }
-					onDecline={ handleFeedbackDecline }
-				/>
-			) }
+			{ FEEDBACK_UPLOAD_ENABLED &&
+				feedbackOptIn === null &&
+				messages.length > 1 && (
+					<FeedbackOptInBanner
+						onAccept={ handleFeedbackAccept }
+						onDecline={ handleFeedbackDecline }
+					/>
+				) }
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (

@@ -52,12 +52,33 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
 		);
 	}
 
+	$actions = array();
+	foreach ( $plugins as $plugin ) {
+		if ( $plugin['active'] ) {
+			$actions[] = array(
+				'label'        => $plugin['name'],
+				'button_label' => __( 'Deactivate', 'wp-agentic-admin' ),
+				'action'       => 'wp-agentic-admin/plugin-deactivate',
+				'args'         => array( 'plugin' => $plugin['slug'] ),
+			);
+		} else {
+			$actions[] = array(
+				'label'        => $plugin['name'],
+				'button_label' => __( 'Activate', 'wp-agentic-admin' ),
+				'action'       => 'wp-agentic-admin/plugin-activate',
+				'args'         => array( 'plugin' => $plugin['slug'] ),
+			);
+		}
+	}
+
 	return array(
 		'plugins' => $plugins,
 		'total'   => count( $plugins ),
 		'active'  => $active_count,
+		'actions' => $actions,
 	);
 }
+
 
 /**
  * Get plugin data by slug.

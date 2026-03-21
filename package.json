@@ -19,7 +19,9 @@
     "lint:php:fix": "composer lint:fix",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:php",
     "lint:fix": "npm run lint:js:fix && npm run lint:css:fix && npm run lint:php:fix",
-    "playground": "npm run build && npx @wp-now/wp-now start --php=8.3 --blueprint=.playground/blueprint.json"
+    "playground": "npm run build && npx @wp-now/wp-now start --php=8.3 --blueprint=.playground/blueprint.json",
+    "playground:feedback-dev": "bash scripts/feedback-dev.sh",
+    "export:feedback": "bash scripts/export-feedback.sh"
   },
   "devDependencies": {
     "@wordpress/scripts": "^31.0.0",

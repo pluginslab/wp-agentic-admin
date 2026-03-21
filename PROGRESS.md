@@ -16,7 +16,24 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 - **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
 - **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
 
-**33 abilities**, **24 PRs merged**, **9 contributors**.
+### current-user-role + agent improvements + crash fix (PRs #138, #137, #136, #135)
+- **current-user-role** (PR #138 by @0xLoopTheory) — "who am I logged in as?" / "am I an administrator?" 3/3 tests pass.
+- **think after tool calls** (PR #137 by @AlexanderMelde) — LLM now reasons over raw JSON after tool results for better answers. Improved cron-list output with individual event listing. Tradeoff: slower but smarter.
+- **crash fix** (PR #136 by @ivdimova) — missing closing brace in class-abilities.php caused PHP fatal
+- **branch sync** (PR #135 by @janvogt) — synced nix flake from main into dev
+
+### Remote Provider Fixes (PRs #119, #112)
+- **wp-now WASM fallback** (PR #119 by @AlexanderMelde) — LLM proxy falls back to `wp_remote_post` when cURL is unavailable (wp-now/Playground). Streaming degrades gracefully.
+- **auto-reconnect remote** (PR #112 by @0xLoopTheory) — page load now respects saved provider preference. If you last used a remote model, it auto-connects instead of loading local WebLLM.
+
+### Interactive Action Buttons + Fine-Tuning Data (PRs #134, #142)
+- **action buttons** (PR #134 by @tomepajk) — any ability can return an `actions` array and get interactive buttons in the chat. Plugin-list now shows Activate/Deactivate buttons inline. Bypasses LLM, respects confirmation modals. Also adds `/tools` slash command with AbilityPicker.
+- **feedback upload** (PR #142 by @janvogt) — opted-in ratings (with full conversation context) are uploaded anonymously to S3 for model fine-tuning. Privacy copy updated. Closes issue #75.
+
+### Prompt UX — Ability Bundles + Web Search Toggle (PR #140 by @Stefan0x)
+Users can now constrain the AI to curated tool sets via a `+` icon in the input area — 6 bundles: Plugins & Themes, Performance, Security, Troubleshooting, Content & Users, Site Overview. Globe icon toggles web search as a pre-step. Send button appears when text is typed. `toolFilter` in ReAct agent constrains the system prompt without mutating global state.
+
+**34 abilities**, **33 PRs merged**, **9 contributors**.
 
 ---
 
