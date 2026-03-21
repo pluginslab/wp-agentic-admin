@@ -26,7 +26,11 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 - **wp-now WASM fallback** (PR #119 by @AlexanderMelde) — LLM proxy falls back to `wp_remote_post` when cURL is unavailable (wp-now/Playground). Streaming degrades gracefully.
 - **auto-reconnect remote** (PR #112 by @0xLoopTheory) — page load now respects saved provider preference. If you last used a remote model, it auto-connects instead of loading local WebLLM.
 
-**34 abilities**, **30 PRs merged**, **9 contributors**.
+### Interactive Action Buttons + Fine-Tuning Data (PRs #134, #142)
+- **action buttons** (PR #134 by @tomepajk) — any ability can return an `actions` array and get interactive buttons in the chat. Plugin-list now shows Activate/Deactivate buttons inline. Bypasses LLM, respects confirmation modals. Also adds `/tools` slash command with AbilityPicker.
+- **feedback upload** (PR #142 by @janvogt) — opted-in ratings (with full conversation context) are uploaded anonymously to S3 for model fine-tuning. Privacy copy updated. Closes issue #75.
+
+**34 abilities**, **32 PRs merged**, **9 contributors**.
 
 ---
 
