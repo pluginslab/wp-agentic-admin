@@ -822,6 +822,9 @@ User: "list plugins"
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
 
+User: "what environment is this?"
+{"action": "tool_call", "tool": "core/get-environment-info", "args": {}}
+
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
 			this.config.disableThinking ? '\n\n/nothink' : ''
