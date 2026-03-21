@@ -388,8 +388,14 @@ class ChatOrchestrator {
 			} );
 		}
 
-		// Update thinking mode per-request based on router decision
-		this.reactAgent.config.disableThinking = disableThinking;
+		// Apply thinking preferences from Settings tab (localStorage)
+		const thinkingPrefs = ChatOrchestrator.getThinkingPreferences();
+
+		// Router says disable → always disable. Router says enable → respect user pref.
+		this.reactAgent.config.disableThinking =
+			disableThinking || thinkingPrefs.disableThinkingBeforeTool;
+		this.reactAgent.config.disableThinkingAfterTool =
+			thinkingPrefs.disableThinkingAfterTool;
 
 		// Execute ReAct loop
 		const result = await this.reactAgent.execute(
@@ -1019,6 +1025,26 @@ Explain what went wrong and suggest what the user might try next.`;
 	 */
 	getSession() {
 		return this.session;
+	}
+
+	/**
+	 * Read thinking preferences from localStorage.
+	 *
+	 * @return {Object} Thinking preferences
+	 */
+	static getThinkingPreferences() {
+		try {
+			const saved = localStorage.getItem( 'wp_agentic_admin_thinking' );
+			if ( saved ) {
+				return JSON.parse( saved );
+			}
+		} catch ( e ) {
+			// Ignore parse errors
+		}
+		return {
+			disableThinkingBeforeTool: false,
+			disableThinkingAfterTool: false,
+		};
 	}
 }
 

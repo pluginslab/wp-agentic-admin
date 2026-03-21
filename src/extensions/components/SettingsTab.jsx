@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	SelectControl,
 	Notice,
+	ToggleControl,
 } from '@wordpress/components';
 import modelLoader, {
 	ModelLoader,
@@ -50,14 +51,27 @@ function saveContextSize( modelId, size ) {
 	localStorage.setItem( STORAGE_KEY, JSON.stringify( saved ) );
 }
 
-function clearContextSize( modelId ) {
-	const saved = getSavedContextSizes();
-	delete saved[ modelId ];
-	if ( Object.keys( saved ).length === 0 ) {
-		localStorage.removeItem( STORAGE_KEY );
-	} else {
-		localStorage.setItem( STORAGE_KEY, JSON.stringify( saved ) );
+const THINKING_STORAGE_KEY = 'wp_agentic_admin_thinking';
+
+function getSavedThinkingPrefs() {
+	try {
+		const saved = localStorage.getItem( THINKING_STORAGE_KEY );
+		return saved
+			? JSON.parse( saved )
+			: {
+					disableThinkingBeforeTool: false,
+					disableThinkingAfterTool: false,
+			  };
+	} catch {
+		return {
+			disableThinkingBeforeTool: false,
+			disableThinkingAfterTool: false,
+		};
 	}
+}
+
+function saveThinkingPrefs( prefs ) {
+	localStorage.setItem( THINKING_STORAGE_KEY, JSON.stringify( prefs ) );
 }
 
 const SettingsTab = () => {
@@ -67,6 +81,9 @@ const SettingsTab = () => {
 	const [ selectedSizes, setSelectedSizes ] = useState( {} );
 	const [ savedNotice, setSavedNotice ] = useState( null );
 	const [ detecting, setDetecting ] = useState( true );
+	const [ thinkingPrefs, setThinkingPrefs ] = useState(
+		getSavedThinkingPrefs
+	);
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -115,18 +132,6 @@ const SettingsTab = () => {
 		setSavedSizes( getSavedContextSizes() );
 		setSavedNotice( modelId );
 		setTimeout( () => setSavedNotice( null ), 3000 );
-	};
-
-	const handleReset = ( modelId ) => {
-		clearContextSize( modelId );
-		const defaultSize =
-			MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
-		setSelectedSizes( ( prev ) => ( {
-			...prev,
-			[ modelId ]: String( defaultSize ),
-		} ) );
-		setSavedSizes( getSavedContextSizes() );
-		setSavedNotice( null );
 	};
 
 	const handleApplyRecommendation = ( modelId ) => {
@@ -217,7 +222,6 @@ const SettingsTab = () => {
 
 			{ models.map( ( model ) => {
 				const rec = recommendations[ model.id ];
-				const isCustom = savedSizes[ model.id ] !== undefined;
 				const currentDefault =
 					MODEL_CONTEXT_SIZES[ model.id ] ||
 					MODEL_CONTEXT_SIZES.default;
@@ -316,6 +320,44 @@ const SettingsTab = () => {
 					</Card>
 				);
 			} ) }
+
+			<h3>Thinking Mode</h3>
+			<p className="wp-agentic-admin-settings-tab__description">
+				Qwen 3 models use a thinking step ({ '<think>...</think>' })
+				before responding. Disabling thinking makes responses faster but
+				may reduce reasoning quality.
+			</p>
+
+			<Card>
+				<CardBody>
+					<ToggleControl
+						label="Disable thinking before tool selection"
+						help="Skip the reasoning step when the model decides which tool to call. Faster but may pick the wrong tool for complex requests."
+						checked={ thinkingPrefs.disableThinkingBeforeTool }
+						onChange={ ( val ) => {
+							const updated = {
+								...thinkingPrefs,
+								disableThinkingBeforeTool: val,
+							};
+							setThinkingPrefs( updated );
+							saveThinkingPrefs( updated );
+						} }
+					/>
+					<ToggleControl
+						label="Disable thinking after tool results"
+						help="Skip the reasoning step when the model summarizes tool output. Faster responses after tool execution."
+						checked={ thinkingPrefs.disableThinkingAfterTool }
+						onChange={ ( val ) => {
+							const updated = {
+								...thinkingPrefs,
+								disableThinkingAfterTool: val,
+							};
+							setThinkingPrefs( updated );
+							saveThinkingPrefs( updated );
+						} }
+					/>
+				</CardBody>
+			</Card>
 		</div>
 	);
 };
