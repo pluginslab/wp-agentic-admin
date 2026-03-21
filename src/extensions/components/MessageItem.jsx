@@ -464,7 +464,7 @@ const MessageItem = ( {
 
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div
 						className={ `agentic-timeline__dot agentic-timeline__dot--${
@@ -481,6 +481,12 @@ const MessageItem = ( {
 						className="agentic-tool__header agentic-tool__header--clickable"
 						onClick={ () => setIsExpanded( ! isExpanded ) }
 						type="button"
+						aria-expanded={ isExpanded }
+						aria-label={
+							thinkingIsStreaming
+								? 'Thinking in progress'
+								: 'Toggle thought process details'
+						}
 					>
 						<span className="agentic-tool__icon">
 							{ thinkingIsStreaming ? (
@@ -493,6 +499,7 @@ const MessageItem = ( {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
+									aria-hidden="true"
 								>
 									<circle cx="12" cy="12" r="10" />
 									<path d="M12 16v-4" />
@@ -517,6 +524,7 @@ const MessageItem = ( {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="2"
+								aria-hidden="true"
 							>
 								<polyline points="6 9 12 15 18 9" />
 							</svg>
@@ -539,11 +547,11 @@ const MessageItem = ( {
 	if ( type === 'loading' ) {
 		return (
 			<div className="agentic-message agentic-message--loading">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--loading" />
 				</div>
-				<div className="agentic-loading">
+				<div className="agentic-loading" role="status">
 					<div className="agentic-loading__spinner" />
 					<span className="agentic-loading__text">{ content }</span>
 				</div>
@@ -622,7 +630,7 @@ const MessageItem = ( {
 
 		return (
 			<div className="agentic-message agentic-message--assistant">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot" />
 				</div>
@@ -785,7 +793,7 @@ const MessageItem = ( {
 	if ( type === MessageType.ABILITY_REQUEST ) {
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--tool" />
 				</div>
@@ -799,6 +807,7 @@ const MessageItem = ( {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="2"
+								aria-hidden="true"
 							>
 								<circle cx="12" cy="12" r="3" />
 								<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -839,7 +848,7 @@ const MessageItem = ( {
 
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div
 						className={ `agentic-timeline__dot agentic-timeline__dot--${ resultStatus }` }
@@ -852,6 +861,10 @@ const MessageItem = ( {
 						className="agentic-tool__header agentic-tool__header--clickable"
 						onClick={ () => setIsExpanded( ! isExpanded ) }
 						type="button"
+						aria-expanded={ isExpanded }
+						aria-label={ `Toggle ${
+							isSuccess ? 'completed' : 'failed'
+						} result details for ${ meta?.abilityId }` }
 					>
 						<span className="agentic-tool__icon">
 							{ resultStatus === 'success' && (
@@ -862,6 +875,7 @@ const MessageItem = ( {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
+									aria-hidden="true"
 								>
 									<polyline points="20 6 9 17 4 12" />
 								</svg>
@@ -874,6 +888,7 @@ const MessageItem = ( {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
+									aria-hidden="true"
 								>
 									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
 									<circle cx="12" cy="12" r="3" />
@@ -887,7 +902,8 @@ const MessageItem = ( {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
-								>
+									aria-hidden="true"
+							>
 									<circle cx="12" cy="12" r="10" />
 									<line x1="15" y1="9" x2="9" y2="15" />
 									<line x1="9" y1="9" x2="15" y2="15" />
@@ -918,11 +934,11 @@ const MessageItem = ( {
 	if ( type === MessageType.ERROR ) {
 		return (
 			<div className="agentic-message agentic-message--error">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--error" />
 				</div>
-				<div className="agentic-error">
+				<div className="agentic-error" role="alert">
 					<span className="agentic-error__icon">
 						<svg
 							width="16"
@@ -931,6 +947,7 @@ const MessageItem = ( {
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="2"
+							aria-hidden="true"
 						>
 							<circle cx="12" cy="12" r="10" />
 							<line x1="12" y1="8" x2="12" y2="12" />

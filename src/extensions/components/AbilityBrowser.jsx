@@ -122,6 +122,7 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 						type="button"
 						className="button button-link wp-agentic-admin-ability-card__toggle"
 						onClick={ () => setShowInput( ! showInput ) }
+						aria-expanded={ showInput }
 					>
 						{ showInput ? 'Hide parameters' : 'Show parameters' }
 					</button>
@@ -135,6 +136,7 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 									setInputJson( e.target.value )
 								}
 								placeholder='{"param": "value"}'
+								aria-label={ `JSON parameters for ${ ability.label }` }
 								rows="3"
 							/>
 							{ inputError && (
@@ -155,6 +157,7 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 					}` }
 					onClick={ handleExecute }
 					disabled={ isExecuting }
+					aria-busy={ isExecuting }
 				>
 					{ isExecuting ? (
 						<>
@@ -191,6 +194,8 @@ const ResultPanel = ( { result, onClear } ) => {
 					? 'wp-agentic-admin-result-panel--error'
 					: 'wp-agentic-admin-result-panel--success'
 			}` }
+			role="status"
+			aria-live="polite"
 		>
 			<div className="wp-agentic-admin-result-panel__header">
 				<h4>
