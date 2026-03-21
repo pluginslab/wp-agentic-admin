@@ -316,12 +316,37 @@ class ReactAgent {
 						userMessage
 					);
 
+					// Resolve the actual tool object (handles bare names without namespace).
+					const executedTool =
+						this.toolRegistry.get( toolName ) ||
+						this.toolRegistry.get(
+							`wp-agentic-admin/${ toolName }`
+						);
+
 					toolsUsed.push( toolName );
 					observations.push( {
 						tool: toolName,
 						args: toolArgs,
 						result: toolResult,
 					} );
+
+					// Short-circuit: if the tool handles its own display, skip the
+					// second LLM call and return summarize() output directly.
+					// This prevents the LLM from truncating large results (e.g. file content).
+					if ( executedTool?.preferSummarize && toolResult?.data ) {
+						const summarized = executedTool.summarize(
+							toolResult.data,
+							userMessage
+						);
+						return {
+							success: true,
+							finalAnswer: summarized,
+							skipStreaming: true,
+							iterations: iteration,
+							toolsUsed,
+							observations,
+						};
+					}
 
 					// Truncate result if too large (prevent context window overflow)
 					const resultStr = JSON.stringify( toolResult );
@@ -562,11 +587,19 @@ class ReactAgent {
 			}
 
 			// Try to fix common JSON syntax issues from small models
-			// 1. Single quotes to double quotes (for models that use single-quoted JSON keys)
+			// 1. Smart single-to-double quote replacement (only JSON structural quotes,
+			//    not apostrophes inside string values like error_log('test'))
 			// 2. Remove trailing commas before } or ]
 			// 3. Fix property names missing closing quotes (e.g., "args:{} → "args": {})
 			const jsonText = text
-				.replace( /'/g, '"' ) // Single quotes to double quotes
+				.replace(
+					// Replace single quotes that act as JSON delimiters:
+					// - After { , [ : or start of string
+					// - Before } , ] : or end of string
+					// This avoids replacing apostrophes inside string values.
+					/(?<=[[{,:\s])'|'(?=[}\],:\s])/g,
+					'"'
+				)
 				.replace( /,(\s*[}\]])/g, '$1' ) // Remove trailing commas
 				.replace( /"(\w+):([^"])/g, '"$1": $2' ); // Fix missing quote+space: "args:{} → "args": {}
 
@@ -667,7 +700,18 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
-		const tool = this.toolRegistry.get( toolId );
+		let tool = this.toolRegistry.get( toolId );
+
+		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
+		// of "wp-agentic-admin/read-file"). Try the default namespace before giving up.
+		if ( ! tool && ! toolId.includes( '/' ) ) {
+			tool = this.toolRegistry.get( `wp-agentic-admin/${ toolId }` );
+			if ( tool ) {
+				log.warn(
+					`Tool "${ toolId }" not found — resolved to "wp-agentic-admin/${ toolId }"`
+				);
+			}
+		}
 
 		if ( ! tool ) {
 			log.error( 'Tool not found:', toolId );
@@ -766,7 +810,7 @@ class ReactAgent {
 	buildToolResultMessage( toolResult, truncatedResult ) {
 		let message;
 		if ( toolResult.result_for_llm ) {
-			message = `Tool interpretation: ${ toolResult.result_for_llm }\n\nRaw data: ${ truncatedResult }`;
+			message = `Tool interpretation: ${ toolResult.result_for_llm }`;
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
@@ -813,6 +857,9 @@ User: "list plugins"
 
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
+
+User: "what environment is this?"
+{"action": "tool_call", "tool": "core/get-environment-info", "args": {}}
 
 User: "what is a transient?"
 {"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${

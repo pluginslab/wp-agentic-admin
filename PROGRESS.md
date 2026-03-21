@@ -2,6 +2,24 @@
 
 Live progress for the WP Agentic Admin hackathon project. Updated as milestones are reached.
 
+## Day 2 — March 21
+
+### Web Search + Dev Tooling + UX (PRs #97, #93, #98)
+- **web-search** (PR #97 by @ivdimova) — search the web via DuckDuckGo HTML parsing, no API key needed. The ability @ivdimova was assigned to on Day 1 — now shipped! Closes issue #29.
+- **high-performance notice** (PR #93 by @AlexanderMelde) — tip box suggesting `chrome://flags/#force-high-performance-gpu` for users with integrated GPUs
+- **build-ability skill** (PR #98 by @ivdimova) — Claude Code interview-driven skill for scaffolding new abilities with patterns reference
+
+### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
+Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
+
+### read-file + core/get-site-url (PRs #99, #104)
+- **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
+- **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
+
+**33 abilities**, **24 PRs merged**, **9 contributors**.
+
+---
+
 ## Day 1 — March 20 (Hackathon Kickoff)
 
 ### Infrastructure
@@ -10,6 +28,19 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - [x] **`/assign` GitHub Action** — contributors can self-assign issues by commenting `/assign`
 - [x] **Cross-linked scaling issues** — #20 (tool selection at scale) ↔ #37 (contextual skill loading)
 - [x] **Contributor notes posted** on #37 with starting points, constraints, and dev setup
+
+### AI Sidebar Everywhere + Kebab Menu (PRs #80, #91)
+- **Admin bar sidebar** (PR #80 by @Stefan0x) — AI chat toggle in the WordPress admin bar, available on every wp-admin page. Slide-in panel with overlay, responsive mobile support, separate webpack entry point.
+- **Model unload dropdown** (PR #91) — kebab menu replaces plain "Unload Model" button, room for future model actions.
+
+The AI assistant is now accessible from **3 places**: the plugin settings page, the Gutenberg block editor, and every wp-admin page via the admin bar. **17 PRs merged**.
+
+### 3 More PRs Merged! — write-file, query-database, website-hacked-check
+- **write-file** (PR #89 by @ivdimova) — edit WordPress files with automatic backup and append mode
+- **query-database** (PR #90 by @ivdimova) — read-only SQL queries for site inspection
+- **website-hacked-check** (PR #88 by @tomepajk) — new contributor! 3 security abilities (verify-core-checksums, verify-plugin-checksums, database-check) plus a "check if hacked" workflow
+
+That's **30 abilities**, **15 PRs merged**, **7 contributors**.
 
 ### CI/CD is Live! (PR #78 by @0xLoopTheory)
 GitHub Actions now run on every PR to `dev` and `main` — PHP lint, JS lint, unit tests, and build check as independent matrix jobs. New contributor @0xLoopTheory. **13 PRs merged**, **6 contributors**.
@@ -47,12 +78,14 @@ A **user-list ability** that lists all WordPress users with roles, registration 
 Our first hackathon contribution! A **theme-list ability** listing installed themes with active/inactive status, version, and parent theme info. Full suite **21/21 (100%)**.
 
 ### Contributors
-- ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59), error-log-search (#65), opcode-cache-status (#67), backup-check (#72)
-- Stefan0x — editor sidebar (#52), model unload dropdown (#71, in review)
-- AlexanderMelde — f32 fallback model (#61, in review)
-- robert81 — HTTP error message (#50, in review)
-- janvogt — feedback thumbs up/down (#70, in review)
+- ivdimova — theme-list (#40), user-list (#41), update-check (#42), disk-usage (#46), comment-stats (#49), testing-prompt (#47), security-scan (#57), post-list (#59), error-log-search (#65), opcode-cache-status (#67), backup-check (#72), write-file (#89), query-database (#90), web-search (#97), build-ability skill (#98)
+- Stefan0x — editor sidebar (#52), admin bar sidebar (#80), model unload dropdown (#91)
+- tomepajk — website-hacked-check (#88)
 - 0xLoopTheory — CI/CD GitHub Actions (#78)
+- AlexanderMelde — high-performance notice (#93)
+- janvogt — nix flake (#81)
+- BoweFrankema — instruction mode (#77, in review)
+- robert81 — HTTP error message (#50, in review)
 
 ---
 
@@ -66,9 +99,9 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 - [x] Streaming `<think>` blocks with collapsible UI
 - [x] Post-tool nothink optimization for faster answers
 
-### Abilities (25 total)
-- [x] 22 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
+### Abilities (33 total)
+- [x] 29 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, read file, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
+- [x] 4 core WordPress wrappers: get-site-info, get-site-url, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)

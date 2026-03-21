@@ -24,8 +24,24 @@ import { registerRewriteList } from './rewrite-list';
 import { registerRevisionCleanup } from './revision-cleanup';
 import { registerThemeList } from './theme-list';
 import { registerUserList } from './user-list';
+import { registerUpdateCheck } from './update-check';
+import { registerDiskUsage } from './disk-usage';
+import { registerCommentStats } from './comment-stats';
+import { registerSecurityScan } from './security-scan';
+import { registerPostList } from './post-list';
+import { registerReadFile } from './read-file';
+import { registerErrorLogSearch } from './error-log-search';
+import { registerOpcodeCacheStatus } from './opcode-cache-status';
+import { registerBackupCheck } from './backup-check';
+import { registerWriteFile } from './write-file';
+import { registerQueryDatabase } from './query-database';
+import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
+import { registerCoreSiteUrl } from './core-site-url';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerVerifyCoreChecksums } from './verify-core-checksums';
+import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+import { registerDatabaseCheck } from './database-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
@@ -45,8 +61,24 @@ export { registerRewriteList } from './rewrite-list';
 export { registerRevisionCleanup } from './revision-cleanup';
 export { registerThemeList } from './theme-list';
 export { registerUserList } from './user-list';
+export { registerUpdateCheck } from './update-check';
+export { registerDiskUsage } from './disk-usage';
+export { registerCommentStats } from './comment-stats';
+export { registerSecurityScan } from './security-scan';
+export { registerPostList } from './post-list';
+export { registerReadFile } from './read-file';
+export { registerErrorLogSearch } from './error-log-search';
+export { registerOpcodeCacheStatus } from './opcode-cache-status';
+export { registerBackupCheck } from './backup-check';
+export { registerWriteFile } from './write-file';
+export { registerQueryDatabase } from './query-database';
+export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
+export { registerCoreSiteUrl } from './core-site-url';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerVerifyCoreChecksums } from './verify-core-checksums';
+export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+export { registerDatabaseCheck } from './database-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
 export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 export { registerRunPluginAbility } from './run-plugin-ability';
@@ -75,11 +107,29 @@ export function registerAllAbilities() {
 	registerRevisionCleanup();
 	registerThemeList();
 	registerUserList();
+	registerUpdateCheck();
+	registerDiskUsage();
+	registerCommentStats();
+	registerSecurityScan();
+	registerPostList();
+	registerReadFile();
+	registerErrorLogSearch();
+	registerOpcodeCacheStatus();
+	registerBackupCheck();
+	registerWriteFile();
+	registerQueryDatabase();
+	registerWebSearch();
+
+	// Security abilities
+	registerVerifyCoreChecksums();
+	registerVerifyPluginChecksums();
+	registerDatabaseCheck();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
+	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
 
 	// Dynamic ability discovery — PoC for calling plugin abilities

@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.82",
+    "@wordpress/icons": "^12.0.0",
     "fastest-levenshtein": "^1.0.16"
   },
   "keywords": [

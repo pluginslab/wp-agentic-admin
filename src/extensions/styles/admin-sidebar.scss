@@ -1,0 +1,294 @@
+/* stylelint-disable no-descending-specificity, no-duplicate-selectors */
+
+/**
+ * WP Agentic Admin - Admin Sidebar Styles
+ *
+ * Fixed sidebar panel for all wp-admin pages.
+ * Imports base chat styles and adds sidebar-specific overrides.
+ *
+ * @package WPAgenticAdmin
+ */
+
+@import './main.scss';
+
+// ── Admin bar toggle button ───────────────────────────────
+#wp-admin-bar-wp-agentic-admin-sidebar-toggle {
+
+	&.is-active .ab-item {
+		background: rgba(0, 0, 0, 0.2) !important;
+	}
+}
+
+// ── Sidebar overlay (click to close) ──────────────────────
+.wp-agentic-admin-sidebar-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.15);
+	z-index: 99998;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+// Show overlay when sidebar is open
+.is-open + .wp-agentic-admin-sidebar-overlay {
+	opacity: 1;
+	visibility: visible;
+}
+
+// ── Sidebar panel ─────────────────────────────────────────
+#wp-agentic-admin-sidebar {
+	position: fixed;
+	right: 0;
+	top: 32px; // Below admin bar
+	width: 380px;
+	height: calc(100vh - 32px);
+	background: #fff;
+	border-left: 1px solid #c3c4c7;
+	box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1);
+	z-index: 99999;
+	transform: translateX(100%);
+	transition: transform 0.25s ease;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+
+	&.is-open {
+		transform: translateX(0);
+	}
+}
+
+// Responsive: admin bar is 46px on mobile
+@media screen and (max-width: 782px) {
+
+	#wp-agentic-admin-sidebar {
+		top: 46px;
+		height: calc(100vh - 46px);
+		width: 100%; // Full width on mobile
+	}
+
+	// Force our icon visible — WP hides custom top-secondary nodes on mobile
+	#wpadminbar #wp-admin-bar-wp-agentic-admin-sidebar-toggle {
+		display: block !important;
+	}
+
+	#wp-admin-bar-wp-agentic-admin-sidebar-toggle .ab-icon {
+		font-size: 28px !important;
+	}
+}
+
+// ── Inner wrapper ─────────────────────────────────────────
+.wp-agentic-admin-sidebar__inner {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+// ── Sidebar header ────────────────────────────────────────
+.wp-agentic-admin-sidebar__header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px;
+	border-bottom: 1px solid #c3c4c7;
+	background: #f6f7f7;
+	flex-shrink: 0;
+
+	.dashicons {
+		color: #2271b1;
+		font-size: 20px;
+		width: 20px;
+		height: 20px;
+	}
+
+	strong {
+		font-size: 14px;
+		color: #1d2327;
+	}
+}
+
+// ── Chat container overrides ──────────────────────────────
+#wp-agentic-admin-sidebar {
+
+	// Chat container fills remaining space
+	.wp-agentic-admin-chat-container {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	// Chat chrome
+	.wp-agentic-admin-chat {
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	// Messages area
+	.wp-agentic-admin-messages {
+		min-height: 150px;
+		padding: 12px;
+
+		.agentic-message--user {
+			padding-left: 20px;
+
+			.agentic-message__bubble {
+				max-width: 95%;
+			}
+		}
+
+		.agentic-message--system {
+			padding: 12px !important;
+			margin-bottom: 16px !important;
+
+			.agentic-message__content {
+
+				h3 {
+					font-size: 15px !important;
+				}
+
+				p,
+				li {
+					font-size: 13px;
+				}
+
+				ul {
+					margin: 8px 0 8px 16px !important;
+				}
+			}
+		}
+
+		.agentic-timeline {
+			width: 22px;
+		}
+	}
+
+	// Input area — fixed at bottom
+	.wp-agentic-admin-input-area {
+		padding: 10px;
+		flex-shrink: 0;
+		border-top: 1px solid #c3c4c7;
+
+		.wp-agentic-admin-input {
+			min-height: 44px;
+			font-size: 13px;
+			padding: 8px 10px;
+		}
+	}
+
+	// Stop generation — also fixed at bottom
+	.wp-agentic-admin-chat-actions {
+		flex-shrink: 0;
+	}
+
+	// Chat header — compact
+	.wp-agentic-admin-chat-header {
+		padding: 6px 10px;
+
+		&__actions {
+			gap: 4px;
+
+			.components-button {
+				font-size: 12px;
+				padding: 4px 8px;
+			}
+		}
+	}
+
+	// Model Status — compact
+	.wp-agentic-admin-model-status {
+		margin: 0;
+		padding: 10px;
+		border-radius: 0;
+		border-left: 0;
+		border-right: 0;
+		border-top: 0;
+
+		.wp-agentic-admin-status {
+			flex-wrap: wrap;
+		}
+
+		.wp-agentic-admin-status__controls {
+			flex-direction: column;
+			gap: 6px;
+			width: 100%;
+			margin-left: 0;
+		}
+
+		.wp-agentic-admin-model-select {
+			max-width: 100%;
+			width: 100%;
+		}
+
+		.button {
+			margin-left: 0;
+			width: 100%;
+			justify-content: center;
+		}
+	}
+
+	// Loading card — compact
+	.wp-agentic-admin-loading-card {
+		padding: 12px;
+		border-radius: 0;
+
+		&__icon {
+			font-size: 22px;
+		}
+
+		&__percent {
+			font-size: 18px;
+		}
+
+		&__title {
+			font-size: 14px !important;
+		}
+
+		&__subtitle,
+		&__description {
+			font-size: 12px;
+		}
+	}
+
+	// Model info — compact
+	.wp-agentic-admin-model-info {
+		margin: 8px 0 0;
+		padding: 8px 10px;
+		font-size: 12px;
+	}
+
+	// Context warning — compact
+	.wp-agentic-admin-context-warning {
+		padding: 0 8px;
+	}
+
+	// WebGPU fallback — compact
+	.wp-agentic-admin-webgpu-fallback {
+		padding: 12px;
+
+		.wp-agentic-admin-browser-instructions {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	// Workflow progress — compact
+	.agentic-message--workflow {
+		padding: 10px 12px;
+	}
+
+	// Snackbar positioning
+	.components-snackbar {
+		position: fixed !important;
+		top: 60px !important;
+		right: 20px !important;
+		left: auto !important;
+		bottom: auto !important;
+		z-index: 1000000 !important;
+	}
+}
