@@ -6,6 +6,7 @@
     "build": "npm run build:extensions",
     "build:extensions": "wp-scripts build src/extensions/index.js --output-path=build-extensions",
     "test:abilities": "node tests/abilities/runner.js",
+    "test:conversations": "node tests/abilities/multi-turn-runner.js",
     "watch": "wp-scripts start src/extensions/index.js --output-path=build-extensions",
     "clean": "del-cli build-extensions wp-agentic-admin.zip",
     "dist": "npm run clean && npm run build && rm -f wp-agentic-admin.zip && zip -r wp-agentic-admin.zip -@ < .distpackage",
