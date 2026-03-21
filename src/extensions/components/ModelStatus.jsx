@@ -7,7 +7,14 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Button, Spinner } from '@wordpress/components';
+import {
+	Button,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
+	Spinner,
+} from '@wordpress/components';
+import { moreVertical } from '@wordpress/icons';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
@@ -572,15 +579,24 @@ const ModelStatus = ( {
 					{ status === 'checking' && <Spinner /> }
 
 					{ status === 'ready' && (
-						<div className="wp-agentic-admin-status__controls">
-							<Button
-								variant="secondary"
-								onClick={ handleUnloadModel }
-								className="wp-agentic-admin-load-model"
-							>
-								Unload Model
-							</Button>
-						</div>
+						<DropdownMenu
+							icon={ moreVertical }
+							label="Model options"
+							className="wp-agentic-admin-status__kebab-menu"
+						>
+							{ ( { onClose } ) => (
+								<MenuGroup>
+									<MenuItem
+										onClick={ () => {
+											handleUnloadModel();
+											onClose();
+										} }
+									>
+										Unload model
+									</MenuItem>
+								</MenuGroup>
+							) }
+						</DropdownMenu>
 					) }
 				</div>
 			) }
@@ -654,6 +670,21 @@ const ModelStatus = ( {
 								reload needed! No data is sent to external
 								servers.
 							</p>
+							<div className="wp-agentic-admin-performance-tip">
+								<span className="wp-agentic-admin-performance-tip__icon">
+									💡
+								</span>
+								<div className="wp-agentic-admin-performance-tip__content">
+									<strong>Performance Tip</strong>
+									LLM thinking can be slow on integrated GPUs.
+									For better performance in Chrome, visit{ ' ' }
+									<code>
+										chrome://flags/#force-high-performance-gpu
+									</code>{ ' ' }
+									and enable &quot;Force high performance
+									GPU&quot;.
+								</div>
+							</div>
 						</div>
 					) }
 

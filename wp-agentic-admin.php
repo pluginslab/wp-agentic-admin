@@ -73,6 +73,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-editor-sidebar.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-bar.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
 
@@ -91,6 +92,10 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 
 			if ( class_exists( '\\WPAgenticAdmin\\Editor_Sidebar' ) ) {
 				\WPAgenticAdmin\Editor_Sidebar::get_instance();
+			}
+
+			if ( class_exists( '\\WPAgenticAdmin\\Admin_Bar' ) ) {
+				\WPAgenticAdmin\Admin_Bar::get_instance();
 			}
 
 			if ( class_exists( '\\WPAgenticAdmin\\Abilities' ) ) {

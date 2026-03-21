@@ -562,11 +562,19 @@ class ReactAgent {
 			}
 
 			// Try to fix common JSON syntax issues from small models
-			// 1. Single quotes to double quotes (for models that use single-quoted JSON keys)
+			// 1. Smart single-to-double quote replacement (only JSON structural quotes,
+			//    not apostrophes inside string values like error_log('test'))
 			// 2. Remove trailing commas before } or ]
 			// 3. Fix property names missing closing quotes (e.g., "args:{} → "args": {})
 			const jsonText = text
-				.replace( /'/g, '"' ) // Single quotes to double quotes
+				.replace(
+					// Replace single quotes that act as JSON delimiters:
+					// - After { , [ : or start of string
+					// - Before } , ] : or end of string
+					// This avoids replacing apostrophes inside string values.
+					/(?<=[[{,:\s])'|'(?=[}\],:\s])/g,
+					'"'
+				)
 				.replace( /,(\s*[}\]])/g, '$1' ) // Remove trailing commas
 				.replace( /"(\w+):([^"])/g, '"$1": $2' ); // Fix missing quote+space: "args:{} → "args": {}
 

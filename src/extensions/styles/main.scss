@@ -957,6 +957,27 @@
 		margin-left: auto;
 	}
 
+	.wp-agentic-admin-status__kebab-menu {
+		margin-left: auto;
+		flex-shrink: 0;
+
+		.components-button {
+			color: #646970;
+			min-width: 36px;
+			height: 36px;
+			padding: 0;
+
+			&:hover {
+				color: #1d2327;
+			}
+
+			&:focus {
+				box-shadow: none;
+				outline: 1px dotted #646970;
+			}
+		}
+	}
+
 	.wp-agentic-admin-model-select {
 		padding: 4px 8px;
 		border: 1px solid #8c8f94;
@@ -997,6 +1018,43 @@
 		background: #f0f6fc;
 		border-left-color: #00a32a;
 		color: #1d2327;
+	}
+}
+
+.wp-agentic-admin-performance-tip {
+	margin: 12px 0 0;
+	padding: 12px;
+	background: #fff8e1;
+	border: 1px solid #ffe082;
+	border-left: 4px solid #ffb300;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #5d4037;
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+
+	&__icon {
+		font-size: 16px;
+		flex-shrink: 0;
+		line-height: 1.4;
+	}
+
+	&__content {
+		flex: 1;
+
+		strong {
+			display: block;
+			margin-bottom: 4px;
+			color: #1d2327;
+		}
+
+		code {
+			background: rgba(0, 0, 0, 0.05);
+			padding: 0 4px;
+			border-radius: 2px;
+			font-family: monospace;
+		}
 	}
 }
 

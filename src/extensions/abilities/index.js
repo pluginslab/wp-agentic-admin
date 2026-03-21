@@ -32,9 +32,14 @@ import { registerPostList } from './post-list';
 import { registerErrorLogSearch } from './error-log-search';
 import { registerOpcodeCacheStatus } from './opcode-cache-status';
 import { registerBackupCheck } from './backup-check';
+import { registerWriteFile } from './write-file';
+import { registerQueryDatabase } from './query-database';
 import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerVerifyCoreChecksums } from './verify-core-checksums';
+import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+import { registerDatabaseCheck } from './database-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
 
 // Re-export individual functions for external use
@@ -60,9 +65,14 @@ export { registerPostList } from './post-list';
 export { registerErrorLogSearch } from './error-log-search';
 export { registerOpcodeCacheStatus } from './opcode-cache-status';
 export { registerBackupCheck } from './backup-check';
+export { registerWriteFile } from './write-file';
+export { registerQueryDatabase } from './query-database';
 export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerVerifyCoreChecksums } from './verify-core-checksums';
+export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+export { registerDatabaseCheck } from './database-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
 
 /**
@@ -97,7 +107,14 @@ export function registerAllAbilities() {
 	registerErrorLogSearch();
 	registerOpcodeCacheStatus();
 	registerBackupCheck();
+	registerWriteFile();
+	registerQueryDatabase();
 	registerWebSearch();
+
+	// Security abilities
+	registerVerifyCoreChecksums();
+	registerVerifyPluginChecksums();
+	registerDatabaseCheck();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities
