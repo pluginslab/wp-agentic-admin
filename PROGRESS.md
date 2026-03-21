@@ -33,8 +33,18 @@ Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in t
 ### Prompt UX — Ability Bundles + Web Search Toggle (PR #140 by @Stefan0x)
 Users can now constrain the AI to curated tool sets via a `+` icon in the input area — 6 bundles: Plugins & Themes, Performance, Security, Troubleshooting, Content & Users, Site Overview. Globe icon toggles web search as a pre-step. Send button appears when text is typed. `toolFilter` in ReAct agent constrains the system prompt without mutating global state.
 
+### Security Suite v2 + Action Buttons Fix (PRs #95, #145 by @tomepajk)
+- **role-capabilities-check** — detects privilege escalation (e.g., subscriber with admin caps)
+- **file-scan** — scans PHP files in themes/plugins/mu-plugins for malware patterns (obfuscation, shell execution, backdoors)
+- **uploads-scan** — scans uploads directory
+- **Markdown table rendering** — structured security reports with proper tables
+- **Hacked workflow** now chains 5 checks: core checksums → plugin checksums → database → file scan → role capabilities
+- **Action buttons fix** (#145) — buttons now display correctly regardless of success flag
+
+**39 abilities**, **36 PRs merged**, **9 contributors**.
+
 ### Plugin Abilities Platform! (PR #139 by @BoweFrankema)
-Strategically the most important PR of the hackathon. The plugin is now an **open extensibility platform** — any WordPress plugin that registers abilities via the WP Abilities API gets AI support automatically. Includes: discover-plugin-abilities (queries the registry), run-plugin-ability (proxy executor), Plugin Abilities tab with toggle controls and token budget bar, dynamic system prompt integration. **36 abilities** (discover + run added), **34 PRs merged**, **9 contributors**.
+Strategically the most important PR of the hackathon. The plugin is now an **open extensibility platform** — any WordPress plugin that registers abilities via the WP Abilities API gets AI support automatically. Includes: discover-plugin-abilities (queries the registry), run-plugin-ability (proxy executor), Plugin Abilities tab with toggle controls and token budget bar, dynamic system prompt integration.
 
 ---
 
