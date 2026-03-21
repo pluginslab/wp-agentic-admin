@@ -254,18 +254,17 @@ class ChatOrchestrator {
 		this.callbacks.onStateChange( { isProcessing: true } );
 
 		try {
-			// Web search pre-step: run search first, append results to user message
-			let enrichedMessage = userMessage;
-			if ( options.webSearch ) {
-				const webContext =
-					await this.performWebSearchPreStep( userMessage );
-				if ( webContext ) {
-					enrichedMessage = userMessage + webContext;
-				}
-			}
+			// Add clean user message to session (for UI display)
+			this.session.addUserMessage( userMessage );
 
-			// Add (possibly enriched) user message to session
-			this.session.addUserMessage( enrichedMessage );
+			// Web search pre-step: get results as context for LLM only
+			let webContext = '';
+			if ( options.webSearch ) {
+				webContext = await this.performWebSearchPreStep( userMessage );
+			}
+			const enrichedMessage = webContext
+				? userMessage + webContext
+				: userMessage;
 
 			// If bundle is active, bypass router and force ReAct with filtered tools
 			if ( options.bundleToolIds && options.bundleToolIds.length > 0 ) {
@@ -293,7 +292,7 @@ class ChatOrchestrator {
 
 			if ( route.type === 'conversational' ) {
 				log.info( 'Routing to direct LLM (conversational)' );
-				return await this.processWithLLM();
+				return await this.processWithLLM( webContext );
 			}
 
 			// Default: ReAct loop for actions
@@ -725,9 +724,10 @@ Explain what went wrong and suggest what the user might try next.`;
 	/**
 	 * Process message with pure LLM (no tool)
 	 *
+	 * @param {string} extraContext - Optional extra context (e.g. web search results) to append to the last user message
 	 * @return {Promise<Object>} Result with success status and LLM response text.
 	 */
-	async processWithLLM() {
+	async processWithLLM( extraContext = '' ) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
 				'The AI model is not loaded yet. Please load the model first.'
@@ -741,9 +741,22 @@ Explain what went wrong and suggest what the user might try next.`;
 		}
 
 		// Build messages for LLM
+		const history = [ ...this.session.getConversationHistory() ];
+
+		// Inject extra context into the last user message (for LLM only, not stored in session)
+		if ( extraContext && history.length > 0 ) {
+			const lastIdx = history.length - 1;
+			if ( history[ lastIdx ].role === 'user' ) {
+				history[ lastIdx ] = {
+					...history[ lastIdx ],
+					content: history[ lastIdx ].content + extraContext,
+				};
+			}
+		}
+
 		const messages = [
 			{ role: 'system', content: this.getSystemPrompt() },
-			...this.session.getConversationHistory(),
+			...history,
 		];
 
 		// Stream from LLM
