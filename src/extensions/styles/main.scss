@@ -318,6 +318,19 @@
 		opacity: 0.6;
 	}
 
+	// Recording state — pulsing glow signals the mic is active
+	&--recording {
+		border-color: rgba(214, 54, 56, 0.4);
+		background: rgba(214, 54, 56, 0.025);
+		animation: wp-agentic-input-recording-glow 1.8s ease-in-out infinite;
+
+		// Keep the red glow even when the textarea has focus
+		&:focus-within {
+			border-color: rgba(214, 54, 56, 0.5);
+			box-shadow: none; // animation handles the shadow
+		}
+	}
+
 	.wp-agentic-admin-input {
 		display: block;
 		width: 100%;
@@ -676,6 +689,17 @@
 	line-height: 1;
 	color: inherit;
 	pointer-events: none;
+}
+
+@keyframes wp-agentic-input-recording-glow {
+	0%,
+	100% {
+		box-shadow: 0 0 0 2px rgba(214, 54, 56, 0.3);
+	}
+
+	50% {
+		box-shadow: 0 0 0 2px rgba(214, 54, 56, 0.08);
+	}
 }
 
 @keyframes wp-agentic-voice-pulse {

@@ -126,6 +126,10 @@ const ChatInput = ( {
 					isDisabled
 						? ' wp-agentic-admin-input-wrapper--disabled'
 						: ''
+				}${
+					voiceState === 'recording'
+						? ' wp-agentic-admin-input-wrapper--recording'
+						: ''
 				}` }
 			>
 				<textarea
