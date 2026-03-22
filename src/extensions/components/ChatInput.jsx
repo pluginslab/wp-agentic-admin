@@ -18,6 +18,7 @@ import {
 	bug,
 	post,
 	info,
+	edit,
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
@@ -33,16 +34,18 @@ const BUNDLE_ICONS = {
 	bug,
 	post,
 	info,
+	edit,
 };
 
 /**
  * ChatInput component
  *
- * @param {Object}   props             - Component props
- * @param {Function} props.onSend      - Callback when message is sent
- * @param {boolean}  props.disabled    - Whether input is disabled
- * @param {string}   props.placeholder - Placeholder text
- * @param {boolean}  props.isLoading   - Whether a request is in progress
+ * @param {Object}   props               - Component props
+ * @param {Function} props.onSend        - Callback when message is sent
+ * @param {boolean}  props.disabled      - Whether input is disabled
+ * @param {string}   props.placeholder   - Placeholder text
+ * @param {boolean}  props.isLoading     - Whether a request is in progress
+ * @param {Object}   props.defaultBundle - Bundle to auto-select on mount
  * @return {JSX.Element} Rendered chat input
  */
 const ChatInput = ( {
@@ -50,6 +53,7 @@ const ChatInput = ( {
 	disabled = false,
 	placeholder = 'Describe your issue or what you want to do… (hold Space to speak)',
 	isLoading = false,
+	defaultBundle = null,
 } ) => {
 	const [ message, setMessage ] = useState( '' );
 	const [ selectedBundle, setSelectedBundle ] = useState( null );
@@ -74,6 +78,13 @@ const ChatInput = ( {
 		refresh();
 		return pluginAbilitiesManager.subscribe( refresh );
 	}, [] );
+
+	// Auto-select default bundle (e.g. when editing a new blank page)
+	useEffect( () => {
+		if ( defaultBundle && ! selectedBundle ) {
+			setSelectedBundle( defaultBundle );
+		}
+	}, [ defaultBundle ] ); // eslint-disable-line react-hooks/exhaustive-deps -- only react to defaultBundle changes
 
 	// Focus textarea on mount if not disabled
 	useEffect( () => {
@@ -104,6 +115,7 @@ const ChatInput = ( {
 
 		onSend( trimmedMessage, {
 			bundleToolIds: selectedBundle?.abilities || null,
+			bundleId: selectedBundle?.id || null,
 			pluginNamespace: selectedBundle?.pluginNamespace || null,
 			webSearch: webSearchEnabled,
 		} );

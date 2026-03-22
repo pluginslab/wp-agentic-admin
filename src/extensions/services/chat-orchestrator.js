@@ -257,9 +257,11 @@ class ChatOrchestrator {
 			// Add user message to session
 			this.session.addUserMessage( userMessage );
 
-			// Web search pre-step: adds tool_request + tool_result to session
+			// Web search pre-step: run search and capture context for the ReAct agent
+			let webSearchContext = null;
 			if ( options.webSearch ) {
-				await this.performWebSearchPreStep( userMessage );
+				webSearchContext =
+					await this.performWebSearchPreStep( userMessage );
 			}
 
 			// If bundle is active, bypass router and force ReAct with filtered tools
@@ -271,7 +273,9 @@ class ChatOrchestrator {
 				return await this.processWithReact(
 					userMessage,
 					false,
-					options.bundleToolIds
+					options.bundleToolIds,
+					webSearchContext,
+					options.bundleId
 				);
 			}
 
@@ -294,7 +298,9 @@ class ChatOrchestrator {
 			);
 			return await this.processWithReact(
 				userMessage,
-				route.disableThinking
+				route.disableThinking,
+				null,
+				webSearchContext
 			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
@@ -313,11 +319,12 @@ class ChatOrchestrator {
 	/**
 	 * Perform web search as a pre-step before normal routing.
 	 *
-	 * Executes a web search and adds both a tool_request and tool_result
-	 * to the session so the UI shows the search in the timeline AND the
-	 * conversation history has valid message ordering for the LLM.
+	 * Executes a web search and adds the tool result to the session
+	 * for UI display. Returns a formatted context string so the
+	 * ReAct agent can include search results in its reasoning.
 	 *
 	 * @param {string} userMessage - The user's message to search for
+	 * @return {string|null} Formatted search results string, or null on failure.
 	 */
 	async performWebSearchPreStep( userMessage ) {
 		const toolId = 'wp-agentic-admin/web-search';
@@ -338,6 +345,19 @@ class ChatOrchestrator {
 			log.info(
 				`Web search pre-step complete: ${ result.total || 0 } results`
 			);
+
+			// Build a context string from search results for the ReAct agent
+			if ( webSuccess && result.results?.length ) {
+				return result.results
+					.map(
+						( r, i ) =>
+							`${ i + 1 }. ${ r.title }\n   ${ r.snippet }\n   ${
+								r.url
+							}`
+					)
+					.join( '\n' );
+			}
+			return null;
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
 			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
@@ -346,6 +366,7 @@ class ChatOrchestrator {
 				{ error: error.message },
 				false
 			);
+			return null;
 		}
 	}
 
@@ -354,15 +375,19 @@ class ChatOrchestrator {
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
-	 * @param {string}  userMessage     - User's message
-	 * @param {boolean} disableThinking - Whether to disable model thinking
-	 * @param {Array}   toolFilter      - Optional array of tool IDs to constrain the agent
+	 * @param {string}      userMessage      - User's message
+	 * @param {boolean}     disableThinking  - Whether to disable model thinking
+	 * @param {Array}       toolFilter       - Optional array of tool IDs to constrain the agent
+	 * @param {string|null} webSearchContext - Formatted search results from pre-step
+	 * @param {string|null} bundleId         - Active bundle identifier
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
 	async processWithReact(
 		userMessage,
 		disableThinking = false,
-		toolFilter = null
+		toolFilter = null,
+		webSearchContext = null,
+		bundleId = null
 	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
@@ -416,7 +441,7 @@ class ChatOrchestrator {
 		const result = await this.reactAgent.execute(
 			userMessage,
 			this.session.getConversationHistory(),
-			{ toolFilter }
+			{ toolFilter, webSearchContext }
 		);
 
 		// For tools that prefer to display their own summary (e.g. read-file),
@@ -451,10 +476,42 @@ class ChatOrchestrator {
 					this.callbacks.onStreamChunk( char, text ),
 			} );
 		}
-		this.session.addAssistantMessage(
-			displayAnswer,
-			this.getUsageStatsMeta()
-		);
+		const meta = this.getUsageStatsMeta();
+
+		// Auto-insert content into editor when content-create bundle is active
+		if ( bundleId === 'content-create' && displayAnswer?.length > 50 ) {
+			const contentTool = toolRegistry.get(
+				'wp-agentic-admin/content-generate'
+			);
+			let autoInserted = false;
+
+			if ( contentTool ) {
+				try {
+					const insertResult = await contentTool.execute( {
+						content: displayAnswer,
+					} );
+					if ( insertResult?.success ) {
+						autoInserted = true;
+					}
+				} catch ( e ) {
+					log.warn( 'Auto-insert failed:', e.message );
+				}
+			}
+
+			// Fallback: show button if auto-insert failed
+			if ( ! autoInserted ) {
+				meta.actions = [
+					{
+						label: 'Add generated content to this page',
+						button_label: 'Insert into editor',
+						action: 'wp-agentic-admin/content-generate',
+						args: { content: displayAnswer },
+					},
+				];
+			}
+		}
+
+		this.session.addAssistantMessage( displayAnswer, meta );
 		this.callbacks.onStreamEnd( displayAnswer );
 
 		log.info(

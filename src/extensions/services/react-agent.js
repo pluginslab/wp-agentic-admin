@@ -117,12 +117,14 @@ class ReactAgent {
 	async execute( userMessage, conversationHistory = [], options = {} ) {
 		log.info( 'Starting ReAct loop for:', userMessage );
 
-		// Store tool filter for this execution
+		// Store tool filter and web search context for this execution
 		this.currentToolFilter = options.toolFilter || null;
+		this.webSearchContext = options.webSearchContext || null;
 
 		const engine = this.modelLoader.getEngine();
 		if ( ! engine ) {
 			this.currentToolFilter = null;
+			this.webSearchContext = null;
 			return {
 				success: false,
 				finalAnswer:
@@ -139,8 +141,9 @@ class ReactAgent {
 			conversationHistory
 		);
 
-		// Clean up tool filter
+		// Clean up tool filter and web search context
 		this.currentToolFilter = null;
+		this.webSearchContext = null;
 
 		// Store last result for test observability
 		this.lastResult = result;
@@ -167,8 +170,22 @@ class ReactAgent {
 		const messages = [
 			{ role: 'system', content: systemPrompt },
 			...conversationHistory,
-			{ role: 'user', content: userMessage },
 		];
+
+		// Inject web search results as context before the user message
+		if ( this.webSearchContext ) {
+			messages.push( {
+				role: 'user',
+				content: `Web search results:\n${ this.webSearchContext }`,
+			} );
+			messages.push( {
+				role: 'assistant',
+				content:
+					'{"action": "final_answer", "content": "I have the search results. Let me use them to help you."}',
+			} );
+		}
+
+		messages.push( { role: 'user', content: userMessage } );
 
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;
@@ -361,7 +378,8 @@ class ReactAgent {
 					const toolResult = await this.executeTool(
 						toolName,
 						toolArgs,
-						userMessage
+						userMessage,
+						observations
 					);
 
 					// Resolve the actual tool object (handles bare names without namespace).
@@ -742,9 +760,10 @@ class ReactAgent {
 	/**
 	 * Execute a single tool
 	 *
-	 * @param {string} toolId      - Tool ID
-	 * @param {Object} args        - Tool arguments
-	 * @param {string} userMessage - Original user message
+	 * @param {string} toolId            - Tool ID
+	 * @param {Object} args              - Tool arguments
+	 * @param {string} userMessage       - Original user message
+	 * @param {Array}  priorObservations - Results from previous tool calls in this loop
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
@@ -810,8 +829,12 @@ class ReactAgent {
 		this.callbacks.onToolStart( toolId );
 
 		try {
-			// Execute the tool
-			const result = await tool.execute( { userMessage, ...args } );
+			// Execute the tool (pass prior observations for context-aware tools)
+			const result = await tool.execute( {
+				userMessage,
+				...args,
+				_priorResults: priorObservations,
+			} );
 
 			const toolSuccess = isToolResultSuccess( result );
 			this.callbacks.onToolEnd( toolId, result, toolSuccess );
