@@ -22,7 +22,7 @@
 
   /* GRID */
   .container{max-width:1200px;margin:0 auto;padding:1.5rem}
-  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem}
   .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;transition:transform .2s}
   .stat-card:hover{transform:translateY(-3px)}
   .stat-card .number{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums}
@@ -33,6 +33,7 @@
   .stat-card.purple .number{color:var(--purple)}
   .stat-card.orange .number{color:var(--orange)}
   .stat-card.cyan .number{color:var(--cyan)}
+  .stat-card.pink .number{color:var(--pink)}
 
   /* SECTIONS */
   .section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
@@ -69,9 +70,34 @@
   .day-card{background:#21262d;border-radius:10px;padding:1.25rem;text-align:center}
   .day-card .day-num{font-size:2.2rem;font-weight:700}
   .day-card .day-label{color:var(--muted);font-size:.85rem}
+  .day-card .day-lines{font-size:.75rem;margin-top:.4rem}
+  .day-card .day-lines .added{color:var(--green)}
+  .day-card .day-lines .deleted{color:var(--red)}
   .day-card:nth-child(1) .day-num{color:var(--green)}
   .day-card:nth-child(2) .day-num{color:var(--accent)}
   .day-card:nth-child(3) .day-num{color:var(--purple)}
+
+  /* BIGGEST COMMITS */
+  .big-commit{display:flex;align-items:baseline;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);font-size:.85rem}
+  .big-commit:last-child{border-bottom:none}
+  .big-commit .rank{color:var(--orange);font-weight:700;font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
+  .big-commit .lines{color:var(--green);font-weight:600;width:60px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .big-commit .msg{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* VELOCITY */
+  .velocity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  @media(max-width:768px){.velocity-grid{grid-template-columns:1fr}}
+  .velocity-card{background:#21262d;border-radius:10px;padding:1.25rem;text-align:center}
+  .velocity-card .vel-num{font-size:1.8rem;font-weight:700;color:var(--cyan)}
+  .velocity-card .vel-unit{font-size:.75rem;color:var(--muted);margin-top:.15rem}
+  .velocity-card .vel-label{font-size:.8rem;color:var(--text);margin-top:.25rem}
+
+  /* DONUT */
+  .donut-container{display:flex;align-items:center;gap:2rem;flex-wrap:wrap;justify-content:center}
+  .donut-legend{display:grid;gap:.35rem}
+  .legend-item{display:flex;align-items:center;gap:.5rem;font-size:.82rem}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .legend-count{color:var(--muted);font-variant-numeric:tabular-nums}
 
   /* FOOTER */
   .footer{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem}
@@ -94,25 +120,55 @@
     <div class="stat-card accent"><div class="number" data-target="257">0</div><div class="label">Commits</div></div>
     <div class="stat-card purple"><div class="number" data-target="62">0</div><div class="label">PRs Merged</div></div>
     <div class="stat-card orange"><div class="number" data-target="184">0</div><div class="label">Files Changed</div></div>
-    <div class="stat-card cyan"><div class="number" data-target="13">0</div><div class="label">Contributors</div></div>
+    <div class="stat-card cyan"><div class="number" data-target="43">0</div><div class="label">Abilities Built</div></div>
+    <div class="stat-card pink"><div class="number" data-target="121">0</div><div class="label">New Files Created</div></div>
+  </div>
+
+  <!-- CODE VELOCITY -->
+  <div class="section">
+    <h2>Code Velocity</h2>
+    <div class="velocity-grid">
+      <div class="velocity-card"><div class="vel-num">~11</div><div class="vel-unit">per hour</div><div class="vel-label">Commits</div></div>
+      <div class="velocity-card"><div class="vel-num">~1,350</div><div class="vel-unit">per hour</div><div class="vel-label">Lines Added</div></div>
+      <div class="velocity-card"><div class="vel-num">~40</div><div class="vel-unit">per day</div><div class="vel-label">New Files</div></div>
+    </div>
   </div>
 
   <!-- DAY BY DAY -->
   <div class="section">
     <h2>Day by Day</h2>
     <div class="day-cards">
-      <div class="day-card"><div class="day-num" data-target="80">0</div><div class="day-label">Day 1 &middot; Mar 20</div></div>
-      <div class="day-card"><div class="day-num" data-target="130">0</div><div class="day-label">Day 2 &middot; Mar 21</div></div>
-      <div class="day-card"><div class="day-num" data-target="47">0</div><div class="day-label">Day 3 &middot; Mar 22</div></div>
+      <div class="day-card">
+        <div class="day-num" data-target="80">0</div>
+        <div class="day-label">Day 1 &middot; Mar 20</div>
+        <div class="day-lines"><span class="added">+20,901</span> &nbsp; <span class="deleted">&minus;5,468</span></div>
+      </div>
+      <div class="day-card">
+        <div class="day-num" data-target="130">0</div>
+        <div class="day-label">Day 2 &middot; Mar 21</div>
+        <div class="day-lines"><span class="added">+11,835</span> &nbsp; <span class="deleted">&minus;2,457</span></div>
+      </div>
+      <div class="day-card">
+        <div class="day-num" data-target="47">0</div>
+        <div class="day-label">Day 3 &middot; Mar 22</div>
+        <div class="day-lines"><span class="added">+280</span> &nbsp; <span class="deleted">&minus;0</span></div>
+      </div>
     </div>
   </div>
 
   <div class="two-col">
 
-    <!-- CONTRIBUTORS -->
+    <!-- COMMIT TYPES -->
     <div class="section">
-      <h2>Contributor Leaderboard</h2>
-      <div id="contributors"></div>
+      <h2>Commit Types</h2>
+      <div class="donut-container">
+        <svg viewBox="0 0 120 120" width="160" height="160">
+          <g id="donut"></g>
+          <text x="60" y="56" text-anchor="middle" fill="#e6edf3" font-size="16" font-weight="700">257</text>
+          <text x="60" y="72" text-anchor="middle" fill="#8b949e" font-size="7">commits</text>
+        </svg>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
     </div>
 
     <!-- LANGUAGES -->
@@ -142,16 +198,15 @@
       <div id="directories"></div>
     </div>
 
-    <!-- EXTRA STATS -->
+    <!-- BIGGEST COMMITS -->
     <div class="section">
-      <h2>Quick Facts</h2>
-      <div style="font-size:.9rem;line-height:2">
-        <div><span style="color:var(--accent);font-weight:700">79</span> <span style="color:var(--muted)">branches created</span></div>
-        <div><span style="color:var(--green);font-weight:700">24,531</span> <span style="color:var(--muted)">net lines added</span></div>
-        <div><span style="color:var(--purple);font-weight:700">303</span> <span style="color:var(--muted)">commits across all branches</span></div>
-        <div><span style="color:var(--orange);font-weight:700">25</span> <span style="color:var(--muted)">peak commits in a single hour</span></div>
-        <div><span style="color:var(--cyan);font-weight:700">86+</span> <span style="color:var(--muted)">merge commits</span></div>
-        <div><span style="color:var(--pink);font-weight:700">12:00</span> <span style="color:var(--muted)">most productive hour (Mar 21)</span></div>
+      <h2>Biggest Commits</h2>
+      <div>
+        <div class="big-commit"><span class="rank">1</span><span class="lines">3,699</span><span class="msg">fix: regenerate package-lock.json for Node 18 CI</span></div>
+        <div class="big-commit"><span class="rank">2</span><span class="lines">2,671</span><span class="msg">feat: local RAG knowledge base with 4 sources</span></div>
+        <div class="big-commit"><span class="rank">3</span><span class="lines">1,723</span><span class="msg">feat: E2E test runner with real ReAct loop</span></div>
+        <div class="big-commit"><span class="rank">4</span><span class="lines">1,479</span><span class="msg">feat: local in-browser RAG for codebase search</span></div>
+        <div class="big-commit"><span class="rank">5</span><span class="lines">1,219</span><span class="msg">feat: add external LLM provider support</span></div>
       </div>
     </div>
 
@@ -219,14 +274,39 @@ function renderBars(containerId, data, maxVal, color) {
   }).join('');
 }
 
-// Contributors
-const contributors = [
-  ['pluginslab', 134], ['Tome Pajkovski', 20], ['Ivelina Dimova', 20],
-  ['Stefan Euchehofer', 15], ['Moritz Bappert', 14], ['Lucisu', 11],
-  ['Bowe Frankema', 11], ['0xLoopTheory', 11], ['AlexanderMelde', 8],
-  ['Jan Vogt', 6], ['Robert Abela', 4], ['Stefan E', 2], ['Alexander Melde', 1]
+// Donut chart
+const commitTypes = [
+  ['feat', 60, '#3fb950'],
+  ['merge', 77, '#30363d'],
+  ['fix', 38, '#f85149'],
+  ['docs', 27, '#bc8cff'],
+  ['refactor', 4, '#58a6ff'],
+  ['test', 3, '#d29922'],
+  ['other', 48, '#8b949e']
 ];
-renderBars('contributors', contributors, 134, 'var(--accent)');
+const total = commitTypes.reduce((s, [,v]) => s + v, 0);
+let cumulative = 0;
+const donut = document.getElementById('donut');
+const legend = document.getElementById('donut-legend');
+const r = 45, cx = 60, cy = 60;
+commitTypes.forEach(([label, value, color]) => {
+  const startAngle = (cumulative / total) * 2 * Math.PI - Math.PI / 2;
+  cumulative += value;
+  const endAngle = (cumulative / total) * 2 * Math.PI - Math.PI / 2;
+  const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+  const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+  const x2 = cx + r * Math.cos(endAngle), y2 = cy + r * Math.sin(endAngle);
+  const ir = 28;
+  const x3 = cx + ir * Math.cos(endAngle), y3 = cy + ir * Math.sin(endAngle);
+  const x4 = cx + ir * Math.cos(startAngle), y4 = cy + ir * Math.sin(startAngle);
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', `M${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} L${x3},${y3} A${ir},${ir} 0 ${largeArc} 0 ${x4},${y4} Z`);
+  path.setAttribute('fill', color);
+  path.setAttribute('stroke', '#161b22');
+  path.setAttribute('stroke-width', '1');
+  donut.appendChild(path);
+  legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${label} <span class="legend-count">${value}</span></div>`;
+});
 
 // Languages
 const languages = [
