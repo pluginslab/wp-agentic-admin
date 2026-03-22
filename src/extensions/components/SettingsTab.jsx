@@ -25,7 +25,16 @@ const CONTEXT_OPTIONS = [
 	{ label: '32,768 tokens (maximum)', value: '32768' },
 ];
 
+const REMOTE_CONTEXT_OPTIONS = [
+	{ label: '8,192 tokens', value: '8192' },
+	{ label: '16,384 tokens', value: '16384' },
+	{ label: '32,768 tokens (default)', value: '32768' },
+	{ label: '65,536 tokens', value: '65536' },
+	{ label: '131,072 tokens (128K)', value: '131072' },
+];
+
 const STORAGE_KEY = 'wp_agentic_admin_context_size';
+const REMOTE_CONTEXT_KEY = 'wp_agentic_admin_remote_context_size';
 
 const TIER_COLORS = {
 	minimal: '#d63638',
@@ -84,6 +93,14 @@ const SettingsTab = () => {
 	const [ thinkingPrefs, setThinkingPrefs ] = useState(
 		getSavedThinkingPrefs
 	);
+	const [ remoteContextSize, setRemoteContextSize ] = useState( () => {
+		try {
+			return localStorage.getItem( REMOTE_CONTEXT_KEY ) || '32768';
+		} catch {
+			return '32768';
+		}
+	} );
+	const [ remoteContextSaved, setRemoteContextSaved ] = useState( false );
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -320,6 +337,57 @@ const SettingsTab = () => {
 					</Card>
 				);
 			} ) }
+
+			<h3>Remote Provider Context Window</h3>
+			<p className="wp-agentic-admin-settings-tab__description">
+				When using a remote LLM provider (Ollama, LM Studio, OpenAI,
+				etc.), this sets the context window size for token tracking.
+				Remote models typically support much larger contexts than local
+				WebLLM models.
+			</p>
+
+			<Card>
+				<CardBody>
+					<div className="wp-agentic-admin-settings-tab__controls">
+						<SelectControl
+							label="Remote context window size"
+							value={ remoteContextSize }
+							options={ REMOTE_CONTEXT_OPTIONS }
+							onChange={ ( val ) => {
+								setRemoteContextSize( val );
+								setRemoteContextSaved( false );
+							} }
+						/>
+						<div className="wp-agentic-admin-settings-tab__actions">
+							<Button
+								variant="primary"
+								onClick={ () => {
+									localStorage.setItem(
+										REMOTE_CONTEXT_KEY,
+										remoteContextSize
+									);
+									setRemoteContextSaved( true );
+									setTimeout(
+										() => setRemoteContextSaved( false ),
+										3000
+									);
+								} }
+							>
+								Save
+							</Button>
+						</div>
+					</div>
+					{ remoteContextSaved && (
+						<Notice
+							status="success"
+							isDismissible={ false }
+							style={ { marginTop: '12px' } }
+						>
+							Remote context window updated.
+						</Notice>
+					) }
+				</CardBody>
+			</Card>
 
 			<h3>Thinking Mode</h3>
 			<p className="wp-agentic-admin-settings-tab__description">

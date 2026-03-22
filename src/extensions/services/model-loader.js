@@ -977,6 +977,7 @@ class ModelLoader {
 	 * @return {number} Context window size in tokens
 	 */
 	static getEffectiveContextSize( modelId ) {
+		// Check per-model localStorage override first
 		try {
 			const saved = localStorage.getItem(
 				'wp_agentic_admin_context_size'
@@ -990,7 +991,25 @@ class ModelLoader {
 		} catch ( e ) {
 			// Ignore parse errors
 		}
-		return MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+
+		// For known local models, use the default map
+		if ( MODEL_CONTEXT_SIZES[ modelId ] ) {
+			return MODEL_CONTEXT_SIZES[ modelId ];
+		}
+
+		// For remote/unknown models, check the remote context setting
+		try {
+			const remote = localStorage.getItem(
+				'wp_agentic_admin_remote_context_size'
+			);
+			if ( remote ) {
+				return parseInt( remote, 10 );
+			}
+		} catch ( e ) {
+			// Ignore
+		}
+
+		return MODEL_CONTEXT_SIZES.default;
 	}
 
 	/**
