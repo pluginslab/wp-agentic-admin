@@ -16,7 +16,13 @@ Privacy-first codebase search — **all in-browser, no external APIs**. PHP extr
 - **Thumbs down red icon** (PR #170 by @robert81) — CSS selector fix, thumbs down now shows red when active. Fixes #146.
 - **External AI infrastructure** (PR #167 by @AlexanderMelde) — increased timeouts for slow local models, o1/o3/gpt-5 parameter mapping, URL normalization, better error messages. 91 lines of unit tests. Fixes #165.
 
-**42 abilities**, **53 PRs merged**, **10 contributors**.
+### Voice Input with Local Whisper! (PR #178 by @moritzbappert)
+On-device speech-to-text via **Whisper Tiny** (~40MB ONNX) running entirely in a Web Worker — no audio ever leaves the browser. Hold Space bar for push-to-talk (200ms threshold), 30s max with countdown, pulsing red glow during recording, transcribing wave overlay. iOS Safari fallback (audio/mp4 + WASM). Also fixes ReAct agent crash when LLM omits tool name.
+
+### Placeholder Fix + Package Sync (PR #173 by @robert81)
+Chat input now shows "Thinking..." during inference instead of stale "Load the AI model first". Fixes #147.
+
+**42 abilities**, **55 PRs merged**, **10 contributors**.
 
 ---
 
