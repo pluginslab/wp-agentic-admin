@@ -864,8 +864,8 @@ const ChatContainer = ( {
 					! modelReady
 						? 'Load the AI model to start chatting...'
 						: isLoading || isStreaming
-							? 'Thinking...'
-							: 'Describe your issue or what you want to do… (hold Space to speak)'
+						? 'Thinking...'
+						: 'Describe your issue or what you want to do… (hold Space to speak)'
 				}
 			/>
 
