@@ -21,6 +21,7 @@ import {
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
+import VoiceButton from './VoiceButton';
 
 /**
  * Map of bundle icon names to @wordpress/icons components.
@@ -47,14 +48,23 @@ const BUNDLE_ICONS = {
 const ChatInput = ( {
 	onSend,
 	disabled = false,
-	placeholder = 'Type your message...',
+	placeholder = 'Describe your issue or what you want to do… (hold Space to speak)',
 	isLoading = false,
 } ) => {
 	const [ message, setMessage ] = useState( '' );
 	const [ selectedBundle, setSelectedBundle ] = useState( null );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
 	const [ pluginBundles, setPluginBundles ] = useState( [] );
+	const [ voiceState, setVoiceState ] = useState( 'idle' );
 	const textareaRef = useRef( null );
+	const voiceButtonRef = useRef( null );
+	const isSpaceDownRef = useRef( false );
+	const spacePressTimerRef = useRef( null );
+
+	// Cancel pending push-to-talk timer on unmount.
+	useEffect( () => {
+		return () => clearTimeout( spacePressTimerRef.current );
+	}, [] );
 
 	// Subscribe to plugin abilities manager for dynamic bundles
 	useEffect( () => {
@@ -82,6 +92,11 @@ const ChatInput = ( {
 			e.preventDefault();
 		}
 
+		// Prevent accidental submit while recording or transcribing.
+		if ( isVoiceActive ) {
+			return;
+		}
+
 		const trimmedMessage = message.trim();
 		if ( ! trimmedMessage || disabled || isLoading ) {
 			return;
@@ -96,7 +111,12 @@ const ChatInput = ( {
 	};
 
 	/**
-	 * Handle keydown for Enter to send (Shift+Enter for new line)
+	 * Handle keydown: Enter sends, Space on empty input starts recording.
+	 *
+	 * A 200 ms threshold distinguishes a quick tap (insert space) from a
+	 * deliberate hold (push-to-talk). The OS key-repeat delay is ~500 ms,
+	 * so we also suppress repeat events once recording is active to prevent
+	 * spaces from being inserted while the user holds the key.
 	 *
 	 * @param {KeyboardEvent} e - Keyboard event
 	 */
@@ -104,6 +124,55 @@ const ChatInput = ( {
 		if ( e.key === 'Enter' && ! e.shiftKey ) {
 			e.preventDefault();
 			handleSubmit( e );
+			return;
+		}
+
+		if ( e.key === ' ' ) {
+			// Suppress OS key-repeat events while push-to-talk or its timer is active.
+			if (
+				isSpaceDownRef.current ||
+				spacePressTimerRef.current !== null
+			) {
+				e.preventDefault();
+				return;
+			}
+
+			// Empty input + idle: arm the 200 ms push-to-talk timer.
+			if (
+				message === '' &&
+				voiceState === 'idle' &&
+				! e.repeat &&
+				! isDisabled
+			) {
+				e.preventDefault();
+				spacePressTimerRef.current = setTimeout( () => {
+					spacePressTimerRef.current = null;
+					isSpaceDownRef.current = true;
+					voiceButtonRef.current?.start();
+				}, 200 );
+			}
+		}
+	};
+
+	/**
+	 * Handle keyup: Space release either inserts a space (quick tap) or stops recording.
+	 *
+	 * @param {KeyboardEvent} e - Keyboard event
+	 */
+	const handleKeyUp = ( e ) => {
+		if ( e.key !== ' ' ) {
+			return;
+		}
+
+		if ( spacePressTimerRef.current !== null ) {
+			// Released before the 200 ms threshold — treat as a normal space character.
+			clearTimeout( spacePressTimerRef.current );
+			spacePressTimerRef.current = null;
+			setMessage( ( prev ) => prev + ' ' );
+		} else if ( isSpaceDownRef.current ) {
+			// Released after recording started — stop push-to-talk.
+			isSpaceDownRef.current = false;
+			voiceButtonRef.current?.stop();
 		}
 	};
 
@@ -116,8 +185,24 @@ const ChatInput = ( {
 		setMessage( e.target.value );
 	};
 
+	/**
+	 * Set the final transcription result and focus the textarea for editing.
+	 *
+	 * @param {string} text - Final transcribed text from Whisper.
+	 */
+	const handleTranscript = ( text ) => {
+		setMessage( text );
+		// Give focus back so the user can immediately edit or send.
+		requestAnimationFrame( () => textareaRef.current?.focus() );
+	};
+
 	const isDisabled = disabled || isLoading;
+	const isVoiceActive = voiceState !== 'idle';
+	const isTranscribing = voiceState === 'transcribing';
 	const canSend = message.trim().length > 0 && ! isDisabled;
+	// Mic is visible on an empty input, or while voice is active (recording /
+	// transcribing) so the component stays mounted through the full cycle.
+	const showMic = message === '' || isVoiceActive;
 
 	return (
 		<div className="wp-agentic-admin-input-area">
@@ -132,16 +217,37 @@ const ChatInput = ( {
 						: ''
 				}` }
 			>
-				<textarea
-					ref={ textareaRef }
-					className="wp-agentic-admin-input"
-					value={ message }
-					onChange={ handleChange }
-					onKeyDown={ handleKeyDown }
-					placeholder={ placeholder }
-					rows="3"
-					disabled={ isDisabled }
-				/>
+				<div className="wp-agentic-admin-textarea-container">
+					<textarea
+						ref={ textareaRef }
+						className="wp-agentic-admin-input"
+						value={ message }
+						onChange={ handleChange }
+						onKeyDown={ handleKeyDown }
+						onKeyUp={ handleKeyUp }
+						placeholder={ placeholder }
+						rows="3"
+						disabled={ isDisabled }
+					/>
+					{ isTranscribing && (
+						<div
+							className="wp-agentic-admin-transcribing-overlay"
+							aria-live="polite"
+							aria-label="Transcribing audio"
+						>
+							<div className="wp-agentic-admin-transcribing-wave">
+								<span />
+								<span />
+								<span />
+								<span />
+								<span />
+							</div>
+							<span className="wp-agentic-admin-transcribing-label">
+								Transcribing…
+							</span>
+						</div>
+					) }
+				</div>
 				<div className="wp-agentic-admin-input-toolbar">
 					<div className="wp-agentic-admin-input-toolbar__left">
 						<Dropdown
@@ -286,15 +392,24 @@ const ChatInput = ( {
 						) }
 					</div>
 					<div className="wp-agentic-admin-input-toolbar__right">
-						<button
-							type="button"
-							className="wp-agentic-admin-send-button"
-							onClick={ handleSubmit }
-							disabled={ ! canSend }
-							aria-label="Send message"
-						>
-							<Icon icon={ send } size={ 20 } />
-						</button>
+						{ showMic ? (
+							<VoiceButton
+								ref={ voiceButtonRef }
+								onTranscript={ handleTranscript }
+								onStateChange={ setVoiceState }
+								disabled={ isDisabled }
+							/>
+						) : (
+							<button
+								type="button"
+								className="wp-agentic-admin-send-button"
+								onClick={ handleSubmit }
+								disabled={ ! canSend }
+								aria-label="Send message"
+							>
+								<Icon icon={ send } size={ 20 } />
+							</button>
+						) }
 					</div>
 				</div>
 			</div>
