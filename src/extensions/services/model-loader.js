@@ -10,6 +10,7 @@
  */
 
 import * as webllm from '@mlc-ai/web-llm';
+import { ExternalEngine } from './external-engine';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ModelLoader' );
@@ -26,17 +27,28 @@ const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
  */
 const MODEL_CONFIG = {
 	// Context window size (larger for 7B models)
-	context_window_size: 4096,
+	context_window_size: 8192,
+};
+
+/**
+ * Mapping from f16 model IDs to their f32 equivalents.
+ * Used when the GPU does not support the shader-f16 WebGPU feature.
+ */
+const F16_TO_F32_MODEL_MAP = {
+	'Qwen3-1.7B-q4f16_1-MLC': 'Qwen3-1.7B-q4f32_1-MLC',
+	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
 };
 
 /**
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
-	'Qwen3-1.7B-q4f16_1-MLC': 4096,
+	'Qwen3-1.7B-q4f16_1-MLC': 8192,
+	'Qwen3-1.7B-q4f32_1-MLC': 8192,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
+	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
 	// Default fallback
-	default: 4096,
+	default: 8192,
 };
 
 /**
@@ -65,12 +77,18 @@ class ModelLoader {
 		this.statusCallback = null;
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
+		this.f16Supported = null; // null = not checked, true/false = result
 
 		// Service Worker state
 		// Can be disabled via setUseServiceWorker(false) if issues found
 		this.useServiceWorker = true;
 		this.swRegistration = null;
 		this.swSupported = null; // null = not checked, true/false = result
+
+		// External provider state
+		this.providerMode = 'local'; // 'local' or 'remote'
+		this.externalEndpoint = '';
+		this.externalApiKey = '';
 	}
 
 	/**
@@ -299,6 +317,14 @@ class ModelLoader {
 	 * @return {Promise<Object>} Support status and reason if not supported
 	 */
 	async checkWebGPUSupport() {
+		// WebGPU requires a secure context (HTTPS or localhost)
+		if ( ! window.isSecureContext ) {
+			return {
+				supported: false,
+				reason: 'WebGPU is not accessible over HTTP. Please access your website over HTTPS.',
+			};
+		}
+
 		if ( ! navigator.gpu ) {
 			return {
 				supported: false,
@@ -329,12 +355,20 @@ class ModelLoader {
 
 			log.info( 'WebGPU Adapter:', info );
 
+			// Check for shader-f16 support (required for q4f16 models)
+			this.f16Supported = adapter.features.has( 'shader-f16' );
+			log.info(
+				'WebGPU shader-f16:',
+				this.f16Supported ? 'supported' : 'not supported'
+			);
+
 			// Store adapter info for later use
 			this.gpuAdapterInfo = {
 				vendor: info.vendor || 'Unknown',
 				architecture: info.architecture || 'Unknown',
 				device: info.device || 'Unknown',
 				description: info.description || '',
+				maxBufferSize: adapter.limits?.maxBufferSize || 0,
 			};
 
 			return {
@@ -424,6 +458,15 @@ class ModelLoader {
 				throw new Error( gpuCheck.reason );
 			}
 
+			// Auto-fallback: if shader-f16 is not supported, switch to f32 variant
+			if ( ! this.f16Supported && F16_TO_F32_MODEL_MAP[ this.modelId ] ) {
+				const f32Model = F16_TO_F32_MODEL_MAP[ this.modelId ];
+				log.info(
+					`GPU lacks shader-f16, switching from ${ this.modelId } to ${ f32Model }`
+				);
+				this.modelId = f32Model;
+			}
+
 			this.reportProgress(
 				5,
 				'WebGPU supported. Initializing engine...'
@@ -459,6 +502,63 @@ class ModelLoader {
 			log.error( 'Failed to load WebLLM model:', err );
 			throw err;
 		}
+	}
+
+	/**
+	 * Load an external model via OpenAI-compatible API
+	 *
+	 * @since 0.10.0
+	 * @param {string} endpointUrl - Base URL (e.g. "http://localhost:11434")
+	 * @param {string} modelId     - Model identifier
+	 * @param {string} apiKey      - Optional API key
+	 * @return {Promise<boolean>} True if connected successfully
+	 */
+	async loadExternal( endpointUrl, modelId, apiKey = '' ) {
+		if ( this.isLoading ) {
+			throw new Error( 'Model is already loading' );
+		}
+
+		this.isLoading = true;
+		this.providerMode = 'remote';
+		this.externalEndpoint = endpointUrl;
+		this.externalApiKey = apiKey;
+		this.modelId = modelId;
+
+		try {
+			this.reportStatus(
+				'loading',
+				'Connecting to external provider...'
+			);
+			this.reportProgress( 50, 'Connecting to external provider...' );
+
+			this.engine = new ExternalEngine( endpointUrl, modelId, apiKey );
+
+			this.reportProgress( 100, 'Connected to external provider!' );
+			this.reportStatus( 'ready', 'External model ready' );
+			this.isReady = true;
+			this.isLoading = false;
+
+			log.info( 'External model loaded:', modelId, 'at', endpointUrl );
+			return true;
+		} catch ( err ) {
+			this.isLoading = false;
+			this.isReady = false;
+			this.engine = null;
+			this.providerMode = 'local';
+			this.reportStatus( 'error', `Failed to connect: ${ err.message }` );
+			log.error( 'Failed to load external model:', err );
+			throw err;
+		}
+	}
+
+	/**
+	 * Check if using an external provider
+	 *
+	 * @since 0.10.0
+	 * @return {boolean} True if using external provider
+	 */
+	isExternalProvider() {
+		return this.providerMode === 'remote';
 	}
 
 	/**
@@ -663,6 +763,18 @@ class ModelLoader {
 	}
 
 	/**
+	 * Check if the GPU supports shader-f16 (half-precision)
+	 *
+	 * Returns null if not yet checked (call checkWebGPUSupport() first).
+	 *
+	 * @since 0.1.0
+	 * @return {boolean|null} True if f16 supported, false if not, null if unchecked
+	 */
+	hasF16Support() {
+		return this.f16Supported;
+	}
+
+	/**
 	 * Get the loaded engine instance
 	 *
 	 * @return {Object|null} The WebLLM engine or null if not loaded
@@ -701,6 +813,9 @@ class ModelLoader {
 		this.isReady = false;
 		this.isLoading = false;
 		this.loadProgress = 0;
+		this.providerMode = 'local';
+		this.externalEndpoint = '';
+		this.externalApiKey = '';
 		this.reportStatus( 'not-loaded', 'Model unloaded' );
 	}
 
@@ -755,6 +870,17 @@ class ModelLoader {
 	getLoadedModelInfo() {
 		if ( ! this.isReady || ! this.modelId ) {
 			return null;
+		}
+
+		// External provider — model isn't in our static list
+		if ( this.isExternalProvider() ) {
+			return {
+				id: this.modelId,
+				name: this.modelId,
+				size: 'Remote',
+				description: `External model via ${ this.externalEndpoint }`,
+				mode: 'external',
+			};
 		}
 
 		const models = ModelLoader.getAvailableModels();
@@ -844,6 +970,136 @@ class ModelLoader {
 	}
 
 	/**
+	 * Get the effective context window size for a model.
+	 * Checks localStorage override first, then falls back to MODEL_CONTEXT_SIZES.
+	 *
+	 * @param {string} modelId - Model identifier
+	 * @return {number} Context window size in tokens
+	 */
+	static getEffectiveContextSize( modelId ) {
+		// Check per-model localStorage override first
+		try {
+			const saved = localStorage.getItem(
+				'wp_agentic_admin_context_size'
+			);
+			if ( saved ) {
+				const parsed = JSON.parse( saved );
+				if ( parsed[ modelId ] ) {
+					return parsed[ modelId ];
+				}
+			}
+		} catch ( e ) {
+			// Ignore parse errors
+		}
+
+		// For known local models, use the default map
+		if ( MODEL_CONTEXT_SIZES[ modelId ] ) {
+			return MODEL_CONTEXT_SIZES[ modelId ];
+		}
+
+		// For remote/unknown models, check the remote context setting
+		try {
+			const remote = localStorage.getItem(
+				'wp_agentic_admin_remote_context_size'
+			);
+			if ( remote ) {
+				return parseInt( remote, 10 );
+			}
+		} catch ( e ) {
+			// Ignore
+		}
+
+		return MODEL_CONTEXT_SIZES.default;
+	}
+
+	/**
+	 * Estimate available GPU VRAM from WebGPU adapter limits.
+	 * maxBufferSize is a rough proxy for total GPU memory.
+	 *
+	 * @return {number} Estimated VRAM in GB, or 0 if unknown
+	 */
+	getEstimatedVRAM() {
+		if ( ! this.gpuAdapterInfo?.maxBufferSize ) {
+			return 0;
+		}
+		// maxBufferSize is typically 25-50% of total VRAM.
+		// Use a 2x multiplier as a conservative estimate.
+		const estimatedBytes = this.gpuAdapterInfo.maxBufferSize * 2;
+		return Math.round( ( estimatedBytes / 1024 ** 3 ) * 10 ) / 10;
+	}
+
+	/**
+	 * Get recommended context window size based on estimated VRAM and model.
+	 *
+	 * @param {string} modelId - Model identifier
+	 * @return {Object} Recommendation with size, reasoning, and tier info
+	 */
+	getRecommendedContextSize( modelId ) {
+		const estimatedVRAM = this.getEstimatedVRAM();
+		const model = ModelLoader.getAvailableModels().find(
+			( m ) => m.id === modelId
+		);
+		const modelVRAM = model
+			? parseFloat( model.vram.replace( /[^0-9.]/g, '' ) )
+			: 1.5;
+
+		const remainingVRAM = estimatedVRAM - modelVRAM;
+		const maxBuffer = this.gpuAdapterInfo?.maxBufferSize || 0;
+		const maxBufferGB = Math.round( ( maxBuffer / 1024 ** 3 ) * 100 ) / 100;
+
+		let recommended, tier, reasoning;
+		if ( estimatedVRAM === 0 ) {
+			recommended =
+				MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+			tier = 'unknown';
+			reasoning =
+				'Could not detect GPU memory. Using default context size.';
+		} else if ( remainingVRAM < 1 ) {
+			recommended = 2048;
+			tier = 'minimal';
+			reasoning = `Only ~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights (${ modelVRAM }GB). Minimal context recommended.`;
+		} else if ( remainingVRAM < 2 ) {
+			recommended = 4096;
+			tier = 'conservative';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Conservative context for stable operation.`;
+		} else if ( remainingVRAM < 4 ) {
+			recommended = 8192;
+			tier = 'balanced';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Good balance of context and performance.`;
+		} else if ( remainingVRAM < 8 ) {
+			recommended = 16384;
+			tier = 'generous';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Large context window possible.`;
+		} else {
+			recommended = 32768;
+			tier = 'maximum';
+			reasoning = `~${ remainingVRAM.toFixed(
+				1
+			) }GB available after model weights. Maximum context window.`;
+		}
+
+		return {
+			recommended,
+			tier,
+			reasoning,
+			estimatedVRAM,
+			modelVRAM,
+			remainingVRAM: Math.max( 0, remainingVRAM ),
+			maxBufferGB,
+			currentDefault:
+				MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default,
+		};
+	}
+
+	/**
 	 * Get GPU adapter info (vendor, architecture, device)
 	 *
 	 * @return {Object|null} GPU info or null if not available
@@ -858,13 +1114,12 @@ class ModelLoader {
 	 * @return {Object|null} Context usage info or null if not available
 	 */
 	getContextUsage() {
-		if ( ! this.lastUsageStats ) {
+		if ( ! this.isReady ) {
 			return null;
 		}
 
-		const maxContext =
-			MODEL_CONTEXT_SIZES[ this.modelId ] || MODEL_CONTEXT_SIZES.default;
-		const usedTokens = this.lastUsageStats.prompt_tokens || 0;
+		const maxContext = ModelLoader.getEffectiveContextSize( this.modelId );
+		const usedTokens = this.lastUsageStats?.prompt_tokens || 0;
 		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 
 		return {
@@ -894,12 +1149,28 @@ class ModelLoader {
 		return [
 			{
 				id: 'Qwen3-1.7B-q4f16_1-MLC',
-				name: 'Qwen 3 1.7B (Q4)',
+				name: 'Qwen 3 1.7B (Q4 F16)',
 				size: '~1.2GB',
 				vram: '~1.5GB',
 				description:
-					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight.',
+					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight. Requires shader-f16.',
 				recommended: true,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'fast inference',
+				],
+			},
+			{
+				id: 'Qwen3-1.7B-q4f32_1-MLC',
+				name: 'Qwen 3 1.7B (Q4 F32)',
+				size: '~1.8GB',
+				vram: '~2GB',
+				description:
+					'Alibaba Qwen 3 1.7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
+				recommended: false,
+				requiresF16: false,
 				capabilities: [
 					'function calling',
 					'JSON output',
@@ -908,12 +1179,29 @@ class ModelLoader {
 			},
 			{
 				id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-				name: 'Qwen 2.5 7B (Q4)',
+				name: 'Qwen 2.5 7B (Q4 F16)',
 				size: '~4.5GB',
 				vram: '~5GB',
 				description:
-					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following.',
+					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following. Requires shader-f16.',
 				recommended: false,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'complex workflows',
+					'advanced reasoning',
+					'JSON output',
+				],
+			},
+			{
+				id: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
+				name: 'Qwen 2.5 7B (Q4 F32)',
+				size: '~6.5GB',
+				vram: '~7GB',
+				description:
+					'Alibaba Qwen 2.5 7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
+				recommended: false,
+				requiresF16: false,
 				capabilities: [
 					'function calling',
 					'complex workflows',
@@ -928,5 +1216,12 @@ class ModelLoader {
 // Create singleton instance
 const modelLoader = new ModelLoader();
 
-export { ModelLoader, modelLoader, DEFAULT_MODEL, MODEL_CONFIG };
+export {
+	ModelLoader,
+	modelLoader,
+	DEFAULT_MODEL,
+	MODEL_CONFIG,
+	MODEL_CONTEXT_SIZES,
+	ExternalEngine,
+};
 export default modelLoader;

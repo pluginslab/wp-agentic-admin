@@ -5,7 +5,7 @@
  * with the chat system. Uses the new extensible registration API.
  *
  * HOW TO ADD A NEW ABILITY:
- * 1. Create a new PHP file in includes/abilities/ with register_agentic_ability()
+ * 1. Create a new PHP file in includes/abilities/ with wp_agentic_admin_register_ability()
  * 2. Create a new JS file in src/extensions/abilities/ using registerAbility()
  * 3. Export it from src/extensions/abilities/index.js
  * 4. The ability will be automatically registered on init

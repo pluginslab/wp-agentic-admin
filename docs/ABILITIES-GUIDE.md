@@ -126,7 +126,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_my_new_ability(): void {
-    register_agentic_ability(
+    wp_agentic_admin_register_ability(
         'wp-agentic-admin/my-new-ability',
         // PHP configuration for WordPress Abilities API
         array(
@@ -197,7 +197,7 @@ if ( function_exists( 'wp_agentic_admin_register_my_new_ability' ) ) {
 
 ```php
 add_action( 'wp_agentic_admin_register_abilities', function() {
-    if ( function_exists( 'register_agentic_ability' ) ) {
+    if ( function_exists( 'wp_agentic_admin_register_ability' ) ) {
         wp_agentic_admin_register_my_new_ability();
     }
 } );
@@ -429,7 +429,7 @@ const merged = {
 };
 ```
 
-The original PHP label is still available as `phpLabel` (set by `get_agentic_abilities_js_config()` in `functions-abilities.php`). This means:
+The original PHP label is still available as `phpLabel` (set by `wp_agentic_admin_get_abilities_js_config()` in `functions-abilities.php`). This means:
 - `tool.label` -- the JS label (or PHP label if JS didn't provide one)
 - `tool.phpLabel` -- always the PHP-defined label, if one was registered
 
@@ -536,6 +536,50 @@ registerWorkflow('my-plugin/audit', {
     },
 });
 ```
+
+## Bypassing the LLM for Display: `preferSummarize`
+
+By default, after a single ability runs, the LLM generates a natural-language summary of the result. This is ideal for most abilities, but harmful for abilities that return large structured content (file contents, logs, raw data) because:
+
+- The LLM has a 512-token output limit — large content gets truncated.
+- The LLM may reformat or paraphrase content, losing accuracy.
+- The round-trip to the LLM adds unnecessary latency.
+
+Set `preferSummarize: true` on the JS ability to bypass the LLM entirely. The orchestrator will call `tool.summarize()` directly and display the result instantly, without streaming.
+
+```javascript
+registerAbility('wp-agentic-admin/my-ability', {
+    // ...
+
+    summarize: (result) => {
+        // This output is shown directly — make it complete and well-formatted.
+        return `**\`${result.file_path}\`**\n\n\`\`\`php\n${result.content}\n\`\`\``;
+    },
+
+    interpretResult: (result, userMessage) => {
+        // Still called — gives context to the LLM for multi-tool chains.
+        // Keep it brief; the LLM will NOT show this to the user.
+        return `File \`${result.file_path}\` was read successfully.`;
+    },
+
+    // Bypasses LLM for display; uses summarize() output directly.
+    preferSummarize: true,
+});
+```
+
+### When to use `preferSummarize`
+
+| Use it when… | Don't use it when… |
+|---|---|
+| Result contains large verbatim content (files, logs) | Result is a status or count the LLM can narrate naturally |
+| Accurate formatting matters (code, tables) | You want the LLM to answer follow-up questions from the result |
+| You want instant display without LLM latency | The ability is one step in a multi-tool chain |
+
+### How it works
+
+The ReAct agent short-circuits after the tool call — it skips the second LLM pass and returns `summarize()` output as the `finalAnswer`, tagged with `skipStreaming: true`. The chat orchestrator then renders it immediately without the char-by-char stream simulator.
+
+`interpretResult` is still called and its output is still passed to the LLM in multi-tool ReAct chains. Keep it concise — it should confirm what happened, not reproduce the full content.
 
 ## Confirmation for Destructive Actions
 
@@ -914,40 +958,40 @@ Key differences from regular abilities:
 
 All public PHP functions are defined in `functions-abilities.php`.
 
-### `register_agentic_ability( string $id, array $php_args, array $js_args = array() ): bool`
+### `wp_agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool`
 
 Registers an ability with both the WordPress Abilities API (backend) and stores JS configuration for the frontend. See the [Creating a New Ability](#creating-a-new-ability) section for full usage.
 
-### `unregister_agentic_ability( string $id ): bool`
+### `wp_agentic_admin_unregister_ability( string $id ): bool`
 
 Removes a previously registered ability. Returns `true` if the ability was unregistered, `false` if it did not exist. Also calls `wp_unregister_ability()` if the WordPress Abilities API is available.
 
 ```php
 // Example: conditionally remove an ability
-if ( agentic_ability_exists( 'wp-agentic-admin/cache-flush' ) ) {
-    unregister_agentic_ability( 'wp-agentic-admin/cache-flush' );
+if ( wp_agentic_admin_ability_exists( 'wp-agentic-admin/cache-flush' ) ) {
+    wp_agentic_admin_unregister_ability( 'wp-agentic-admin/cache-flush' );
 }
 ```
 
-### `agentic_ability_exists( string $id ): bool`
+### `wp_agentic_admin_ability_exists( string $id ): bool`
 
 Checks whether an ability with the given ID is currently registered. Useful for guard checks before registering or unregistering.
 
 ```php
-if ( ! agentic_ability_exists( 'my-plugin/my-ability' ) ) {
-    register_agentic_ability( 'my-plugin/my-ability', $php_args, $js_args );
+if ( ! wp_agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
+    wp_agentic_admin_register_ability( 'my-plugin/my-ability', $php_args, $js_args );
 }
 ```
 
-### `get_agentic_abilities(): array`
+### `wp_agentic_admin_get_abilities(): array`
 
 Returns all registered abilities as an associative array keyed by ability ID.
 
-### `get_agentic_ability( string $id ): ?array`
+### `wp_agentic_admin_get_ability( string $id ): ?array`
 
 Returns the configuration for a single ability, or `null` if not found.
 
-### `get_agentic_abilities_js_config(): array`
+### `wp_agentic_admin_get_abilities_js_config(): array`
 
 Returns JS-facing configurations for all abilities. Used internally by `wp_localize_script()` to pass ability metadata to the frontend. Includes `phpLabel`, `description`, and `annotations` from the PHP config.
 

@@ -2,18 +2,38 @@
  * Model Status Component
  *
  * Displays the AI model loading status with progress bar and controls.
+ * Supports both local (WebLLM) and remote (OpenAI-compatible API) providers.
  *
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Button, Spinner } from '@wordpress/components';
+import {
+	Button,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
+	Spinner,
+} from '@wordpress/components';
+import { moreVertical } from '@wordpress/icons';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
+	ExternalEngine,
 } from '../services/model-loader';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ModelStatus' );
+
+/**
+ * localStorage keys for provider settings
+ */
+const STORAGE_KEYS = {
+	model: 'wp_agentic_admin_model',
+	provider: 'wp_agentic_admin_provider',
+	remoteUrl: 'wp_agentic_admin_remote_url',
+	remoteModel: 'wp_agentic_admin_remote_model',
+	remoteApiKey: 'wp_agentic_admin_remote_api_key',
+};
 
 /**
  * Get the saved model from localStorage
@@ -22,7 +42,7 @@ const log = createLogger( 'ModelStatus' );
  */
 const getSavedModel = () => {
 	try {
-		const saved = localStorage.getItem( 'wp_agentic_admin_model' );
+		const saved = localStorage.getItem( STORAGE_KEYS.model );
 		return saved || DEFAULT_MODEL;
 	} catch ( err ) {
 		log.warn( 'Failed to load saved model from localStorage:', err );
@@ -37,9 +57,64 @@ const getSavedModel = () => {
  */
 const saveModel = ( modelId ) => {
 	try {
-		localStorage.setItem( 'wp_agentic_admin_model', modelId );
+		localStorage.setItem( STORAGE_KEYS.model, modelId );
 	} catch ( err ) {
 		log.warn( 'Failed to save model to localStorage:', err );
+	}
+};
+
+/**
+ * Get saved provider settings from localStorage
+ *
+ * @return {Object} Provider settings
+ */
+const getSavedProviderSettings = () => {
+	try {
+		return {
+			provider: localStorage.getItem( STORAGE_KEYS.provider ) || 'local',
+			remoteUrl: localStorage.getItem( STORAGE_KEYS.remoteUrl ) || '',
+			remoteModel: localStorage.getItem( STORAGE_KEYS.remoteModel ) || '',
+			remoteApiKey:
+				localStorage.getItem( STORAGE_KEYS.remoteApiKey ) || '',
+		};
+	} catch ( err ) {
+		log.warn( 'Failed to load provider settings:', err );
+		return {
+			provider: 'local',
+			remoteUrl: '',
+			remoteModel: '',
+			remoteApiKey: '',
+		};
+	}
+};
+
+/**
+ * Save provider settings to localStorage
+ *
+ * @param {Object} settings - Provider settings to save
+ */
+const saveProviderSettings = ( settings ) => {
+	try {
+		if ( settings.provider !== undefined ) {
+			localStorage.setItem( STORAGE_KEYS.provider, settings.provider );
+		}
+		if ( settings.remoteUrl !== undefined ) {
+			localStorage.setItem( STORAGE_KEYS.remoteUrl, settings.remoteUrl );
+		}
+		if ( settings.remoteModel !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.remoteModel,
+				settings.remoteModel
+			);
+		}
+		if ( settings.remoteApiKey !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.remoteApiKey,
+				settings.remoteApiKey
+			);
+		}
+	} catch ( err ) {
+		log.warn( 'Failed to save provider settings:', err );
 	}
 };
 
@@ -83,6 +158,13 @@ const getLoadingStage = ( message, progress ) => {
 		return { icon: '📝', title: 'Loading Tokenizer' };
 	}
 
+	if (
+		lowerMsg.includes( 'connecting' ) ||
+		lowerMsg.includes( 'external' )
+	) {
+		return { icon: '🌐', title: 'Connecting' };
+	}
+
 	if ( progress >= 95 ) {
 		return { icon: '✨', title: 'Finalizing' };
 	}
@@ -93,16 +175,18 @@ const getLoadingStage = ( message, progress ) => {
 /**
  * ModelStatus component
  *
- * @param {Object}      props              - Component props
- * @param {Function}    props.onModelReady - Callback when model is ready
- * @param {Function}    props.onModelError - Callback when model loading fails
- * @param {string|null} props.initPhase    - Current initialization phase ('checking', 'loading', or null)
- * @param {string}      props.initMessage  - Message to display during initialization
- * @param {number}      props.initProgress - Progress percentage during initialization
+ * @param {Object}      props               - Component props
+ * @param {Function}    props.onModelReady  - Callback when model is ready
+ * @param {Function}    props.onModelError  - Callback when model loading fails
+ * @param {string|null} props.initPhase     - Current initialization phase ('checking', 'loading', or null)
+ * @param {string}      props.initMessage   - Message to display during initialization
+ * @param {number}      props.initProgress  - Progress percentage during initialization
+ * @param               props.onModelUnload
  */
 const ModelStatus = ( {
 	onModelReady,
 	onModelError,
+	onModelUnload,
 	initPhase,
 	initMessage, // eslint-disable-line no-unused-vars -- Prop passed by parent for future use in status display.
 	initProgress,
@@ -120,6 +204,22 @@ const ModelStatus = ( {
 	const [ gpuInfo, setGpuInfo ] = useState( null );
 	const [ contextUsage, setContextUsage ] = useState( null );
 	const [ isServiceWorkerMode, setIsServiceWorkerMode ] = useState( false );
+
+	// Remote provider state — lazy initializer to avoid reading localStorage on every render
+	const [ savedSettings ] = useState( getSavedProviderSettings );
+	const [ providerMode, setProviderMode ] = useState(
+		savedSettings.provider
+	);
+	const [ remoteUrl, setRemoteUrl ] = useState( savedSettings.remoteUrl );
+	const [ remoteApiKey, setRemoteApiKey ] = useState(
+		savedSettings.remoteApiKey
+	);
+	const [ remoteModels, setRemoteModels ] = useState( [] );
+	const [ selectedRemoteModel, setSelectedRemoteModel ] = useState(
+		savedSettings.remoteModel
+	);
+	const [ isFetchingModels, setIsFetchingModels ] = useState( false );
+	const [ fetchError, setFetchError ] = useState( '' );
 
 	const availableModels = ModelLoader.getAvailableModels();
 
@@ -205,10 +305,14 @@ const ModelStatus = ( {
 			const gpu = modelLoader.getGPUInfo();
 			setGpuInfo( gpu );
 
-			// Initial stats fetch
+			// Initial stats and context fetch
 			modelLoader.getMemoryStats().then( ( stats ) => {
 				setMemoryStats( stats );
 			} );
+			const initialContext = modelLoader.getContextUsage();
+			if ( initialContext ) {
+				setContextUsage( initialContext );
+			}
 
 			// Poll for stats updates every 2 seconds to capture post-inference performance
 			const statsInterval = setInterval( () => {
@@ -234,18 +338,41 @@ const ModelStatus = ( {
 	}, [ status ] );
 
 	/**
-	 * Handle Load Model button click
+	 * Handle Load Model button click (local)
 	 */
 	const handleLoadModel = useCallback( async () => {
 		try {
-			// Save the selected model before loading
 			saveModel( selectedModel );
 			await modelLoader.load( selectedModel );
 		} catch ( err ) {
 			log.error( 'Failed to load model:', err );
-			// Error state is handled by the status callback
 		}
 	}, [ selectedModel ] );
+
+	/**
+	 * Handle Connect button click (remote)
+	 */
+	const handleConnectRemote = useCallback( async () => {
+		if ( ! remoteUrl || ! selectedRemoteModel ) {
+			return;
+		}
+
+		try {
+			saveProviderSettings( {
+				provider: 'remote',
+				remoteUrl,
+				remoteModel: selectedRemoteModel,
+				remoteApiKey,
+			} );
+			await modelLoader.loadExternal(
+				remoteUrl,
+				selectedRemoteModel,
+				remoteApiKey
+			);
+		} catch ( err ) {
+			log.error( 'Failed to connect to remote provider:', err );
+		}
+	}, [ remoteUrl, selectedRemoteModel, remoteApiKey ] );
 
 	/**
 	 * Handle Unload Model
@@ -254,6 +381,48 @@ const ModelStatus = ( {
 		await modelLoader.unload();
 		setProgress( 0 );
 		setIsFromCache( false );
+		if ( onModelUnload ) {
+			onModelUnload();
+		}
+	}, [ onModelUnload ] );
+
+	/**
+	 * Fetch models from remote endpoint
+	 */
+	const handleFetchModels = useCallback( async () => {
+		if ( ! remoteUrl ) {
+			setFetchError( 'Please enter a URL' );
+			return;
+		}
+
+		setIsFetchingModels( true );
+		setFetchError( '' );
+
+		try {
+			const models = await ExternalEngine.fetchModels(
+				remoteUrl,
+				remoteApiKey
+			);
+			setRemoteModels( models );
+			if ( models.length > 0 && ! selectedRemoteModel ) {
+				setSelectedRemoteModel( models[ 0 ].id );
+			}
+			saveProviderSettings( { remoteUrl, remoteApiKey } );
+		} catch ( err ) {
+			log.error( 'Failed to fetch models:', err );
+			setFetchError( err.message );
+			setRemoteModels( [] );
+		} finally {
+			setIsFetchingModels( false );
+		}
+	}, [ remoteUrl, remoteApiKey, selectedRemoteModel ] );
+
+	/**
+	 * Handle provider mode toggle
+	 */
+	const handleProviderChange = useCallback( ( mode ) => {
+		setProviderMode( mode );
+		saveProviderSettings( { provider: mode } );
 	}, [] );
 
 	/**
@@ -273,30 +442,6 @@ const ModelStatus = ( {
 		}
 	};
 
-	/**
-	 * Get button text based on status
-	 */
-	const getButtonText = () => {
-		switch ( status ) {
-			case 'error':
-				return 'Retry';
-			case 'ready':
-				return 'Unload Model';
-			default:
-				return 'Load Model';
-		}
-	};
-
-	/**
-	 * Get button click handler
-	 */
-	const getButtonHandler = () => {
-		if ( status === 'ready' ) {
-			return handleUnloadModel;
-		}
-		return handleLoadModel;
-	};
-
 	// Get current loading stage info - use init values during init phase, otherwise use model loader values
 	const isInInitPhase = initPhase === 'checking';
 	const displayProgress = isInInitPhase ? initProgress : progress;
@@ -309,11 +454,17 @@ const ModelStatus = ( {
 		if ( isInInitPhase ) {
 			return 'Initializing';
 		}
+		if ( providerMode === 'remote' ) {
+			return 'Connecting';
+		}
 		if ( isFromCache ) {
 			return 'Loading from Cache';
 		}
 		return 'Loading Model';
 	};
+
+	const isRemoteReady =
+		providerMode === 'remote' && remoteUrl && selectedRemoteModel;
 
 	return (
 		<div className="wp-agentic-admin-model-status">
@@ -337,7 +488,14 @@ const ModelStatus = ( {
 						</span>
 					</div>
 
-					<div className="wp-agentic-admin-loading-card__progress">
+					<div
+						className="wp-agentic-admin-loading-card__progress"
+						role="progressbar"
+						aria-valuenow={ displayProgress }
+						aria-valuemin={ 0 }
+						aria-valuemax={ 100 }
+						aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
+					>
 						<div
 							className="wp-agentic-admin-loading-card__progress-bar"
 							style={ { width: `${ displayProgress }%` } }
@@ -357,7 +515,17 @@ const ModelStatus = ( {
 				<div className="wp-agentic-admin-status">
 					<span
 						className={ `wp-agentic-admin-status__indicator ${ getStatusClass() }` }
+						aria-hidden="true"
 					/>
+					<span className="screen-reader-text">
+						{ status === 'ready'
+							? 'Ready'
+							: status === 'error'
+							? 'Error'
+							: status === 'loading'
+							? 'Loading'
+							: 'Not loaded' }
+					</span>
 					<div className="wp-agentic-admin-status__info">
 						<span className="wp-agentic-admin-status__text">
 							{ status === 'ready' && loadedModelInfo
@@ -366,6 +534,14 @@ const ModelStatus = ( {
 						</span>
 						{ status === 'ready' && loadedModelInfo && (
 							<span className="wp-agentic-admin-status__model-details">
+								{ loadedModelInfo.mode === 'external' && (
+									<span
+										className="wp-agentic-admin-status__mode-badge wp-agentic-admin-status__mode-badge--external"
+										title="Connected to external API"
+									>
+										Remote
+									</span>
+								) }
 								{ isServiceWorkerMode && (
 									<span
 										className="wp-agentic-admin-status__mode-badge wp-agentic-admin-status__mode-badge--persistent"
@@ -382,7 +558,6 @@ const ModelStatus = ( {
 										{ ' · ' }
 									</span>
 								) }
-								{ `~${ loadedModelInfo.size } VRAM` }
 								{ memoryStats?.available &&
 									memoryStats?.formatted && (
 										<>
@@ -405,7 +580,16 @@ const ModelStatus = ( {
 										<span className="context__label">
 											Context:
 										</span>
-										<span className="context__bar">
+										<span
+											className="context__bar"
+											role="progressbar"
+											aria-valuenow={
+												contextUsage.percentage
+											}
+											aria-valuemin={ 0 }
+											aria-valuemax={ 100 }
+											aria-label={ `Context usage: ${ contextUsage.percentage }%` }
+										>
 											<span
 												className="context__fill"
 												style={ {
@@ -427,23 +611,75 @@ const ModelStatus = ( {
 
 					{ status === 'checking' && <Spinner /> }
 
-					{ ( status === 'not-loaded' ||
-						status === 'error' ||
-						status === 'ready' ) && (
-						<div className="wp-agentic-admin-status__controls">
-							{ status !== 'ready' && (
+					{ status === 'ready' && (
+						<DropdownMenu
+							icon={ moreVertical }
+							label="Model options"
+							className="wp-agentic-admin-status__kebab-menu"
+						>
+							{ ( { onClose } ) => (
+								<MenuGroup>
+									<MenuItem
+										onClick={ () => {
+											handleUnloadModel();
+											onClose();
+										} }
+									>
+										Unload model
+									</MenuItem>
+								</MenuGroup>
+							) }
+						</DropdownMenu>
+					) }
+				</div>
+			) }
+
+			{ /* Provider selection and controls — shown when not loaded */ }
+			{ ( status === 'not-loaded' || status === 'error' ) && (
+				<div className="wp-agentic-admin-provider">
+					{ /* Provider toggle */ }
+					<div
+						className="wp-agentic-admin-provider__toggle"
+						role="tablist"
+						aria-label="Provider selection"
+					>
+						<button
+							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'local' }
+							className={ `wp-agentic-admin-provider__tab ${
+								providerMode === 'local' ? 'is-active' : ''
+							}` }
+							onClick={ () => handleProviderChange( 'local' ) }
+						>
+							Local (WebLLM)
+						</button>
+						<button
+							type="button"
+							role="tab"
+							aria-selected={ providerMode === 'remote' }
+							className={ `wp-agentic-admin-provider__tab ${
+								providerMode === 'remote' ? 'is-active' : ''
+							}` }
+							onClick={ () => handleProviderChange( 'remote' ) }
+						>
+							Remote (API)
+						</button>
+					</div>
+
+					{ /* Local provider controls */ }
+					{ providerMode === 'local' && (
+						<div className="wp-agentic-admin-provider__local">
+							<div className="wp-agentic-admin-status__controls">
 								<select
 									className="wp-agentic-admin-model-select"
 									value={ selectedModel }
+									aria-label="Select AI model"
 									onChange={ ( e ) => {
 										const modelId = e.target.value;
 										setSelectedModel( modelId );
 										saveModel( modelId );
 									} }
-									disabled={
-										status === 'loading' ||
-										status === 'checking'
-									}
 								>
 									{ availableModels.map( ( model ) => (
 										<option
@@ -457,33 +693,153 @@ const ModelStatus = ( {
 										</option>
 									) ) }
 								</select>
+								<Button
+									variant="primary"
+									onClick={ handleLoadModel }
+									className="wp-agentic-admin-load-model"
+								>
+									{ status === 'error'
+										? 'Retry'
+										: 'Load Model' }
+								</Button>
+							</div>
+							<p className="wp-agentic-admin-model-info">
+								The AI model runs entirely in your browser using
+								WebGPU. The first load will download model data
+								(250MB-1GB depending on model), which is cached
+								for future use. Using a Service Worker, the
+								model stays loaded as you navigate wp-admin - no
+								reload needed! No data is sent to external
+								servers.
+							</p>
+							<div className="wp-agentic-admin-performance-tip">
+								<span className="wp-agentic-admin-performance-tip__icon">
+									💡
+								</span>
+								<div className="wp-agentic-admin-performance-tip__content">
+									<strong>Performance Tip</strong>
+									LLM thinking can be slow on integrated GPUs.
+									For better performance in Chrome, visit{ ' ' }
+									<code>
+										chrome://flags/#force-high-performance-gpu
+									</code>{ ' ' }
+									and enable &quot;Force high performance
+									GPU&quot;.
+								</div>
+							</div>
+						</div>
+					) }
+
+					{ /* Remote provider controls */ }
+					{ providerMode === 'remote' && (
+						<div className="wp-agentic-admin-provider__remote">
+							<div className="wp-agentic-admin-provider__field">
+								<label htmlFor="wp-agentic-remote-url">
+									Endpoint URL
+								</label>
+								<div className="wp-agentic-admin-provider__url-row">
+									<input
+										id="wp-agentic-remote-url"
+										type="url"
+										className="wp-agentic-admin-provider__input"
+										value={ remoteUrl }
+										onChange={ ( e ) =>
+											setRemoteUrl( e.target.value )
+										}
+										placeholder="http://localhost:11434"
+									/>
+									<Button
+										variant="secondary"
+										onClick={ handleFetchModels }
+										disabled={
+											isFetchingModels || ! remoteUrl
+										}
+										className="wp-agentic-admin-provider__fetch-btn"
+									>
+										{ isFetchingModels
+											? 'Fetching...'
+											: 'Fetch Models' }
+									</Button>
+								</div>
+							</div>
+
+							<div className="wp-agentic-admin-provider__field">
+								<label htmlFor="wp-agentic-remote-key">
+									API Key{ ' ' }
+									<span className="wp-agentic-admin-provider__optional">
+										(optional)
+									</span>
+								</label>
+								<input
+									id="wp-agentic-remote-key"
+									type="password"
+									className="wp-agentic-admin-provider__input"
+									value={ remoteApiKey }
+									onChange={ ( e ) =>
+										setRemoteApiKey( e.target.value )
+									}
+									placeholder="sk-... (for OpenAI, Groq, etc.)"
+								/>
+							</div>
+
+							{ fetchError && (
+								<p className="wp-agentic-admin-provider__error">
+									{ fetchError }
+								</p>
 							) }
-							<Button
-								variant={
-									status === 'ready' ? 'secondary' : 'primary'
-								}
-								onClick={ getButtonHandler() }
-								disabled={
-									status === 'loading' ||
-									status === 'checking'
-								}
-								className="wp-agentic-admin-load-model"
-							>
-								{ getButtonText() }
-							</Button>
+
+							{ remoteModels.length > 0 && (
+								<div className="wp-agentic-admin-provider__field">
+									<label htmlFor="wp-agentic-remote-model">
+										Model
+									</label>
+									<div className="wp-agentic-admin-status__controls">
+										<select
+											id="wp-agentic-remote-model"
+											className="wp-agentic-admin-model-select"
+											value={ selectedRemoteModel }
+											onChange={ ( e ) => {
+												setSelectedRemoteModel(
+													e.target.value
+												);
+												saveProviderSettings( {
+													remoteModel: e.target.value,
+												} );
+											} }
+										>
+											{ remoteModels.map( ( model ) => (
+												<option
+													key={ model.id }
+													value={ model.id }
+												>
+													{ model.name }
+												</option>
+											) ) }
+										</select>
+										<Button
+											variant="primary"
+											onClick={ handleConnectRemote }
+											disabled={ ! isRemoteReady }
+											className="wp-agentic-admin-load-model"
+										>
+											{ status === 'error'
+												? 'Retry'
+												: 'Connect' }
+										</Button>
+									</div>
+								</div>
+							) }
+
+							<p className="wp-agentic-admin-model-info">
+								Connect to any OpenAI-compatible API endpoint
+								(Ollama, LM Studio, vLLM, OpenAI, Groq,
+								Together, etc.). Enter the base URL and fetch
+								available models. API keys are stored in your
+								browser only.
+							</p>
 						</div>
 					) }
 				</div>
-			) }
-
-			{ status === 'not-loaded' && (
-				<p className="wp-agentic-admin-model-info">
-					The AI model runs entirely in your browser using WebGPU. The
-					first load will download model data (250MB-1GB depending on
-					model), which is cached for future use. Using a Service
-					Worker, the model stays loaded as you navigate wp-admin - no
-					reload needed! No data is sent to external servers.
-				</p>
 			) }
 		</div>
 	);

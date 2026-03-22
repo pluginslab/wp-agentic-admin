@@ -10,10 +10,21 @@ import { Notice, ExternalLink } from '@wordpress/components';
 /**
  * WebGPUFallback component
  *
- * @param {Object} props        - Component props
- * @param {string} props.reason - The specific reason WebGPU isn't available
+ * @param {Object}  props                   - Component props
+ * @param {string}  props.reason            - The specific reason WebGPU isn't available
+ * @param {boolean} props.isInsecureContext - Whether the page is served over HTTP
  */
-const WebGPUFallback = ( { reason } ) => {
+const WebGPUFallback = ( { reason, isInsecureContext } ) => {
+	if ( isInsecureContext ) {
+		return (
+			<div className="wp-agentic-admin-webgpu-fallback">
+				<Notice status="warning" isDismissible={ false }>
+					<h3>{ reason }</h3>
+				</Notice>
+			</div>
+		);
+	}
+
 	return (
 		<div className="wp-agentic-admin-webgpu-fallback">
 			<Notice status="warning" isDismissible={ false }>

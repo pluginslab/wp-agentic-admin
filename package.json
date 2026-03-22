@@ -6,6 +6,7 @@
     "build": "npm run build:extensions",
     "build:extensions": "wp-scripts build src/extensions/index.js --output-path=build-extensions",
     "test:abilities": "node tests/abilities/runner.js",
+    "test:e2e": "node tests/abilities/e2e-runner.js",
     "watch": "wp-scripts start src/extensions/index.js --output-path=build-extensions",
     "clean": "del-cli build-extensions wp-agentic-admin.zip",
     "dist": "npm run clean && npm run build && rm -f wp-agentic-admin.zip && zip -r wp-agentic-admin.zip -@ < .distpackage",
@@ -19,7 +20,9 @@
     "lint:php:fix": "composer lint:fix",
     "lint": "npm run lint:js && npm run lint:css && npm run lint:php",
     "lint:fix": "npm run lint:js:fix && npm run lint:css:fix && npm run lint:php:fix",
-    "playground": "npm run build && npx @wp-now/wp-now start --php=8.3 --blueprint=.playground/blueprint.json"
+    "playground": "npm run build && npx @wp-now/wp-now start --php=8.3 --blueprint=.playground/blueprint.json",
+    "playground:feedback-dev": "bash scripts/feedback-dev.sh",
+    "export:feedback": "bash scripts/export-feedback.sh"
   },
   "devDependencies": {
     "@wordpress/scripts": "^31.0.0",
@@ -27,6 +30,7 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.82",
+    "@wordpress/icons": "^12.0.0",
     "fastest-levenshtein": "^1.0.16"
   },
   "keywords": [

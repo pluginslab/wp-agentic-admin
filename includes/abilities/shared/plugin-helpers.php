@@ -52,10 +52,193 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
 		);
 	}
 
+	$actions = array();
+	foreach ( $plugins as $plugin ) {
+		if ( $plugin['active'] ) {
+			$actions[] = array(
+				'label'        => $plugin['name'],
+				'button_label' => __( 'Deactivate', 'wp-agentic-admin' ),
+				'action'       => 'wp-agentic-admin/plugin-deactivate',
+				'args'         => array( 'plugin' => $plugin['slug'] ),
+			);
+		} else {
+			$actions[] = array(
+				'label'        => $plugin['name'],
+				'button_label' => __( 'Activate', 'wp-agentic-admin' ),
+				'action'       => 'wp-agentic-admin/plugin-activate',
+				'args'         => array( 'plugin' => $plugin['slug'] ),
+			);
+		}
+	}
+
 	return array(
 		'plugins' => $plugins,
 		'total'   => count( $plugins ),
 		'active'  => $active_count,
+		'actions' => $actions,
+	);
+}
+
+
+/**
+ * Resolve a plugin identifier (name, slug, or partial match) to a plugin file path.
+ *
+ * Uses tiered matching with certainty scoring:
+ * - Tier 1 (10.0): Exact slug match (e.g. "akismet/akismet.php")
+ * - Tier 2 (9.5):  Exact name match, case-insensitive
+ * - Tier 3 (9.0):  Slug directory prefix (e.g. "akismet" matches "akismet/akismet.php")
+ * - Tier 4 (8.0):  Name starts with input
+ * - Tier 5 (6.0):  Input is substring of name
+ * - Tier 6 (5.0):  Name is substring of input
+ *
+ * If multiple plugins match at the same tier, certainty is reduced by 1.0.
+ *
+ * @param string $identifier Plugin name, slug, or partial string.
+ * @return array {
+ *     @type string|null $plugin_file Resolved plugin file path, or null if no match.
+ *     @type string|null $plugin_name Display name of the matched plugin.
+ *     @type float       $certainty   Match confidence from 1.0 to 10.0.
+ *     @type array       $candidates  Top candidates with their certainty scores.
+ * }
+ */
+function    wp_agentic_admin_resolve_plugin( string $identifier ): array {
+	if ( ! function_exists( 'get_plugins' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+
+	$all_plugins = get_plugins();
+	$input_lower = strtolower( trim( $identifier ) );
+
+	// Strip trailing "plugin" (e.g. "blocks plugin" → "blocks").
+	$input_lower = preg_replace( '/\s+plugin$/', '', $input_lower );
+
+	if ( '' === $input_lower ) {
+		return array(
+			'plugin_file' => null,
+			'plugin_name' => null,
+			'certainty'   => 0.0,
+			'candidates'  => array(),
+		);
+	}
+
+	// Collect all matches with their tier and certainty.
+	$matches = array();
+
+	foreach ( $all_plugins as $plugin_file => $plugin_data ) {
+		$name_lower = strtolower( $plugin_data['Name'] );
+		$slug_dir   = strtolower( dirname( $plugin_file ) );
+
+		// Tier 1: Exact slug match.
+		if ( strtolower( $plugin_file ) === $input_lower ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 1,
+				'certainty'   => 10.0,
+			);
+			continue;
+		}
+
+		// Tier 2: Exact name match (case-insensitive).
+		if ( $name_lower === $input_lower ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 2,
+				'certainty'   => 9.5,
+			);
+			continue;
+		}
+
+		// Tier 3: Slug directory prefix (e.g. "akismet" matches "akismet/akismet.php").
+		if ( '.' !== $slug_dir && $slug_dir === $input_lower ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 3,
+				'certainty'   => 9.0,
+			);
+			continue;
+		}
+
+		// Tier 4: Name starts with input.
+		if ( str_starts_with( $name_lower, $input_lower ) ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 4,
+				'certainty'   => 8.0,
+			);
+			continue;
+		}
+
+		// Tier 5: Input is substring of name.
+		if ( false !== strpos( $name_lower, $input_lower ) ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 5,
+				'certainty'   => 6.0,
+			);
+			continue;
+		}
+
+		// Tier 6: Name is substring of input.
+		if ( false !== strpos( $input_lower, $name_lower ) ) {
+			$matches[] = array(
+				'plugin_file' => $plugin_file,
+				'plugin_name' => $plugin_data['Name'],
+				'tier'        => 6,
+				'certainty'   => 5.0,
+			);
+			continue;
+		}
+	}
+
+	if ( empty( $matches ) ) {
+		return array(
+			'plugin_file' => null,
+			'plugin_name' => null,
+			'certainty'   => 0.0,
+			'candidates'  => array(),
+		);
+	}
+
+	// Sort by tier (ascending = best first), then by name length (shorter = more specific).
+	usort(
+		$matches,
+		function ( $a, $b ) {
+			if ( $a['tier'] !== $b['tier'] ) {
+				return $a['tier'] - $b['tier'];
+			}
+			return strlen( $a['plugin_name'] ) - strlen( $b['plugin_name'] );
+		}
+	);
+
+	$best      = $matches[0];
+	$best_tier = $best['tier'];
+
+	// Count how many matches share the best tier.
+	$same_tier_count = 0;
+	foreach ( $matches as $match ) {
+		if ( $match['tier'] === $best_tier ) {
+			++$same_tier_count;
+		}
+	}
+
+	// Reduce certainty if multiple plugins matched at the same tier.
+	if ( $same_tier_count > 1 ) {
+		$best['certainty'] = max( 1.0, $best['certainty'] - 1.0 );
+	}
+
+	// Build candidates list (top 5).
+	$candidates = array_slice( $matches, 0, 5 );
+
+	return array(
+		'plugin_file' => $best['plugin_file'],
+		'plugin_name' => $best['plugin_name'],
+		'certainty'   => $best['certainty'],
+		'candidates'  => $candidates,
 	);
 }
 
@@ -88,38 +271,58 @@ function wp_agentic_admin_get_plugin_by_slug( string $plugin_file ): ?array {
 }
 
 /**
- * Activate a plugin by its slug.
+ * Activate a plugin by its slug or name.
  *
- * @param string $plugin_file The plugin file path (slug) to activate.
- * @return array Result with success status and message.
+ * Accepts either an exact plugin file path (e.g. "akismet/akismet.php") or a
+ * display name / partial match. Uses fuzzy resolution with certainty scoring.
+ * If certainty is below 8.0, returns action buttons for the top candidates
+ * instead of activating.
+ *
+ * @param string $plugin_identifier The plugin file path, name, or partial match.
+ * @return array Result with success status, message, certainty, and optional actions.
  */
-function wp_agentic_admin_activate_plugin_by_slug( string $plugin_file ): array {
-	$plugin_file = sanitize_text_field( $plugin_file );
-	$plugin_data = wp_agentic_admin_get_plugin_by_slug( $plugin_file );
+function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): array {
+	$plugin_identifier = sanitize_text_field( $plugin_identifier );
+	$resolved          = wp_agentic_admin_resolve_plugin( $plugin_identifier );
 
-	// Check if plugin exists.
-	if ( null === $plugin_data ) {
+	// No match at all.
+	if ( null === $resolved['plugin_file'] ) {
 		return array(
-			'success' => false,
-			'message' => sprintf(
-				/* translators: %s: plugin file path */
-				__( 'Plugin "%s" not found.', 'wp-agentic-admin' ),
-				$plugin_file
+			'success'   => false,
+			'message'   => sprintf(
+				/* translators: %s: plugin identifier */
+				__( 'No plugin found matching "%s".', 'wp-agentic-admin' ),
+				$plugin_identifier
 			),
+			'certainty' => 0.0,
 		);
 	}
 
-	$plugin_name = $plugin_data['name'];
+	// Low certainty — return candidates as action buttons.
+	if ( $resolved['certainty'] < 8.0 ) {
+		return wp_agentic_admin_build_candidate_response(
+			$resolved,
+			$plugin_identifier,
+			'wp-agentic-admin/plugin-activate',
+			__( 'Activate', 'wp-agentic-admin' )
+		);
+	}
+
+	$plugin_file = $resolved['plugin_file'];
+	$plugin_name = $resolved['plugin_name'];
+	$certainty   = $resolved['certainty'];
 
 	// Check if already active.
-	if ( $plugin_data['active'] ) {
+	if ( is_plugin_active( $plugin_file ) ) {
 		return array(
-			'success' => true,
-			'message' => sprintf(
+			'success'        => true,
+			'message'        => sprintf(
 				/* translators: %s: plugin name */
 				__( 'Plugin "%s" is already active.', 'wp-agentic-admin' ),
 				$plugin_name
 			),
+			'matched_plugin' => $plugin_name,
+			'certainty'      => $certainty,
 		);
 	}
 
@@ -129,71 +332,97 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_file ): array 
 	// Check if activation failed.
 	if ( is_wp_error( $result ) ) {
 		return array(
-			'success' => false,
-			'message' => sprintf(
+			'success'        => false,
+			'message'        => sprintf(
 				/* translators: 1: plugin name, 2: error message */
 				__( 'Failed to activate plugin "%1$s": %2$s', 'wp-agentic-admin' ),
 				$plugin_name,
 				$result->get_error_message()
 			),
+			'matched_plugin' => $plugin_name,
+			'certainty'      => $certainty,
 		);
 	}
 
 	// Verify activation.
 	if ( ! is_plugin_active( $plugin_file ) ) {
 		return array(
-			'success' => false,
-			'message' => sprintf(
+			'success'        => false,
+			'message'        => sprintf(
 				/* translators: %s: plugin name */
 				__( 'Failed to activate plugin "%s".', 'wp-agentic-admin' ),
 				$plugin_name
 			),
+			'matched_plugin' => $plugin_name,
+			'certainty'      => $certainty,
 		);
 	}
 
 	return array(
-		'success' => true,
-		'message' => sprintf(
+		'success'        => true,
+		'message'        => sprintf(
 			/* translators: %s: plugin name */
 			__( 'Plugin "%s" has been activated successfully.', 'wp-agentic-admin' ),
 			$plugin_name
 		),
+		'matched_plugin' => $plugin_name,
+		'certainty'      => $certainty,
 	);
 }
 
 /**
- * Deactivate a plugin by its slug.
+ * Deactivate a plugin by its slug or name.
  *
- * @param string $plugin_file The plugin file path (slug) to deactivate.
- * @return array Result with success status and message.
+ * Accepts either an exact plugin file path (e.g. "akismet/akismet.php") or a
+ * display name / partial match. Uses fuzzy resolution with certainty scoring.
+ * If certainty is below 8.0, returns action buttons for the top candidates
+ * instead of deactivating.
+ *
+ * @param string $plugin_identifier The plugin file path, name, or partial match.
+ * @return array Result with success status, message, certainty, and optional actions.
  */
-function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_file ): array {
-	$plugin_file = sanitize_text_field( $plugin_file );
-	$plugin_data = wp_agentic_admin_get_plugin_by_slug( $plugin_file );
+function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier ): array {
+	$plugin_identifier = sanitize_text_field( $plugin_identifier );
+	$resolved          = wp_agentic_admin_resolve_plugin( $plugin_identifier );
 
-	// Check if plugin exists.
-	if ( null === $plugin_data ) {
+	// No match at all.
+	if ( null === $resolved['plugin_file'] ) {
 		return array(
-			'success' => false,
-			'message' => sprintf(
-				/* translators: %s: plugin file path */
-				__( 'Plugin "%s" not found.', 'wp-agentic-admin' ),
-				$plugin_file
+			'success'   => false,
+			'message'   => sprintf(
+				/* translators: %s: plugin identifier */
+				__( 'No plugin found matching "%s".', 'wp-agentic-admin' ),
+				$plugin_identifier
 			),
+			'certainty' => 0.0,
 		);
 	}
 
-	$plugin_name = $plugin_data['name'];
+	// Low certainty — return candidates as action buttons.
+	if ( $resolved['certainty'] < 8.0 ) {
+		return wp_agentic_admin_build_candidate_response(
+			$resolved,
+			$plugin_identifier,
+			'wp-agentic-admin/plugin-deactivate',
+			__( 'Deactivate', 'wp-agentic-admin' )
+		);
+	}
+
+	$plugin_file = $resolved['plugin_file'];
+	$plugin_name = $resolved['plugin_name'];
+	$certainty   = $resolved['certainty'];
 
 	// Check if already inactive.
-	if ( ! $plugin_data['active'] ) {
+	if ( ! is_plugin_active( $plugin_file ) ) {
 		return array(
-			'success' => true,
-			'message' => sprintf(
+			'success'        => true,
+			'message'        => sprintf(
 				/* translators: %s: plugin name */
 				__( 'Plugin "%s" is already inactive.', 'wp-agentic-admin' ),
 				$plugin_name
 			),
+			'matched_plugin' => $plugin_name,
+			'certainty'      => $certainty,
 		);
 	}
 
@@ -203,21 +432,477 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_file ): arra
 	// Verify deactivation.
 	if ( is_plugin_active( $plugin_file ) ) {
 		return array(
-			'success' => false,
-			'message' => sprintf(
+			'success'        => false,
+			'message'        => sprintf(
 				/* translators: %s: plugin name */
 				__( 'Failed to deactivate plugin "%s".', 'wp-agentic-admin' ),
 				$plugin_name
 			),
+			'matched_plugin' => $plugin_name,
+			'certainty'      => $certainty,
 		);
 	}
 
 	return array(
-		'success' => true,
-		'message' => sprintf(
+		'success'        => true,
+		'message'        => sprintf(
 			/* translators: %s: plugin name */
 			__( 'Plugin "%s" has been deactivated.', 'wp-agentic-admin' ),
 			$plugin_name
 		),
+		'matched_plugin' => $plugin_name,
+		'certainty'      => $certainty,
 	);
+}
+
+/**
+ * Build a response with candidate action buttons when certainty is low.
+ *
+ * Returns a structured response with action buttons for the top plugin
+ * candidates, allowing the user to select the correct one.
+ *
+ * @param array  $resolved         Result from wp_agentic_admin_resolve_plugin().
+ * @param string $original_input   The user's original input string.
+ * @param string $action_id        The ability action ID (e.g. "wp-agentic-admin/plugin-activate").
+ * @param string $button_label     Label for the action button (e.g. "Activate").
+ * @return array Response with actions for UI buttons.
+ */
+function wp_agentic_admin_build_candidate_response( array $resolved, string $original_input, string $action_id, string $button_label ): array {
+	$actions = array();
+
+	foreach ( $resolved['candidates'] as $candidate ) {
+		$actions[] = array(
+			'label'        => sprintf( '%s (%.1f/10)', $candidate['plugin_name'], $candidate['certainty'] ),
+			'button_label' => $button_label,
+			'action'       => $action_id,
+			'args'         => array( 'plugin' => $candidate['plugin_file'] ),
+		);
+	}
+
+	return array(
+		'success'   => false,
+		'message'   => sprintf(
+			/* translators: %s: user input */
+			__( 'Multiple plugins match "%s". Please select the correct one:', 'wp-agentic-admin' ),
+			$original_input
+		),
+		'certainty' => $resolved['certainty'],
+		'actions'   => $actions,
+	);
+}
+
+/**
+ * Scan plugins for known vulnerabilities using public CVE data sources.
+ *
+ * This function currently queries the NVD API and additionally uses MITRE CVE
+ * records (where available) to help determine affected versions of plugins.
+ *
+ * TODO: This is a solution that does not require any API key, authentication, or setup,
+ * but it is not an extremely accurate way of checking vulnerabilities and may produce
+ * false positives/negatives. In the future we can consider integrating with a more
+ * reliable service via a partnership.
+ *
+ * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'active'.
+ * @return array Array with plugins and their vulnerabilities.
+ */
+function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'active' ): array {
+	$plugins_data = wp_agentic_admin_get_all_plugins( $status_filter );
+	$plugins      = $plugins_data['plugins'];
+
+	$total_vulnerabilities = 0;
+	$scan_errors           = 0;
+	$endpoint              = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
+
+	foreach ( $plugins as $index => $plugin ) {
+		$plugin_name    = sanitize_text_field( $plugin['name'] );
+		$plugin_version = isset( $plugin['version'] ) ? (string) $plugin['version'] : '';
+		$plugin_slug    = wp_agentic_admin_normalize_plugin_slug( isset( $plugin['slug'] ) ? (string) $plugin['slug'] : '' );
+
+		$plugins[ $index ]['vulnerabilities']      = array();
+		$plugins[ $index ]['vulnerability_count']  = 0;
+		$plugins[ $index ]['has_vulnerabilities']  = false;
+		$plugins[ $index ]['vulnerability_source'] = 'mitre';
+
+		if ( '' === $plugin_name ) {
+			continue;
+		}
+
+		$cache_key = 'wp_agentic_admin_nvd_' . md5( strtolower( $plugin_name ) );
+		$response  = get_transient( $cache_key );
+
+		if ( false === $response ) {
+			$request_url = add_query_arg(
+				array(
+					'keywordSearch'     => $plugin_name,
+					'keywordExactMatch' => '',
+					'resultsPerPage'    => 30,
+				),
+				$endpoint
+			);
+
+			$headers = array(
+				'Accept' => 'application/json',
+			);
+
+			$response = wp_remote_get(
+				$request_url,
+				array(
+					'timeout' => 30,
+					'headers' => $headers,
+				)
+			);
+
+			set_transient( $cache_key, $response, 3 * HOUR_IN_SECONDS );
+		}
+
+		if ( is_wp_error( $response ) ) {
+			$plugins[ $index ]['scan_error'] = $response->get_error_message();
+			++$scan_errors;
+			continue;
+		}
+
+		$status_code = (int) wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $status_code ) {
+			$plugins[ $index ]['scan_error'] = sprintf(
+				/* translators: %d: HTTP status code */
+				__( 'NVD request failed with status code %d.', 'wp-agentic-admin' ),
+				$status_code
+			);
+			++$scan_errors;
+			continue;
+		}
+
+		$body    = wp_remote_retrieve_body( $response );
+		$decoded = json_decode( $body, true );
+
+		if ( ! is_array( $decoded ) || empty( $decoded['vulnerabilities'] ) || ! is_array( $decoded['vulnerabilities'] ) ) {
+			continue;
+		}
+
+		$vulnerabilities = array_reverse( array_slice( $decoded['vulnerabilities'], -30 ) );
+
+		foreach ( $vulnerabilities as $vulnerability ) {
+			if ( empty( $vulnerability['cve'] ) || ! is_array( $vulnerability['cve'] ) ) {
+				continue;
+			}
+
+			$cve    = $vulnerability['cve'];
+			$cve_id = isset( $cve['id'] ) ? (string) $cve['id'] : '';
+
+			if ( '' === $cve_id ) {
+				continue;
+			}
+
+			$mitre_record = wp_agentic_admin_get_mitre_cve_record( $cve_id );
+			if ( is_wp_error( $mitre_record ) ) {
+				continue;
+			}
+
+			$mitre_match = wp_agentic_admin_is_plugin_version_affected_from_mitre(
+				$plugin_name,
+				$plugin_version,
+				$plugin_slug,
+				$mitre_record
+			);
+
+			if ( true !== $mitre_match ) {
+				continue;
+			}
+
+			$cvss = wp_agentic_admin_extract_cvss_data( $cve );
+
+			$plugins[ $index ]['vulnerabilities'][] = array(
+				'cve_id'                  => $cve_id,
+				'published'               => isset( $cve['published'] ) ? $cve['published'] : '',
+				'last_modified'           => isset( $cve['lastModified'] ) ? $cve['lastModified'] : '',
+				'description'             => wp_agentic_admin_extract_english_description( $cve ),
+				'severity'                => isset( $cvss['severity'] ) ? $cvss['severity'] : '',
+				'base_score'              => isset( $cvss['base_score'] ) ? $cvss['base_score'] : null,
+				'vector'                  => isset( $cvss['vector'] ) ? $cvss['vector'] : '',
+				'affected_version_source' => 'mitre',
+			);
+
+			break;
+		}
+
+		$plugins[ $index ]['vulnerability_count'] = count( $plugins[ $index ]['vulnerabilities'] );
+		$plugins[ $index ]['has_vulnerabilities'] = $plugins[ $index ]['vulnerability_count'] > 0;
+		$total_vulnerabilities                   += $plugins[ $index ]['vulnerability_count'];
+	}
+
+	$plugins_data['plugins']               = $plugins;
+	$plugins_data['total_vulnerabilities'] = $total_vulnerabilities;
+	$plugins_data['plugins_with_issues']   = count(
+		array_filter(
+			$plugins,
+			static function ( array $plugin ): bool {
+				return ! empty( $plugin['has_vulnerabilities'] );
+			}
+		)
+	);
+	$plugins_data['scan_errors']           = $scan_errors;
+	$plugins_data['scanned_at']            = gmdate( 'c' );
+
+	return $plugins_data;
+}
+
+/**
+ * Normalize plugin file path to WordPress.org slug.
+ *
+ * @param string $plugin_file Plugin file path.
+ * @return string
+ */
+function wp_agentic_admin_normalize_plugin_slug( string $plugin_file ): string {
+	$plugin_file = trim( $plugin_file );
+
+	if ( '' === $plugin_file ) {
+		return '';
+	}
+
+	$directory = dirname( $plugin_file );
+	if ( '.' !== $directory && '' !== $directory ) {
+		return strtolower( sanitize_title( $directory ) );
+	}
+
+	return strtolower( sanitize_title( basename( $plugin_file, '.php' ) ) );
+}
+
+/**
+ * Match plugin version using MITRE CVE affected/versions data.
+ *
+ * @param string $plugin_name    Installed plugin name.
+ * @param string $plugin_version Installed plugin version.
+ * @param string $plugin_slug    Installed plugin slug.
+ * @param array  $mitre_record   MITRE CVE record payload.
+ * @return bool|null True if affected, false if not affected, null if cannot decide.
+ */
+function wp_agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_name, string $plugin_version, string $plugin_slug, array $mitre_record ): ?bool {
+	if (
+		empty( $mitre_record['containers']['cna']['affected'] ) ||
+		! is_array( $mitre_record['containers']['cna']['affected'] )
+	) {
+		return null;
+	}
+
+	$normalized_version = ltrim( trim( $plugin_version ), 'vV' );
+	$normalized_slug    = strtolower( trim( $plugin_slug ) );
+	$evaluated_ranges   = false;
+	$matched_package    = false;
+	$normalized_name    = trim( $plugin_name );
+
+	foreach ( $mitre_record['containers']['cna']['affected'] as $affected ) {
+		$collection_url   = isset( $affected['collectionURL'] ) ? trim( (string) $affected['collectionURL'] ) : '';
+		$package_name     = isset( $affected['packageName'] ) ? strtolower( trim( (string) $affected['packageName'] ) ) : '';
+		$affected_product = isset( $affected['product'] ) ? trim( (string) $affected['product'] ) : '';
+
+		if ( $normalized_name !== $affected_product ) {
+			if ( 'https://wordpress.org/plugins' !== $collection_url ) {
+				continue;
+			}
+
+			if ( '' === $package_name || $package_name !== $normalized_slug ) {
+				continue;
+			}
+		}
+
+		$matched_package = true;
+
+		$default_status = isset( $affected['defaultStatus'] ) ? strtolower( (string) $affected['defaultStatus'] ) : '';
+
+		if ( empty( $affected['versions'] ) || ! is_array( $affected['versions'] ) ) {
+			if ( 'affected' === $default_status ) {
+				return true;
+			}
+			if ( 'unaffected' === $default_status ) {
+				return false;
+			}
+			continue;
+		}
+
+		foreach ( $affected['versions'] as $version_rule ) {
+			$status = isset( $version_rule['status'] ) ? strtolower( (string) $version_rule['status'] ) : $default_status;
+			if ( '' === $status ) {
+				continue;
+			}
+
+			if ( '' === $normalized_version ) {
+				return 'affected' === $status;
+			}
+
+			$exact = isset( $version_rule['version'] ) ? trim( (string) $version_rule['version'] ) : '';
+			$lt    = isset( $version_rule['lessThan'] ) ? wp_agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThan'] ) : '';
+			$lte   = isset( $version_rule['lessThanOrEqual'] ) ? wp_agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThanOrEqual'] ) : '';
+
+			$in_range = true;
+
+			if ( '' !== $lt && version_compare( $normalized_version, $lt, '>=' ) ) {
+				$in_range = false;
+			}
+			if ( '' !== $lte && version_compare( $normalized_version, $lte, '>' ) ) {
+				$in_range = false;
+			}
+
+			if ( '' !== $exact && ! in_array( strtolower( $exact ), array( 'n/a', '*', 'all' ), true ) && '' === $lt && '' === $lte ) {
+				$in_range = ( 0 === version_compare( $normalized_version, ltrim( $exact, 'vV' ) ) );
+			}
+
+			$evaluated_ranges = true;
+
+			if ( $in_range ) {
+				return 'affected' === $status;
+			}
+		}
+	}
+
+	if ( ! $matched_package ) {
+		return false;
+	}
+
+	if ( $evaluated_ranges ) {
+		return false;
+	}
+
+	return null;
+}
+
+/**
+ * Retrieve CVE JSON from MITRE CVE API.
+ *
+ * @param string $cve_id CVE identifier.
+ * @return array|WP_Error
+ */
+function wp_agentic_admin_get_mitre_cve_record( string $cve_id ) {
+	$cve_id    = strtoupper( trim( $cve_id ) );
+	$cache_key = 'wp_agentic_admin_mitre_' . md5( $cve_id );
+	$cached    = get_transient( $cache_key );
+
+	if ( false !== $cached ) {
+		return $cached;
+	}
+
+	$request_url = 'https://cveawg.mitre.org/api/cve/' . rawurlencode( $cve_id );
+	$response    = wp_remote_get(
+		$request_url,
+		array(
+			'timeout' => 30,
+			'headers' => array(
+				'Accept' => 'application/json',
+			),
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		set_transient( $cache_key, $response, 15 * MINUTE_IN_SECONDS );
+		return $response;
+	}
+
+	$status_code = (int) wp_remote_retrieve_response_code( $response );
+	if ( 200 !== $status_code ) {
+		$error = new WP_Error(
+			'wp_agentic_admin_mitre_http_error',
+			sprintf(
+				/* translators: %d: HTTP status code */
+				__( 'MITRE CVE request failed with status code %d.', 'wp-agentic-admin' ),
+				$status_code
+			)
+		);
+		set_transient( $cache_key, $error, 5 * MINUTE_IN_SECONDS );
+		return $error;
+	}
+
+	$body    = wp_remote_retrieve_body( $response );
+	$decoded = json_decode( $body, true );
+
+	if ( ! is_array( $decoded ) ) {
+		$error = new WP_Error(
+			'wp_agentic_admin_mitre_invalid_json',
+			__( 'Invalid MITRE CVE response.', 'wp-agentic-admin' )
+		);
+		set_transient( $cache_key, $error, 5 * MINUTE_IN_SECONDS );
+		return $error;
+	}
+
+	set_transient( $cache_key, $decoded, 6 * HOUR_IN_SECONDS );
+
+	return $decoded;
+}
+
+/**
+ * Normalize MITRE version bounds like "<= 1.2.3" to "1.2.3".
+ *
+ * @param string $bound Version bound.
+ * @return string
+ */
+function wp_agentic_admin_normalize_mitre_bound( string $bound ): string {
+	$bound = trim( $bound );
+	$bound = preg_replace( '/^[<>=\s]+/', '', $bound );
+
+	return is_string( $bound ) ? ltrim( $bound, 'vV' ) : '';
+}
+
+/**
+ * Extract the first English CVE description.
+ *
+ * @param array $cve CVE payload.
+ * @return string
+ */
+function wp_agentic_admin_extract_english_description( array $cve ): string {
+	if ( empty( $cve['descriptions'] ) || ! is_array( $cve['descriptions'] ) ) {
+		return '';
+	}
+
+	foreach ( $cve['descriptions'] as $description ) {
+		if ( isset( $description['lang'], $description['value'] ) && 'en' === $description['lang'] ) {
+			return (string) $description['value'];
+		}
+	}
+
+	if ( isset( $cve['descriptions'][0]['value'] ) ) {
+		return (string) $cve['descriptions'][0]['value'];
+	}
+
+	return '';
+}
+
+/**
+ * Extract CVSS severity details from CVE metrics.
+ *
+ * @param array $cve CVE payload.
+ * @return array
+ */
+function wp_agentic_admin_extract_cvss_data( array $cve ): array {
+	if ( empty( $cve['metrics'] ) || ! is_array( $cve['metrics'] ) ) {
+		return array();
+	}
+
+	$metric_sets = array( 'cvssMetricV31', 'cvssMetricV30', 'cvssMetricV2' );
+
+	foreach ( $metric_sets as $set_key ) {
+		if ( empty( $cve['metrics'][ $set_key ] ) || ! is_array( $cve['metrics'][ $set_key ] ) ) {
+			continue;
+		}
+
+		$metric = $cve['metrics'][ $set_key ][0];
+
+		if ( ! empty( $cve['metrics'][ $set_key ] ) ) {
+			foreach ( $cve['metrics'][ $set_key ] as $candidate ) {
+				if ( isset( $candidate['type'] ) && 'Primary' === $candidate['type'] ) {
+					$metric = $candidate;
+					break;
+				}
+			}
+		}
+
+		if ( empty( $metric['cvssData'] ) || ! is_array( $metric['cvssData'] ) ) {
+			continue;
+		}
+
+		return array(
+			'severity'   => isset( $metric['cvssData']['baseSeverity'] ) ? $metric['cvssData']['baseSeverity'] : '',
+			'base_score' => isset( $metric['cvssData']['baseScore'] ) ? $metric['cvssData']['baseScore'] : null,
+			'vector'     => isset( $metric['cvssData']['vectorString'] ) ? $metric['cvssData']['vectorString'] : '',
+		);
+	}
+
+	return array();
 }

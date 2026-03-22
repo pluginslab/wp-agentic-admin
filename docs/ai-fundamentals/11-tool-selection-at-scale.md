@@ -339,7 +339,7 @@ Third-party abilities automatically work:
 
 ```php
 // Third-party plugin
-register_agentic_ability(
+wp_agentic_admin_register_ability(
     'my-plugin/backup-restore',
     array(
         'description' => 'Restore site from backup file',

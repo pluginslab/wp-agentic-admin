@@ -7,7 +7,9 @@
  */
 
 import { useState } from '@wordpress/element';
+import AbilityPicker from './AbilityPicker';
 import { createLogger } from '../utils/logger';
+import { getMessageRating } from '../services/feedback';
 
 const log = createLogger( 'MessageItem' );
 
@@ -39,6 +41,140 @@ const formatTime = ( timestamp ) => {
 };
 
 /**
+ * Split message content into text and fenced code block segments.
+ *
+ * @param {string} text - Full message content
+ * @return {Array<{type:'text'|'code', content:string, lang?:string, partial?:boolean}>} Parsed blocks — partial is true for unclosed fences during streaming
+ */
+const parseBlocks = ( text ) => {
+	if ( ! text ) {
+		return [];
+	}
+
+	const blocks = [];
+	const fenceRe = /```(\w*)\n([\s\S]*?)```/g;
+	let lastIndex = 0;
+	let match;
+
+	while ( ( match = fenceRe.exec( text ) ) !== null ) {
+		if ( match.index > lastIndex ) {
+			blocks.push( {
+				type: 'text',
+				content: text.slice( lastIndex, match.index ),
+			} );
+		}
+		blocks.push( {
+			type: 'code',
+			lang: match[ 1 ] || '',
+			content: match[ 2 ],
+			partial: false,
+		} );
+		lastIndex = match.index + match[ 0 ].length;
+	}
+
+	// Handle an in-progress (unclosed) fenced code block during streaming.
+	const remaining = text.slice( lastIndex );
+	const openFence = remaining.match( /```(\w*)\n([\s\S]*)$/ );
+	if ( openFence ) {
+		const textBefore = remaining.slice( 0, openFence.index );
+		if ( textBefore ) {
+			blocks.push( { type: 'text', content: textBefore } );
+		}
+		blocks.push( {
+			type: 'code',
+			lang: openFence[ 1 ] || '',
+			content: openFence[ 2 ],
+			partial: true,
+		} );
+	} else if ( remaining ) {
+		blocks.push( { type: 'text', content: remaining } );
+	}
+
+	return blocks;
+};
+
+/**
+ * Code block component with language badge and copy button.
+ *
+ * @param {Object}  props         - Component props
+ * @param {string}  props.lang    - Language identifier (e.g. 'php', 'apache')
+ * @param {string}  props.code    - Raw code content
+ * @param {boolean} props.partial - True while the block is still streaming
+ * @return {JSX.Element} Rendered code block
+ */
+const CodeBlock = ( { lang, code, partial = false } ) => {
+	const [ codeCopied, setCodeCopied ] = useState( false );
+
+	const handleCodeCopy = async () => {
+		try {
+			await navigator.clipboard.writeText( code );
+			setCodeCopied( true );
+			setTimeout( () => setCodeCopied( false ), 2000 );
+		} catch ( err ) {
+			// Clipboard not available
+		}
+	};
+
+	return (
+		<div className="agentic-code-block">
+			<div className="agentic-code-block__header">
+				<span className="agentic-code-block__lang">
+					{ lang || 'code' }
+				</span>
+				{ ! partial && (
+					<button
+						className={ `agentic-code-block__copy ${
+							codeCopied ? 'agentic-code-block__copy--copied' : ''
+						}` }
+						onClick={ handleCodeCopy }
+						type="button"
+						title={ codeCopied ? 'Copied!' : 'Copy code' }
+					>
+						{ codeCopied ? (
+							<svg
+								width="13"
+								height="13"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+							>
+								<polyline points="20 6 9 17 4 12" />
+							</svg>
+						) : (
+							<svg
+								width="13"
+								height="13"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<rect
+									x="9"
+									y="9"
+									width="13"
+									height="13"
+									rx="2"
+									ry="2"
+								/>
+								<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+							</svg>
+						) }
+						<span className="agentic-code-block__copy-label">
+							{ codeCopied ? 'Copied!' : 'Copy' }
+						</span>
+					</button>
+				) }
+			</div>
+			<pre className="agentic-code-block__body">
+				<code>{ code }</code>
+			</pre>
+		</div>
+	);
+};
+
+/**
  * Parse simple markdown to React elements
  * Supports: **bold**, `code`, and line breaks
  *
@@ -60,7 +196,9 @@ const parseMarkdown = ( text ) => {
 		const boldMatch = remaining.match( /^\*\*(.+?)\*\*/ );
 		if ( boldMatch ) {
 			parts.push(
-				<strong key={ keyIndex++ }>{ boldMatch[ 1 ] }</strong>
+				<strong key={ keyIndex++ }>
+					{ parseMarkdown( boldMatch[ 1 ] ) }
+				</strong>
 			);
 			remaining = remaining.slice( boldMatch[ 0 ].length );
 			continue;
@@ -92,6 +230,124 @@ const parseMarkdown = ( text ) => {
 	}
 
 	return parts;
+};
+
+/**
+ * Check if a line is a markdown table separator (e.g. |---|---|)
+ *
+ * @param {string} line - Line to check
+ * @return {boolean} True if separator
+ */
+const isTableSeparator = ( line ) => {
+	return /^\|[\s\-:|]+\|$/.test( line.trim() );
+};
+
+/**
+ * Parse a group of markdown table lines into a React table element
+ *
+ * @param {string[]} lines    - Table lines (header, separator, rows)
+ * @param {number}   keyIndex - React key base index
+ * @return {JSX.Element} Table element
+ */
+const parseTable = ( lines, keyIndex ) => {
+	const parseRow = ( line ) =>
+		line
+			.split( '|' )
+			.slice( 1, -1 )
+			.map( ( cell ) => cell.trim() );
+
+	// First line is header, second is separator, rest are body rows.
+	const headerCells = parseRow( lines[ 0 ] );
+	const bodyLines = lines.filter(
+		( line, i ) => i > 0 && ! isTableSeparator( line )
+	);
+
+	return (
+		<div key={ `table-${ keyIndex }` } className="agentic-table-wrap">
+			<table className="agentic-table">
+				<thead>
+					<tr>
+						{ headerCells.map( ( cell, i ) => (
+							<th key={ i }>{ parseMarkdown( cell ) }</th>
+						) ) }
+					</tr>
+				</thead>
+				<tbody>
+					{ bodyLines.map( ( line, rowIdx ) => {
+						const cells = parseRow( line );
+						return (
+							<tr key={ rowIdx }>
+								{ cells.map( ( cell, i ) => (
+									<td key={ i }>{ parseMarkdown( cell ) }</td>
+								) ) }
+							</tr>
+						);
+					} ) }
+				</tbody>
+			</table>
+		</div>
+	);
+};
+
+/**
+ * Parse content into blocks (paragraphs and tables).
+ *
+ * Groups consecutive lines starting with | into table blocks.
+ * Everything else becomes paragraph blocks.
+ *
+ * @param {string} content - Raw message content
+ * @return {Array} Array of React elements
+ */
+const parseContentBlocks = ( content ) => {
+	if ( ! content ) {
+		return null;
+	}
+
+	const lines = content.split( '\n' );
+	const elements = [];
+	let tableBuffer = [];
+	let keyIndex = 0;
+
+	const flushTable = () => {
+		if ( tableBuffer.length >= 2 ) {
+			elements.push( parseTable( tableBuffer, keyIndex++ ) );
+		} else {
+			// Not enough lines for a table, render as paragraphs.
+			tableBuffer.forEach( ( line ) => {
+				elements.push(
+					<p key={ keyIndex++ }>{ parseMarkdown( line ) }</p>
+				);
+			} );
+		}
+		tableBuffer = [];
+	};
+
+	for ( const line of lines ) {
+		const trimmed = line.trim();
+
+		if ( trimmed.startsWith( '|' ) && trimmed.endsWith( '|' ) ) {
+			tableBuffer.push( trimmed );
+		} else {
+			if ( tableBuffer.length > 0 ) {
+				flushTable();
+			}
+
+			if ( trimmed === '' ) {
+				continue;
+			}
+
+			elements.push(
+				<p key={ keyIndex++ }>{ parseMarkdown( trimmed ) }</p>
+			);
+		}
+	}
+
+	// Flush remaining table buffer.
+	if ( tableBuffer.length > 0 ) {
+		flushTable();
+	}
+
+	return elements;
 };
 
 /**
@@ -128,14 +384,25 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * MessageItem component
  *
- * @param {Object} props         - Component props
- * @param {Object} props.message - Message object
+ * @param {Object}        props               - Component props
+ * @param {Object}        props.message       - Message object
+ * @param {boolean}       props.feedbackOptIn - Whether the user has opted in to feedback
+ * @param {Function|null} props.onFeedback    - Called with (messageId, rating) when a thumb is clicked
+ * @param {Function}      props.onAction      - Callback to execute an ability action
  * @return {JSX.Element} Rendered message
  */
-const MessageItem = ( { message } ) => {
+const MessageItem = ( {
+	message,
+	feedbackOptIn = false,
+	onFeedback = null,
+	onAction,
+} ) => {
 	const { type, content, timestamp, prefillTps, decodeTps } = message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
+	const [ rating, setRating ] = useState( () =>
+		feedbackOptIn ? getMessageRating( message.id ) : null
+	);
 
 	/**
 	 * Copy message content to clipboard
@@ -152,6 +419,19 @@ const MessageItem = ( { message } ) => {
 			setTimeout( () => setCopied( false ), 2000 );
 		} catch ( err ) {
 			log.error( 'Failed to copy:', err );
+		}
+	};
+
+	/**
+	 * Handle thumbs-up / thumbs-down click
+	 *
+	 * @param {string} newRating - 'up' or 'down'
+	 */
+	const handleRating = ( newRating ) => {
+		const next = rating === newRating ? null : newRating;
+		setRating( next );
+		if ( onFeedback ) {
+			onFeedback( message.id, next );
 		}
 	};
 
@@ -184,7 +464,7 @@ const MessageItem = ( { message } ) => {
 
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div
 						className={ `agentic-timeline__dot agentic-timeline__dot--${
@@ -201,6 +481,12 @@ const MessageItem = ( { message } ) => {
 						className="agentic-tool__header agentic-tool__header--clickable"
 						onClick={ () => setIsExpanded( ! isExpanded ) }
 						type="button"
+						aria-expanded={ isExpanded }
+						aria-label={
+							thinkingIsStreaming
+								? 'Thinking in progress'
+								: 'Toggle thought process details'
+						}
 					>
 						<span className="agentic-tool__icon">
 							{ thinkingIsStreaming ? (
@@ -213,6 +499,7 @@ const MessageItem = ( { message } ) => {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
+									aria-hidden="true"
 								>
 									<circle cx="12" cy="12" r="10" />
 									<path d="M12 16v-4" />
@@ -237,6 +524,7 @@ const MessageItem = ( { message } ) => {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="2"
+								aria-hidden="true"
 							>
 								<polyline points="6 9 12 15 18 9" />
 							</svg>
@@ -259,11 +547,11 @@ const MessageItem = ( { message } ) => {
 	if ( type === 'loading' ) {
 		return (
 			<div className="agentic-message agentic-message--loading">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--loading" />
 				</div>
-				<div className="agentic-loading">
+				<div className="agentic-loading" role="status">
 					<div className="agentic-loading__spinner" />
 					<span className="agentic-loading__text">{ content }</span>
 				</div>
@@ -337,27 +625,49 @@ const MessageItem = ( { message } ) => {
 				.trim();
 		}
 
+		// Actions attached from a preceding tool result
+		const messageActions = message.actions;
+
 		return (
 			<div className="agentic-message agentic-message--assistant">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot" />
 				</div>
 				<div className="agentic-message__content">
 					{ displayContent && (
 						<div className="agentic-message__text">
-							{ displayContent
-								.split( '\n' )
-								.map( ( line, index ) => {
-									if ( line.trim() === '' ) {
-										return null;
-									}
-									return (
-										<p key={ index }>
-											{ parseMarkdown( line ) }
-										</p>
-									);
-								} ) }
+							{ parseContentBlocks( displayContent ) }
+						</div>
+					) }
+					{ messageActions?.length > 0 && onAction && (
+						<div className="agentic-message__actions">
+							<ol className="agentic-action-list">
+								{ messageActions.map( ( action ) => (
+									<li
+										key={ `${
+											action.action
+										}-${ JSON.stringify( action.args ) }` }
+										className="agentic-action-list__item"
+									>
+										<span className="agentic-action-list__label">
+											{ action.label }
+										</span>
+										<button
+											className="agentic-action-list__button"
+											type="button"
+											onClick={ () =>
+												onAction(
+													action.action,
+													action.args
+												)
+											}
+										>
+											{ action.button_label }
+										</button>
+									</li>
+								) ) }
+							</ol>
 						</div>
 					) }
 					<div className="agentic-message__footer">
@@ -371,46 +681,108 @@ const MessageItem = ( { message } ) => {
 								</span>
 							) }
 						</div>
-						<button
-							className={ `agentic-message__copy ${
-								copied ? 'agentic-message__copy--copied' : ''
-							}` }
-							onClick={ handleCopy }
-							type="button"
-							title={ copied ? 'Copied!' : 'Copy to clipboard' }
-						>
-							{ copied ? (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<polyline points="20 6 9 17 4 12" />
-								</svg>
-							) : (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<rect
-										x="9"
-										y="9"
-										width="13"
-										height="13"
-										rx="2"
-										ry="2"
-									/>
-									<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-								</svg>
+						<div className="agentic-message__actions">
+							{ feedbackOptIn && (
+								<div className="agentic-message__feedback">
+									<button
+										type="button"
+										className={ `agentic-message__thumb ${
+											rating === 'up'
+												? 'agentic-message__thumb--active'
+												: ''
+										}` }
+										onClick={ () => handleRating( 'up' ) }
+										title="Good response"
+									>
+										<svg
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill={
+												rating === 'up'
+													? 'currentColor'
+													: 'none'
+											}
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+											<path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+										</svg>
+									</button>
+									<button
+										type="button"
+										className={ `agentic-message__thumb ${
+											rating === 'down'
+												? 'agentic-message__thumb--active agentic-message__thumb--down'
+												: ''
+										}` }
+										onClick={ () => handleRating( 'down' ) }
+										title="Poor response"
+									>
+										<svg
+											width="14"
+											height="14"
+											viewBox="0 0 24 24"
+											fill={
+												rating === 'down'
+													? 'currentColor'
+													: 'none'
+											}
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z" />
+											<path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+										</svg>
+									</button>
+								</div>
 							) }
-						</button>
+							<button
+								className={ `agentic-message__copy ${
+									copied
+										? 'agentic-message__copy--copied'
+										: ''
+								}` }
+								onClick={ handleCopy }
+								type="button"
+								title={
+									copied ? 'Copied!' : 'Copy to clipboard'
+								}
+							>
+								{ copied ? (
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+									>
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+								) : (
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+									>
+										<rect
+											x="9"
+											y="9"
+											width="13"
+											height="13"
+											rx="2"
+											ry="2"
+										/>
+										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+									</svg>
+								) }
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -421,7 +793,7 @@ const MessageItem = ( { message } ) => {
 	if ( type === MessageType.ABILITY_REQUEST ) {
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--tool" />
 				</div>
@@ -435,6 +807,7 @@ const MessageItem = ( { message } ) => {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="2"
+								aria-hidden="true"
 							>
 								<circle cx="12" cy="12" r="3" />
 								<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -455,32 +828,59 @@ const MessageItem = ( { message } ) => {
 		);
 	}
 
-	// Ability result - collapsible with success/error state
+	// Ability result - collapsible with success/info state
 	if ( type === MessageType.ABILITY_RESULT ) {
-		const isSuccess = meta?.success;
+		// Two visual states:
+		//   'success' — tool ran and task succeeded (green, checkmark)
+		//   'info'    — tool ran but task goal not achieved (blue, eye)
+		const resultStatus =
+			meta?.success === false ||
+			( meta?.success === undefined &&
+				( meta?.result?.success === false || meta?.result?.error ) )
+				? 'info'
+				: 'success';
+
+		const statusLabel = {
+			success: 'Task completed successfully',
+			info: 'Finished processing but could not perform the task',
+			error: 'Failed',
+		};
 
 		return (
 			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div
-						className={ `agentic-timeline__dot agentic-timeline__dot--${
-							isSuccess ? 'success' : 'error'
-						}` }
+						className={ `agentic-timeline__dot agentic-timeline__dot--${ resultStatus }` }
 					/>
 				</div>
 				<div
-					className={ `agentic-tool agentic-tool--${
-						isSuccess ? 'success' : 'error'
-					}` }
+					className={ `agentic-tool agentic-tool--${ resultStatus }` }
 				>
 					<button
 						className="agentic-tool__header agentic-tool__header--clickable"
 						onClick={ () => setIsExpanded( ! isExpanded ) }
 						type="button"
+						aria-expanded={ isExpanded }
+						aria-label={ `Toggle ${
+							resultStatus === 'success' ? 'completed' : 'failed'
+						} result details for ${ meta?.abilityId }` }
 					>
 						<span className="agentic-tool__icon">
-							{ isSuccess ? (
+							{ resultStatus === 'success' && (
+								<svg
+									width="14"
+									height="14"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									aria-hidden="true"
+								>
+									<polyline points="20 6 9 17 4 12" />
+								</svg>
+							) }
+							{ resultStatus === 'info' && (
 								<svg
 									width="14"
 									height="14"
@@ -489,9 +889,11 @@ const MessageItem = ( { message } ) => {
 									stroke="currentColor"
 									strokeWidth="2"
 								>
-									<polyline points="20 6 9 17 4 12" />
+									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+									<circle cx="12" cy="12" r="3" />
 								</svg>
-							) : (
+							) }
+							{ resultStatus === 'error' && (
 								<svg
 									width="14"
 									height="14"
@@ -499,6 +901,7 @@ const MessageItem = ( { message } ) => {
 									fill="none"
 									stroke="currentColor"
 									strokeWidth="2"
+									aria-hidden="true"
 								>
 									<circle cx="12" cy="12" r="10" />
 									<line x1="15" y1="9" x2="9" y2="15" />
@@ -507,23 +910,10 @@ const MessageItem = ( { message } ) => {
 							) }
 						</span>
 						<span className="agentic-tool__label">
-							{ isSuccess ? 'Completed' : 'Failed' }
+							{ statusLabel[ resultStatus ] }
 						</span>
-						<span
-							className={ `agentic-tool__expand ${
-								isExpanded ? 'agentic-tool__expand--open' : ''
-							}` }
-						>
-							<svg
-								width="12"
-								height="12"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<polyline points="6 9 12 15 18 9" />
-							</svg>
+						<span className="agentic-tool__expand">
+							{ isExpanded ? 'Hide details' : 'Show details' }
 						</span>
 						<span className="agentic-tool__id">
 							{ meta?.abilityId }
@@ -543,11 +933,11 @@ const MessageItem = ( { message } ) => {
 	if ( type === MessageType.ERROR ) {
 		return (
 			<div className="agentic-message agentic-message--error">
-				<div className="agentic-timeline">
+				<div className="agentic-timeline" aria-hidden="true">
 					<div className="agentic-timeline__line" />
 					<div className="agentic-timeline__dot agentic-timeline__dot--error" />
 				</div>
-				<div className="agentic-error">
+				<div className="agentic-error" role="alert">
 					<span className="agentic-error__icon">
 						<svg
 							width="16"
@@ -556,6 +946,7 @@ const MessageItem = ( { message } ) => {
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="2"
+							aria-hidden="true"
 						>
 							<circle cx="12" cy="12" r="10" />
 							<line x1="12" y1="8" x2="12" y2="12" />
@@ -563,6 +954,26 @@ const MessageItem = ( { message } ) => {
 						</svg>
 					</span>
 					<span className="agentic-error__text">{ content }</span>
+				</div>
+			</div>
+		);
+	}
+
+	// Ability picker — interactive numbered list of tools
+	if ( type === 'ability_picker' ) {
+		return (
+			<div className="agentic-message agentic-message--assistant">
+				<div className="agentic-timeline">
+					<div className="agentic-timeline__line" />
+					<div className="agentic-timeline__dot" />
+				</div>
+				<div className="agentic-message__content">
+					<AbilityPicker
+						abilities={ message.abilities || [] }
+						workflows={ message.workflows || [] }
+						onExecute={ message.onExecute }
+						isProcessing={ message.isProcessing }
+					/>
 				</div>
 			</div>
 		);

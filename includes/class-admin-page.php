@@ -140,12 +140,16 @@ class Admin_Page {
 
 		// Get JS configurations for registered abilities.
 		$abilities_js_config = array();
-		if ( function_exists( 'get_agentic_abilities_js_config' ) ) {
-			$abilities_js_config = get_agentic_abilities_js_config();
+		if ( function_exists( 'wp_agentic_admin_get_abilities_js_config' ) ) {
+			$abilities_js_config = wp_agentic_admin_get_abilities_js_config();
 		}
+
+		$feedback_optin_raw = $settings->get_field( 'feedback_optin', null );
+		$feedback_optin     = null === $feedback_optin_raw ? null : (bool) $feedback_optin_raw;
 
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
+			'settingsUrl'         => esc_url_raw( rest_url( 'wp-agentic-admin/v1/settings' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'userId'              => get_current_user_id(),
 			'pluginUrl'           => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL ),
@@ -157,6 +161,7 @@ class Admin_Page {
 				'modelId'            => $settings->get_field( 'wp_agentic_admin_model_id', 'Qwen2.5-7B-Instruct-q4f16_1-MLC' ),
 				'confirmDestructive' => (bool) $settings->get_field( 'wp_agentic_admin_confirm_destructive', 1 ),
 				'maxLogLines'        => (int) $settings->get_field( 'wp_agentic_admin_max_log_lines', 100 ),
+				'feedbackOptIn'      => $feedback_optin,
 			),
 			'browserRequirements' => Utils::get_browser_requirements(),
 			'abilities'           => $abilities_js_config,
