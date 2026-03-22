@@ -47,6 +47,8 @@ import { registerDatabaseCheck } from './database-check';
 import { registerFileScan } from './file-scan';
 import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
+import { registerCodebaseIndex } from './codebase-index';
+import { registerCodeSearch } from './code-search';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
 import { registerWpConfigList } from './wp-config-list';
@@ -88,6 +90,8 @@ export { registerDatabaseCheck } from './database-check';
 export { registerFileScan } from './file-scan';
 export { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
+export { registerCodebaseIndex } from './codebase-index';
+export { registerCodeSearch } from './code-search';
 export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 export { registerRunPluginAbility } from './run-plugin-ability';
 export { registerWpConfigList } from './wp-config-list';
@@ -143,6 +147,10 @@ export function registerAllAbilities() {
 	registerCoreSiteInfo();
 	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
+
+	// Codebase RAG
+	registerCodebaseIndex();
+	registerCodeSearch();
 
 	// Dynamic ability discovery — PoC for calling plugin abilities
 	registerDiscoverPluginAbilities();
