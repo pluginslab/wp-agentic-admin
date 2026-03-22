@@ -34,6 +34,7 @@ const wpUrlIndex = args.indexOf( '--wp-url' );
 const wpUserIndex = args.indexOf( '--wp-user' );
 const wpPassIndex = args.indexOf( '--wp-pass' );
 const verbose = args.includes( '--verbose' );
+const dumpMessages = args.includes( '--dump-messages' );
 const noThink = ! args.includes( '--think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
@@ -473,6 +474,19 @@ async function executeReactLoop( userMessage, conversationHistory, systemPrompt 
 			console.log( `      [ReAct iteration ${ iteration }]` );
 		}
 
+		// Dump full messages array for debugging
+		if ( dumpMessages ) {
+			console.log( `\n      ── Messages sent to LLM (iteration ${ iteration }) ──` );
+			for ( let mi = 0; mi < messages.length; mi++ ) {
+				const m = messages[ mi ];
+				const preview = m.content.length > 200
+					? m.content.substring( 0, 200 ) + `... (${ m.content.length } chars)`
+					: m.content;
+				console.log( `      [${ mi }] ${ m.role }: ${ preview }` );
+			}
+			console.log( `      ── End messages ──\n` );
+		}
+
 		const response = await chatCompletion( messages );
 
 		if ( verbose ) {
@@ -723,19 +737,12 @@ function evaluateTurn( turn, result ) {
 					console.log( `✗ (${ evalResult.reason })` );
 				}
 
-				// Update conversation history for next turn
-				// Add user message
+				// Update conversation history for next turn.
+				// Only add user message + final answer (not raw tool results).
+				// This mirrors the browser fix for issue #158: tool results
+				// were already consumed in the ReAct loop and including them
+				// causes back-to-back assistant messages + cached data reuse.
 				history.push( { role: 'user', content: turn.input } );
-
-				// Add tool results (if any)
-				for ( const obs of result.observations ) {
-					history.push( {
-						role: 'assistant',
-						content: formatToolResultForHistory( obs.tool, obs.result ),
-					} );
-				}
-
-				// Add final answer
 				if ( result.finalAnswer ) {
 					history.push( { role: 'assistant', content: result.finalAnswer } );
 				}
