@@ -38,22 +38,35 @@ const dumpMessages = args.includes( '--dump-messages' );
 const noThink = ! args.includes( '--think' );
 
 if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
-	console.error( 'Usage: node e2e-runner.js --file <test-file.js> [options]' );
+	console.error(
+		'Usage: node e2e-runner.js --file <test-file.js> [options]'
+	);
 	console.error( '' );
 	console.error( 'Options:' );
 	console.error( '  --file <path>       Path to test file (required)' );
 	console.error( '  --model <id>        Ollama model (default: qwen3:1.7b)' );
 	console.error( '  --think             Enable thinking (default: off)' );
-	console.error( '  --wp-url <url>      WordPress URL (default: https://wp-agentic-admin.local)' );
+	console.error(
+		'  --wp-url <url>      WordPress URL (default: https://wp-agentic-admin.local)'
+	);
 	console.error( '  --wp-user <user>    WP application password username' );
 	console.error( '  --wp-pass <pass>    WP application password' );
-	console.error( '  --verbose           Show full LLM responses and API results' );
+	console.error(
+		'  --verbose           Show full LLM responses and API results'
+	);
 	process.exit( 1 );
 }
 
 const testFilePath = path.resolve( args[ fileIndex + 1 ] );
-const modelId = modelIndex !== -1 && args[ modelIndex + 1 ] ? args[ modelIndex + 1 ] : 'qwen3:1.7b';
-const wpUrl = ( wpUrlIndex !== -1 && args[ wpUrlIndex + 1 ] ? args[ wpUrlIndex + 1 ] : 'https://wp-agentic-admin.local' ).replace( /\/$/, '' );
+const modelId =
+	modelIndex !== -1 && args[ modelIndex + 1 ]
+		? args[ modelIndex + 1 ]
+		: 'qwen3:1.7b';
+const wpUrl = (
+	wpUrlIndex !== -1 && args[ wpUrlIndex + 1 ]
+		? args[ wpUrlIndex + 1 ]
+		: 'https://wp-agentic-admin.local'
+).replace( /\/$/, '' );
 const wpUser = wpUserIndex !== -1 ? args[ wpUserIndex + 1 ] : '';
 // Application passwords have spaces — collect all args until the next flag
 let wpPass = '';
@@ -103,7 +116,9 @@ function isOllamaInstalled() {
 
 function installOllama() {
 	if ( process.platform !== 'darwin' ) {
-		console.error( 'Auto-install only supported on macOS. Install Ollama manually.' );
+		console.error(
+			'Auto-install only supported on macOS. Install Ollama manually.'
+		);
 		process.exit( 1 );
 	}
 	try {
@@ -126,7 +141,10 @@ async function isOllamaRunning() {
 
 function startOllamaServe() {
 	console.log( '  Starting Ollama server...' );
-	const child = spawn( 'ollama', [ 'serve' ], { stdio: 'ignore', detached: true } );
+	const child = spawn( 'ollama', [ 'serve' ], {
+		stdio: 'ignore',
+		detached: true,
+	} );
 	child.unref();
 }
 
@@ -143,8 +161,15 @@ async function waitForOllama( maxWaitMs = 15000 ) {
 
 async function isModelPulled( model ) {
 	try {
-		const data = await ( await fetch( `${ OLLAMA_BASE }/api/tags` ) ).json();
-		return ( data.models || [] ).some( ( m ) => m.name === model || m.name === `${ model }:latest` || m.name.startsWith( model ) );
+		const data = await (
+			await fetch( `${ OLLAMA_BASE }/api/tags` )
+		).json();
+		return ( data.models || [] ).some(
+			( m ) =>
+				m.name === model ||
+				m.name === `${ model }:latest` ||
+				m.name.startsWith( model )
+		);
 	} catch {
 		return false;
 	}
@@ -153,8 +178,12 @@ async function isModelPulled( model ) {
 async function pullModel( model ) {
 	console.log( `  Pulling model ${ model }...` );
 	return new Promise( ( resolve, reject ) => {
-		const child = spawn( 'ollama', [ 'pull', model ], { stdio: 'inherit' } );
-		child.on( 'close', ( code ) => code === 0 ? resolve() : reject( new Error( `exit ${ code }` ) ) );
+		const child = spawn( 'ollama', [ 'pull', model ], {
+			stdio: 'inherit',
+		} );
+		child.on( 'close', ( code ) =>
+			code === 0 ? resolve() : reject( new Error( `exit ${ code }` ) )
+		);
 	} );
 }
 
@@ -185,15 +214,22 @@ async function chatCompletion( messages ) {
 // ---------------------------------------------------------------------------
 
 async function wpExecuteTool( toolId, toolArgs = {} ) {
-	const parts = toolId.includes( '/' ) ? toolId.split( '/' ) : [ 'wp-agentic-admin', toolId ];
+	const parts = toolId.includes( '/' )
+		? toolId.split( '/' )
+		: [ 'wp-agentic-admin', toolId ];
 	const baseEndpoint = `${ wpUrl }/wp-json/wp-abilities/v1/abilities/${ parts[ 0 ] }/${ parts[ 1 ] }/run`;
 	const headers = {};
 
 	if ( wpUser && wpPass ) {
-		headers.Authorization = 'Basic ' + Buffer.from( `${ wpUser }:${ wpPass }` ).toString( 'base64' );
+		headers.Authorization =
+			'Basic ' +
+			Buffer.from( `${ wpUser }:${ wpPass }` ).toString( 'base64' );
 	}
 
-	const hasArgs = toolArgs && typeof toolArgs === 'object' && Object.keys( toolArgs ).length > 0;
+	const hasArgs =
+		toolArgs &&
+		typeof toolArgs === 'object' &&
+		Object.keys( toolArgs ).length > 0;
 
 	// Build query string for GET requests (mirrors abilities-api.js buildInputQueryString)
 	function buildQueryString( input ) {
@@ -206,7 +242,9 @@ async function wpExecuteTool( toolId, toolArgs = {} ) {
 
 	// Try GET first (with args as query params), fall back to POST.
 	// This mirrors the browser's logic: read-only abilities use GET.
-	const getEndpoint = hasArgs ? baseEndpoint + buildQueryString( toolArgs ) : baseEndpoint;
+	const getEndpoint = hasArgs
+		? baseEndpoint + buildQueryString( toolArgs )
+		: baseEndpoint;
 
 	let res = await fetch( getEndpoint, { method: 'GET', headers } );
 
@@ -222,7 +260,9 @@ async function wpExecuteTool( toolId, toolArgs = {} ) {
 
 	if ( ! res.ok ) {
 		const text = await res.text();
-		throw new Error( `WP API ${ res.status }: ${ text.substring( 0, 200 ) }` );
+		throw new Error(
+			`WP API ${ res.status }: ${ text.substring( 0, 200 ) }`
+		);
 	}
 	return await res.json();
 }
@@ -265,11 +305,13 @@ User: "what environment is this?"
 {"action": "tool_call", "tool": "core/get-environment-info", "args": {}}
 
 User: "what is a transient?"
-{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${ REACT_CONFIG.disableThinking ? '\n\n/nothink' : '' }`;
+{"action": "final_answer", "content": "A transient is temporary cached data in WordPress..."}${
+		REACT_CONFIG.disableThinking ? '\n\n/nothink' : ''
+	}`;
 }
 
 function buildConversationalPrompt() {
-	return 'You are a helpful WordPress assistant embedded in the wp-admin dashboard. Answer questions about WordPress clearly and concisely. If you don\'t know something, say so honestly.';
+	return "You are a helpful WordPress assistant embedded in the wp-admin dashboard. Answer questions about WordPress clearly and concisely. If you don't know something, say so honestly.";
 }
 
 // ---------------------------------------------------------------------------
@@ -362,7 +404,9 @@ function parseActionFromResponse( content ) {
 				braceCount--;
 				if ( braceCount === 0 ) {
 					try {
-						const action = JSON.parse( jsonText.substring( firstBrace, i + 1 ) );
+						const action = JSON.parse(
+							jsonText.substring( firstBrace, i + 1 )
+						);
 						if ( action.action ) {
 							return action;
 						}
@@ -392,7 +436,8 @@ function buildToolResultMessage( toolResult, truncatedResult ) {
 	} else {
 		message = `Tool result: ${ truncatedResult }`;
 	}
-	const suffix = '\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.';
+	const suffix =
+		'\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.';
 	const nothink = REACT_CONFIG.disableThinkingAfterTool ? '\n\n/nothink' : '';
 	return message + suffix + nothink;
 }
@@ -402,15 +447,39 @@ function buildToolResultMessage( toolResult, truncatedResult ) {
 // ---------------------------------------------------------------------------
 
 const ACTION_WORDS = [
-	'list', 'show', 'check', 'flush', 'clear', 'purge', 'optimize',
-	'activate', 'deactivate', 'enable', 'disable', 'turn on', 'turn off',
-	'read', 'run', 'delete', 'clean', 'fix', 'refresh', 'regenerate',
-	'reset', 'view',
+	'list',
+	'show',
+	'check',
+	'flush',
+	'clear',
+	'purge',
+	'optimize',
+	'activate',
+	'deactivate',
+	'enable',
+	'disable',
+	'turn on',
+	'turn off',
+	'read',
+	'run',
+	'delete',
+	'clean',
+	'fix',
+	'refresh',
+	'regenerate',
+	'reset',
+	'view',
 ];
 
 const QUESTION_WORDS = [
-	'what is', 'what are', 'what does', 'explain', 'define',
-	'difference between', 'tell me about', 'meaning of',
+	'what is',
+	'what are',
+	'what does',
+	'explain',
+	'define',
+	'difference between',
+	'tell me about',
+	'meaning of',
 ];
 
 function routeMessage( message, abilities ) {
@@ -456,7 +525,11 @@ function routeMessage( message, abilities ) {
 // ReAct loop — copied from react-agent.js executeWithPromptBased()
 // ---------------------------------------------------------------------------
 
-async function executeReactLoop( userMessage, conversationHistory, systemPrompt ) {
+async function executeReactLoop(
+	userMessage,
+	conversationHistory,
+	systemPrompt
+) {
 	const toolsUsed = [];
 	const observations = [];
 	let iteration = 0;
@@ -476,12 +549,16 @@ async function executeReactLoop( userMessage, conversationHistory, systemPrompt 
 
 		// Dump full messages array for debugging
 		if ( dumpMessages ) {
-			console.log( `\n      ── Messages sent to LLM (iteration ${ iteration }) ──` );
+			console.log(
+				`\n      ── Messages sent to LLM (iteration ${ iteration }) ──`
+			);
 			for ( let mi = 0; mi < messages.length; mi++ ) {
 				const m = messages[ mi ];
-				const preview = m.content.length > 200
-					? m.content.substring( 0, 200 ) + `... (${ m.content.length } chars)`
-					: m.content;
+				const preview =
+					m.content.length > 200
+						? m.content.substring( 0, 200 ) +
+						  `... (${ m.content.length } chars)`
+						: m.content;
 				console.log( `      [${ mi }] ${ m.role }: ${ preview }` );
 			}
 			console.log( `      ── End messages ──\n` );
@@ -490,25 +567,54 @@ async function executeReactLoop( userMessage, conversationHistory, systemPrompt 
 		const response = await chatCompletion( messages );
 
 		if ( verbose ) {
-			const clean = response.replace( /<think>[\s\S]*?<\/think>\s*/g, '' ).trim();
-			console.log( `      LLM: ${ clean.length > 120 ? clean.substring( 0, 120 ) + '...' : clean }` );
+			const clean = response
+				.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
+				.trim();
+			console.log(
+				`      LLM: ${
+					clean.length > 120
+						? clean.substring( 0, 120 ) + '...'
+						: clean
+				}`
+			);
 		}
 
 		// Strip think blocks for parsing
-		const content = response.replace( /<think>[\s\S]*?<\/think>\s*/g, '' ).trim();
+		const content = response
+			.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
+			.trim();
 		const action = parseActionFromResponse( content );
 
 		// No valid JSON → treat as final answer
 		if ( ! action ) {
 			if ( toolsUsed.length > 0 ) {
-				return { success: true, finalAnswer: content, iterations: iteration, toolsUsed, observations };
+				return {
+					success: true,
+					finalAnswer: content,
+					iterations: iteration,
+					toolsUsed,
+					observations,
+				};
 			}
-			return { success: false, finalAnswer: content || 'Failed to parse response', iterations: iteration, toolsUsed, observations };
+			return {
+				success: false,
+				finalAnswer: content || 'Failed to parse response',
+				iterations: iteration,
+				toolsUsed,
+				observations,
+			};
 		}
 
 		// Final answer
 		if ( action.action === 'final_answer' ) {
-			return { success: true, finalAnswer: action.content || action.answer || 'Task completed.', iterations: iteration, toolsUsed, observations };
+			return {
+				success: true,
+				finalAnswer:
+					action.content || action.answer || 'Task completed.',
+				iterations: iteration,
+				toolsUsed,
+				observations,
+			};
 		}
 
 		// Tool call
@@ -517,8 +623,18 @@ async function executeReactLoop( userMessage, conversationHistory, systemPrompt 
 			const toolArgs = action.args || {};
 
 			// Detect repeated tool call
-			if ( toolsUsed.length > 0 && toolsUsed[ toolsUsed.length - 1 ] === toolName ) {
-				return { success: true, finalAnswer: 'Data gathered but stopped due to repeated tool call.', iterations: iteration, toolsUsed, observations };
+			if (
+				toolsUsed.length > 0 &&
+				toolsUsed[ toolsUsed.length - 1 ] === toolName
+			) {
+				return {
+					success: true,
+					finalAnswer:
+						'Data gathered but stopped due to repeated tool call.',
+					iterations: iteration,
+					toolsUsed,
+					observations,
+				};
 			}
 
 			// Execute via WP REST API
@@ -527,35 +643,66 @@ async function executeReactLoop( userMessage, conversationHistory, systemPrompt 
 				toolResult = await wpExecuteTool( toolName, toolArgs );
 				if ( verbose ) {
 					const preview = JSON.stringify( toolResult );
-					console.log( `      Tool ${ toolName }: ${ preview.length > 100 ? preview.substring( 0, 100 ) + '...' : preview }` );
+					console.log(
+						`      Tool ${ toolName }: ${
+							preview.length > 100
+								? preview.substring( 0, 100 ) + '...'
+								: preview
+						}`
+					);
 				}
 			} catch ( err ) {
 				toolResult = { success: false, error: err.message };
 				if ( verbose ) {
-					console.log( `      Tool ${ toolName } ERROR: ${ err.message }` );
+					console.log(
+						`      Tool ${ toolName } ERROR: ${ err.message }`
+					);
 				}
 			}
 
 			toolsUsed.push( toolName );
-			observations.push( { tool: toolName, args: toolArgs, result: toolResult } );
+			observations.push( {
+				tool: toolName,
+				args: toolArgs,
+				result: toolResult,
+			} );
 
 			// Truncate and feed result back to LLM
 			const resultStr = JSON.stringify( toolResult );
-			const truncated = resultStr.length > REACT_CONFIG.maxToolResultLength
-				? resultStr.substring( 0, REACT_CONFIG.maxToolResultLength ) + '...[truncated]'
-				: resultStr;
+			const truncated =
+				resultStr.length > REACT_CONFIG.maxToolResultLength
+					? resultStr.substring(
+							0,
+							REACT_CONFIG.maxToolResultLength
+					  ) + '...[truncated]'
+					: resultStr;
 
 			messages.push( { role: 'assistant', content } );
-			messages.push( { role: 'user', content: buildToolResultMessage( toolResult, truncated ) } );
+			messages.push( {
+				role: 'user',
+				content: buildToolResultMessage( toolResult, truncated ),
+			} );
 
 			continue;
 		}
 
 		// Unknown action
-		return { success: false, finalAnswer: 'Unknown action type', iterations: iteration, toolsUsed, observations };
+		return {
+			success: false,
+			finalAnswer: 'Unknown action type',
+			iterations: iteration,
+			toolsUsed,
+			observations,
+		};
 	}
 
-	return { success: false, finalAnswer: 'Max iterations reached', iterations: iteration, toolsUsed, observations };
+	return {
+		success: false,
+		finalAnswer: 'Max iterations reached',
+		iterations: iteration,
+		toolsUsed,
+		observations,
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -573,10 +720,20 @@ async function executeConversational( userMessage, conversationHistory ) {
 	const clean = response.replace( /<think>[\s\S]*?<\/think>\s*/g, '' ).trim();
 
 	if ( verbose ) {
-		console.log( `      LLM (conv): ${ clean.length > 120 ? clean.substring( 0, 120 ) + '...' : clean }` );
+		console.log(
+			`      LLM (conv): ${
+				clean.length > 120 ? clean.substring( 0, 120 ) + '...' : clean
+			}`
+		);
 	}
 
-	return { success: true, finalAnswer: clean, iterations: 1, toolsUsed: [], observations: [] };
+	return {
+		success: true,
+		finalAnswer: clean,
+		iterations: 1,
+		toolsUsed: [],
+		observations: [],
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -585,7 +742,8 @@ async function executeConversational( userMessage, conversationHistory ) {
 
 function formatToolResultForHistory( toolId, result ) {
 	const str = JSON.stringify( result, null, 2 );
-	const truncated = str.length > 1000 ? str.substring( 0, 1000 ) + '...(truncated)' : str;
+	const truncated =
+		str.length > 1000 ? str.substring( 0, 1000 ) + '...(truncated)' : str;
 	return `[Tool Result from ${ toolId }]:\n${ truncated }`;
 }
 
@@ -595,30 +753,51 @@ function formatToolResultForHistory( toolId, result ) {
 
 function evaluateTurn( turn, result ) {
 	// Normalize tool names
-	const toolsUsed = result.toolsUsed.map( ( t ) => t.includes( '/' ) ? t : `wp-agentic-admin/${ t }` );
+	const toolsUsed = result.toolsUsed.map( ( t ) =>
+		t.includes( '/' ) ? t : `wp-agentic-admin/${ t }`
+	);
 	const firstTool = toolsUsed[ 0 ] || null;
 
 	// Check tool expectation
 	if ( turn.expectTool !== undefined ) {
 		if ( turn.expectTool === null ) {
 			if ( firstTool !== null ) {
-				return { passed: false, reason: `Expected no tool, got: ${ firstTool }` };
+				return {
+					passed: false,
+					reason: `Expected no tool, got: ${ firstTool }`,
+				};
 			}
 		} else if ( Array.isArray( turn.expectTool ) ) {
 			if ( ! turn.expectTool.includes( firstTool ) ) {
-				return { passed: false, reason: `Expected [${ turn.expectTool.join( '|' ) }], got: ${ firstTool || '(none)' }` };
+				return {
+					passed: false,
+					reason: `Expected [${ turn.expectTool.join(
+						'|'
+					) }], got: ${ firstTool || '(none)' }`,
+				};
 			}
 		} else if ( firstTool !== turn.expectTool ) {
-			return { passed: false, reason: `Expected ${ turn.expectTool }, got: ${ firstTool || '(none)' }` };
+			return {
+				passed: false,
+				reason: `Expected ${ turn.expectTool }, got: ${
+					firstTool || '(none)'
+				}`,
+			};
 		}
 	}
 
 	// Check answer pattern
 	if ( turn.expectAnswer ) {
-		const pattern = turn.expectAnswer instanceof RegExp ? turn.expectAnswer : new RegExp( turn.expectAnswer, 'i' );
+		const pattern =
+			turn.expectAnswer instanceof RegExp
+				? turn.expectAnswer
+				: new RegExp( turn.expectAnswer, 'i' );
 		if ( ! pattern.test( result.finalAnswer || '' ) ) {
 			const preview = ( result.finalAnswer || '' ).substring( 0, 80 );
-			return { passed: false, reason: `Answer didn't match ${ pattern }: "${ preview }..."` };
+			return {
+				passed: false,
+				reason: `Answer didn't match ${ pattern }: "${ preview }..."`,
+			};
 		}
 	}
 
@@ -660,13 +839,20 @@ function evaluateTurn( turn, result ) {
 	try {
 		const headers = {};
 		if ( wpUser && wpPass ) {
-			headers.Authorization = 'Basic ' + Buffer.from( `${ wpUser }:${ wpPass }` ).toString( 'base64' );
+			headers.Authorization =
+				'Basic ' +
+				Buffer.from( `${ wpUser }:${ wpPass }` ).toString( 'base64' );
 		}
-		const wpTest = await fetch( `${ wpUrl }/wp-json/wp-abilities/v1/abilities`, { headers } );
+		const wpTest = await fetch(
+			`${ wpUrl }/wp-json/wp-abilities/v1/abilities`,
+			{ headers }
+		);
 		if ( wpTest.ok ) {
 			console.log( `  ✓ WP API connected (${ wpUrl })` );
 		} else {
-			console.error( `  ✗ WP API returned ${ wpTest.status }. Check --wp-url, --wp-user, --wp-pass` );
+			console.error(
+				`  ✗ WP API returned ${ wpTest.status }. Check --wp-url, --wp-user, --wp-pass`
+			);
 			process.exit( 1 );
 		}
 	} catch ( err ) {
@@ -688,9 +874,16 @@ function evaluateTurn( turn, result ) {
 	console.log( `  Model:          ${ modelId }` );
 	console.log( `  Thinking:       ${ noThink ? 'DISABLED' : 'enabled' }` );
 	console.log( `  WP URL:         ${ wpUrl }` );
-	console.log( `  Test file:      ${ path.relative( process.cwd(), testFilePath ) }` );
+	console.log(
+		`  Test file:      ${ path.relative( process.cwd(), testFilePath ) }`
+	);
 	console.log( `  Conversations:  ${ conversations.length }` );
-	console.log( `  Total turns:    ${ conversations.reduce( ( s, c ) => s + c.turns.length, 0 ) }` );
+	console.log(
+		`  Total turns:    ${ conversations.reduce(
+			( s, c ) => s + c.turns.length,
+			0
+		) }`
+	);
 
 	const reactPrompt = buildReactSystemPrompt( abilities );
 
@@ -709,13 +902,19 @@ function evaluateTurn( turn, result ) {
 
 		for ( let ti = 0; ti < convo.turns.length; ti++ ) {
 			const turn = convo.turns[ ti ];
-			process.stdout.write( `    [${ ci + 1 }.${ ti + 1 }] "${ turn.input }" ... ` );
+			process.stdout.write(
+				`    [${ ci + 1 }.${ ti + 1 }] "${ turn.input }" ... `
+			);
 
 			try {
 				// Always use ReAct prompt — the LLM decides tool_call vs final_answer.
 				// This mirrors the browser's most common path and lets us test both
 				// tool selection AND conversational answers in the same loop.
-				const result = await executeReactLoop( turn.input, history, reactPrompt );
+				const result = await executeReactLoop(
+					turn.input,
+					history,
+					reactPrompt
+				);
 
 				// Evaluate
 				const evalResult = evaluateTurn( turn, result );
@@ -731,8 +930,13 @@ function evaluateTurn( turn, result ) {
 				} );
 
 				if ( evalResult.passed ) {
-					const toolInfo = result.toolsUsed.length > 0 ? ` [${result.toolsUsed.join(', ')}]` : '';
-					console.log( `✓${ toolInfo } (${ result.iterations } iter)` );
+					const toolInfo =
+						result.toolsUsed.length > 0
+							? ` [${ result.toolsUsed.join( ', ' ) }]`
+							: '';
+					console.log(
+						`✓${ toolInfo } (${ result.iterations } iter)`
+					);
 				} else {
 					console.log( `✗ (${ evalResult.reason })` );
 				}
@@ -744,9 +948,11 @@ function evaluateTurn( turn, result ) {
 				// causes back-to-back assistant messages + cached data reuse.
 				history.push( { role: 'user', content: turn.input } );
 				if ( result.finalAnswer ) {
-					history.push( { role: 'assistant', content: result.finalAnswer } );
+					history.push( {
+						role: 'assistant',
+						content: result.finalAnswer,
+					} );
 				}
-
 			} catch ( err ) {
 				allResults.push( {
 					conversation: label,
@@ -771,7 +977,9 @@ function evaluateTurn( turn, result ) {
 		console.log( '' );
 		console.log( '  Failures:' );
 		for ( const f of failures ) {
-			console.log( `    ✗ [${ f.conversation } T${ f.turn }] "${ f.input }"` );
+			console.log(
+				`    ✗ [${ f.conversation } T${ f.turn }] "${ f.input }"`
+			);
 			console.log( `      ${ f.reason }` );
 		}
 	}
@@ -781,7 +989,11 @@ function evaluateTurn( turn, result ) {
 	const pct = total > 0 ? Math.round( ( passed / total ) * 100 ) : 0;
 
 	console.log( '' );
-	console.log( `  ${ passed }/${ total } turns passed (${ pct }%) in ${ ( totalTime / 1000 ).toFixed( 1 ) }s` );
+	console.log(
+		`  ${ passed }/${ total } turns passed (${ pct }%) in ${ (
+			totalTime / 1000
+		).toFixed( 1 ) }s`
+	);
 	console.log( '' );
 
 	process.exit( passed === total ? 0 : 1 );

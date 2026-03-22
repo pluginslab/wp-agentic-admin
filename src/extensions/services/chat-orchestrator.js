@@ -257,9 +257,11 @@ class ChatOrchestrator {
 			// Add user message to session
 			this.session.addUserMessage( userMessage );
 
-			// Web search pre-step: adds tool_request + tool_result to session
+			// Web search pre-step: run search and capture context for the ReAct agent
+			let webSearchContext = null;
 			if ( options.webSearch ) {
-				await this.performWebSearchPreStep( userMessage );
+				webSearchContext =
+					await this.performWebSearchPreStep( userMessage );
 			}
 
 			// If bundle is active, bypass router and force ReAct with filtered tools
@@ -271,7 +273,10 @@ class ChatOrchestrator {
 				return await this.processWithReact(
 					userMessage,
 					false,
-					options.bundleToolIds
+					options.bundleToolIds,
+					webSearchContext,
+					options.bundleId,
+					options.docSearch
 				);
 			}
 
@@ -294,7 +299,11 @@ class ChatOrchestrator {
 			);
 			return await this.processWithReact(
 				userMessage,
-				route.disableThinking
+				route.disableThinking,
+				null,
+				webSearchContext,
+				null,
+				options.docSearch
 			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
@@ -313,11 +322,12 @@ class ChatOrchestrator {
 	/**
 	 * Perform web search as a pre-step before normal routing.
 	 *
-	 * Executes a web search and adds both a tool_request and tool_result
-	 * to the session so the UI shows the search in the timeline AND the
-	 * conversation history has valid message ordering for the LLM.
+	 * Executes a web search and adds the tool result to the session
+	 * for UI display. Returns a formatted context string so the
+	 * ReAct agent can include search results in its reasoning.
 	 *
 	 * @param {string} userMessage - The user's message to search for
+	 * @return {string|null} Formatted search results string, or null on failure.
 	 */
 	async performWebSearchPreStep( userMessage ) {
 		const toolId = 'wp-agentic-admin/web-search';
@@ -338,18 +348,28 @@ class ChatOrchestrator {
 			log.info(
 				`Web search pre-step complete: ${ result.total || 0 } results`
 			);
+
+			// Build a context string from search results for the ReAct agent
+			if ( webSuccess && result.results?.length ) {
+				return result.results
+					.map(
+						( r, i ) =>
+							`${ i + 1 }. ${ r.title }\n   ${ r.snippet }\n   ${
+								r.url
+							}`
+					)
+					.join( '\n' );
+			}
+			return null;
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
-			this.callbacks.onToolEnd(
-				toolId,
-				{ error: error.message },
-				false
-			);
+			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
 			this.session.addToolResult(
 				toolId,
 				{ error: error.message },
 				false
 			);
+			return null;
 		}
 	}
 
@@ -358,15 +378,20 @@ class ChatOrchestrator {
 	 *
 	 * Uses the ReAct agent to intelligently select and use tools.
 	 *
-	 * @param {string}  userMessage     - User's message
-	 * @param {boolean} disableThinking - Whether to disable model thinking
-	 * @param {Array}   toolFilter      - Optional array of tool IDs to constrain the agent
+	 * @param {string}      userMessage      - User's message
+	 * @param {boolean}     disableThinking  - Whether to disable model thinking
+	 * @param {Array}       toolFilter       - Optional array of tool IDs to constrain the agent
+	 * @param {string|null} webSearchContext - Formatted search results from pre-step
+	 * @param {string|null} bundleId         - Active bundle identifier
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
 	async processWithReact(
 		userMessage,
 		disableThinking = false,
-		toolFilter = null
+		toolFilter = null,
+		webSearchContext = null,
+		bundleId = null,
+		docSearch = false
 	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
@@ -420,7 +445,7 @@ class ChatOrchestrator {
 		const result = await this.reactAgent.execute(
 			userMessage,
 			this.session.getConversationHistory(),
-			{ toolFilter }
+			{ toolFilter, webSearchContext, docSearch }
 		);
 
 		// For tools that prefer to display their own summary (e.g. read-file),
@@ -455,10 +480,42 @@ class ChatOrchestrator {
 					this.callbacks.onStreamChunk( char, text ),
 			} );
 		}
-		this.session.addAssistantMessage(
-			displayAnswer,
-			this.getUsageStatsMeta()
-		);
+		const meta = this.getUsageStatsMeta();
+
+		// Auto-insert content into editor when content-create bundle is active
+		if ( bundleId === 'content-create' && displayAnswer?.length > 50 ) {
+			const contentTool = toolRegistry.get(
+				'wp-agentic-admin/content-generate'
+			);
+			let autoInserted = false;
+
+			if ( contentTool ) {
+				try {
+					const insertResult = await contentTool.execute( {
+						content: displayAnswer,
+					} );
+					if ( insertResult?.success ) {
+						autoInserted = true;
+					}
+				} catch ( e ) {
+					log.warn( 'Auto-insert failed:', e.message );
+				}
+			}
+
+			// Fallback: show button if auto-insert failed
+			if ( ! autoInserted ) {
+				meta.actions = [
+					{
+						label: 'Add generated content to this page',
+						button_label: 'Insert into editor',
+						action: 'wp-agentic-admin/content-generate',
+						args: { content: displayAnswer },
+					},
+				];
+			}
+		}
+
+		this.session.addAssistantMessage( displayAnswer, meta );
 		this.callbacks.onStreamEnd( displayAnswer );
 
 		log.info(
@@ -685,173 +742,6 @@ Explain what went wrong and suggest what the user might try next.`;
 			const messageWithContext = `• ${ toolName }\n${ fallbackSummary }`;
 			this.session.addAssistantMessage( messageWithContext );
 			this.callbacks.onStreamEnd( fallbackSummary );
-		}
-	}
-
-	/**
-	 * Detect if LLM output contains hallucinated tool results
-	 *
-	 * @param {string} response - LLM response text
-	 * @return {boolean} True if hallucination detected
-	 */
-	detectHallucinatedToolResult( response ) {
-		// Check for common hallucination patterns
-		const hallucinationPatterns = [
-			/\[Tool Result from [^\]]+\]/i, // [Tool Result from ...]
-			/\{[\s\n]*"(success|data|result)"/i, // JSON objects at start
-			/Analyzing|Checking|Processing\.\.\./i, // Tool-like initial messages
-		];
-
-		return hallucinationPatterns.some( ( pattern ) =>
-			pattern.test( response )
-		);
-	}
-
-	/**
-	 * Process message with pure LLM (no tool)
-	 *
-	 * @param {string} extraContext - Optional extra context (e.g. web search results) to append to the last user message
-	 * @return {Promise<Object>} Result with success status and LLM response text.
-	 */
-	async processWithLLM() {
-		if ( ! this.isLLMReady() ) {
-			this.session.addAssistantMessage(
-				'The AI model is not loaded yet. Please load the model first.'
-			);
-			return { success: false, error: 'Model not loaded' };
-		}
-
-		const engine = modelLoader.getEngine();
-		if ( ! engine ) {
-			throw new Error( 'LLM engine not available' );
-		}
-
-		// Build messages for LLM
-		const messages = [
-			{ role: 'system', content: this.getSystemPrompt() },
-			...this.session.getConversationHistory(),
-		];
-
-		// Stream from LLM
-		this.callbacks.onStreamStart();
-		let fullResponse = '';
-		let inThinkBlock = false; // Track <think> blocks
-		let thinkContent = ''; // Accumulated thinking content
-
-		try {
-			const stream = await engine.chat.completions.create( {
-				messages,
-				temperature: this.llmOptions.temperature,
-				max_tokens: this.llmOptions.maxTokens,
-				stream: true,
-				stream_options: { include_usage: true },
-				stop: [ 'User:', 'USER:', '\n\nUser' ],
-			} );
-
-			for await ( const chunk of stream ) {
-				if ( this.currentAbortController?.signal.aborted ) {
-					break;
-				}
-
-				const delta = chunk.choices[ 0 ]?.delta?.content || '';
-				fullResponse += delta;
-
-				// Stream <think> blocks to the UI as thinking indicators.
-				// Qwen 3 outputs <think>...</think> before the actual response.
-				if (
-					fullResponse.includes( '<think>' ) &&
-					! fullResponse.includes( '</think>' )
-				) {
-					if ( ! inThinkBlock ) {
-						inThinkBlock = true;
-						this.callbacks.onThinkingStart?.();
-					}
-					// Extract thinking content so far (after <think> tag)
-					const thinkStart = fullResponse.indexOf( '<think>' ) + 7;
-					thinkContent = fullResponse.substring( thinkStart ).trim();
-					this.callbacks.onThinkingChunk?.( delta, thinkContent );
-					// Capture usage stats from the final chunk
-					if ( chunk.usage ) {
-						log.debug( 'Usage stats:', chunk.usage );
-						modelLoader.updateUsageStats( chunk.usage );
-					}
-					continue;
-				}
-				if ( inThinkBlock && fullResponse.includes( '</think>' ) ) {
-					inThinkBlock = false;
-					// Extract final thinking content
-					const thinkMatch = fullResponse.match(
-						/<think>([\s\S]*?)<\/think>/
-					);
-					thinkContent = thinkMatch
-						? thinkMatch[ 1 ].trim()
-						: thinkContent;
-					// Persist thinking to session and notify UI
-					this.session.addThinkingMessage( thinkContent );
-					this.callbacks.onThinkingEnd?.( thinkContent );
-					// Strip think block and stream the clean content so far
-					const cleanResponse = fullResponse
-						.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
-						.trim();
-					this.callbacks.onStreamChunk( '', cleanResponse );
-					// Capture usage stats from the final chunk
-					if ( chunk.usage ) {
-						log.debug( 'Usage stats:', chunk.usage );
-						modelLoader.updateUsageStats( chunk.usage );
-					}
-					continue;
-				}
-
-				if ( ! inThinkBlock ) {
-					this.callbacks.onStreamChunk( delta, fullResponse );
-				}
-
-				// Capture usage stats from the final chunk
-				if ( chunk.usage ) {
-					log.debug( 'Usage stats:', chunk.usage );
-					modelLoader.updateUsageStats( chunk.usage );
-				}
-			}
-
-			// Strip any remaining think blocks from the final response
-			fullResponse = fullResponse
-				.replace( /<think>[\s\S]*?<\/think>\s*/g, '' )
-				.trim();
-			// Handle incomplete think block (model ran out of tokens)
-			if ( fullResponse.startsWith( '<think>' ) ) {
-				// Persist and end thinking even if incomplete
-				if ( inThinkBlock && thinkContent ) {
-					this.session.addThinkingMessage( thinkContent );
-					this.callbacks.onThinkingEnd?.( thinkContent );
-				}
-				fullResponse = '';
-			}
-
-			// Detect and filter hallucinated tool results
-			const hallucinationDetected =
-				this.detectHallucinatedToolResult( fullResponse );
-			if ( hallucinationDetected ) {
-				log.warn(
-					'Detected hallucinated tool result, replacing with helpful message'
-				);
-				fullResponse =
-					"I don't have an ability to do that. I can help you with:\n\n" +
-					toolRegistry
-						.getAll()
-						.map( ( t ) => `- ${ t.label || t.id }` )
-						.join( '\n' );
-			}
-
-			this.session.addAssistantMessage(
-				fullResponse,
-				this.getUsageStatsMeta()
-			);
-			this.callbacks.onStreamEnd( fullResponse );
-
-			return { success: true, response: fullResponse };
-		} catch ( error ) {
-			log.error( 'LLM error:', error );
-			throw error;
 		}
 	}
 

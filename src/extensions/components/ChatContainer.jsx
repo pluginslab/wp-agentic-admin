@@ -58,16 +58,18 @@ const log = createLogger( 'ChatContainer' );
 /**
  * ChatContainer component
  *
- * @param {Object}   props              - Component props
- * @param {boolean}  props.modelReady   - Whether AI model is loaded and ready
- * @param {boolean}  props.isLoading    - Whether a request is in progress
- * @param {Function} props.setIsLoading - Callback to set loading state
+ * @param {Object}   props               - Component props
+ * @param {boolean}  props.modelReady    - Whether AI model is loaded and ready
+ * @param {boolean}  props.isLoading     - Whether a request is in progress
+ * @param {Function} props.setIsLoading  - Callback to set loading state
+ * @param {Object}   props.defaultBundle - Bundle to auto-select on mount
  * @return {JSX.Element} Rendered chat container
  */
 const ChatContainer = ( {
 	modelReady = false,
 	isLoading = false,
 	setIsLoading,
+	defaultBundle = null,
 } ) => {
 	// Messages state - managed by ChatSession but we need React state for re-renders
 	const [ messages, setMessages ] = useState( [] );
@@ -306,6 +308,7 @@ const ChatContainer = ( {
 						id: msg.id,
 						type: 'assistant',
 						content: msg.content,
+						actions: msg.meta?.actions || msg.actions,
 						timestamp: msg.timestamp,
 						prefillTps: msg.meta?.prefillTps,
 						decodeTps: msg.meta?.decodeTps,
@@ -657,7 +660,16 @@ const ChatContainer = ( {
 		}
 
 		try {
-			const result = await executeAbility( abilityId, params );
+			let result;
+
+			// JS-only abilities: execute directly via toolRegistry
+			if ( tool?.execute ) {
+				result = await tool.execute( params );
+			} else {
+				// PHP abilities: use REST API
+				result = await executeAbility( abilityId, params );
+			}
+
 			const msg =
 				result?.message ||
 				( result?.success
@@ -861,10 +873,13 @@ const ChatContainer = ( {
 				disabled={ ! modelReady || isStreaming }
 				isLoading={ isLoading || isStreaming }
 				placeholder={
-					modelReady
-						? 'Describe your issue or what you want to do...'
-						: 'Load the AI model to start chatting...'
+					! modelReady
+						? 'Load the AI model to start chatting...'
+						: isLoading || isStreaming
+						? 'Thinking...'
+						: 'Describe your issue or what you want to do… (hold Space to speak)'
 				}
+				defaultBundle={ defaultBundle }
 			/>
 
 			{ isStreaming && (

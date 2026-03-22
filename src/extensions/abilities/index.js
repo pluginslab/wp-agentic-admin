@@ -46,12 +46,12 @@ import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
 import { registerFileScan } from './file-scan';
 import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
-import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerCodebaseIndex } from './codebase-index';
 import { registerCodeSearch } from './code-search';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
 import { registerWpConfigList } from './wp-config-list';
+import { registerContentGenerate } from './content-generate';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -95,6 +95,7 @@ export { registerCodeSearch } from './code-search';
 export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 export { registerRunPluginAbility } from './run-plugin-ability';
 export { registerWpConfigList } from './wp-config-list';
+export { registerContentGenerate } from './content-generate';
 
 /**
  * Register all abilities.
@@ -158,6 +159,9 @@ export function registerAllAbilities() {
 
 	// WP-Config constants listing
 	registerWpConfigList();
+
+	// Content editing abilities
+	registerContentGenerate();
 
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
 

@@ -1,7 +1,9 @@
 /**
  * Code Search Ability
  *
- * Searches the locally indexed codebase using semantic vector search.
+ * Searches the local knowledge base using semantic vector search.
+ * The knowledge base includes site code, database schemas,
+ * WordPress API signatures, and reference documentation.
  *
  * @see src/extensions/services/vector-store.js for the vector store service
  * @see src/extensions/abilities/codebase-index.js for the indexing ability
@@ -18,9 +20,9 @@ const log = createLogger( 'CodeSearch' );
  */
 export function registerCodeSearch() {
 	registerAbility( 'wp-agentic-admin/code-search', {
-		label: 'Search site codebase',
+		label: 'Search knowledge base',
 		description:
-			'Search code for functions, classes, or patterns. Use when users ask to find, search, or locate code in the codebase.',
+			'Search the knowledge base for code, database schema, WordPress API docs, or reference information. Use when users ask to find, search, or look up anything about the site or WordPress.',
 
 		keywords: [
 			'search code',
@@ -31,9 +33,15 @@ export function registerCodeSearch() {
 			'find code',
 			'code search',
 			'search codebase',
+			'database',
+			'schema',
+			'wordpress',
+			'documentation',
+			'how does',
+			'what is',
 		],
 
-		initialMessage: 'Searching your codebase...',
+		initialMessage: 'Searching your knowledge base...',
 
 		parseIntent: ( message ) => {
 			return { query: message };
@@ -45,10 +53,10 @@ export function registerCodeSearch() {
 			}
 
 			if ( ! result.matches || result.matches.length === 0 ) {
-				return 'No matching code found.';
+				return 'No matching results found in the knowledge base.';
 			}
 
-			let summary = `Found **${ result.matches.length }** relevant code sections:\n\n`;
+			let summary = `Found **${ result.matches.length }** relevant results:\n\n`;
 
 			result.matches.forEach( ( match, i ) => {
 				summary += `**${ i + 1 }. ${ match.path }** (lines ${
@@ -73,7 +81,7 @@ export function registerCodeSearch() {
 			}
 
 			if ( ! result.matches || result.matches.length === 0 ) {
-				return 'No matching code found in the index.';
+				return 'No matching results found in the knowledge base.';
 			}
 
 			// Strict budget: max 2 snippets, ~400 chars each, total under 800 chars.
@@ -93,7 +101,7 @@ export function registerCodeSearch() {
 
 				if ( ! vectorStore.isReady() ) {
 					return {
-						error: "Codebase not indexed yet. Run 'index the codebase' first.",
+						error: "Knowledge base not indexed yet. Run 'index the codebase' first.",
 					};
 				}
 
