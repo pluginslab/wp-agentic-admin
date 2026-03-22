@@ -11,6 +11,7 @@
  */
 
 import { createLogger } from '../utils/logger';
+import vectorStore from './vector-store';
 
 const log = createLogger( 'ReactAgent' );
 
@@ -164,10 +165,45 @@ class ReactAgent {
 		const toolsUsed = [];
 		let iteration = 0;
 
+		// Auto-consult: inject relevant RAG context before the ReAct loop.
+		let augmentedMessage = userMessage;
+		try {
+			await vectorStore.init();
+			if ( vectorStore.isReady() ) {
+				const ragResults = await vectorStore.search( userMessage, 2 );
+				if ( ragResults.length > 0 ) {
+					// Budget: ~1750 chars max for injected context.
+					let context = '[Relevant knowledge base context]\n';
+					let charBudget = 1750;
+
+					for ( const result of ragResults ) {
+						const snippet = result.content.slice(
+							0,
+							Math.min( result.content.length, charBudget )
+						);
+						context += `${ result.path }: ${ snippet }\n`;
+						charBudget -= snippet.length + result.path.length + 3;
+						if ( charBudget <= 0 ) {
+							break;
+						}
+					}
+
+					context += '[End context]\n\n';
+					augmentedMessage = context + userMessage;
+					log.info(
+						`Auto-consult: injected ${ ragResults.length } RAG results (${ context.length } chars)`
+					);
+				}
+			}
+		} catch ( e ) {
+			// Auto-consult is best-effort — don't block the agent.
+			log.warn( 'Auto-consult RAG failed:', e.message );
+		}
+
 		const messages = [
 			{ role: 'system', content: systemPrompt },
 			...conversationHistory,
-			{ role: 'user', content: userMessage },
+			{ role: 'user', content: augmentedMessage },
 		];
 
 		while ( iteration < this.config.maxIterations ) {
