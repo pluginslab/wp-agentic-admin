@@ -317,6 +317,22 @@ class ReactAgent {
 
 					log.info( `LLM requested tool: ${ toolName }`, toolArgs );
 
+					// Guard: small models occasionally omit the tool name entirely.
+					if ( ! toolName ) {
+						log.warn(
+							'LLM returned tool_call with no tool name — skipping iteration'
+						);
+						observations.push( {
+							tool: 'unknown',
+							args: toolArgs,
+							result: {
+								success: false,
+								error: 'No tool name provided by model.',
+							},
+						} );
+						continue;
+					}
+
 					// Detect repeated tool calls (same tool twice in a row)
 					if (
 						toolsUsed.length > 0 &&
@@ -732,6 +748,15 @@ class ReactAgent {
 	 * @return {Promise<Object>} Tool result
 	 */
 	async executeTool( toolId, args, userMessage ) {
+		// Guard against missing tool name (model returned tool_call with no tool field).
+		if ( ! toolId ) {
+			log.warn( 'executeTool called with undefined toolId' );
+			return {
+				success: false,
+				error: 'No tool name provided by model.',
+			};
+		}
+
 		// Enforce bundle filter — block tools outside the active bundle
 		if (
 			this.currentToolFilter &&

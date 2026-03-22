@@ -38,6 +38,15 @@ module.exports = {
 			import: path.resolve( __dirname, 'src/extensions/sw.js' ),
 			filename: 'sw.js', // Output as sw.js directly, not sw.index.js
 		},
+
+		// Whisper Web Worker - self-contained bundle for speech-to-text
+		'whisper-worker': {
+			import: path.resolve(
+				__dirname,
+				'src/extensions/services/whisper-worker.js'
+			),
+			filename: 'whisper-worker.js',
+		},
 	},
 
 	output: {
@@ -64,8 +73,9 @@ module.exports = {
 			...defaultConfig.optimization?.splitChunks,
 			cacheGroups: {
 				...defaultConfig.optimization?.splitChunks?.cacheGroups,
-				// Don't split the service worker
+				// Don't split the service worker or whisper worker
 				sw: false,
+				'whisper-worker': false,
 			},
 		},
 		runtimeChunk: false, // SW needs runtime included
