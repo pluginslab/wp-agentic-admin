@@ -13,7 +13,7 @@ import {
 	closeSmall,
 	shield,
 	globe,
-	library,
+	stack,
 	plugins,
 	tool,
 	bug,
@@ -407,7 +407,7 @@ const ChatInput = ( {
 								docSearchEnabled ? 'active' : 'inactive'
 							}` }
 						>
-							<Icon icon={ library } size={ 24 } />
+							<Icon icon={ stack } size={ 24 } />
 						</button>
 						{ selectedBundle && (
 							<span className="wp-agentic-admin-bundle-pill">
