@@ -9,7 +9,10 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 - **Remote provider context window** — separate setting for Ollama/LM Studio/OpenAI (8K–128K)
 - **E2E test runner** that mirrors the browser's exact ReAct loop flow
 
-**40 abilities**, **50 PRs merged**, **10 contributors**.
+### Local In-Browser RAG (PR #115 by @ivdimova)
+Privacy-first codebase search — **all in-browser, no external APIs**. PHP extracts code from active theme + plugins, chunks by function/class boundaries. Transformers.js (`all-MiniLM-L6-v2`, ~23MB) runs embeddings on CPU/WASM to avoid GPU contention. Voy-search for vector similarity, IndexedDB for persistence. Two new abilities: `codebase-index` and `code-search`.
+
+**42 abilities**, **51 PRs merged**, **10 contributors**.
 
 ---
 
