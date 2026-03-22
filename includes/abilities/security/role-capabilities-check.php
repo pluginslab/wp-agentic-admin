@@ -25,7 +25,7 @@ function wp_agentic_admin_register_role_capabilities_check(): void {
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Check Role Capabilities', 'wp-agentic-admin' ),
-			'description'         => __( 'Compare site role capabilities against WordPress defaults to detect privilege escalation or tampering.', 'wp-agentic-admin' ),
+			'description'         => __( 'Check default WordPress roles for added capabilities that indicate privilege escalation.', 'wp-agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -50,11 +50,7 @@ function wp_agentic_admin_register_role_capabilities_check(): void {
 					),
 					'roles'        => array(
 						'type'        => 'array',
-						'description' => __( 'Per-role comparison results.', 'wp-agentic-admin' ),
-					),
-					'extra_roles'  => array(
-						'type'        => 'array',
-						'description' => __( 'Roles that do not exist in default WordPress.', 'wp-agentic-admin' ),
+						'description' => __( 'Per-role escalation results.', 'wp-agentic-admin' ),
 					),
 				),
 			),
@@ -91,92 +87,53 @@ function wp_agentic_admin_execute_role_capabilities_check( array $input = array(
 	$current      = wp_roles()->roles;
 	$roles_result = array();
 	$total_issues = 0;
-	$extra_roles  = array();
 
-	// Check each default role against the current site.
+	// Check each default role for added capabilities (privilege escalation).
 	foreach ( $defaults as $role_slug => $default_caps ) {
 		if ( ! isset( $current[ $role_slug ] ) ) {
-			// Default role was removed — this is legitimate hardening, skip it.
 			continue;
 		}
 
 		$current_caps = array_keys( array_filter( $current[ $role_slug ]['capabilities'] ?? array() ) );
 		$default_list = array_keys( $default_caps );
 
-		$added   = array_values( array_diff( $current_caps, $default_list ) );
-		$removed = array_values( array_diff( $default_list, $current_caps ) );
+		$added = array_values( array_diff( $current_caps, $default_list ) );
 
-		if ( empty( $added ) && empty( $removed ) ) {
+		if ( empty( $added ) ) {
 			$roles_result[] = array(
 				'role'      => $role_slug,
 				'role_name' => $current[ $role_slug ]['name'],
 				'status'    => 'default',
 				'added'     => array(),
-				'removed'   => array(),
 			);
 			continue;
 		}
 
 		++$total_issues;
 
-		// Risk depends on which role gained capabilities.
-		$risk = wp_agentic_admin_calculate_role_risk( $role_slug, $added, $removed );
+		$risk = wp_agentic_admin_calculate_role_risk( $role_slug, $added );
 
 		$roles_result[] = array(
 			'role'       => $role_slug,
 			'role_name'  => $current[ $role_slug ]['name'],
-			'status'     => 'modified',
+			'status'     => 'escalated',
 			'added'      => $added,
-			'removed'    => $removed,
 			'risk_score' => $risk,
 		);
 	}
 
-	// Detect non-default roles (from plugins, or attacker-created).
-	$default_slugs = array_keys( $defaults );
-	foreach ( $current as $role_slug => $role_data ) {
-		if ( in_array( $role_slug, $default_slugs, true ) ) {
-			continue;
-		}
-
-		$caps = array_keys( array_filter( $role_data['capabilities'] ?? array() ) );
-
-		// Dangerous capabilities that indicate admin-level access.
-		$dangerous_caps  = array( 'manage_options', 'edit_users', 'install_plugins', 'edit_plugins', 'delete_users', 'create_users', 'update_core', 'activate_plugins' );
-		$has_admin_caps  = ! empty( array_intersect( $caps, $dangerous_caps ) );
-
-		$extra_roles[] = array(
-			'role'         => $role_slug,
-			'role_name'    => $role_data['name'],
-			'capabilities' => $caps,
-			'cap_count'    => count( $caps ),
-			'has_admin'    => $has_admin_caps,
-			'risk_score'   => $has_admin_caps ? 8.0 : 3.0,
-		);
-	}
-
-	if ( 0 === $total_issues && empty( $extra_roles ) ) {
-		$message = __( 'All default WordPress roles match their expected capabilities. No modifications detected.', 'wp-agentic-admin' );
+	if ( 0 === $total_issues ) {
+		$message = __( 'No privilege escalation detected. All default roles have their expected capabilities.', 'wp-agentic-admin' );
 	} else {
-		$parts = array();
-		if ( $total_issues > 0 ) {
-			$parts[] = sprintf(
-				/* translators: %d: number of modified roles */
-				_n( '%d default role modified', '%d default roles modified', $total_issues, 'wp-agentic-admin' ),
-				$total_issues
-			);
-		}
-		if ( ! empty( $extra_roles ) ) {
-			$parts[] = sprintf(
-				/* translators: %d: number of extra roles */
-				_n( '%d non-default role found', '%d non-default roles found', count( $extra_roles ), 'wp-agentic-admin' ),
-				count( $extra_roles )
-			);
-		}
 		$message = sprintf(
-			/* translators: %s: details */
-			__( 'Role capabilities check: %s.', 'wp-agentic-admin' ),
-			implode( ', ', $parts )
+			/* translators: %d: number of escalated roles */
+			_n(
+				'Privilege escalation detected: %d default role has added capabilities.',
+				'Privilege escalation detected: %d default roles have added capabilities.',
+				$total_issues,
+				'wp-agentic-admin'
+			),
+			$total_issues
 		);
 	}
 
@@ -185,28 +142,20 @@ function wp_agentic_admin_execute_role_capabilities_check( array $input = array(
 		'message'      => $message,
 		'total_issues' => $total_issues,
 		'roles'        => $roles_result,
-		'extra_roles'  => $extra_roles,
 	);
 }
 
 /**
- * Calculate risk score for a modified default role.
+ * Calculate risk score for a role with added capabilities.
  *
  * Subscribers and contributors gaining capabilities is high risk.
  * Editors gaining admin-level capabilities is medium-high risk.
- * Removed capabilities are low risk (usually intentional hardening).
  *
  * @param string $role_slug Role slug.
  * @param array  $added     Capabilities added beyond defaults.
- * @param array  $removed   Capabilities removed from defaults.
  * @return float Risk score 1.0–10.0.
  */
-function wp_agentic_admin_calculate_role_risk( string $role_slug, array $added, array $removed ): float {
-	if ( empty( $added ) ) {
-		// Only removals — likely intentional hardening.
-		return 3.0;
-	}
-
+function wp_agentic_admin_calculate_role_risk( string $role_slug, array $added ): float {
 	// Dangerous capabilities that should never appear on low-privilege roles.
 	$dangerous = array( 'manage_options', 'edit_users', 'install_plugins', 'edit_plugins', 'delete_users', 'create_users', 'update_core', 'activate_plugins', 'edit_themes', 'switch_themes' );
 
@@ -214,10 +163,10 @@ function wp_agentic_admin_calculate_role_risk( string $role_slug, array $added, 
 
 	// Risk by role — lower-privilege roles are higher risk when escalated.
 	$role_risk_base = array(
-		'subscriber'  => 9.0,
-		'contributor' => 8.5,
-		'author'      => 7.0,
-		'editor'      => 6.5,
+		'subscriber'    => 9.0,
+		'contributor'   => 8.5,
+		'author'        => 7.0,
+		'editor'        => 6.5,
 		'administrator' => 4.0,
 	);
 
