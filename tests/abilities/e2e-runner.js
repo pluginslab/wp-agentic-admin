@@ -20,6 +20,9 @@ const { execSync, spawn } = require( 'child_process' );
 const path = require( 'path' );
 const fs = require( 'fs' );
 
+// Allow self-signed certs for local dev (e.g. *.local with mkcert)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 // ---------------------------------------------------------------------------
 // CLI arguments
 // ---------------------------------------------------------------------------
@@ -51,7 +54,18 @@ const testFilePath = path.resolve( args[ fileIndex + 1 ] );
 const modelId = modelIndex !== -1 && args[ modelIndex + 1 ] ? args[ modelIndex + 1 ] : 'qwen3:1.7b';
 const wpUrl = ( wpUrlIndex !== -1 && args[ wpUrlIndex + 1 ] ? args[ wpUrlIndex + 1 ] : 'https://wp-agentic-admin.local' ).replace( /\/$/, '' );
 const wpUser = wpUserIndex !== -1 ? args[ wpUserIndex + 1 ] : '';
-const wpPass = wpPassIndex !== -1 ? args[ wpPassIndex + 1 ] : '';
+// Application passwords have spaces — collect all args until the next flag
+let wpPass = '';
+if ( wpPassIndex !== -1 ) {
+	const passArgs = [];
+	for ( let i = wpPassIndex + 1; i < args.length; i++ ) {
+		if ( args[ i ].startsWith( '--' ) ) {
+			break;
+		}
+		passArgs.push( args[ i ] );
+	}
+	wpPass = passArgs.join( ' ' );
+}
 
 if ( ! fs.existsSync( testFilePath ) ) {
 	console.error( `Test file not found: ${ testFilePath }` );
@@ -171,8 +185,8 @@ async function chatCompletion( messages ) {
 
 async function wpExecuteTool( toolId, toolArgs = {} ) {
 	const parts = toolId.includes( '/' ) ? toolId.split( '/' ) : [ 'wp-agentic-admin', toolId ];
-	const endpoint = `${ wpUrl }/wp-json/wp-abilities/v1/abilities/${ parts[ 0 ] }/${ parts[ 1 ] }/run`;
-	const headers = { 'Content-Type': 'application/json' };
+	const baseEndpoint = `${ wpUrl }/wp-json/wp-abilities/v1/abilities/${ parts[ 0 ] }/${ parts[ 1 ] }/run`;
+	const headers = {};
 
 	if ( wpUser && wpPass ) {
 		headers.Authorization = 'Basic ' + Buffer.from( `${ wpUser }:${ wpPass }` ).toString( 'base64' );
@@ -180,15 +194,29 @@ async function wpExecuteTool( toolId, toolArgs = {} ) {
 
 	const hasArgs = toolArgs && typeof toolArgs === 'object' && Object.keys( toolArgs ).length > 0;
 
-	// Try GET first (read-only abilities), fall back to POST
-	let res;
-	if ( ! hasArgs ) {
-		res = await fetch( endpoint, { method: 'GET', headers } );
-		if ( res.status === 400 || res.status === 405 ) {
-			res = await fetch( endpoint, { method: 'POST', headers, body: JSON.stringify( { input: toolArgs } ) } );
+	// Build query string for GET requests (mirrors abilities-api.js buildInputQueryString)
+	function buildQueryString( input ) {
+		const params = new URLSearchParams();
+		for ( const [ key, val ] of Object.entries( input ) ) {
+			params.append( `input[${ key }]`, String( val ) );
 		}
-	} else {
-		res = await fetch( endpoint, { method: 'POST', headers, body: JSON.stringify( { input: toolArgs } ) } );
+		return '?' + params.toString();
+	}
+
+	// Try GET first (with args as query params), fall back to POST.
+	// This mirrors the browser's logic: read-only abilities use GET.
+	const getEndpoint = hasArgs ? baseEndpoint + buildQueryString( toolArgs ) : baseEndpoint;
+
+	let res = await fetch( getEndpoint, { method: 'GET', headers } );
+
+	// If GET fails (405 or 400), retry with POST
+	if ( res.status === 405 || res.status === 400 ) {
+		headers[ 'Content-Type' ] = 'application/json';
+		res = await fetch( baseEndpoint, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify( { input: toolArgs } ),
+		} );
 	}
 
 	if ( ! res.ok ) {
@@ -670,20 +698,10 @@ function evaluateTurn( turn, result ) {
 			process.stdout.write( `    [${ ci + 1 }.${ ti + 1 }] "${ turn.input }" ... ` );
 
 			try {
-				// Route the message — same logic as the browser
-				const route = routeMessage( turn.input, abilities );
-
-				if ( verbose ) {
-					console.log( `\n      Route: ${ route.type }${ route.disableThinking !== undefined ? ` (thinking: ${ route.disableThinking ? 'off' : 'on' })` : '' }` );
-				}
-
-				let result;
-
-				if ( route.type === 'conversational' ) {
-					result = await executeConversational( turn.input, history );
-				} else {
-					result = await executeReactLoop( turn.input, history, reactPrompt );
-				}
+				// Always use ReAct prompt — the LLM decides tool_call vs final_answer.
+				// This mirrors the browser's most common path and lets us test both
+				// tool selection AND conversational answers in the same loop.
+				const result = await executeReactLoop( turn.input, history, reactPrompt );
 
 				// Evaluate
 				const evalResult = evaluateTurn( turn, result );
@@ -691,7 +709,7 @@ function evaluateTurn( turn, result ) {
 					conversation: label,
 					turn: ti + 1,
 					input: turn.input,
-					route: route.type,
+					route: 'react',
 					toolsUsed: result.toolsUsed,
 					iterations: result.iterations,
 					passed: evalResult.passed,
