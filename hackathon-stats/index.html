@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WP Agentic Admin — Hackathon Stats</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0d1117;--card:#161b22;--border:#30363d;
+    --text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;
+    --green:#3fb950;--red:#f85149;--purple:#bc8cff;
+    --orange:#d29922;--pink:#f778ba;--cyan:#39d2c0;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+
+  /* HERO */
+  .hero{text-align:center;padding:3rem 1rem 2rem;background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a1e2e 100%);border-bottom:1px solid var(--border)}
+  .hero h1{font-size:2.4rem;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero .dates{color:var(--muted);font-size:1.1rem;margin:.5rem 0}
+  .hero .tagline{color:var(--accent);font-size:1rem;opacity:.8}
+
+  /* GRID */
+  .container{max-width:1200px;margin:0 auto;padding:1.5rem}
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;transition:transform .2s}
+  .stat-card:hover{transform:translateY(-3px)}
+  .stat-card .number{font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat-card .label{color:var(--muted);font-size:.85rem;margin-top:.25rem}
+  .stat-card.green .number{color:var(--green)}
+  .stat-card.red .number{color:var(--red)}
+  .stat-card.accent .number{color:var(--accent)}
+  .stat-card.purple .number{color:var(--purple)}
+  .stat-card.orange .number{color:var(--orange)}
+  .stat-card.cyan .number{color:var(--cyan)}
+
+  /* SECTIONS */
+  .section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem}
+  .section h2{font-size:1.2rem;margin-bottom:1rem;color:var(--accent)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  @media(max-width:768px){.two-col{grid-template-columns:1fr}}
+
+  /* BARS */
+  .bar-row{display:flex;align-items:center;margin-bottom:.5rem;font-size:.85rem}
+  .bar-label{width:140px;flex-shrink:0;text-align:right;padding-right:.75rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{flex:1;height:22px;background:#21262d;border-radius:4px;overflow:hidden;position:relative}
+  .bar-fill{height:100%;border-radius:4px;transition:width 1s ease}
+  .bar-value{position:absolute;right:6px;top:2px;font-size:.75rem;color:var(--text);font-weight:600}
+
+  /* TIMELINE */
+  .timeline{display:flex;align-items:flex-end;gap:2px;height:160px;padding-top:20px}
+  .timeline .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .timeline .bar{width:100%;border-radius:3px 3px 0 0;transition:height 1s ease;min-width:8px;position:relative}
+  .timeline .bar:hover{opacity:.8}
+  .timeline .bar .tip{display:none;position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:.65rem;padding:2px 5px;border-radius:3px;white-space:nowrap}
+  .timeline .bar:hover .tip{display:block}
+  .timeline .time{font-size:.55rem;color:var(--muted);margin-top:4px;writing-mode:vertical-rl;text-orientation:mixed;height:50px}
+  .day-labels{display:flex;justify-content:space-around;margin-top:.25rem;font-size:.75rem;color:var(--muted)}
+
+  /* FEATURES */
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem}
+  .feature{background:#21262d;border-radius:8px;padding:.75rem 1rem;font-size:.85rem;border-left:3px solid var(--accent)}
+  .feature .feat-title{font-weight:600;color:var(--text)}
+  .feature .feat-desc{color:var(--muted);font-size:.78rem;margin-top:.15rem}
+
+  /* DAY CARDS */
+  .day-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  @media(max-width:768px){.day-cards{grid-template-columns:1fr}}
+  .day-card{background:#21262d;border-radius:10px;padding:1.25rem;text-align:center}
+  .day-card .day-num{font-size:2.2rem;font-weight:700}
+  .day-card .day-label{color:var(--muted);font-size:.85rem}
+  .day-card:nth-child(1) .day-num{color:var(--green)}
+  .day-card:nth-child(2) .day-num{color:var(--accent)}
+  .day-card:nth-child(3) .day-num{color:var(--purple)}
+
+  /* FOOTER */
+  .footer{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>WP Agentic Admin</h1>
+  <div class="dates">Hackathon &middot; March 20 &ndash; 22, 2026</div>
+  <div class="tagline">3 days &middot; 13 contributors &middot; 1 privacy-first AI assistant</div>
+</div>
+
+<div class="container">
+
+  <!-- TOP STATS -->
+  <div class="stats-grid">
+    <div class="stat-card green"><div class="number" data-target="32456">0</div><div class="label">Lines Added</div></div>
+    <div class="stat-card red"><div class="number" data-target="7925">0</div><div class="label">Lines Deleted</div></div>
+    <div class="stat-card accent"><div class="number" data-target="257">0</div><div class="label">Commits</div></div>
+    <div class="stat-card purple"><div class="number" data-target="62">0</div><div class="label">PRs Merged</div></div>
+    <div class="stat-card orange"><div class="number" data-target="184">0</div><div class="label">Files Changed</div></div>
+    <div class="stat-card cyan"><div class="number" data-target="13">0</div><div class="label">Contributors</div></div>
+  </div>
+
+  <!-- DAY BY DAY -->
+  <div class="section">
+    <h2>Day by Day</h2>
+    <div class="day-cards">
+      <div class="day-card"><div class="day-num" data-target="80">0</div><div class="day-label">Day 1 &middot; Mar 20</div></div>
+      <div class="day-card"><div class="day-num" data-target="130">0</div><div class="day-label">Day 2 &middot; Mar 21</div></div>
+      <div class="day-card"><div class="day-num" data-target="47">0</div><div class="day-label">Day 3 &middot; Mar 22</div></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- CONTRIBUTORS -->
+    <div class="section">
+      <h2>Contributor Leaderboard</h2>
+      <div id="contributors"></div>
+    </div>
+
+    <!-- LANGUAGES -->
+    <div class="section">
+      <h2>Code by Language</h2>
+      <div id="languages"></div>
+    </div>
+
+  </div>
+
+  <!-- ACTIVITY TIMELINE -->
+  <div class="section">
+    <h2>Commit Activity Timeline</h2>
+    <div class="timeline" id="timeline"></div>
+    <div class="day-labels">
+      <span>Mar 20 (afternoon)</span>
+      <span>Mar 21 (full day)</span>
+      <span>Mar 22 (morning)</span>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- TOP DIRECTORIES -->
+    <div class="section">
+      <h2>Most Active Directories</h2>
+      <div id="directories"></div>
+    </div>
+
+    <!-- EXTRA STATS -->
+    <div class="section">
+      <h2>Quick Facts</h2>
+      <div style="font-size:.9rem;line-height:2">
+        <div><span style="color:var(--accent);font-weight:700">79</span> <span style="color:var(--muted)">branches created</span></div>
+        <div><span style="color:var(--green);font-weight:700">24,531</span> <span style="color:var(--muted)">net lines added</span></div>
+        <div><span style="color:var(--purple);font-weight:700">303</span> <span style="color:var(--muted)">commits across all branches</span></div>
+        <div><span style="color:var(--orange);font-weight:700">25</span> <span style="color:var(--muted)">peak commits in a single hour</span></div>
+        <div><span style="color:var(--cyan);font-weight:700">86+</span> <span style="color:var(--muted)">merge commits</span></div>
+        <div><span style="color:var(--pink);font-weight:700">12:00</span> <span style="color:var(--muted)">most productive hour (Mar 21)</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FEATURES SHIPPED -->
+  <div class="section">
+    <h2>Features Shipped</h2>
+    <div class="features">
+      <div class="feature"><div class="feat-title">Voice Mode</div><div class="feat-desc">Whisper STT with Space push-to-talk</div></div>
+      <div class="feature"><div class="feat-title">Local RAG Knowledge Base</div><div class="feat-desc">4 sources with auto-consult</div></div>
+      <div class="feature"><div class="feat-title">WebMCP Bridge</div><div class="feat-desc">Expose abilities to external AI agents</div></div>
+      <div class="feature"><div class="feat-title">Security Scanning Suite</div><div class="feat-desc">Checksums, vulnerabilities, hacked-check</div></div>
+      <div class="feature"><div class="feat-title">Plugin Abilities Platform</div><div class="feat-desc">Discovery, bundles, fuzzy matching</div></div>
+      <div class="feature"><div class="feat-title">Content Creation</div><div class="feat-desc">LLM-powered content generation</div></div>
+      <div class="feature"><div class="feat-title">Feedback Collection</div><div class="feat-desc">Thumbs up/down with opt-in fine-tuning</div></div>
+      <div class="feature"><div class="feat-title">E2E Test Runner</div><div class="feat-desc">Real ReAct loop with WP REST API</div></div>
+      <div class="feature"><div class="feat-title">Gutenberg Sidebar</div><div class="feat-desc">AI chat in the block editor</div></div>
+      <div class="feature"><div class="feat-title">Admin Bar Integration</div><div class="feat-desc">AI toggle across all admin pages</div></div>
+      <div class="feature"><div class="feat-title">Web Search</div><div class="feat-desc">DuckDuckGo integration for context</div></div>
+      <div class="feature"><div class="feat-title">Settings & Context Window</div><div class="feat-desc">GPU-based recommendations, thinking mode</div></div>
+      <div class="feature"><div class="feat-title">Query Database</div><div class="feat-desc">Read-only SQL queries via chat</div></div>
+      <div class="feature"><div class="feat-title">External LLM Providers</div><div class="feat-desc">Remote model support with auto-reconnect</div></div>
+      <div class="feature"><div class="feat-title">Accessibility</div><div class="feat-desc">Enhanced a11y across components</div></div>
+      <div class="feature"><div class="feat-title">CI/CD Pipeline</div><div class="feat-desc">GitHub Actions quality workflow</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Built with data from <strong>git log</strong> &middot; WP Agentic Admin Hackathon 2026
+</div>
+
+<script>
+// Animated counters
+function animateCounters() {
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = +el.dataset.target;
+    const duration = 1500;
+    const start = performance.now();
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target).toLocaleString();
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// Bar chart helper
+function renderBars(containerId, data, maxVal, color) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = data.map(([label, value]) => {
+    const pct = (value / maxVal * 100).toFixed(1);
+    return `<div class="bar-row">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:0%;background:${color}" data-width="${pct}%"></div>
+        <div class="bar-value">${value.toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Contributors
+const contributors = [
+  ['pluginslab', 134], ['Tome Pajkovski', 20], ['Ivelina Dimova', 20],
+  ['Stefan Euchehofer', 15], ['Moritz Bappert', 14], ['Lucisu', 11],
+  ['Bowe Frankema', 11], ['0xLoopTheory', 11], ['AlexanderMelde', 8],
+  ['Jan Vogt', 6], ['Robert Abela', 4], ['Stefan E', 2], ['Alexander Melde', 1]
+];
+renderBars('contributors', contributors, 134, 'var(--accent)');
+
+// Languages
+const languages = [
+  ['JavaScript', 13968], ['PHP', 9729], ['JSX', 5221],
+  ['JSON', 4860], ['Markdown', 2593], ['SCSS', 2417],
+  ['Text', 1228], ['Shell', 178], ['YAML', 73]
+];
+renderBars('languages', languages, 13968, 'var(--green)');
+
+// Directories
+const directories = [
+  ['abilities (JS)', 78], ['components', 70], ['abilities (PHP)', 58],
+  ['services', 56], ['tests', 40], ['includes', 37],
+  ['styles', 25], ['security', 17], ['workflows', 8]
+];
+renderBars('directories', directories, 78, 'var(--purple)');
+
+// Timeline
+const timeline = [
+  ['12:00', 1, 1], ['13:00', 4, 1], ['14:00', 16, 1], ['15:00', 18, 1],
+  ['16:00', 20, 1], ['17:00', 14, 1], ['18:00', 6, 1], ['19:00', 1, 1],
+  ['09:00', 6, 2], ['10:00', 5, 2], ['11:00', 15, 2], ['12:00', 25, 2],
+  ['13:00', 13, 2], ['14:00', 18, 2], ['15:00', 13, 2], ['16:00', 15, 2],
+  ['17:00', 13, 2], ['18:00', 7, 2],
+  ['08:00', 5, 3], ['09:00', 7, 3], ['10:00', 21, 3], ['11:00', 7, 3], ['12:00', 7, 3]
+];
+const maxCommits = 25;
+const dayColors = { 1: 'var(--green)', 2: 'var(--accent)', 3: 'var(--purple)' };
+const tl = document.getElementById('timeline');
+tl.innerHTML = timeline.map(([time, count, day]) => {
+  const h = (count / maxCommits * 130);
+  return `<div class="col">
+    <div class="bar" style="height:${h}px;background:${dayColors[day]}">
+      <div class="tip">${count} commits</div>
+    </div>
+    <div class="time">${time}</div>
+  </div>`;
+}).join('');
+
+// Animate bar fills after load
+setTimeout(() => {
+  document.querySelectorAll('.bar-fill[data-width]').forEach(el => {
+    el.style.width = el.dataset.width;
+  });
+}, 100);
+
+// Start counters
+animateCounters();
+</script>
+</body>
+</html>
