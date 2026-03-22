@@ -11,11 +11,36 @@ import ChatContainer from './ChatContainer';
 import ModelStatus from './ModelStatus';
 import WebGPUFallback from './WebGPUFallback';
 import modelLoader from '../services/model-loader';
+import { getBundleById } from '../data/ability-bundles';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'AdminSidebar' );
 
 const AdminSidebar = () => {
+	// Auto-select "Create Content" bundle on blank pages via global wp.data
+	// (no @wordpress/data import — avoids adding wp-data as a bundle dependency)
+	const [ defaultBundle ] = useState( () => {
+		try {
+			const editor = wp?.data?.select?.( 'core/editor' );
+			if ( ! editor ) {
+				return null;
+			}
+			const title = editor.getEditedPostAttribute( 'title' ) || '';
+			const blocks =
+				wp.data.select( 'core/block-editor' )?.getBlocks() || [];
+			const hasNoContent =
+				blocks.length === 0 ||
+				( blocks.length === 1 &&
+					blocks[ 0 ].name === 'core/paragraph' &&
+					! blocks[ 0 ].attributes?.content );
+			return ! title.trim() && hasNoContent
+				? getBundleById( 'content-create' )
+				: null;
+		} catch ( e ) {
+			return null;
+		}
+	} );
+
 	const [ modelReady, setModelReady ] = useState( false );
 	const [ webGPUError, setWebGPUError ] = useState( null );
 	const [ isExecuting, setIsExecuting ] = useState( false );
@@ -148,6 +173,7 @@ const AdminSidebar = () => {
 					modelReady={ modelReady }
 					isLoading={ isExecuting }
 					setIsLoading={ setIsExecuting }
+					defaultBundle={ defaultBundle }
 				/>
 			) }
 		</div>

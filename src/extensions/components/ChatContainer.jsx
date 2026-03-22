@@ -58,16 +58,18 @@ const log = createLogger( 'ChatContainer' );
 /**
  * ChatContainer component
  *
- * @param {Object}   props              - Component props
- * @param {boolean}  props.modelReady   - Whether AI model is loaded and ready
- * @param {boolean}  props.isLoading    - Whether a request is in progress
- * @param {Function} props.setIsLoading - Callback to set loading state
+ * @param {Object}   props               - Component props
+ * @param {boolean}  props.modelReady    - Whether AI model is loaded and ready
+ * @param {boolean}  props.isLoading     - Whether a request is in progress
+ * @param {Function} props.setIsLoading  - Callback to set loading state
+ * @param {Object}   props.defaultBundle - Bundle to auto-select on mount
  * @return {JSX.Element} Rendered chat container
  */
 const ChatContainer = ( {
 	modelReady = false,
 	isLoading = false,
 	setIsLoading,
+	defaultBundle = null,
 } ) => {
 	// Messages state - managed by ChatSession but we need React state for re-renders
 	const [ messages, setMessages ] = useState( [] );
@@ -865,6 +867,7 @@ const ChatContainer = ( {
 						? 'Describe your issue or what you want to do...'
 						: 'Load the AI model to start chatting...'
 				}
+				defaultBundle={ defaultBundle }
 			/>
 
 			{ isStreaming && (
