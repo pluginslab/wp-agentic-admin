@@ -37,6 +37,9 @@ const MODEL_CONFIG = {
 const F16_TO_F32_MODEL_MAP = {
 	'Qwen3-1.7B-q4f16_1-MLC': 'Qwen3-1.7B-q4f32_1-MLC',
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
+	'Qwen2.5-3B-Instruct-q4f16_1-MLC': 'Qwen2.5-3B-Instruct-q4f32_1-MLC',
+	'Qwen3.5-4B-Instruct-q4f16_1-MLC': 'Qwen3.5-4B-Instruct-q4f32_1-MLC',
+	'Qwen3.5-35B-A3B-q4f16_1-MLC': 'Qwen3.5-35B-A3B-q4f32_1-MLC',
 };
 
 /**
@@ -47,6 +50,12 @@ const MODEL_CONTEXT_SIZES = {
 	'Qwen3-1.7B-q4f32_1-MLC': 8192,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
 	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
+	'Qwen2.5-3B-Instruct-q4f16_1-MLC': 32768,
+	'Qwen2.5-3B-Instruct-q4f32_1-MLC': 32768,
+	'Qwen3.5-4B-Instruct-q4f16_1-MLC': 32768,
+	'Qwen3.5-4B-Instruct-q4f32_1-MLC': 32768,
+	'Qwen3.5-35B-A3B-q4f16_1-MLC': 32768,
+	'Qwen3.5-35B-A3B-q4f32_1-MLC': 32768,
 	// Default fallback
 	default: 8192,
 };
@@ -1175,6 +1184,52 @@ class ModelLoader {
 					'function calling',
 					'JSON output',
 					'fast inference',
+				],
+			},
+			{
+				id: 'Qwen3.5-35B-A3B-q4f16_1-MLC',
+				name: 'Qwen 3.5 35B-A3B (3B Active)',
+				size: '~2.8GB',
+				vram: '~3.5GB',
+				description:
+					'Alibaba Qwen 3.5 MoE. 35B parameters with 3B active. High reasoning quality with low VRAM footprint. Requires shader-f16.',
+				recommended: true,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'complex reasoning',
+					'MoE efficiency',
+				],
+			},
+			{
+				id: 'Qwen3.5-4B-Instruct-q4f16_1-MLC',
+				name: 'Qwen 3.5 4B Instruct',
+				size: '~2.6GB',
+				vram: '~3GB',
+				description:
+					'Alibaba Qwen 3.5 4B. Excellent balance of speed and reasoning for agentic tasks. Requires shader-f16.',
+				recommended: false,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'fast inference',
+				],
+			},
+			{
+				id: 'Qwen2.5-3B-Instruct-q4f16_1-MLC',
+				name: 'Qwen 2.5 3B Instruct',
+				size: '~2.1GB',
+				vram: '~2.5GB',
+				description:
+					'Alibaba Qwen 2.5 3B. Highly reliable 3B model for structured WordPress tasks. Requires shader-f16.',
+				recommended: false,
+				requiresF16: true,
+				capabilities: [
+					'function calling',
+					'JSON output',
+					'stable performance',
 				],
 			},
 			{
