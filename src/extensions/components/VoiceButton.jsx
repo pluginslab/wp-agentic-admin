@@ -4,9 +4,9 @@
  * Microphone button for speech-to-text voice input.
  *
  * Flow:
- *   1. User clicks mic → MediaRecorder starts.
- *   2. User clicks the stop icon (or 30 s elapses) → recording stops, state
- *      moves to 'transcribing'.
+ *   1. User clicks mic (or parent calls ref.start()) → MediaRecorder starts.
+ *   2. User clicks stop / releases Space / 30 s elapses → recording stops,
+ *      state moves to 'transcribing'.
  *   3. Full audio blob is decoded and sent to the Whisper Web Worker.
  *   4. Final transcript is passed to onTranscript callback.
  *
@@ -15,13 +15,23 @@
  *   recording    — stop icon + countdown badge; click to stop
  *   transcribing — three pulsing dots while Whisper runs
  *
+ * Imperative handle (via ref):
+ *   ref.start() — start recording programmatically
+ *   ref.stop()  — stop recording programmatically
+ *
  * iOS Safari: audio/webm unsupported → falls back to audio/mp4.
  * WebGPU unavailable on iOS → worker uses WASM backend automatically.
  *
  * @since 0.10.0
  */
 
-import { useState, useRef, useEffect } from '@wordpress/element';
+import {
+	useState,
+	useRef,
+	useEffect,
+	useImperativeHandle,
+	forwardRef,
+} from '@wordpress/element';
 
 /** Maximum recording duration in seconds — matches Whisper's context window. */
 const MAX_RECORDING_SECONDS = 30;
@@ -95,288 +105,308 @@ const ThinkingDots = () => (
  *
  * @param {Object}   props                       - Component props.
  * @param {Function} props.onTranscript          - Called with the final transcribed string.
- * @param {Function} [props.onPartialTranscript] - Reserved for future live transcription.
+ * @param {Function} [props.onPartialTranscript] - Called with interim status text.
  * @param {Function} [props.onStateChange]       - Called on every state transition.
  * @param {boolean}  props.disabled              - Whether the button is disabled.
+ * @param {Object}   ref                         - Imperative ref exposing start/stop.
  * @return {JSX.Element|null} The voice button, or null if unsupported.
  */
-const VoiceButton = ( {
-	onTranscript,
-	onPartialTranscript,
-	onStateChange,
-	disabled,
-} ) => {
-	const [ state, setState ] = useState( 'idle' ); // 'idle' | 'recording' | 'transcribing'
-	const [ recordingSeconds, setRecordingSeconds ] = useState( 0 );
+const VoiceButton = forwardRef(
+	( { onTranscript, onPartialTranscript, onStateChange, disabled }, ref ) => {
+		const [ state, setState ] = useState( 'idle' ); // 'idle' | 'recording' | 'transcribing'
+		const [ recordingSeconds, setRecordingSeconds ] = useState( 0 );
 
-	// Stable refs for callbacks — never go stale inside async handlers.
-	const onTranscriptRef = useRef( onTranscript );
-	const onPartialTranscriptRef = useRef( onPartialTranscript );
-	const onStateChangeRef = useRef( onStateChange );
+		// Stable refs for callbacks — never go stale inside async handlers.
+		const onTranscriptRef = useRef( onTranscript );
+		const onPartialTranscriptRef = useRef( onPartialTranscript );
+		const onStateChangeRef = useRef( onStateChange );
 
-	useEffect( () => {
-		onTranscriptRef.current = onTranscript;
-		onPartialTranscriptRef.current = onPartialTranscript;
-		onStateChangeRef.current = onStateChange;
-	} );
-
-	const mediaRecorderRef = useRef( null );
-	const mimeTypeRef = useRef( '' );
-	const workerRef = useRef( null );
-	const decodeCtxRef = useRef( null );
-	const requestIdRef = useRef( 0 );
-	const autoStopTimeoutRef = useRef( null );
-	const countdownIntervalRef = useRef( null );
-
-	/**
-	 * Transition to a new state and notify the parent.
-	 *
-	 * @param {string} next - New state value.
-	 */
-	const transition = ( next ) => {
-		setState( next );
-		onStateChangeRef.current?.( next );
-	};
-
-	/**
-	 * Lazily create (and cache) the Whisper Web Worker.
-	 *
-	 * @return {Worker|null} Worker instance, or null when pluginUrl is unavailable.
-	 */
-	const getWorker = () => {
-		if ( workerRef.current ) {
-			return workerRef.current;
-		}
-
-		const pluginUrl = window.wpAgenticAdmin?.pluginUrl;
-
-		if ( ! pluginUrl ) {
-			return null;
-		}
-
-		const worker = new Worker(
-			pluginUrl + 'build-extensions/whisper-worker.js'
-		);
-
-		worker.addEventListener( 'message', ( e ) => {
-			const { type: msgType, text } = e.data;
-
-			if ( msgType === 'result' ) {
-				onTranscriptRef.current?.( text );
-				transition( 'idle' );
-			} else if ( msgType === 'error' ) {
-				transition( 'idle' );
-			}
+		useEffect( () => {
+			onTranscriptRef.current = onTranscript;
+			onPartialTranscriptRef.current = onPartialTranscript;
+			onStateChangeRef.current = onStateChange;
 		} );
 
-		workerRef.current = worker;
-		return worker;
-	};
+		const mediaRecorderRef = useRef( null );
+		const mimeTypeRef = useRef( '' );
+		const workerRef = useRef( null );
+		const decodeCtxRef = useRef( null );
+		const requestIdRef = useRef( 0 );
+		const autoStopTimeoutRef = useRef( null );
+		const countdownIntervalRef = useRef( null );
 
-	// Clean up everything on unmount.
-	useEffect( () => {
-		return () => {
-			workerRef.current?.terminate();
-			decodeCtxRef.current?.close();
-			clearTimeout( autoStopTimeoutRef.current );
-			clearInterval( countdownIntervalRef.current );
+		// Mutable refs so the imperative handle can delegate to the real functions
+		// even though those are defined after the early-return check below.
+		const startRecordingRef = useRef( null );
+		const stopRecordingRef = useRef( null );
+
+		// Expose start/stop to parent via ref (e.g. for Space-bar push-to-talk).
+		useImperativeHandle(
+			ref,
+			() => ( {
+				start: () => startRecordingRef.current?.(),
+				stop: () => stopRecordingRef.current?.(),
+			} ),
+			[]
+		); // eslint-disable-line react-hooks/exhaustive-deps
+
+		/**
+		 * Transition to a new state and notify the parent.
+		 *
+		 * @param {string} next - New state value.
+		 */
+		const transition = ( next ) => {
+			setState( next );
+			onStateChangeRef.current?.( next );
 		};
-	}, [] );
 
-	// Pre-warm the Whisper model on mount so first voice use is instant.
-	// getWorker() accesses only stable refs and window globals — safe with [].
-	useEffect( () => {
+		/**
+		 * Lazily create (and cache) the Whisper Web Worker.
+		 *
+		 * @return {Worker|null} Worker instance, or null when pluginUrl is unavailable.
+		 */
+		const getWorker = () => {
+			if ( workerRef.current ) {
+				return workerRef.current;
+			}
+
+			const pluginUrl = window.wpAgenticAdmin?.pluginUrl;
+
+			if ( ! pluginUrl ) {
+				return null;
+			}
+
+			const worker = new Worker(
+				pluginUrl + 'build-extensions/whisper-worker.js'
+			);
+
+			worker.addEventListener( 'message', ( e ) => {
+				const { type: msgType, text } = e.data;
+
+				if ( msgType === 'result' ) {
+					onTranscriptRef.current?.( text );
+					transition( 'idle' );
+				} else if ( msgType === 'error' ) {
+					transition( 'idle' );
+				}
+			} );
+
+			workerRef.current = worker;
+			return worker;
+		};
+
+		// Clean up everything on unmount.
+		useEffect( () => {
+			return () => {
+				workerRef.current?.terminate();
+				decodeCtxRef.current?.close();
+				clearTimeout( autoStopTimeoutRef.current );
+				clearInterval( countdownIntervalRef.current );
+			};
+		}, [] );
+
+		// Pre-warm the Whisper model on mount so first voice use is instant.
+		// getWorker() accesses only stable refs and window globals — safe with [].
+		useEffect( () => {
+			if (
+				typeof MediaRecorder === 'undefined' ||
+				! navigator?.mediaDevices?.getUserMedia
+			) {
+				return;
+			}
+			const worker = getWorker();
+			if ( worker ) {
+				worker.postMessage( { type: 'warmup' } );
+			}
+		}, [] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+		// Return null if the browser lacks the required APIs.
 		if (
 			typeof MediaRecorder === 'undefined' ||
 			! navigator?.mediaDevices?.getUserMedia
 		) {
-			return;
-		}
-		const worker = getWorker();
-		if ( worker ) {
-			worker.postMessage( { type: 'warmup' } );
-		}
-	}, [] ); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Return null if the browser lacks the required APIs.
-	if (
-		typeof MediaRecorder === 'undefined' ||
-		! navigator?.mediaDevices?.getUserMedia
-	) {
-		return null;
-	}
-
-	/**
-	 * Get (or create) the 16 kHz AudioContext used to decode recorded audio.
-	 *
-	 * Reusing the same context avoids hitting browser limits on
-	 * AudioContext instances.
-	 *
-	 * @return {AudioContext} Decode context.
-	 */
-	const getDecodeCtx = () => {
-		if (
-			! decodeCtxRef.current ||
-			decodeCtxRef.current.state === 'closed'
-		) {
-			decodeCtxRef.current = new AudioContext( { sampleRate: 16000 } );
+			return null;
 		}
 
-		return decodeCtxRef.current;
-	};
+		/**
+		 * Get (or create) the 16 kHz AudioContext used to decode recorded audio.
+		 *
+		 * @return {AudioContext} Decode context.
+		 */
+		const getDecodeCtx = () => {
+			if (
+				! decodeCtxRef.current ||
+				decodeCtxRef.current.state === 'closed'
+			) {
+				decodeCtxRef.current = new AudioContext( {
+					sampleRate: 16000,
+				} );
+			}
 
-	const startRecording = async () => {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia( {
-				audio: true,
-			} );
+			return decodeCtxRef.current;
+		};
 
-			const mimeType = getSupportedMimeType();
-			mimeTypeRef.current = mimeType;
+		const startRecording = async () => {
+			try {
+				const stream = await navigator.mediaDevices.getUserMedia( {
+					audio: true,
+				} );
 
-			const options = mimeType ? { mimeType } : {};
-			const recorder = new MediaRecorder( stream, options );
-			const chunks = [];
+				const mimeType = getSupportedMimeType();
+				mimeTypeRef.current = mimeType;
 
-			recorder.addEventListener( 'dataavailable', ( e ) => {
-				if ( e.data.size > 0 ) {
-					chunks.push( e.data );
-				}
-			} );
+				const options = mimeType ? { mimeType } : {};
+				const recorder = new MediaRecorder( stream, options );
+				const chunks = [];
 
-			recorder.addEventListener( 'stop', async () => {
-				stream.getTracks().forEach( ( track ) => track.stop() );
+				recorder.addEventListener( 'dataavailable', ( e ) => {
+					if ( e.data.size > 0 ) {
+						chunks.push( e.data );
+					}
+				} );
 
-				if ( ! chunks.length ) {
-					transition( 'idle' );
-					return;
-				}
+				recorder.addEventListener( 'stop', async () => {
+					stream.getTracks().forEach( ( track ) => track.stop() );
 
-				try {
-					const blob = new Blob( chunks, {
-						type: mimeTypeRef.current || 'audio/webm',
-					} );
-					const arrayBuffer = await blob.arrayBuffer();
-					const audioCtx = getDecodeCtx();
-					const audioBuffer =
-						await audioCtx.decodeAudioData( arrayBuffer );
-					const pcmData = audioBuffer.getChannelData( 0 );
-					const worker = getWorker();
-
-					if ( ! worker ) {
+					if ( ! chunks.length ) {
 						transition( 'idle' );
 						return;
 					}
 
-					const id = ++requestIdRef.current;
-					// Derive the site language from the <html lang="…"> attribute
-					// that WordPress sets, e.g. "en-US" → "en", "de-DE" → "de".
-					const lang =
-						document.documentElement.lang
-							?.split( '-' )[ 0 ]
-							?.toLowerCase() || 'en';
+					try {
+						const blob = new Blob( chunks, {
+							type: mimeTypeRef.current || 'audio/webm',
+						} );
+						const arrayBuffer = await blob.arrayBuffer();
+						const audioCtx = getDecodeCtx();
+						const audioBuffer =
+							await audioCtx.decodeAudioData( arrayBuffer );
+						const pcmData = audioBuffer.getChannelData( 0 );
+						const worker = getWorker();
 
-					worker.postMessage(
-						{
-							type: 'transcribe',
-							audioData: pcmData,
-							sampleRate: 16000,
-							id,
-							language: lang,
-						},
-						[ pcmData.buffer ]
-					);
-				} catch {
-					onPartialTranscriptRef.current?.( '' );
-					transition( 'idle' );
-				}
-			} );
+						if ( ! worker ) {
+							transition( 'idle' );
+							return;
+						}
 
-			mediaRecorderRef.current = recorder;
-			recorder.start();
-			transition( 'recording' );
+						const id = ++requestIdRef.current;
+						// Derive the site language from the <html lang="…"> attribute
+						// that WordPress sets, e.g. "en-US" → "en", "de-DE" → "de".
+						const lang =
+							document.documentElement.lang
+								?.split( '-' )[ 0 ]
+								?.toLowerCase() || 'en';
 
-			// Tick the countdown every second.
-			countdownIntervalRef.current = setInterval( () => {
-				setRecordingSeconds( ( s ) => s + 1 );
-			}, 1000 );
+						worker.postMessage(
+							{
+								type: 'transcribe',
+								audioData: pcmData,
+								sampleRate: 16000,
+								id,
+								language: lang,
+							},
+							[ pcmData.buffer ]
+						);
+					} catch {
+						onPartialTranscriptRef.current?.( '' );
+						transition( 'idle' );
+					}
+				} );
 
-			// Hard-stop at the Whisper context-window limit.
-			autoStopTimeoutRef.current = setTimeout( () => {
-				clearInterval( countdownIntervalRef.current );
-				setRecordingSeconds( 0 );
-				if ( mediaRecorderRef.current?.state === 'recording' ) {
-					mediaRecorderRef.current.stop();
-					transition( 'transcribing' );
-					onPartialTranscriptRef.current?.(
-						'Transcribing your voice...'
-					);
-				}
-			}, MAX_RECORDING_SECONDS * 1000 );
-		} catch {
-			transition( 'idle' );
+				mediaRecorderRef.current = recorder;
+				recorder.start();
+				transition( 'recording' );
+
+				// Tick the countdown every second.
+				countdownIntervalRef.current = setInterval( () => {
+					setRecordingSeconds( ( s ) => s + 1 );
+				}, 1000 );
+
+				// Hard-stop at the Whisper context-window limit.
+				autoStopTimeoutRef.current = setTimeout( () => {
+					clearInterval( countdownIntervalRef.current );
+					setRecordingSeconds( 0 );
+					if ( mediaRecorderRef.current?.state === 'recording' ) {
+						mediaRecorderRef.current.stop();
+						transition( 'transcribing' );
+						onPartialTranscriptRef.current?.(
+							'Transcribing your voice...'
+						);
+					}
+				}, MAX_RECORDING_SECONDS * 1000 );
+			} catch {
+				transition( 'idle' );
+			}
+		};
+
+		const stopRecording = () => {
+			clearTimeout( autoStopTimeoutRef.current );
+			clearInterval( countdownIntervalRef.current );
+			setRecordingSeconds( 0 );
+			if ( mediaRecorderRef.current?.state === 'recording' ) {
+				mediaRecorderRef.current.stop();
+				transition( 'transcribing' );
+				// Show in-progress text inside the textarea so the user knows
+				// transcription is running. Replaced by the real result on success.
+				onPartialTranscriptRef.current?.(
+					'Transcribing your voice...'
+				);
+			}
+		};
+
+		// Populate the imperative-handle refs now that the real functions exist.
+		startRecordingRef.current = startRecording;
+		stopRecordingRef.current = stopRecording;
+
+		const handleClick = () => {
+			if ( state === 'idle' ) {
+				startRecording();
+			} else if ( state === 'recording' ) {
+				stopRecording();
+			}
+		};
+
+		const isProcessing = state === 'transcribing';
+		const ariaLabel =
+			state === 'recording' ? 'Stop recording' : 'Start voice input';
+		const remaining = MAX_RECORDING_SECONDS - recordingSeconds;
+		const isNearLimit = state === 'recording' && remaining <= 10;
+
+		let content;
+		if ( state === 'recording' ) {
+			content = (
+				<>
+					<StopIcon />
+					<span
+						className="wp-agentic-admin-voice-timer"
+						aria-hidden="true"
+					>
+						{ remaining }s
+					</span>
+				</>
+			);
+		} else if ( state === 'transcribing' ) {
+			content = <ThinkingDots />;
+		} else {
+			content = <MicIcon />;
 		}
-	};
 
-	const stopRecording = () => {
-		clearTimeout( autoStopTimeoutRef.current );
-		clearInterval( countdownIntervalRef.current );
-		setRecordingSeconds( 0 );
-		if ( mediaRecorderRef.current?.state === 'recording' ) {
-			mediaRecorderRef.current.stop();
-			transition( 'transcribing' );
-			// Show in-progress text inside the textarea so the user knows
-			// transcription is running. Replaced by the real result on success.
-			onPartialTranscriptRef.current?.( 'Transcribing your voice...' );
-		}
-	};
-
-	const handleClick = () => {
-		if ( state === 'idle' ) {
-			startRecording();
-		} else if ( state === 'recording' ) {
-			stopRecording();
-		}
-	};
-
-	const isProcessing = state === 'transcribing';
-	const ariaLabel =
-		state === 'recording' ? 'Stop recording' : 'Start voice input';
-	const remaining = MAX_RECORDING_SECONDS - recordingSeconds;
-	const isNearLimit = state === 'recording' && remaining <= 10;
-
-	let content;
-	if ( state === 'recording' ) {
-		content = (
-			<>
-				<StopIcon />
-				<span
-					className="wp-agentic-admin-voice-timer"
-					aria-hidden="true"
-				>
-					{ remaining }s
-				</span>
-			</>
+		return (
+			<button
+				type="button"
+				className={ `wp-agentic-admin-voice-button wp-agentic-admin-voice-button--${ state }${
+					isNearLimit ? ' wp-agentic-admin-voice-button--warning' : ''
+				}` }
+				onClick={ handleClick }
+				disabled={ disabled || isProcessing }
+				aria-label={ ariaLabel }
+			>
+				{ content }
+			</button>
 		);
-	} else if ( state === 'transcribing' ) {
-		content = <ThinkingDots />;
-	} else {
-		content = <MicIcon />;
 	}
+);
 
-	return (
-		<button
-			type="button"
-			className={ `wp-agentic-admin-voice-button wp-agentic-admin-voice-button--${ state }${
-				isNearLimit ? ' wp-agentic-admin-voice-button--warning' : ''
-			}` }
-			onClick={ handleClick }
-			disabled={ disabled || isProcessing }
-			aria-label={ ariaLabel }
-		>
-			{ content }
-		</button>
-	);
-};
+VoiceButton.displayName = 'VoiceButton';
 
 export default VoiceButton;
