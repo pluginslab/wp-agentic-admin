@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { TabPanel, Notice } from '@wordpress/components';
+import { TabPanel, Notice, Button } from '@wordpress/components';
+import { cog } from '@wordpress/icons';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
@@ -23,6 +24,7 @@ const App = () => {
 	const [ modelReady, setModelReady ] = useState( false );
 	const [ webGPUError, setWebGPUError ] = useState( null );
 	const [ isExecuting, setIsExecuting ] = useState( false );
+	const [ showSettings, setShowSettings ] = useState( false );
 	// Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
 	const [ initPhase, setInitPhase ] = useState( 'checking' );
 	const [ initMessage, setInitMessage ] = useState(
@@ -216,11 +218,6 @@ const App = () => {
 			title: 'Plugin Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
-		{
-			name: 'settings',
-			title: 'Settings',
-			className: 'wp-agentic-admin-tab',
-		},
 		...( FEEDBACK_UPLOAD_ENABLED
 			? [
 					{
@@ -261,8 +258,6 @@ const App = () => {
 				return <AbilityBrowser />;
 			case 'plugin-abilities':
 				return <PluginAbilitiesPanel />;
-			case 'settings':
-				return <SettingsTab />;
 			case 'feedback':
 				return <FeedbackTab />;
 			default:
@@ -273,17 +268,38 @@ const App = () => {
 	return (
 		<div className="wp-agentic-admin-app">
 			<div className="wp-agentic-admin-main">
-				<TabPanel
-					className="wp-agentic-admin-tabs"
-					tabs={ tabs }
-					initialTabName="chat"
-				>
-					{ ( tab ) => (
-						<div className="wp-agentic-admin-tab-content">
-							{ renderTabContent( tab ) }
-						</div>
-					) }
-				</TabPanel>
+				<div className="wp-agentic-admin-tabs-wrapper">
+					<TabPanel
+						className="wp-agentic-admin-tabs"
+						tabs={ tabs }
+						initialTabName="chat"
+						onSelect={ () => setShowSettings( false ) }
+					>
+						{ ( tab ) => (
+							<div className="wp-agentic-admin-tab-content">
+								{ showSettings ? (
+									<SettingsTab />
+								) : (
+									renderTabContent( tab )
+								) }
+							</div>
+						) }
+					</TabPanel>
+					<Button
+						icon={ cog }
+						className={ `wp-agentic-admin-settings-toggle${
+							showSettings
+								? ' is-active'
+								: ''
+						}` }
+						onClick={ () =>
+							setShowSettings( ( prev ) => ! prev )
+						}
+						label="Settings"
+					>
+						Settings
+					</Button>
+				</div>
 			</div>
 
 			<ModelStatus
