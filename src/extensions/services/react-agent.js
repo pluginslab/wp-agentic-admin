@@ -766,7 +766,7 @@ class ReactAgent {
 	 * @param {Array}  priorObservations - Results from previous tool calls in this loop
 	 * @return {Promise<Object>} Tool result
 	 */
-	async executeTool( toolId, args, userMessage ) {
+	async executeTool( toolId, args, userMessage, priorObservations = [] ) {
 		// Guard against missing tool name (model returned tool_call with no tool field).
 		if ( ! toolId ) {
 			log.warn( 'executeTool called with undefined toolId' );
