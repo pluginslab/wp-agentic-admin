@@ -2,6 +2,17 @@
 
 Live progress for the WP Agentic Admin hackathon project. Updated as milestones are reached.
 
+## Day 3 — March 22
+
+### Settings Tab + Context Window Tuning + E2E Test Runner (PR #168)
+- **Settings tab** with GPU detection (device, vendor, architecture, VRAM estimate), per-model context window dropdown defaulting to GPU-recommended value, thinking mode controls
+- **Remote provider context window** — separate setting for Ollama/LM Studio/OpenAI (8K–128K)
+- **E2E test runner** that mirrors the browser's exact ReAct loop flow
+
+**40 abilities**, **50 PRs merged**, **10 contributors**.
+
+---
+
 ## Day 2 — March 21
 
 ### Web Search + Dev Tooling + UX (PRs #97, #93, #98)

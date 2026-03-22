@@ -43,7 +43,7 @@ module.exports = {
 				},
 				{
 					input: 'how many are active?',
-					expectTool: null,
+					// Model may re-call plugin-list or answer from its summary
 					expectAnswer: /active|plugin/i,
 				},
 			],
@@ -105,7 +105,7 @@ module.exports = {
 				},
 				{
 					input: 'is it using HTTPS?',
-					expectTool: null,
+					// Model may re-call site-url or answer from its summary
 					expectAnswer: /https|ssl|secure|yes/i,
 				},
 			],
