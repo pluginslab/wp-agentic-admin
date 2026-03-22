@@ -5,7 +5,8 @@
  *
  */
 
-import { useState, useRef, useEffect } from '@wordpress/element';
+import { useState, useRef, useEffect, useCallback } from '@wordpress/element';
+import vectorStore from '../services/vector-store';
 import { Dropdown, Icon } from '@wordpress/components';
 import {
 	plus,
@@ -59,12 +60,26 @@ const ChatInput = ( {
 	const [ selectedBundle, setSelectedBundle ] = useState( null );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
 	const [ docSearchEnabled, setDocSearchEnabled ] = useState( false );
+	const [ kbIndexReady, setKbIndexReady ] = useState( false );
 	const [ pluginBundles, setPluginBundles ] = useState( [] );
 	const [ voiceState, setVoiceState ] = useState( 'idle' );
 	const textareaRef = useRef( null );
 	const voiceButtonRef = useRef( null );
 	const isSpaceDownRef = useRef( false );
 	const spacePressTimerRef = useRef( null );
+
+	// Check if the knowledge base index is available.
+	useEffect( () => {
+		const checkIndex = async () => {
+			try {
+				await vectorStore.init();
+				setKbIndexReady( vectorStore.isReady() );
+			} catch {
+				setKbIndexReady( false );
+			}
+		};
+		checkIndex();
+	}, [] );
 
 	// Cancel pending push-to-talk timer on unmount.
 	useEffect( () => {
@@ -401,10 +416,11 @@ const ChatInput = ( {
 							}
 							aria-label="Toggle knowledge base"
 							aria-pressed={ docSearchEnabled }
-							disabled={ isDisabled }
-							data-tooltip={ `Knowledge Base: ${
-								docSearchEnabled ? 'active' : 'inactive'
-							}` }
+							disabled={ isDisabled || ! kbIndexReady }
+							data-tooltip={ ! kbIndexReady
+								? 'Knowledge Base: not indexed (build in Settings)'
+								: `Knowledge Base: ${ docSearchEnabled ? 'active' : 'inactive' }`
+							}
 						>
 							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
 								<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
