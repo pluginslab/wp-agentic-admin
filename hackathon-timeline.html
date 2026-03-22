@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudFest Hackathon 2026 — PR Timeline</title>
+<style>
+	* { margin: 0; padding: 0; box-sizing: border-box; }
+	body {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		background: #0d1117;
+		color: #e6edf3;
+		overflow: hidden;
+		height: 100vh;
+	}
+	.header {
+		text-align: center;
+		padding: 40px 20px 20px;
+		position: sticky;
+		left: 0;
+	}
+	.header h1 {
+		font-size: 28px;
+		font-weight: 700;
+		background: linear-gradient(135deg, #58a6ff, #bc8cff);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		margin-bottom: 8px;
+	}
+	.header .subtitle {
+		color: #8b949e;
+		font-size: 16px;
+	}
+	.header .stat {
+		margin-top: 16px;
+	}
+	.header .stat-value {
+		font-size: 48px;
+		font-weight: 700;
+		color: #a371f7;
+	}
+	.header .stat-label {
+		font-size: 13px;
+		color: #8b949e;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+	.timeline-container {
+		padding: 20px 20px 40px;
+		width: 100%;
+	}
+	.timeline-track {
+		position: relative;
+		min-width: 100%;
+	}
+	.axis-line {
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 2px;
+		background: #30363d;
+	}
+	.day-divider {
+		position: absolute;
+		width: 1px;
+		background: #58a6ff22;
+		z-index: 0;
+	}
+	.day-divider-label {
+		position: absolute;
+		font-size: 13px;
+		font-weight: 600;
+		color: #58a6ff;
+		transform: translateX(-50%);
+		white-space: nowrap;
+	}
+	.hour-marker {
+		position: absolute;
+		width: 1px;
+		height: 14px;
+		background: #30363d;
+	}
+	.hour-label {
+		position: absolute;
+		font-size: 10px;
+		color: #484f58;
+		transform: translateX(-50%);
+		white-space: nowrap;
+	}
+	.pr-dot {
+		position: absolute;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: #a371f7;
+		transform: translateX(-5px);
+		z-index: 2;
+		cursor: pointer;
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+	}
+	.pr-dot:hover {
+		transform: translateX(-5px) scale(1.8);
+		box-shadow: 0 0 12px #a371f7;
+	}
+	.pr-stem {
+		position: absolute;
+		width: 1px;
+		z-index: 1;
+	}
+	.pr-stem.up { background: linear-gradient(to top, #30363d, transparent); }
+	.pr-stem.down { background: linear-gradient(to bottom, #30363d, transparent); }
+	.pr-label {
+		position: absolute;
+		font-size: 11px;
+		white-space: nowrap;
+		z-index: 3;
+		transform: translateX(-50%);
+		text-align: center;
+	}
+	.pr-number {
+		font-weight: 700;
+		font-size: 12px;
+		color: #a371f7;
+	}
+	.pr-title {
+		color: #8b949e;
+		font-size: 10px;
+		display: block;
+		max-width: 110px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		margin: 0 auto;
+	}
+	a { color: inherit; text-decoration: none; }
+	a:hover .pr-title { color: #e6edf3; }
+</style>
+</head>
+<body>
+
+<div class="header">
+	<h1>WP Agentic Admin — CloudFest Hackathon 2026</h1>
+	<p class="subtitle">Pull Request Timeline — March 20 - 22, 2026</p>
+	<div class="stat">
+		<span class="stat-value">78</span>
+		<span class="stat-label">Pull Requests</span>
+	</div>
+</div>
+
+<div class="timeline-container" id="timeline"></div>
+
+<script>
+const prs = [
+	{ n: 40, t: "feat: add theme-list ability", ts: "2026-03-20T13:09:58Z" },
+	{ n: 41, t: "Add user-list ability", ts: "2026-03-20T13:37:12Z" },
+	{ n: 42, t: "Add update-check ability", ts: "2026-03-20T13:45:18Z" },
+	{ n: 44, t: "feat: contextual instruction loading", ts: "2026-03-20T13:51:15Z" },
+	{ n: 46, t: "Add disk-usage ability", ts: "2026-03-20T13:52:17Z" },
+	{ n: 47, t: "test: system prompt printer", ts: "2026-03-20T13:55:41Z" },
+	{ n: 48, t: "Feature/GitHub actions ci", ts: "2026-03-20T14:00:34Z" },
+	{ n: 49, t: "Add comment-stats ability", ts: "2026-03-20T14:00:36Z" },
+	{ n: 50, t: "WebGPU error message fix", ts: "2026-03-20T14:05:37Z" },
+	{ n: 52, t: "feat: editor sidebar + core blocks", ts: "2026-03-20T14:09:42Z" },
+	{ n: 57, t: "Add security-scan ability", ts: "2026-03-20T14:17:32Z" },
+	{ n: 59, t: "Add post-list ability", ts: "2026-03-20T14:22:36Z" },
+	{ n: 61, t: "feat: fallback-model f32", ts: "2026-03-20T14:34:48Z" },
+	{ n: 65, t: "Add error-log-search ability", ts: "2026-03-20T14:46:50Z" },
+	{ n: 67, t: "Add opcode-cache-status ability", ts: "2026-03-20T14:51:27Z" },
+	{ n: 70, t: "Action feedback thumbs-up/down", ts: "2026-03-20T15:03:52Z" },
+	{ n: 71, t: "fix: dropdown menu for unload", ts: "2026-03-20T15:05:23Z" },
+	{ n: 72, t: "Add backup-check ability", ts: "2026-03-20T15:07:37Z" },
+	{ n: 77, t: "feat: pure instruction mode", ts: "2026-03-20T15:28:41Z" },
+	{ n: 78, t: "ci: GitHub Actions quality workflow", ts: "2026-03-20T15:34:56Z" },
+	{ n: 80, t: "feat: admin bar chat toggle", ts: "2026-03-20T15:44:51Z" },
+	{ n: 81, t: "Add direnv dev environment", ts: "2026-03-20T15:51:53Z" },
+	{ n: 86, t: "feat: external LLM provider", ts: "2026-03-20T16:22:23Z" },
+	{ n: 88, t: "Website hacked check", ts: "2026-03-20T16:27:46Z" },
+	{ n: 89, t: "Add write-file ability", ts: "2026-03-20T16:33:42Z" },
+	{ n: 90, t: "Add query-database ability", ts: "2026-03-20T16:38:17Z" },
+	{ n: 91, t: "fix: dropdown menu for unload", ts: "2026-03-20T16:38:49Z" },
+	{ n: 93, t: "feat: high-performance notice", ts: "2026-03-20T17:07:19Z" },
+	{ n: 95, t: "Website hacked check v2", ts: "2026-03-20T17:19:40Z" },
+	{ n: 97, t: "Add web-search ability", ts: "2026-03-20T17:50:46Z" },
+	{ n: 98, t: "Add build-ability skill", ts: "2026-03-21T08:23:37Z" },
+	{ n: 99, t: "Add read-file ability", ts: "2026-03-21T09:18:02Z" },
+	{ n: 100, t: "feat: create content via Gutenberg", ts: "2026-03-21T09:22:59Z" },
+	{ n: 102, t: "fix: ability selection regressions", ts: "2026-03-21T09:49:10Z" },
+	{ n: 103, t: "feat: thumbs-up/down feedback", ts: "2026-03-21T09:56:38Z" },
+	{ n: 104, t: "feat: core/get-site-url ability", ts: "2026-03-21T10:02:03Z" },
+	{ n: 112, t: "fix: auto-reconnect remote provider", ts: "2026-03-21T10:26:42Z" },
+	{ n: 115, t: "feat: local in-browser RAG", ts: "2026-03-21T10:36:28Z" },
+	{ n: 119, t: "fix: remote models in wp-now", ts: "2026-03-21T10:55:03Z" },
+	{ n: 134, t: "Feature/call tools", ts: "2026-03-21T11:18:36Z" },
+	{ n: 135, t: "merge: sync main into dev", ts: "2026-03-21T11:25:34Z" },
+	{ n: 136, t: "fix: PHP fatal unclosed brace", ts: "2026-03-21T11:32:22Z" },
+	{ n: 137, t: "feat: raw json context + think", ts: "2026-03-21T11:37:12Z" },
+	{ n: 138, t: "feat: current user role ability", ts: "2026-03-21T11:40:40Z" },
+	{ n: 139, t: "feat: plugin abilities discovery", ts: "2026-03-21T11:43:22Z" },
+	{ n: 140, t: "feat: prompt UX + ability bundles", ts: "2026-03-21T11:50:00Z" },
+	{ n: 141, t: "feat: admin page context", ts: "2026-03-21T12:06:47Z" },
+	{ n: 142, t: "feat: feedback-upload fine-tuning", ts: "2026-03-21T12:11:00Z" },
+	{ n: 144, t: "fix: action buttons styling", ts: "2026-03-21T13:33:17Z" },
+	{ n: 145, t: "fix: action buttons not displaying", ts: "2026-03-21T13:37:04Z" },
+	{ n: 148, t: "Settings tab + GPU context recs", ts: "2026-03-21T13:54:28Z" },
+	{ n: 149, t: "feat: suggestion pills", ts: "2026-03-21T14:01:17Z" },
+	{ n: 151, t: "feat: dynamic ability bundles", ts: "2026-03-21T14:04:22Z" },
+	{ n: 152, t: "Feature/prefix global functions", ts: "2026-03-21T14:05:17Z" },
+	{ n: 153, t: "fix: ability result status UI", ts: "2026-03-21T14:06:54Z" },
+	{ n: 154, t: "feat: fuzzy plugin name matching", ts: "2026-03-21T14:10:09Z" },
+	{ n: 155, t: "a11y: WCAG 2.2 AA accessibility", ts: "2026-03-21T14:10:15Z" },
+	{ n: 156, t: "Thinking mode toggles", ts: "2026-03-21T14:12:09Z" },
+	{ n: 157, t: "feat: plugin vulnerability scan", ts: "2026-03-21T14:16:12Z" },
+	{ n: 159, t: "fix: rewrite list categorize", ts: "2026-03-21T15:29:09Z" },
+	{ n: 160, t: "Add wp-config-list ability", ts: "2026-03-21T15:34:52Z" },
+	{ n: 161, t: "feat: WebMCP bridge", ts: "2026-03-21T15:41:06Z" },
+	{ n: 162, t: "fix: simplify sampling logic", ts: "2026-03-21T15:46:23Z" },
+	{ n: 163, t: "fix: dry-run confirmation bug", ts: "2026-03-21T16:10:50Z" },
+	{ n: 164, t: "fix: remove beforeunload popup", ts: "2026-03-21T16:23:30Z" },
+	{ n: 167, t: "fix: internal ai infrastructure", ts: "2026-03-21T16:51:32Z" },
+	{ n: 168, t: "Settings + context window + E2E", ts: "2026-03-22T07:56:11Z" },
+	{ n: 169, t: "Fix: exclude tool results from history", ts: "2026-03-22T08:34:45Z" },
+	{ n: 170, t: "fix: thumbs down icon red", ts: "2026-03-22T08:46:44Z" },
+	{ n: 171, t: "Remove conversational routing", ts: "2026-03-22T09:04:58Z" },
+	{ n: 172, t: "fix: contextual field filtering", ts: "2026-03-22T09:05:59Z" },
+	{ n: 173, t: "Fix for issue #147", ts: "2026-03-22T09:11:34Z" },
+	{ n: 174, t: "feat: settings gear icon tab", ts: "2026-03-22T09:41:09Z" },
+	{ n: 175, t: "feat: eval() malware pattern", ts: "2026-03-22T09:45:22Z" },
+	{ n: 177, t: "feat: remove get-site-url ability", ts: "2026-03-22T09:55:12Z" },
+	{ n: 178, t: "Voice input (Whisper) push-to-talk", ts: "2026-03-22T10:01:14Z" },
+	{ n: 180, t: "fix: remove query redaction", ts: "2026-03-22T10:18:00Z" },
+	{ n: 182, t: "feat: local RAG knowledge base", ts: "2026-03-22T10:55:55Z" },
+];
+
+const repo = "https://github.com/pluginslab/wp-agentic-admin/pull/";
+const container = document.getElementById("timeline");
+
+// Group PRs by day and build collapsed time segments
+const dayLabels = {
+	"2026-03-20": "Day 1 — Thu Mar 20",
+	"2026-03-21": "Day 2 — Fri Mar 21",
+	"2026-03-22": "Day 3 — Sat Mar 22",
+};
+
+const dayKeys = [...new Set(prs.map(pr => pr.ts.slice(0, 10)))].sort();
+const daySegments = dayKeys.map(day => {
+	const dayPrs = prs.filter(p => p.ts.startsWith(day));
+	const times = dayPrs.map(p => new Date(p.ts));
+	return {
+		day,
+		label: dayLabels[day] || day,
+		min: new Date(Math.min(...times) - 20 * 60000),
+		max: new Date(Math.max(...times) + 20 * 60000),
+		duration: (Math.max(...times) - Math.min(...times) + 40 * 60000) / 60000,
+	};
+});
+
+const DAY_GAP = 40; // px gap between days
+const AXIS_Y = 200;
+const PADDING = 30;
+
+// Fit to viewport: calculate PX_PER_MIN from available width
+const viewportWidth = window.innerWidth;
+const totalMinutes = daySegments.reduce((sum, s) => sum + s.duration, 0);
+const availableWidth = viewportWidth - 2 * PADDING - (daySegments.length - 1) * DAY_GAP;
+const PX_PER_MIN = availableWidth / totalMinutes;
+
+// Compute cumulative offsets for each day segment
+let cumulativeX = PADDING;
+daySegments.forEach(seg => {
+	seg.startX = cumulativeX;
+	seg.widthPx = seg.duration * PX_PER_MIN;
+	cumulativeX += seg.widthPx + DAY_GAP;
+});
+
+const trackWidth = viewportWidth - 2 * PADDING;
+const trackHeight = 460;
+
+function xFor(date) {
+	const d = new Date(date);
+	const day = d.toISOString().slice(0, 10);
+	const seg = daySegments.find(s => s.day === day);
+	if (!seg) return 0;
+	const minutesIntoDay = (d - seg.min) / 60000;
+	return seg.startX + minutesIntoDay * PX_PER_MIN;
+}
+
+const track = document.createElement("div");
+track.className = "timeline-track";
+track.style.width = trackWidth + "px";
+track.style.height = trackHeight + "px";
+
+// Axis line
+const axis = document.createElement("div");
+axis.className = "axis-line";
+axis.style.top = AXIS_Y + "px";
+axis.style.width = trackWidth + "px";
+track.appendChild(axis);
+
+// Per-day: hour markers, day labels, dividers
+daySegments.forEach((seg, si) => {
+	// Day label centered over segment
+	const midX = seg.startX + seg.widthPx / 2;
+	const lbl = document.createElement("div");
+	lbl.className = "day-divider-label";
+	lbl.style.left = midX + "px";
+	lbl.style.top = (AXIS_Y + 42) + "px";
+	lbl.textContent = seg.label;
+	track.appendChild(lbl);
+
+	// Day divider line before this segment (except first)
+	if (si > 0) {
+		const divX = seg.startX - DAY_GAP / 2;
+		const div = document.createElement("div");
+		div.className = "day-divider";
+		div.style.left = divX + "px";
+		div.style.top = "20px";
+		div.style.height = (trackHeight - 40) + "px";
+		track.appendChild(div);
+	}
+
+	// Hour markers within this day's range
+	const firstHour = new Date(seg.min);
+	firstHour.setUTCMinutes(0, 0, 0);
+	if (firstHour < seg.min) firstHour.setUTCHours(firstHour.getUTCHours() + 1);
+
+	for (let h = new Date(firstHour); h <= seg.max; h = new Date(h.getTime() + 3600000)) {
+		const x = seg.startX + ((h - seg.min) / 60000) * PX_PER_MIN;
+		const marker = document.createElement("div");
+		marker.className = "hour-marker";
+		marker.style.left = x + "px";
+		marker.style.top = (AXIS_Y - 7) + "px";
+		track.appendChild(marker);
+
+		const hl = document.createElement("div");
+		hl.className = "hour-label";
+		hl.style.left = x + "px";
+		hl.style.top = (AXIS_Y + 12) + "px";
+		hl.textContent = h.getUTCHours().toString().padStart(2, "0") + ":00";
+		track.appendChild(hl);
+	}
+});
+
+// Place PRs — alternate up/down, vary stem length in 3-tier cycle
+prs.forEach((pr, i) => {
+	const x = xFor(pr.ts);
+	const goUp = i % 2 === 0;
+
+	// Dot
+	const dot = document.createElement("div");
+	dot.className = "pr-dot";
+	dot.style.left = x + "px";
+	dot.style.top = (AXIS_Y - 5) + "px";
+	dot.title = `#${pr.n}: ${pr.t}`;
+	track.appendChild(dot);
+
+	// Stem
+	const stem = document.createElement("div");
+	stem.className = `pr-stem ${goUp ? "up" : "down"}`;
+	stem.style.left = x + "px";
+
+	const stemLen = 50 + (i % 3) * 25;
+
+	if (goUp) {
+		stem.style.top = (AXIS_Y - stemLen) + "px";
+		stem.style.height = stemLen + "px";
+	} else {
+		stem.style.top = (AXIS_Y + 7) + "px";
+		stem.style.height = stemLen + "px";
+	}
+	track.appendChild(stem);
+
+	// Label
+	const lbl = document.createElement("a");
+	lbl.href = repo + pr.n;
+	lbl.target = "_blank";
+	lbl.className = "pr-label";
+
+	if (goUp) {
+		lbl.style.bottom = (trackHeight - AXIS_Y + stemLen + 4) + "px";
+	} else {
+		lbl.style.top = (AXIS_Y + 7 + stemLen + 4) + "px";
+	}
+	lbl.style.left = x + "px";
+
+	lbl.innerHTML = `<span class="pr-number">#${pr.n}</span>`;
+	track.appendChild(lbl);
+});
+
+container.appendChild(track);
+
+</script>
+
+</body>
+</html>

@@ -13,6 +13,7 @@ import {
 	closeSmall,
 	shield,
 	globe,
+	library,
 	plugins,
 	tool,
 	bug,
@@ -58,6 +59,7 @@ const ChatInput = ( {
 	const [ message, setMessage ] = useState( '' );
 	const [ selectedBundle, setSelectedBundle ] = useState( null );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
+	const [ docSearchEnabled, setDocSearchEnabled ] = useState( false );
 	const [ pluginBundles, setPluginBundles ] = useState( [] );
 	const [ voiceState, setVoiceState ] = useState( 'idle' );
 	const textareaRef = useRef( null );
@@ -118,6 +120,7 @@ const ChatInput = ( {
 			bundleId: selectedBundle?.id || null,
 			pluginNamespace: selectedBundle?.pluginNamespace || null,
 			webSearch: webSearchEnabled,
+			docSearch: docSearchEnabled,
 		} );
 		setMessage( '' );
 	};
@@ -386,6 +389,25 @@ const ChatInput = ( {
 							}` }
 						>
 							<Icon icon={ globe } size={ 24 } />
+						</button>
+						<button
+							type="button"
+							className={ `wp-agentic-admin-websearch-toggle${
+								docSearchEnabled
+									? ' wp-agentic-admin-websearch-toggle--active'
+									: ''
+							}` }
+							onClick={ () =>
+								setDocSearchEnabled( ! docSearchEnabled )
+							}
+							aria-label="Toggle knowledge base"
+							aria-pressed={ docSearchEnabled }
+							disabled={ isDisabled }
+							data-tooltip={ `Knowledge Base: ${
+								docSearchEnabled ? 'active' : 'inactive'
+							}` }
+						>
+							<Icon icon={ library } size={ 24 } />
 						</button>
 						{ selectedBundle && (
 							<span className="wp-agentic-admin-bundle-pill">

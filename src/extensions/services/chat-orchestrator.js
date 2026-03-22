@@ -275,7 +275,8 @@ class ChatOrchestrator {
 					false,
 					options.bundleToolIds,
 					webSearchContext,
-					options.bundleId
+					options.bundleId,
+					options.docSearch
 				);
 			}
 
@@ -300,7 +301,9 @@ class ChatOrchestrator {
 				userMessage,
 				route.disableThinking,
 				null,
-				webSearchContext
+				webSearchContext,
+				null,
+				options.docSearch
 			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
@@ -387,7 +390,8 @@ class ChatOrchestrator {
 		disableThinking = false,
 		toolFilter = null,
 		webSearchContext = null,
-		bundleId = null
+		bundleId = null,
+		docSearch = false
 	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
@@ -441,7 +445,7 @@ class ChatOrchestrator {
 		const result = await this.reactAgent.execute(
 			userMessage,
 			this.session.getConversationHistory(),
-			{ toolFilter, webSearchContext }
+			{ toolFilter, webSearchContext, docSearch }
 		);
 
 		// For tools that prefer to display their own summary (e.g. read-file),
