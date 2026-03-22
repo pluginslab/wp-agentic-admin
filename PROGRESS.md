@@ -12,7 +12,11 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 ### Local In-Browser RAG (PR #115 by @ivdimova)
 Privacy-first codebase search — **all in-browser, no external APIs**. PHP extracts code from active theme + plugins, chunks by function/class boundaries. Transformers.js (`all-MiniLM-L6-v2`, ~23MB) runs embeddings on CPU/WASM to avoid GPU contention. Voy-search for vector similarity, IndexedDB for persistence. Two new abilities: `codebase-index` and `code-search`.
 
-**42 abilities**, **51 PRs merged**, **10 contributors**.
+### Bug Fixes (PRs #170, #167)
+- **Thumbs down red icon** (PR #170 by @robert81) — CSS selector fix, thumbs down now shows red when active. Fixes #146.
+- **External AI infrastructure** (PR #167 by @AlexanderMelde) — increased timeouts for slow local models, o1/o3/gpt-5 parameter mapping, URL normalization, better error messages. 91 lines of unit tests. Fixes #165.
+
+**42 abilities**, **53 PRs merged**, **10 contributors**.
 
 ---
 
