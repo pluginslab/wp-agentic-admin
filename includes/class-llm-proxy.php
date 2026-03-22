@@ -102,14 +102,14 @@ class LLM_Proxy {
 			$url,
 			array(
 				'headers' => $headers,
-				'timeout' => 15,
+				'timeout' => 60,
 			)
 		);
 
 		if ( \is_wp_error( $response ) ) {
 			return new \WP_Error(
 				'llm_proxy_error',
-				$response->get_error_message(),
+				sprintf( 'Failed to fetch models from %s: %s', $url, $response->get_error_message() ),
 				array( 'status' => 502 )
 			);
 		}
@@ -175,14 +175,14 @@ class LLM_Proxy {
 			array(
 				'headers' => $headers,
 				'body'    => wp_json_encode( $body ),
-				'timeout' => 120,
+				'timeout' => 300, // 5 minutes for slow LLMs
 			)
 		);
 
 		if ( \is_wp_error( $response ) ) {
 			return new \WP_Error(
 				'llm_proxy_error',
-				$response->get_error_message(),
+				sprintf( 'Failed to connect to %s: %s', $url, $response->get_error_message() ),
 				array( 'status' => 502 )
 			);
 		}
@@ -235,7 +235,7 @@ class LLM_Proxy {
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_TIMEOUT, 120 );
+			curl_setopt( $ch, CURLOPT_TIMEOUT, 300 );
 			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 			curl_setopt(
 				$ch,
@@ -269,7 +269,7 @@ class LLM_Proxy {
 				array(
 					'headers' => $wp_headers,
 					'body'    => wp_json_encode( $body ),
-					'timeout' => 120,
+					'timeout' => 300,
 				)
 			);
 
