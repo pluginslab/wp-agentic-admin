@@ -101,27 +101,6 @@ function wp_agentic_admin_is_safe_query( string $query ): bool {
 }
 
 /**
- * Redact sensitive columns from query results.
- *
- * @param array $results Query results.
- * @return array Redacted results.
- */
-function wp_agentic_admin_redact_query_results( array $results ): array {
-	$sensitive_columns = array( 'user_pass', 'user_email' );
-
-	foreach ( $results as &$row ) {
-		$row = (array) $row;
-		foreach ( $sensitive_columns as $col ) {
-			if ( isset( $row[ $col ] ) ) {
-				$row[ $col ] = '[REDACTED]';
-			}
-		}
-	}
-
-	return $results;
-}
-
-/**
  * Execute the query-database ability.
  *
  * @param array $input Input parameters.
@@ -167,9 +146,6 @@ function wp_agentic_admin_execute_query_database( array $input = array() ): arra
 
 	// Limit to 50 rows.
 	$results = array_slice( $results, 0, 50 );
-
-	// Redact sensitive data.
-	$results = wp_agentic_admin_redact_query_results( $results );
 
 	return array(
 		'success' => true,
