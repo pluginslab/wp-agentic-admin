@@ -154,6 +154,10 @@ class Abilities {
 			wp_agentic_admin_register_plugin_activate();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_plugin_install' ) ) {
+			wp_agentic_admin_register_plugin_install();
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_site_health' ) ) {
 			wp_agentic_admin_register_site_health();
 		}
