@@ -124,6 +124,12 @@ function wp_agentic_admin_get_malware_patterns(): array {
 			'risk_score' => 9.0,
 		),
 		array(
+			'id'         => 'eval_variable',
+			'label'      => 'eval($variable)',
+			'regex'      => '/eval\s*\(\s*\$/i',
+			'risk_score' => 9.0,
+		),
+		array(
 			'id'         => 'assert_variable',
 			'label'      => 'assert($variable)',
 			'regex'      => '/assert\s*\(\s*\$/i',
