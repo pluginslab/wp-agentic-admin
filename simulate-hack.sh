@@ -13,8 +13,28 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+# Navigate to the WordPress root (ABSPATH).
+# Detect it via WP-CLI, fall back to walking up from the script directory.
+if command -v wp &>/dev/null; then
+    WP_ROOT="$(wp eval 'echo ABSPATH;' 2>/dev/null)" || true
+fi
+
+if [ -z "$WP_ROOT" ] || [ ! -f "$WP_ROOT/wp-login.php" ]; then
+    # Walk up from the script's location until we find wp-login.php.
+    WP_ROOT="$(cd "$(dirname "$0")" && pwd)"
+    while [ "$WP_ROOT" != "/" ] && [ ! -f "$WP_ROOT/wp-login.php" ]; do
+        WP_ROOT="$(dirname "$WP_ROOT")"
+    done
+fi
+
+if [ ! -f "$WP_ROOT/wp-login.php" ]; then
+    echo "[!] Could not locate WordPress root. Run this script from within your WP install."
+    exit 1
+fi
+
+cd "$WP_ROOT"
+echo "WordPress root: $WP_ROOT"
+echo ""
 
 echo "============================================"
 echo "  Simulating hacked WordPress site"
