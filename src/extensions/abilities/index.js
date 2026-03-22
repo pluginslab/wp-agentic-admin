@@ -148,7 +148,7 @@ export function registerAllAbilities() {
 	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
 
-	// Codebase RAG
+	// RAG abilities — local codebase indexing and search
 	registerCodebaseIndex();
 	registerCodeSearch();
 
