@@ -101,7 +101,7 @@ module.exports = {
 			turns: [
 				{
 					input: 'what is my site URL?',
-					expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+					expectTool: 'core/get-site-info',
 				},
 				{
 					input: 'is it using HTTPS?',
