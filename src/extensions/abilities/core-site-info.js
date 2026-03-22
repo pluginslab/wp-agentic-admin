@@ -37,6 +37,36 @@ import {
 } from '../services/agentic-abilities-api';
 
 /**
+ * Map of data fields to the keywords that indicate a user is asking about them.
+ */
+const FIELD_KEYWORDS = {
+	name: [ 'name', 'title' ],
+	url: [ 'url', 'address' ],
+	description: [ 'tagline', 'description' ],
+	version: [ 'version' ],
+	admin_email: [ 'email' ],
+	language: [ 'language', 'locale' ],
+	charset: [ 'charset', 'encoding' ],
+};
+
+/**
+ * Detect which site-info fields a user message is asking about.
+ *
+ * @param {string} message - The user's message.
+ * @return {string[]} Array of field names, empty if no specific fields detected.
+ */
+function detectRequestedFields( message ) {
+	const lower = message.toLowerCase();
+	const fields = [];
+	for ( const [ field, keywords ] of Object.entries( FIELD_KEYWORDS ) ) {
+		if ( keywords.some( ( kw ) => lower.includes( kw ) ) ) {
+			fields.push( field );
+		}
+	}
+	return fields;
+}
+
+/**
  * Register the core/get-site-info ability with the chat system.
  */
 export function registerCoreSiteInfo() {
@@ -105,32 +135,45 @@ export function registerCoreSiteInfo() {
 		/**
 		 * Plain-English interpretation of the result for the LLM.
 		 *
-		 * @param {Object} result - The result from WordPress core.
+		 * Filters output to only the fields the user asked about,
+		 * so small models return focused answers instead of dumping everything.
+		 *
+		 * @param {Object} result        - The result from WordPress core.
+		 * @param {string} [userMessage] - The user's original message.
 		 * @return {string} Plain-English interpretation.
 		 */
-		interpretResult: ( result ) => {
+		interpretResult: ( result, userMessage ) => {
 			if ( ! result || typeof result !== 'object' ) {
 				return 'Unable to retrieve site information.';
 			}
-			const parts = [];
-			if ( result.name ) {
-				parts.push( `site name is "${ result.name }"` );
-			}
-			if ( result.description ) {
-				parts.push( `tagline is "${ result.description }"` );
-			}
-			if ( result.url ) {
-				parts.push( `URL is ${ result.url }` );
-			}
-			if ( result.version ) {
-				parts.push( `WordPress ${ result.version }` );
-			}
-			if ( result.language ) {
-				parts.push( `language: ${ result.language }` );
-			}
-			if ( result.admin_email ) {
-				parts.push( `admin email: ${ result.admin_email }` );
-			}
+
+			const fieldBuilders = {
+				name: () => result.name && `site name is "${ result.name }"`,
+				description: () =>
+					result.description &&
+					`tagline is "${ result.description }"`,
+				url: () => result.url && `URL is ${ result.url }`,
+				version: () =>
+					result.version && `WordPress ${ result.version }`,
+				language: () =>
+					result.language && `language: ${ result.language }`,
+				admin_email: () =>
+					result.admin_email &&
+					`admin email: ${ result.admin_email }`,
+				charset: () => result.charset && `charset: ${ result.charset }`,
+			};
+
+			const requested = userMessage
+				? detectRequestedFields( userMessage )
+				: [];
+
+			const fieldsToInclude =
+				requested.length > 0 ? requested : Object.keys( fieldBuilders );
+
+			const parts = fieldsToInclude
+				.map( ( f ) => fieldBuilders[ f ]?.() )
+				.filter( Boolean );
+
 			if ( parts.length === 0 ) {
 				return 'Site information was retrieved but contained no data.';
 			}
@@ -161,42 +204,7 @@ export function registerCoreSiteInfo() {
 		 * @return {Object} Extracted parameters.
 		 */
 		parseIntent: ( message ) => {
-			const lowerMessage = message.toLowerCase();
-			const fields = [];
-
-			// Check for specific field requests
-			if ( lowerMessage.includes( 'version' ) ) {
-				fields.push( 'version' );
-			}
-			if (
-				lowerMessage.includes( 'name' ) ||
-				lowerMessage.includes( 'title' )
-			) {
-				fields.push( 'name' );
-			}
-			if (
-				lowerMessage.includes( 'url' ) ||
-				lowerMessage.includes( 'address' )
-			) {
-				fields.push( 'url' );
-			}
-			if (
-				lowerMessage.includes( 'tagline' ) ||
-				lowerMessage.includes( 'description' )
-			) {
-				fields.push( 'description' );
-			}
-			if ( lowerMessage.includes( 'email' ) ) {
-				fields.push( 'admin_email' );
-			}
-			if (
-				lowerMessage.includes( 'language' ) ||
-				lowerMessage.includes( 'locale' )
-			) {
-				fields.push( 'language' );
-			}
-
-			// Return empty fields to get all info if no specific request
+			const fields = detectRequestedFields( message );
 			return fields.length > 0 ? { fields } : {};
 		},
 
