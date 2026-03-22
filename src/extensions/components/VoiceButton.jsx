@@ -103,27 +103,24 @@ const ThinkingDots = () => (
  *
  * Renders null if the browser does not support MediaRecorder or getUserMedia.
  *
- * @param {Object}   props                       - Component props.
- * @param {Function} props.onTranscript          - Called with the final transcribed string.
- * @param {Function} [props.onPartialTranscript] - Called with interim status text.
- * @param {Function} [props.onStateChange]       - Called on every state transition.
- * @param {boolean}  props.disabled              - Whether the button is disabled.
- * @param {Object}   ref                         - Imperative ref exposing start/stop.
+ * @param {Object}   props                 - Component props.
+ * @param {Function} props.onTranscript    - Called with the final transcribed string.
+ * @param {Function} [props.onStateChange] - Called on every state transition.
+ * @param {boolean}  props.disabled        - Whether the button is disabled.
+ * @param {Object}   ref                   - Imperative ref exposing start/stop.
  * @return {JSX.Element|null} The voice button, or null if unsupported.
  */
 const VoiceButton = forwardRef(
-	( { onTranscript, onPartialTranscript, onStateChange, disabled }, ref ) => {
+	( { onTranscript, onStateChange, disabled }, ref ) => {
 		const [ state, setState ] = useState( 'idle' ); // 'idle' | 'recording' | 'transcribing'
 		const [ recordingSeconds, setRecordingSeconds ] = useState( 0 );
 
 		// Stable refs for callbacks — never go stale inside async handlers.
 		const onTranscriptRef = useRef( onTranscript );
-		const onPartialTranscriptRef = useRef( onPartialTranscript );
 		const onStateChangeRef = useRef( onStateChange );
 
 		useEffect( () => {
 			onTranscriptRef.current = onTranscript;
-			onPartialTranscriptRef.current = onPartialTranscript;
 			onStateChangeRef.current = onStateChange;
 		} );
 
@@ -308,7 +305,6 @@ const VoiceButton = forwardRef(
 							[ pcmData.buffer ]
 						);
 					} catch {
-						onPartialTranscriptRef.current?.( '' );
 						transition( 'idle' );
 					}
 				} );
@@ -329,9 +325,6 @@ const VoiceButton = forwardRef(
 					if ( mediaRecorderRef.current?.state === 'recording' ) {
 						mediaRecorderRef.current.stop();
 						transition( 'transcribing' );
-						onPartialTranscriptRef.current?.(
-							'Transcribing your voice...'
-						);
 					}
 				}, MAX_RECORDING_SECONDS * 1000 );
 			} catch {
@@ -346,11 +339,6 @@ const VoiceButton = forwardRef(
 			if ( mediaRecorderRef.current?.state === 'recording' ) {
 				mediaRecorderRef.current.stop();
 				transition( 'transcribing' );
-				// Show in-progress text inside the textarea so the user knows
-				// transcription is running. Replaced by the real result on success.
-				onPartialTranscriptRef.current?.(
-					'Transcribing your voice...'
-				);
 			}
 		};
 
