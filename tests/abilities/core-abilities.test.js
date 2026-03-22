@@ -286,15 +286,15 @@ module.exports = {
 		// ── Core WordPress info ────────────────────────────────────
 		{
 			input: 'what is the name of my site?',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what is my site URL?',
-			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what is my address URL',
-			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what environment is this site running on?',
@@ -393,12 +393,12 @@ module.exports = {
 		},
 		{
 			input: 'what is my address URL',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 			source: '#79',
 		},
 		{
 			input: 'what is my site URL?',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 			source: '#79',
 		},
 

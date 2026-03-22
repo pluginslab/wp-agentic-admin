@@ -16,7 +16,7 @@ Privacy-first codebase search — **all in-browser, no external APIs**. PHP extr
 - **Thumbs down red icon** (PR #170 by @robert81) — CSS selector fix, thumbs down now shows red when active. Fixes #146.
 - **External AI infrastructure** (PR #167 by @AlexanderMelde) — increased timeouts for slow local models, o1/o3/gpt-5 parameter mapping, URL normalization, better error messages. 91 lines of unit tests. Fixes #165.
 
-**42 abilities**, **53 PRs merged**, **10 contributors**.
+**41 abilities**, **53 PRs merged**, **10 contributors**.
 
 ---
 
@@ -30,9 +30,8 @@ Privacy-first codebase search — **all in-browser, no external APIs**. PHP extr
 ### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
 Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
 
-### read-file + core/get-site-url (PRs #99, #104)
+### read-file (PR #99)
 - **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
-- **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
 
 ### current-user-role + agent improvements + crash fix (PRs #138, #137, #136, #135)
 - **current-user-role** (PR #138 by @0xLoopTheory) — "who am I logged in as?" / "am I an administrator?" 3/3 tests pass.
@@ -167,7 +166,7 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 
 ### Abilities (33 total)
 - [x] 29 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, read file, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 4 core WordPress wrappers: get-site-info, get-site-url, get-environment-info, get-editor-blocks
+- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)
