@@ -140,21 +140,48 @@ class ExternalEngine {
 		const url = `${ proxyBase }/chat/completions`;
 		const isStreaming = params.stream ?? false;
 
+		const isModernModel =
+			this.modelId.startsWith( 'o1-' ) ||
+			this.modelId.startsWith( 'o3-' ) ||
+			this.modelId.startsWith( 'gpt-5' ) ||
+			this.modelId === 'o1';
+
 		const body = {
+			...params,
 			endpoint_url: this.endpointUrl,
 			api_key: this.apiKey,
 			model: this.modelId,
-			messages: params.messages,
-			temperature: params.temperature ?? 0.3,
-			max_tokens: params.max_tokens ?? 1024,
-			stream: isStreaming,
 		};
+
+		// o1/o3/gpt-5 models require specific parameter mapping and don't support many standard params
+		if ( isModernModel ) {
+			if ( body.max_tokens ) {
+				body.max_completion_tokens = body.max_tokens;
+				delete body.max_tokens;
+			}
+			// These models don't support these parameters
+			delete body.temperature;
+			delete body.stop;
+			delete body.top_p;
+			delete body.presence_penalty;
+			delete body.frequency_penalty;
+			delete body.logit_bias;
+		} else {
+			// Ensure defaults for standard models if not provided
+			if ( body.temperature === undefined ) {
+				body.temperature = 0.3;
+			}
+			if ( body.max_tokens === undefined ) {
+				body.max_tokens = 1024;
+			}
+		}
 
 		log.debug( 'External completion request via proxy:', {
 			url,
 			model: this.modelId,
 			stream: isStreaming,
 			messageCount: params.messages.length,
+			isModernModel,
 		} );
 
 		const response = await fetch( url, {
@@ -205,8 +232,16 @@ class ExternalEngine {
 	 */
 	static async fetchModels( endpointUrl, apiKey = '' ) {
 		const { proxyBase, nonce } = getProxyConfig();
+
+		// Cleanup URL: remove potential double dots, extra slashes, and whitespace.
+		const normalizedUrl = endpointUrl
+			.trim()
+			.replace( /\.+/g, '.' )
+			.replace( /:\/+/g, '://' )
+			.replace( /\/+$/, '' );
+
 		const params = new URLSearchParams( {
-			endpoint_url: endpointUrl.replace( /\/+$/, '' ),
+			endpoint_url: normalizedUrl,
 		} );
 		if ( apiKey ) {
 			params.set( 'api_key', apiKey );
