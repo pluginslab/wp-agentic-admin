@@ -74,6 +74,81 @@
 	}
 }
 
+// Feedback opt-in banner
+.agentic-feedback-banner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 12px 8px;
+	padding: 10px 14px;
+	background: #f0f6fc;
+	border: 1px solid #c2d4e8;
+	border-radius: 6px;
+	font-size: 13px;
+
+	&__body {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 1;
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		color: #2271b1;
+	}
+
+	&__text {
+		margin: 0;
+		color: #1d2327;
+		line-height: 1.4;
+	}
+
+	&__note {
+		color: #646970;
+		font-size: 12px;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+	}
+
+	&__btn {
+		padding: 4px 10px;
+		border-radius: 4px;
+		border: 1px solid transparent;
+		font-size: 12px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&--accept {
+			background: #2271b1;
+			color: #fff;
+			border-color: #2271b1;
+
+			&:hover {
+				background: #135e96;
+				border-color: #135e96;
+			}
+		}
+
+		&--decline {
+			background: transparent;
+			color: #646970;
+			border-color: #c3c4c7;
+
+			&:hover {
+				background: #f0f0f1;
+				color: #1d2327;
+			}
+		}
+	}
+}
+
 // Individual Message
 .wp-agentic-admin-message {
 	margin-bottom: 16px;
@@ -220,47 +295,331 @@
 .wp-agentic-admin-input-area {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
 	padding: 15px;
 	border-top: 1px solid #c3c4c7;
 	background: #fff;
+}
+
+// Unified wrapper — single border around textarea + toolbar
+.wp-agentic-admin-input-wrapper {
+	border: 1px solid #c3c4c7;
+	border-radius: 8px;
+	background: #fff;
+	overflow: hidden;
+	transition: border-color 0.2s ease;
+
+	&:focus-within {
+		border-color: #2271b1;
+		box-shadow: 0 0 0 1px #2271b1;
+	}
+
+	&--disabled {
+		background: #f6f7f7;
+		opacity: 0.6;
+	}
 
 	.wp-agentic-admin-input {
+		display: block;
 		width: 100%;
-		resize: vertical;
+		resize: none;
 		min-height: 60px;
 		max-height: 200px;
 		padding: 12px;
-		border: 1px solid #8c8f94;
-		border-radius: 4px;
+		border: none;
+		border-radius: 0;
+		background: transparent;
 		font-size: 14px;
 		line-height: 1.5;
-		transition:
-			border-color 0.2s ease,
-			box-shadow 0.2s ease;
+		outline: none;
+		box-shadow: none;
+		-webkit-appearance: none;
 
 		&:focus {
-			border-color: #2271b1;
-			box-shadow: 0 0 0 1px #2271b1;
-			outline: none;
+			box-shadow: none;
+			outline: 2px solid transparent; // Visible in Windows High Contrast Mode; wrapper :focus-within handles visual indicator
 		}
 
 		&:disabled {
-			background: #f6f7f7;
 			cursor: not-allowed;
-			opacity: 0.6;
 		}
 
 		&::placeholder {
 			color: #a0a0a0;
 		}
 	}
+}
 
-	.wp-agentic-admin-input-hint {
+.wp-agentic-admin-input-hint {
+	font-size: 12px;
+	color: #6e6e6e;
+	padding: 0 4px;
+	text-align: left;
+}
+
+// Input Toolbar (below textarea, inside unified wrapper)
+.wp-agentic-admin-input-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 8px 8px;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+	}
+}
+
+// Web search toggle
+.wp-agentic-admin-websearch-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	margin-right: 4px;
+	position: relative;
+	transition: color 0.15s ease;
+
+	// CSS tooltip — stays visible on hover regardless of clicks
+	&::before {
+		content: attr(data-tooltip);
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 4px 8px;
+		background: #1d2327;
+		color: #fff;
 		font-size: 12px;
-		color: #6e6e6e;
-		padding: 0 4px;
+		font-weight: 400;
+		white-space: nowrap;
+		border-radius: 4px;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.1s ease;
+		margin-bottom: 6px;
+	}
+
+	&:hover::before {
+		opacity: 1;
+	}
+
+	&:hover {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&--active {
+		color: #2271b1;
+
+		svg {
+			fill: #2271b1;
+		}
+	}
+
+	&:disabled {
+		color: #a0a0a0;
+		cursor: not-allowed;
+
+		&:hover {
+			background: none;
+			color: #a0a0a0;
+		}
+
+		&:hover::before {
+			opacity: 0;
+		}
+	}
+}
+
+// Bundle trigger button (plus icon)
+.wp-agentic-admin-bundle-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: none;
+	color: #50575e;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	transition: color 0.15s ease, background 0.15s ease;
+
+	&:hover {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&--active {
+		background: #f0f0f1;
+		color: #2271b1;
+	}
+
+	&:disabled {
+		color: #a0a0a0;
+		cursor: not-allowed;
+
+		&:hover {
+			background: none;
+			color: #a0a0a0;
+		}
+	}
+}
+
+// Send button (arrow icon) — fades in when text is present
+.wp-agentic-admin-send-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border: none;
+	background: #2271b1;
+	color: #fff;
+	cursor: pointer;
+	border-radius: 6px;
+	padding: 0;
+	opacity: 1;
+	transform: scale(1);
+	transition:
+		background 0.15s ease,
+		opacity 0.2s ease,
+		transform 0.2s ease;
+
+	svg {
+		fill: #fff;
+	}
+
+	&:hover {
+		background: #135e96;
+	}
+
+	&:disabled {
+		opacity: 0;
+		transform: scale(0.8);
+		pointer-events: none;
+	}
+}
+
+// Bundle pill — label + dismiss
+.wp-agentic-admin-bundle-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	background: none;
+	border: none;
+	padding: 4px 0;
+	font-size: 13px;
+	color: #2271b1;
+	line-height: 1;
+
+	&__label {
+		white-space: nowrap;
+		font-weight: 600;
+	}
+
+	&__remove {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border: none;
+		background: none;
+		color: #50575e;
+		cursor: pointer;
+		padding: 0;
+		border-radius: 50%;
+		transition: color 0.15s ease, background 0.15s ease;
+
+		&:hover {
+			background: #f0f0f1;
+			color: #d63638;
+		}
+	}
+}
+
+// Bundle dropdown menu
+.wp-agentic-admin-bundle-menu {
+	min-width: 200px;
+	padding: 4px 0;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		padding: 8px 12px;
+		border: none;
+		background: none;
+		cursor: pointer;
+		font-size: 13px;
+		color: #1d2327;
 		text-align: left;
+		transition: background 0.1s ease;
+
+		&:hover {
+			background: #f0f0f1;
+		}
+
+		&--selected {
+			background: #f0f6fc;
+		}
+
+		svg {
+			fill: #2271b1;
+			flex-shrink: 0;
+		}
+	}
+
+	&__label {
+		flex: 1;
+	}
+
+	&__count {
+		font-size: 11px;
+		color: #6e6e6e;
+	}
+
+	&__separator {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 12px 4px;
+		font-size: 11px;
+		font-weight: 600;
+		color: #6e6e6e;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+
+		&::after {
+			content: "";
+			flex: 1;
+			height: 1px;
+			background: #c3c4c7;
+		}
+	}
+
+	&__plugin-icon {
+		width: 18px;
+		height: 18px;
+		border-radius: 3px;
+		flex-shrink: 0;
+		object-fit: contain;
 	}
 }
 
@@ -643,10 +1002,248 @@
 		}
 	}
 
+	&__tabs {
+		display: flex;
+		gap: 0;
+		margin-bottom: 16px;
+		border-bottom: 1px solid #c3c4c7;
+	}
+
+	&__tab {
+		padding: 8px 16px;
+		border: 1px solid transparent;
+		border-bottom: none;
+		background: none;
+		cursor: pointer;
+		font-size: 13px;
+		color: #646970;
+		margin-bottom: -1px;
+		border-radius: 4px 4px 0 0;
+
+		&:hover {
+			color: #2271b1;
+		}
+
+		&--active {
+			color: #1d2327;
+			font-weight: 600;
+			border-color: #c3c4c7;
+			background: #fff;
+		}
+	}
+
 	&__grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: 16px;
+	}
+}
+
+// Feedback Tab
+.wp-agentic-feedback {
+	padding: 20px;
+	max-width: 680px;
+
+	&__header {
+		margin-bottom: 24px;
+	}
+
+	&__title {
+		margin: 0 0 10px !important;
+		font-size: 18px !important;
+		font-weight: 600;
+		color: #1d2327;
+	}
+
+	&__intro {
+		margin: 0;
+		color: #50575e;
+		line-height: 1.6;
+	}
+
+	&__card {
+		background: #fff;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		padding: 20px;
+		margin-bottom: 16px;
+	}
+
+	&__card-title {
+		margin: 0 0 16px !important;
+		font-size: 13px !important;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: #646970;
+	}
+
+	&__card-body {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	&__toggle-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+	}
+
+	&__toggle-info {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+
+	&__toggle-title {
+		font-weight: 600;
+		color: #1d2327;
+		font-size: 14px;
+	}
+
+	&__toggle-desc {
+		color: #646970;
+		font-size: 13px;
+	}
+
+	// Toggle switch
+	&__toggle {
+		position: relative;
+		flex-shrink: 0;
+		width: 44px;
+		height: 24px;
+		background: #c3c4c7;
+		border: none;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: background 0.2s ease;
+		padding: 0;
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		&--on {
+			background: #2271b1;
+		}
+
+		&:focus-visible {
+			outline: 2px solid #2271b1;
+			outline-offset: 2px;
+		}
+	}
+
+	&__toggle-knob {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		width: 18px;
+		height: 18px;
+		background: #fff;
+		border-radius: 50%;
+		transition: transform 0.2s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+		.wp-agentic-feedback__toggle--on & {
+			transform: translateX( 20px );
+		}
+	}
+
+	&__status {
+		margin: 0;
+		font-size: 13px;
+		border-radius: 3px;
+		padding: 8px 12px;
+
+		&--on {
+			background: #edfaef;
+			color: #00a32a;
+			border-left: 3px solid #00a32a;
+		}
+
+		&--off {
+			background: #f6f7f7;
+			color: #646970;
+			border-left: 3px solid #c3c4c7;
+		}
+	}
+
+	// Stats row
+	&__stats {
+		display: flex;
+		gap: 12px;
+		flex-wrap: wrap;
+	}
+
+	&__stat {
+		flex: 1;
+		min-width: 80px;
+		background: #f6f7f7;
+		border-radius: 4px;
+		padding: 14px 16px;
+		text-align: center;
+		border-top: 3px solid #c3c4c7;
+
+		&--up {
+			border-top-color: #00a32a;
+			background: #f0faf1;
+		}
+
+		&--down {
+			border-top-color: #d63638;
+			background: #fdf0f0;
+		}
+
+		&--pct {
+			border-top-color: #2271b1;
+			background: #f0f6fc;
+		}
+	}
+
+	&__stat-value {
+		display: block;
+		font-size: 28px;
+		font-weight: 700;
+		color: #1d2327;
+		line-height: 1;
+		margin-bottom: 4px;
+	}
+
+	&__stat-label {
+		display: block;
+		font-size: 12px;
+		color: #646970;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	&__empty {
+		margin: 12px 0 0;
+		color: #646970;
+		font-style: italic;
+		font-size: 13px;
+	}
+
+	// Privacy note at bottom
+	&__privacy {
+		display: flex;
+		align-items: flex-start;
+		gap: 8px;
+		padding: 12px 16px;
+		background: #f0f6fc;
+		border: 1px solid #c2d4e8;
+		border-radius: 4px;
+		color: #2271b1;
+		font-size: 12px;
+		line-height: 1.5;
+
+		svg {
+			flex-shrink: 0;
+			margin-top: 1px;
+		}
 	}
 }
 
@@ -719,7 +1316,7 @@
 			&:focus {
 				border-color: #2271b1;
 				box-shadow: 0 0 0 1px #2271b1;
-				outline: none;
+				outline: 2px solid transparent; // Visible in Windows High Contrast Mode
 			}
 		}
 	}
@@ -860,6 +1457,199 @@
 	}
 }
 
+// Token Budget Bar
+.wp-agentic-admin-token-budget {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px;
+	margin-bottom: 16px;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	&__label {
+		font-weight: 600;
+		font-size: 13px;
+	}
+
+	&__status {
+		font-weight: 600;
+		font-size: 12px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	&__bar-container {
+		height: 12px;
+		background: #f0f0f1;
+		border-radius: 6px;
+		overflow: hidden;
+		margin-bottom: 8px;
+		display: flex;
+	}
+
+	&__bar {
+		height: 100%;
+		transition: width 0.4s ease, background-color 0.4s ease;
+		min-width: 0;
+
+		&--reserve {
+			background-color: #a7aaad;
+			border-radius: 6px 0 0 6px;
+		}
+
+		&--base {
+			background-color: #2271b1;
+		}
+
+		&--external {
+			border-radius: 0 6px 6px 0;
+		}
+	}
+
+	&__info {
+		display: flex;
+		justify-content: space-between;
+		font-size: 12px;
+		color: #646970;
+	}
+
+	&__breakdown {
+		display: flex;
+		justify-content: space-between;
+		font-size: 11px;
+		color: #646970;
+		margin-top: 4px;
+	}
+
+	&__context {
+		font-style: italic;
+	}
+}
+
+// Plugin Abilities Panel
+.wp-agentic-admin-plugin-panel {
+	padding: 20px;
+
+	&--loading,
+	&--error,
+	&--empty {
+		text-align: center;
+		padding: 40px;
+	}
+
+	&__header {
+		margin-bottom: 16px;
+
+		h3 {
+			margin: 0 0 4px;
+		}
+
+		.description {
+			margin: 0;
+			color: #646970;
+		}
+	}
+
+	&__controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 16px;
+		background: #f6f7f7;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		margin-bottom: 12px;
+
+		.components-toggle-control {
+			margin-bottom: 0;
+		}
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&__item {
+		background: #fff;
+		border: 1px solid #c3c4c7;
+		border-radius: 4px;
+		padding: 12px 16px;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+		&--enabled {
+			border-color: #2271b1;
+			border-left-width: 3px;
+		}
+
+		&:hover {
+			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+		}
+
+		.components-toggle-control {
+			margin-bottom: 0;
+		}
+	}
+
+	&__item-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	&__item-icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 6px;
+		flex-shrink: 0;
+		margin-top: 2px;
+		object-fit: contain;
+
+		&--letter {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: #2271b1;
+			color: #fff;
+			font-weight: 600;
+			font-size: 16px;
+		}
+	}
+
+	&__item-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__item-meta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-top: 8px;
+
+		code {
+			background: #f0f0f1;
+			padding: 2px 6px;
+			border-radius: 3px;
+			font-size: 11px;
+		}
+	}
+
+	&__item-tokens {
+		font-size: 11px;
+		color: #646970;
+		white-space: nowrap;
+	}
+
+}
+
 // Error content in messages
 .wp-agentic-admin-error-content {
 	display: flex;
@@ -957,6 +1747,28 @@
 		margin-left: auto;
 	}
 
+	.wp-agentic-admin-status__kebab-menu {
+		margin-left: auto;
+		flex-shrink: 0;
+
+		.components-button {
+			color: #646970;
+			min-width: 36px;
+			height: 36px;
+			padding: 0;
+
+			&:hover {
+				color: #1d2327;
+			}
+
+			&:focus-visible {
+				box-shadow: none;
+				outline: 2px solid #2271b1;
+				outline-offset: 2px;
+			}
+		}
+	}
+
 	.wp-agentic-admin-model-select {
 		padding: 4px 8px;
 		border: 1px solid #8c8f94;
@@ -997,6 +1809,43 @@
 		background: #f0f6fc;
 		border-left-color: #00a32a;
 		color: #1d2327;
+	}
+}
+
+.wp-agentic-admin-performance-tip {
+	margin: 12px 0 0;
+	padding: 12px;
+	background: #fff8e1;
+	border: 1px solid #ffe082;
+	border-left: 4px solid #ffb300;
+	border-radius: 4px;
+	font-size: 13px;
+	color: #5d4037;
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+
+	&__icon {
+		font-size: 16px;
+		flex-shrink: 0;
+		line-height: 1.4;
+	}
+
+	&__content {
+		flex: 1;
+
+		strong {
+			display: block;
+			margin-bottom: 4px;
+			color: #1d2327;
+		}
+
+		code {
+			background: rgba(0, 0, 0, 0.05);
+			padding: 0 4px;
+			border-radius: 2px;
+			font-family: monospace;
+		}
 	}
 }
 
@@ -1071,7 +1920,7 @@
 		&:focus {
 			border-color: #2271b1;
 			box-shadow: 0 0 0 1px #2271b1;
-			outline: none;
+			outline: 2px solid transparent; // Visible in Windows High Contrast Mode
 		}
 	}
 
@@ -1683,6 +2532,58 @@
 					&:last-child {
 						margin-bottom: 0 !important;
 					}
+
+					code {
+						font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+						font-size: 0.875em;
+						background: rgba(0, 0, 0, 0.06);
+						border: 1px solid rgba(0, 0, 0, 0.08);
+						border-radius: 3px;
+						padding: 1px 5px;
+						color: inherit;
+					}
+				}
+
+				.agentic-table-wrap {
+					overflow-x: auto;
+					margin: 8px 0 12px;
+				}
+
+				.agentic-table {
+					width: 100%;
+					border-collapse: collapse;
+					font-size: 13px;
+					line-height: 1.4;
+
+					th,
+					td {
+						padding: 6px 10px;
+						border: 1px solid #e2e4e7;
+						text-align: left;
+						vertical-align: top;
+					}
+
+					th {
+						background: #f6f7f7;
+						font-weight: 600;
+						color: #1d2327;
+						white-space: nowrap;
+					}
+
+					td {
+						color: #2c3338;
+					}
+
+					tbody tr:hover {
+						background: #f9f9f9;
+					}
+
+					code {
+						font-size: 12px;
+						padding: 1px 4px;
+						background: #f0f0f1;
+						border-radius: 3px;
+					}
 				}
 			}
 
@@ -1708,6 +2609,55 @@
 				&::before {
 					content: "·";
 					margin-right: 8px;
+				}
+			}
+
+			.agentic-message__actions {
+				display: flex;
+				align-items: center;
+				gap: 2px;
+			}
+
+			.agentic-message__feedback {
+				display: flex;
+				align-items: center;
+				gap: 2px;
+				margin-right: 4px;
+			}
+
+			.agentic-message__thumb {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 28px;
+				height: 28px;
+				padding: 0;
+				border: none;
+				background: transparent;
+				color: #8c8f94;
+				border-radius: 4px;
+				cursor: pointer;
+				transition: all 0.15s ease;
+
+				&:hover {
+					background: #f0f0f1;
+					color: #1d2327;
+				}
+
+				&--active {
+					color: #00a32a;
+
+					&:hover {
+						color: #00a32a;
+					}
+				}
+
+				&--down#{&}--active {
+					color: #d63638;
+
+					&:hover {
+						color: #d63638;
+					}
 				}
 			}
 
@@ -1856,6 +2806,10 @@
 				background: #00a32a;
 			}
 
+			&--info {
+				background: #2271b1;
+			}
+
 			&--error {
 				background: #d63638;
 			}
@@ -1890,6 +2844,11 @@
 		&--success {
 			border-color: #b8e6bf;
 			background: #f7fcf8;
+		}
+
+		&--info {
+			border-color: #b8d4e6;
+			background: #f0f6fc;
 		}
 
 		&--error {
@@ -1930,6 +2889,10 @@
 				color: #00a32a;
 			}
 
+			.agentic-tool--info & {
+				color: #2271b1;
+			}
+
 			.agentic-tool--error & {
 				color: #d63638;
 			}
@@ -1960,13 +2923,12 @@
 		}
 
 		&__expand {
-			display: flex;
-			align-items: center;
-			color: #8c8f94;
-			transition: transform 0.2s ease;
+			font-size: 12px;
+			color: #2271b1;
+			margin-left: 8px;
 
-			&--open {
-				transform: rotate(180deg);
+			&:hover {
+				text-decoration: underline;
 			}
 		}
 
@@ -2132,6 +3094,179 @@
 }
 
 // =============================================================================
+// Ability Picker (interactive tool buttons)
+// =============================================================================
+
+.agentic-ability-picker {
+	padding: 4px 0;
+
+	&__section-label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: #646970;
+		margin: 12px 0 8px;
+
+		&:first-child {
+			margin-top: 0;
+		}
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0 0 0 24px;
+		list-style-type: decimal;
+		counter-reset: none;
+	}
+
+	&__item {
+		margin-bottom: 4px;
+		font-size: 13px;
+		color: #646970;
+
+		&::marker {
+			color: #8c8f94;
+			font-weight: 500;
+		}
+	}
+
+	&__button {
+		background: none;
+		border: none;
+		padding: 4px 8px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #2271b1;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background 0.15s ease, color 0.15s ease;
+		text-align: left;
+
+		&:hover {
+			background: #f0f6fc;
+			color: #135e96;
+		}
+
+		&:active {
+			background: #e2e4e7;
+		}
+
+		&:disabled {
+			color: #a7aaad;
+			cursor: not-allowed;
+
+			&:hover {
+				background: none;
+			}
+		}
+	}
+
+	&__input-row {
+		display: flex;
+		gap: 6px;
+		margin: 4px 0 2px 8px;
+	}
+
+	&__args-input {
+		flex: 1;
+		padding: 4px 8px;
+		font-size: 13px;
+		border: 1px solid #8c8f94;
+		border-radius: 4px;
+		min-width: 0;
+
+		&:focus {
+			border-color: #2271b1;
+			box-shadow: 0 0 0 1px #2271b1;
+			outline: none;
+		}
+
+		&:disabled {
+			background: #f6f7f7;
+			cursor: not-allowed;
+		}
+	}
+
+	&__run-button {
+		padding: 4px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		color: #fff;
+		background: #2271b1;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover {
+			background: #135e96;
+		}
+
+		&:disabled {
+			background: #a7aaad;
+			cursor: not-allowed;
+		}
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: 13px;
+		color: #646970;
+		font-style: italic;
+	}
+}
+
+// =============================================================================
+// Action List (generic interactive buttons from ability results)
+// =============================================================================
+
+.agentic-action-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	width: 100%;
+
+	&__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 0;
+		font-size: 13px;
+		border-bottom: 1px solid #f0f0f1;
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+
+	&__label {
+		flex: 1;
+		font-weight: 500;
+		color: #1d2327;
+	}
+
+	&__button {
+		padding: 3px 10px;
+		font-size: 12px;
+		font-weight: 500;
+		border-radius: 4px;
+		border: 1px solid #2271b1;
+		background: transparent;
+		color: #2271b1;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+		white-space: nowrap;
+
+		&:hover {
+			background: #2271b1;
+			color: #fff;
+		}
+	}
+}
+
+// =============================================================================
 // Workflow Progress UI
 // =============================================================================
 
@@ -2219,3 +3354,206 @@
 	}
 }
 
+// Global focus-visible styles for interactive elements
+.wp-agentic-admin-app,
+#wp-agentic-admin-sidebar {
+
+	button:focus-visible,
+	a:focus-visible,
+	select:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 2px;
+	}
+
+	.agentic-tool__header--clickable:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 1px;
+		background: rgba(0, 0, 0, 0.04);
+	}
+
+	.agentic-message__copy:focus-visible {
+		outline: 2px solid #2271b1;
+		outline-offset: 1px;
+	}
+}
+
+// Respect user motion preferences (WCAG 2.3.3)
+@media ( prefers-reduced-motion: reduce ) {
+
+	.wp-agentic-admin-app,
+	#wp-agentic-admin-sidebar {
+
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+}
+
+// Code block rendering (fenced ``` blocks from read-file and similar)
+.agentic-code-block {
+	margin: 10px 0;
+	border-radius: 6px;
+	overflow: hidden;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 12px;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 6px 12px;
+		background: #1a1a2e;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	}
+
+	&__lang {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.4);
+		text-transform: lowercase;
+		letter-spacing: 0.03em;
+	}
+
+	&__copy {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 3px;
+		background: transparent;
+		border: none;
+		border-radius: 3px;
+		color: rgba(255, 255, 255, 0.35);
+		cursor: pointer;
+		transition: color 0.15s ease, background 0.15s ease;
+		line-height: 1;
+
+		&:hover {
+			color: rgba(255, 255, 255, 0.7);
+			background: rgba(255, 255, 255, 0.08);
+		}
+
+		&--copied {
+			color: #4ade80;
+
+			&:hover {
+				color: #4ade80;
+				background: rgba(74, 222, 128, 0.08);
+			}
+		}
+	}
+
+	&__body {
+		margin: 0;
+		padding: 12px 14px;
+		background: #12121f;
+		overflow-x: auto;
+		white-space: pre;
+		color: #e2e8f0;
+		line-height: 1.6;
+		border-radius: 0;
+
+		code {
+			font-family: inherit;
+			font-size: inherit;
+			background: none;
+			padding: 0;
+			color: inherit;
+		}
+	}
+}
+
+.agentic-code-block__copy-label {
+	font-size: 10px;
+	margin-left: 4px;
+	color: inherit;
+}
+
+/* Settings Tab */
+.wp-agentic-admin-settings-tab {
+	padding: 16px;
+
+	.components-card {
+		margin-bottom: 16px;
+	}
+
+	h3 {
+		margin: 24px 0 8px;
+	}
+
+	&__description {
+		color: #646970;
+		margin-bottom: 16px;
+	}
+
+	&__gpu-table {
+		width: 100%;
+		border-collapse: collapse;
+
+		td {
+			padding: 6px 12px 6px 0;
+			border-bottom: 1px solid #f0f0f0;
+		}
+
+		td:first-child {
+			width: 160px;
+			color: #646970;
+		}
+	}
+
+	&__model-card {
+		margin-bottom: 16px;
+	}
+
+	&__model-size {
+		font-weight: normal;
+		font-size: 13px;
+		color: #646970;
+		margin-left: 8px;
+	}
+
+	&__recommendation {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 8px;
+		padding: 8px 12px;
+		background: #f0f6fc;
+		border-radius: 4px;
+	}
+
+	&__tier-badge {
+		display: inline-block;
+		padding: 2px 8px;
+		border-radius: 3px;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: #fff;
+		letter-spacing: 0.5px;
+	}
+
+	&__rec-text {
+		flex: 1;
+		font-size: 13px;
+	}
+
+	&__reasoning {
+		font-size: 13px;
+		color: #646970;
+		margin: 0 0 12px;
+	}
+
+	&__controls {
+		max-width: 400px;
+	}
+
+	&__actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}

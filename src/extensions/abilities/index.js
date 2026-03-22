@@ -8,6 +8,7 @@
 
 // WP-Agentic-Admin custom abilities
 import { createLogger } from '../utils/logger';
+import webmcpBridge from '../services/webmcp-bridge';
 import { registerErrorLogRead } from './error-log-read';
 
 const log = createLogger( 'Abilities' );
@@ -23,20 +24,34 @@ import { registerRewriteFlush } from './rewrite-flush';
 import { registerRewriteList } from './rewrite-list';
 import { registerRevisionCleanup } from './revision-cleanup';
 import { registerThemeList } from './theme-list';
+import { registerCurrentUserRole } from './current-user-role';
 import { registerUserList } from './user-list';
 import { registerUpdateCheck } from './update-check';
 import { registerDiskUsage } from './disk-usage';
 import { registerCommentStats } from './comment-stats';
 import { registerSecurityScan } from './security-scan';
 import { registerPostList } from './post-list';
+import { registerReadFile } from './read-file';
 import { registerErrorLogSearch } from './error-log-search';
 import { registerOpcodeCacheStatus } from './opcode-cache-status';
 import { registerBackupCheck } from './backup-check';
+import { registerWriteFile } from './write-file';
+import { registerQueryDatabase } from './query-database';
+import { registerWebSearch } from './web-search';
 import { registerCoreSiteInfo } from './core-site-info';
+import { registerCoreSiteUrl } from './core-site-url';
 import { registerCoreEnvironmentInfo } from './core-environment-info';
+import { registerVerifyCoreChecksums } from './verify-core-checksums';
+import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+import { registerDatabaseCheck } from './database-check';
+import { registerFileScan } from './file-scan';
+import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 import { registerCoreEditorBlocks } from './core-editor-blocks';
 import { registerCodebaseIndex } from './codebase-index';
 import { registerCodeSearch } from './code-search';
+import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
+import { registerRunPluginAbility } from './run-plugin-ability';
+import { registerWpConfigList } from './wp-config-list';
 
 // Re-export individual functions for external use
 export { registerErrorLogRead } from './error-log-read';
@@ -52,20 +67,34 @@ export { registerRewriteFlush } from './rewrite-flush';
 export { registerRewriteList } from './rewrite-list';
 export { registerRevisionCleanup } from './revision-cleanup';
 export { registerThemeList } from './theme-list';
+export { registerCurrentUserRole } from './current-user-role';
 export { registerUserList } from './user-list';
 export { registerUpdateCheck } from './update-check';
 export { registerDiskUsage } from './disk-usage';
 export { registerCommentStats } from './comment-stats';
 export { registerSecurityScan } from './security-scan';
 export { registerPostList } from './post-list';
+export { registerReadFile } from './read-file';
 export { registerErrorLogSearch } from './error-log-search';
 export { registerOpcodeCacheStatus } from './opcode-cache-status';
 export { registerBackupCheck } from './backup-check';
+export { registerWriteFile } from './write-file';
+export { registerQueryDatabase } from './query-database';
+export { registerWebSearch } from './web-search';
 export { registerCoreSiteInfo } from './core-site-info';
+export { registerCoreSiteUrl } from './core-site-url';
 export { registerCoreEnvironmentInfo } from './core-environment-info';
+export { registerVerifyCoreChecksums } from './verify-core-checksums';
+export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
+export { registerDatabaseCheck } from './database-check';
+export { registerFileScan } from './file-scan';
+export { registerRoleCapabilitiesCheck } from './role-capabilities-check';
 export { registerCoreEditorBlocks } from './core-editor-blocks';
 export { registerCodebaseIndex } from './codebase-index';
 export { registerCodeSearch } from './code-search';
+export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
+export { registerRunPluginAbility } from './run-plugin-ability';
+export { registerWpConfigList } from './wp-config-list';
 
 /**
  * Register all abilities.
@@ -90,28 +119,52 @@ export function registerAllAbilities() {
 	registerRewriteList();
 	registerRevisionCleanup();
 	registerThemeList();
+	registerCurrentUserRole();
 	registerUserList();
 	registerUpdateCheck();
 	registerDiskUsage();
 	registerCommentStats();
 	registerSecurityScan();
 	registerPostList();
+	registerReadFile();
 	registerErrorLogSearch();
 	registerOpcodeCacheStatus();
 	registerBackupCheck();
+	registerWriteFile();
+	registerQueryDatabase();
+	registerWebSearch();
+
+	// Security abilities
+	registerVerifyCoreChecksums();
+	registerVerifyPluginChecksums();
+	registerDatabaseCheck();
+	registerFileScan();
+	registerRoleCapabilitiesCheck();
 
 	// WordPress 6.9+ core ability wrappers
 	// These provide chat-friendly interfaces for WordPress core abilities
 	// Note: core/get-user-info is not included as it has show_in_rest=false
 	registerCoreSiteInfo();
+	registerCoreSiteUrl();
 	registerCoreEnvironmentInfo();
-	registerCoreEditorBlocks();
 
 	// RAG abilities — local codebase indexing and search
 	registerCodebaseIndex();
 	registerCodeSearch();
 
+	// Dynamic ability discovery — PoC for calling plugin abilities
+	registerDiscoverPluginAbilities();
+	registerRunPluginAbility();
+
+	// WP-Config constants listing
+	registerWpConfigList();
+
 	log.info( 'All abilities registered (including WordPress core wrappers)' );
+
+	// Bridge registered abilities to WebMCP for external AI agents
+	if ( webmcpBridge.isSupported() ) {
+		webmcpBridge.initialize();
+	}
 }
 
 export default registerAllAbilities;

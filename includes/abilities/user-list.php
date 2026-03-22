@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_user_list(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/user-list',
 		// PHP configuration for WordPress Abilities API.
 		array(

@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function wp_agentic_admin_register_cron_list(): void {
-	register_agentic_ability(
+	wp_agentic_admin_register_ability(
 		'wp-agentic-admin/cron-list',
 		// PHP configuration for WordPress Abilities API.
 		array(

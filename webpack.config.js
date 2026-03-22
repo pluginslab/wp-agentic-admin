@@ -9,6 +9,7 @@
 
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const path = require( 'path' );
+const webpack = require( 'webpack' );
 
 module.exports = {
 	...defaultConfig,
@@ -26,6 +27,12 @@ module.exports = {
 		// Block editor sidebar plugin
 		editor: path.resolve( __dirname, 'src/extensions/editor.js' ),
 
+		// Admin-wide chat sidebar (all wp-admin pages)
+		'admin-sidebar': path.resolve(
+			__dirname,
+			'src/extensions/admin-sidebar.js'
+		),
+
 		// Service Worker - needs to be a self-contained bundle
 		sw: {
 			import: path.resolve( __dirname, 'src/extensions/sw.js' ),
@@ -37,6 +44,17 @@ module.exports = {
 		...defaultConfig.output,
 		path: path.resolve( __dirname, 'build-extensions' ),
 	},
+
+	// Always inline FEEDBACK_S3_ENDPOINT at build time so `process.env.*` is
+	// never a runtime reference in the browser (process is not defined there).
+	plugins: [
+		...( defaultConfig.plugins || [] ),
+		new webpack.DefinePlugin( {
+			'process.env.FEEDBACK_S3_ENDPOINT': JSON.stringify(
+				process.env.FEEDBACK_S3_ENDPOINT || ''
+			),
+		} ),
+	],
 
 	// Service Worker specific optimizations
 	optimization: {
