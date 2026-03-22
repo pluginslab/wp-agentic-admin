@@ -212,6 +212,14 @@ const SettingsTab = () => {
 
 	return (
 		<div className="wp-agentic-admin-settings-tab">
+			<div className="wp-agentic-admin-settings-tab__header">
+				<h3 className="wp-agentic-admin-settings-tab__title">
+					Settings
+				</h3>
+				<p className="wp-agentic-admin-settings-tab__intro">
+					Configure GPU, context windows, and model behavior.
+				</p>
+			</div>
 			<Card>
 				<CardHeader>
 					<h3 style={ { margin: 0 } }>Knowledge Base</h3>
