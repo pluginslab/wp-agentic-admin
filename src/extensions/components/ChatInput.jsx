@@ -134,9 +134,7 @@ const ChatInput = ( {
 					value={ message }
 					onChange={ handleChange }
 					onKeyDown={ handleKeyDown }
-					placeholder={
-						isDisabled ? 'Load the AI model first...' : placeholder
-					}
+					placeholder={ placeholder }
 					rows="3"
 					disabled={ isDisabled }
 				/>

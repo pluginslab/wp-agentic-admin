@@ -861,9 +861,11 @@ const ChatContainer = ( {
 				disabled={ ! modelReady || isStreaming }
 				isLoading={ isLoading || isStreaming }
 				placeholder={
-					modelReady
-						? 'Describe your issue or what you want to do...'
-						: 'Load the AI model to start chatting...'
+					! modelReady
+						? 'Load the AI model to start chatting...'
+						: isLoading || isStreaming
+							? 'Thinking...'
+							: 'Describe your issue or what you want to do...'
 				}
 			/>
 
