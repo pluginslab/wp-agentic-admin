@@ -27,7 +27,7 @@ const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
  */
 const MODEL_CONFIG = {
 	// Context window size (larger for 7B models)
-	context_window_size: 4096,
+	context_window_size: 8192,
 };
 
 /**
@@ -43,12 +43,12 @@ const F16_TO_F32_MODEL_MAP = {
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
-	'Qwen3-1.7B-q4f16_1-MLC': 4096,
-	'Qwen3-1.7B-q4f32_1-MLC': 4096,
+	'Qwen3-1.7B-q4f16_1-MLC': 8192,
+	'Qwen3-1.7B-q4f32_1-MLC': 8192,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
 	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
 	// Default fallback
-	default: 4096,
+	default: 8192,
 };
 
 /**
@@ -1099,9 +1099,7 @@ class ModelLoader {
 			return null;
 		}
 
-		const maxContext = this.isExternalProvider()
-			? this.externalContextSize || 32768
-			: ModelLoader.getEffectiveContextSize( this.modelId );
+		const maxContext = ModelLoader.getEffectiveContextSize( this.modelId );
 		const usedTokens = this.lastUsageStats?.prompt_tokens || 0;
 		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 
