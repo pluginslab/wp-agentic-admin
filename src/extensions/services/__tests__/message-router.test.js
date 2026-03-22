@@ -176,9 +176,7 @@ describe( 'MessageRouter', () => {
 
 		it( 'should route knowledge questions about tool topics to conversational', () => {
 			// Has keyword "transient" but is a knowledge question
-			expect( route( 'what is a transient?' ).type ).toBe(
-				'react'
-			);
+			expect( route( 'what is a transient?' ).type ).toBe( 'react' );
 			expect( route( 'explain what transients are' ).type ).toBe(
 				'react'
 			);
@@ -188,12 +186,8 @@ describe( 'MessageRouter', () => {
 			expect(
 				route( 'explain the difference between posts and pages' ).type
 			).toBe( 'react' );
-			expect( route( 'what is WordPress?' ).type ).toBe(
-				'react'
-			);
-			expect( route( 'tell me about hooks' ).type ).toBe(
-				'react'
-			);
+			expect( route( 'what is WordPress?' ).type ).toBe( 'react' );
+			expect( route( 'tell me about hooks' ).type ).toBe( 'react' );
 		} );
 
 		it( 'should route "how many" questions with keywords to ReAct', () => {
@@ -282,9 +276,7 @@ describe( 'MessageRouter', () => {
 		} );
 
 		it( '"what is a transient?" → conversational', () => {
-			expect( route( 'what is a transient?' ).type ).toBe(
-				'react'
-			);
+			expect( route( 'what is a transient?' ).type ).toBe( 'react' );
 		} );
 
 		it( '"why is my site so slow?" → ReAct (with thinking)', () => {

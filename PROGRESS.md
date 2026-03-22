@@ -12,7 +12,17 @@ Live progress for the WP Agentic Admin hackathon project. Updated as milestones 
 ### Local In-Browser RAG (PR #115 by @ivdimova)
 Privacy-first codebase search — **all in-browser, no external APIs**. PHP extracts code from active theme + plugins, chunks by function/class boundaries. Transformers.js (`all-MiniLM-L6-v2`, ~23MB) runs embeddings on CPU/WASM to avoid GPU contention. Voy-search for vector similarity, IndexedDB for persistence. Two new abilities: `codebase-index` and `code-search`.
 
-**42 abilities**, **51 PRs merged**, **10 contributors**.
+### Bug Fixes (PRs #170, #167)
+- **Thumbs down red icon** (PR #170 by @robert81) — CSS selector fix, thumbs down now shows red when active. Fixes #146.
+- **External AI infrastructure** (PR #167 by @AlexanderMelde) — increased timeouts for slow local models, o1/o3/gpt-5 parameter mapping, URL normalization, better error messages. 91 lines of unit tests. Fixes #165.
+
+### Voice Input with Local Whisper! (PR #178 by @moritzbappert)
+On-device speech-to-text via **Whisper Tiny** (~40MB ONNX) running entirely in a Web Worker — no audio ever leaves the browser. Hold Space bar for push-to-talk (200ms threshold), 30s max with countdown, pulsing red glow during recording, transcribing wave overlay. iOS Safari fallback (audio/mp4 + WASM). Also fixes ReAct agent crash when LLM omits tool name.
+
+### Placeholder Fix + Package Sync (PR #173 by @robert81)
+Chat input now shows "Thinking..." during inference instead of stale "Load the AI model first". Fixes #147.
+
+**42 abilities**, **55 PRs merged**, **10 contributors**.
 
 ---
 
