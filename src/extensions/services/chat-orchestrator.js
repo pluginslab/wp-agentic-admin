@@ -257,7 +257,7 @@ class ChatOrchestrator {
 			// Add user message to session
 			this.session.addUserMessage( userMessage );
 
-			// Web search pre-step: run search first, inject results as context
+			// Web search pre-step: adds tool_request + tool_result to session
 			if ( options.webSearch ) {
 				await this.performWebSearchPreStep( userMessage );
 			}
@@ -286,12 +286,7 @@ class ChatOrchestrator {
 				);
 			}
 
-			if ( route.type === 'conversational' && ! options.webSearch ) {
-				log.info( 'Routing to direct LLM (conversational)' );
-				return await this.processWithLLM();
-			}
-
-			// Default: ReAct loop for actions
+			// All non-workflow messages go through ReAct.
 			log.info(
 				`Routing to ReAct loop (thinking: ${
 					route.disableThinking ? 'off' : 'on'
@@ -318,9 +313,9 @@ class ChatOrchestrator {
 	/**
 	 * Perform web search as a pre-step before normal routing.
 	 *
-	 * Executes a web search using the user's message as query,
-	 * then injects results into the session so subsequent processing
-	 * has web context available.
+	 * Executes a web search and adds both a tool_request and tool_result
+	 * to the session so the UI shows the search in the timeline AND the
+	 * conversation history has valid message ordering for the LLM.
 	 *
 	 * @param {string} userMessage - The user's message to search for
 	 */
@@ -345,7 +340,11 @@ class ChatOrchestrator {
 			);
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
-			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
+			this.callbacks.onToolEnd(
+				toolId,
+				{ error: error.message },
+				false
+			);
 			this.session.addToolResult(
 				toolId,
 				{ error: error.message },
@@ -711,6 +710,7 @@ Explain what went wrong and suggest what the user might try next.`;
 	/**
 	 * Process message with pure LLM (no tool)
 	 *
+	 * @param {string} extraContext - Optional extra context (e.g. web search results) to append to the last user message
 	 * @return {Promise<Object>} Result with success status and LLM response text.
 	 */
 	async processWithLLM() {

@@ -274,36 +274,23 @@ class ChatSession {
 	 * @return {Array} Conversation history
 	 */
 	getConversationHistory( maxMessages ) {
+		// Only include user messages and assistant final answers.
+		// Tool results are excluded — they were already consumed during
+		// the ReAct loop and including them causes:
+		// 1. Back-to-back assistant messages (tool_result + final_answer)
+		//    which violates expected user/assistant alternation
+		// 2. The LLM reuses cached tool data instead of re-calling tools,
+		//    leading to stale answers (issue #158)
 		const relevantMessages = this.messages.filter(
 			( m ) =>
 				m.type === MessageType.USER ||
-				m.type === MessageType.ASSISTANT ||
-				m.type === MessageType.TOOL_RESULT
+				m.type === MessageType.ASSISTANT
 		);
 
-		const history = relevantMessages.map( ( m ) => {
-			if ( m.type === MessageType.TOOL_RESULT ) {
-				// Include tool results as assistant messages with the data
-				const toolId = m.meta?.toolId || 'unknown tool';
-				const result = m.meta?.result;
-				const resultStr = result
-					? JSON.stringify( result, null, 2 )
-					: 'No data';
-				// Truncate if too large
-				const truncated =
-					resultStr.length > 1000
-						? resultStr.substring( 0, 1000 ) + '...(truncated)'
-						: resultStr;
-				return {
-					role: 'assistant',
-					content: `[Tool Result from ${ toolId }]:\n${ truncated }`,
-				};
-			}
-			return {
-				role: m.type === MessageType.USER ? 'user' : 'assistant',
-				content: m.content,
-			};
-		} );
+		const history = relevantMessages.map( ( m ) => ( {
+			role: m.type === MessageType.USER ? 'user' : 'assistant',
+			content: m.content,
+		} ) );
 
 		if ( maxMessages && history.length > maxMessages ) {
 			return history.slice( -maxMessages );

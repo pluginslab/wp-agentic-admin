@@ -27,7 +27,7 @@ const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
  */
 const MODEL_CONFIG = {
 	// Context window size (larger for 7B models)
-	context_window_size: 4096,
+	context_window_size: 8192,
 };
 
 /**
@@ -43,12 +43,12 @@ const F16_TO_F32_MODEL_MAP = {
  * Context window sizes for different models
  */
 const MODEL_CONTEXT_SIZES = {
-	'Qwen3-1.7B-q4f16_1-MLC': 4096,
-	'Qwen3-1.7B-q4f32_1-MLC': 4096,
+	'Qwen3-1.7B-q4f16_1-MLC': 8192,
+	'Qwen3-1.7B-q4f32_1-MLC': 8192,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
 	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
 	// Default fallback
-	default: 4096,
+	default: 8192,
 };
 
 /**
@@ -977,6 +977,7 @@ class ModelLoader {
 	 * @return {number} Context window size in tokens
 	 */
 	static getEffectiveContextSize( modelId ) {
+		// Check per-model localStorage override first
 		try {
 			const saved = localStorage.getItem(
 				'wp_agentic_admin_context_size'
@@ -990,7 +991,25 @@ class ModelLoader {
 		} catch ( e ) {
 			// Ignore parse errors
 		}
-		return MODEL_CONTEXT_SIZES[ modelId ] || MODEL_CONTEXT_SIZES.default;
+
+		// For known local models, use the default map
+		if ( MODEL_CONTEXT_SIZES[ modelId ] ) {
+			return MODEL_CONTEXT_SIZES[ modelId ];
+		}
+
+		// For remote/unknown models, check the remote context setting
+		try {
+			const remote = localStorage.getItem(
+				'wp_agentic_admin_remote_context_size'
+			);
+			if ( remote ) {
+				return parseInt( remote, 10 );
+			}
+		} catch ( e ) {
+			// Ignore
+		}
+
+		return MODEL_CONTEXT_SIZES.default;
 	}
 
 	/**
@@ -1099,9 +1118,7 @@ class ModelLoader {
 			return null;
 		}
 
-		const maxContext = this.isExternalProvider()
-			? this.externalContextSize || 32768
-			: ModelLoader.getEffectiveContextSize( this.modelId );
+		const maxContext = ModelLoader.getEffectiveContextSize( this.modelId );
 		const usedTokens = this.lastUsageStats?.prompt_tokens || 0;
 		const percentage = Math.round( ( usedTokens / maxContext ) * 100 );
 

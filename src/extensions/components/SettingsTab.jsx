@@ -25,16 +25,16 @@ const CONTEXT_OPTIONS = [
 	{ label: '32,768 tokens (maximum)', value: '32768' },
 ];
 
-const STORAGE_KEY = 'wp_agentic_admin_context_size';
+const REMOTE_CONTEXT_OPTIONS = [
+	{ label: '8,192 tokens', value: '8192' },
+	{ label: '16,384 tokens', value: '16384' },
+	{ label: '32,768 tokens (default)', value: '32768' },
+	{ label: '65,536 tokens', value: '65536' },
+	{ label: '131,072 tokens (128K)', value: '131072' },
+];
 
-const TIER_COLORS = {
-	minimal: '#d63638',
-	conservative: '#dba617',
-	balanced: '#00a32a',
-	generous: '#2271b1',
-	maximum: '#8c1aff',
-	unknown: '#757575',
-};
+const STORAGE_KEY = 'wp_agentic_admin_context_size';
+const REMOTE_CONTEXT_KEY = 'wp_agentic_admin_remote_context_size';
 
 function getSavedContextSizes() {
 	try {
@@ -84,6 +84,14 @@ const SettingsTab = () => {
 	const [ thinkingPrefs, setThinkingPrefs ] = useState(
 		getSavedThinkingPrefs
 	);
+	const [ remoteContextSize, setRemoteContextSize ] = useState( () => {
+		try {
+			return localStorage.getItem( REMOTE_CONTEXT_KEY ) || '32768';
+		} catch {
+			return '32768';
+		}
+	} );
+	const [ remoteContextSaved, setRemoteContextSaved ] = useState( false );
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -107,12 +115,13 @@ const SettingsTab = () => {
 		}
 		setRecommendations( recs );
 
-		// Initialize selected sizes from saved or defaults
+		// Initialize selected sizes from saved, recommendation, or defaults
 		const initial = {};
 		const saved = getSavedContextSizes();
 		for ( const model of models ) {
 			initial[ model.id ] = String(
 				saved[ model.id ] ||
+					recs[ model.id ]?.recommended ||
 					MODEL_CONTEXT_SIZES[ model.id ] ||
 					MODEL_CONTEXT_SIZES.default
 			);
@@ -132,17 +141,6 @@ const SettingsTab = () => {
 		setSavedSizes( getSavedContextSizes() );
 		setSavedNotice( modelId );
 		setTimeout( () => setSavedNotice( null ), 3000 );
-	};
-
-	const handleApplyRecommendation = ( modelId ) => {
-		const rec = recommendations[ modelId ];
-		if ( ! rec ) {
-			return;
-		}
-		setSelectedSizes( ( prev ) => ( {
-			...prev,
-			[ modelId ]: String( rec.recommended ),
-		} ) );
 	};
 
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
@@ -246,37 +244,6 @@ const SettingsTab = () => {
 							</h4>
 						</CardHeader>
 						<CardBody>
-							{ rec && rec.tier !== 'unknown' && (
-								<div className="wp-agentic-admin-settings-tab__recommendation">
-									<span
-										className="wp-agentic-admin-settings-tab__tier-badge"
-										style={ {
-											background:
-												TIER_COLORS[ rec.tier ] ||
-												TIER_COLORS.unknown,
-										} }
-									>
-										{ rec.tier }
-									</span>
-									<span className="wp-agentic-admin-settings-tab__rec-text">
-										Recommended:{ ' ' }
-										<strong>
-											{ rec.recommended.toLocaleString() }{ ' ' }
-											tokens
-										</strong>
-									</span>
-									<Button
-										variant="link"
-										onClick={ () =>
-											handleApplyRecommendation(
-												model.id
-											)
-										}
-									>
-										Apply
-									</Button>
-								</div>
-							) }
 							{ rec && (
 								<p className="wp-agentic-admin-settings-tab__reasoning">
 									{ rec.reasoning }
@@ -287,7 +254,18 @@ const SettingsTab = () => {
 								<SelectControl
 									label="Context window size"
 									value={ selectedValue }
-									options={ CONTEXT_OPTIONS }
+									options={ CONTEXT_OPTIONS.map(
+										( opt ) => ( {
+											...opt,
+											label:
+												rec &&
+												String( rec.recommended ) ===
+													opt.value
+													? opt.label +
+													  ' - Recommended'
+													: opt.label,
+										} )
+									) }
 									onChange={ ( val ) =>
 										setSelectedSizes( ( prev ) => ( {
 											...prev,
@@ -320,6 +298,57 @@ const SettingsTab = () => {
 					</Card>
 				);
 			} ) }
+
+			<h3>Remote Provider Context Window</h3>
+			<p className="wp-agentic-admin-settings-tab__description">
+				When using a remote LLM provider (Ollama, LM Studio, OpenAI,
+				etc.), this sets the context window size for token tracking.
+				Remote models typically support much larger contexts than local
+				WebLLM models.
+			</p>
+
+			<Card>
+				<CardBody>
+					<div className="wp-agentic-admin-settings-tab__controls">
+						<SelectControl
+							label="Remote context window size"
+							value={ remoteContextSize }
+							options={ REMOTE_CONTEXT_OPTIONS }
+							onChange={ ( val ) => {
+								setRemoteContextSize( val );
+								setRemoteContextSaved( false );
+							} }
+						/>
+						<div className="wp-agentic-admin-settings-tab__actions">
+							<Button
+								variant="primary"
+								onClick={ () => {
+									localStorage.setItem(
+										REMOTE_CONTEXT_KEY,
+										remoteContextSize
+									);
+									setRemoteContextSaved( true );
+									setTimeout(
+										() => setRemoteContextSaved( false ),
+										3000
+									);
+								} }
+							>
+								Save
+							</Button>
+						</div>
+					</div>
+					{ remoteContextSaved && (
+						<Notice
+							status="success"
+							isDismissible={ false }
+							style={ { marginTop: '12px' } }
+						>
+							Remote context window updated.
+						</Notice>
+					) }
+				</CardBody>
+			</Card>
 
 			<h3>Thinking Mode</h3>
 			<p className="wp-agentic-admin-settings-tab__description">
