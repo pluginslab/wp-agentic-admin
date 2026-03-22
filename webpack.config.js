@@ -14,6 +14,12 @@ const webpack = require( 'webpack' );
 module.exports = {
 	...defaultConfig,
 
+	// Enable WASM support for voy-search vector database.
+	experiments: {
+		...( defaultConfig.experiments || {} ),
+		asyncWebAssembly: true,
+	},
+
 	entry: {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),

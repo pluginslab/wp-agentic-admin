@@ -286,12 +286,7 @@ class ChatOrchestrator {
 				);
 			}
 
-			if ( route.type === 'conversational' ) {
-				log.info( 'Routing to direct LLM (conversational)' );
-				return await this.processWithLLM();
-			}
-
-			// Default: ReAct loop for actions
+			// All non-workflow messages go through ReAct.
 			log.info(
 				`Routing to ReAct loop (thinking: ${
 					route.disableThinking ? 'off' : 'on'

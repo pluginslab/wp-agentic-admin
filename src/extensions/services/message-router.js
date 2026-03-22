@@ -45,6 +45,9 @@ const ACTION_WORDS = [
 	'regenerate',
 	'reset',
 	'view',
+	'search',
+	'find',
+	'index',
 ];
 
 /**
@@ -147,24 +150,18 @@ export function route( userMessage ) {
 		return { type: 'react', disableThinking: true };
 	}
 
-	// Step 3: Tool keyword + knowledge question → skip ReAct entirely
-	const isQuestion = isKnowledgeQuestion( lower );
-	if ( hasKeyword && isQuestion ) {
-		log.info(
-			'Routing to conversational (keyword present but knowledge question)'
-		);
-		return { type: 'conversational' };
-	}
-
-	// Step 4: Tool keyword but ambiguous intent → ReAct with thinking
+	// Step 3: Tool keyword but ambiguous intent → ReAct with thinking
 	if ( hasKeyword ) {
 		log.info( 'Routing to ReAct (keyword match, ambiguous intent)' );
 		return { type: 'react', disableThinking: false };
 	}
 
-	// Step 5: No tool relevance → conversational
-	log.info( 'Routing to conversational (no tool keyword match)' );
-	return { type: 'conversational' };
+	// Step 4: No tool relevance → ReAct with thinking.
+	// The LLM uses final_answer for knowledge questions — no separate
+	// conversational path needed. This avoids two code paths and prevents
+	// routing bugs (issue #158, web search context loss).
+	log.info( 'Routing to ReAct (no keyword match, LLM decides)' );
+	return { type: 'react', disableThinking: false };
 }
 
 /**
