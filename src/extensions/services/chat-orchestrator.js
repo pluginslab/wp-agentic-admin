@@ -340,11 +340,7 @@ class ChatOrchestrator {
 			);
 		} catch ( error ) {
 			log.error( 'Web search pre-step failed:', error );
-			this.callbacks.onToolEnd(
-				toolId,
-				{ error: error.message },
-				false
-			);
+			this.callbacks.onToolEnd( toolId, { error: error.message }, false );
 			this.session.addToolResult(
 				toolId,
 				{ error: error.message },
