@@ -100,6 +100,7 @@ const ChatInput = ( {
 
 		onSend( trimmedMessage, {
 			bundleToolIds: selectedBundle?.abilities || null,
+			bundleId: selectedBundle?.id || null,
 			pluginNamespace: selectedBundle?.pluginNamespace || null,
 			webSearch: webSearchEnabled,
 		} );

@@ -308,6 +308,7 @@ const ChatContainer = ( {
 						id: msg.id,
 						type: 'assistant',
 						content: msg.content,
+						actions: msg.meta?.actions || msg.actions,
 						timestamp: msg.timestamp,
 						prefillTps: msg.meta?.prefillTps,
 						decodeTps: msg.meta?.decodeTps,
@@ -659,7 +660,16 @@ const ChatContainer = ( {
 		}
 
 		try {
-			const result = await executeAbility( abilityId, params );
+			let result;
+
+			// JS-only abilities: execute directly via toolRegistry
+			if ( tool?.execute ) {
+				result = await tool.execute( params );
+			} else {
+				// PHP abilities: use REST API
+				result = await executeAbility( abilityId, params );
+			}
+
 			const msg =
 				result?.message ||
 				( result?.success

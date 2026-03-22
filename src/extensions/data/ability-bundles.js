@@ -67,11 +67,7 @@ const ABILITY_BUNDLES = [
 		label: 'Create Content',
 		icon: 'edit',
 		description: 'Generate and manage page content',
-		abilities: [
-			'wp-agentic-admin/content-generate',
-			'wp-agentic-admin/post-list',
-			'core/get-editor-blocks',
-		],
+		abilities: [ 'wp-agentic-admin/post-list', 'core/get-editor-blocks' ],
 	},
 	{
 		id: 'content-users',

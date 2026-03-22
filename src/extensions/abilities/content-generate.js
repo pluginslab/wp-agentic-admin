@@ -30,6 +30,7 @@ import {
 	compactFormatToBlocks,
 	replaceEditorBlocks,
 	getEditorPostTitle,
+	setEditorPostTitle,
 } from './shared/editor-helpers';
 
 /**
@@ -205,13 +206,106 @@ function parseBlocksFromResponse( text ) {
 }
 
 /**
+ * Convert inline markdown to HTML for Gutenberg block content.
+ *
+ * @param {string} text - Text with markdown formatting.
+ * @return {string} Text with HTML formatting.
+ */
+function markdownInlineToHtml( text ) {
+	return text
+		.replace( /\*\*(.+?)\*\*/g, '<strong>$1</strong>' )
+		.replace( /(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>' )
+		.replace( /(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>' )
+		.replace( /`([^`]+?)`/g, '<code>$1</code>' )
+		.replace( /\[([^\]]+?)\]\(([^)]+?)\)/g, '<a href="$2">$1</a>' );
+}
+
+/**
+ * Convert a plain-text or markdown string to compact block format.
+ *
+ * Used when the ReAct agent passes pre-written content (e.g. from search
+ * results) instead of asking the local LLM to generate from scratch.
+ *
+ * @param {string} content - The text content (may include markdown headings).
+ * @param {string} [title] - Optional title to prepend as a level-2 heading.
+ * @return {Array} Compact block array.
+ */
+function contentToBlocks( content, title ) {
+	const blocks = [];
+
+	if ( title ) {
+		blocks.push( {
+			name: 'core/heading',
+			attributes: { level: 2, content: title },
+		} );
+	}
+
+	const lines = content.split( /\n/ );
+	let currentListItems = [];
+
+	const flushList = () => {
+		if ( currentListItems.length > 0 ) {
+			blocks.push( {
+				name: 'core/list',
+				innerBlocks: currentListItems.map( ( item ) => ( {
+					name: 'core/list-item',
+					attributes: { content: item },
+				} ) ),
+			} );
+			currentListItems = [];
+		}
+	};
+
+	for ( const line of lines ) {
+		const trimmed = line.trim();
+		if ( ! trimmed ) {
+			flushList();
+			continue;
+		}
+
+		// Markdown headings
+		const headingMatch = trimmed.match( /^(#{1,6})\s+(.+)$/ );
+		if ( headingMatch ) {
+			flushList();
+			blocks.push( {
+				name: 'core/heading',
+				attributes: {
+					level: headingMatch[ 1 ].length,
+					content: markdownInlineToHtml( headingMatch[ 2 ] ),
+				},
+			} );
+			continue;
+		}
+
+		// List items (-, *, or numbered)
+		const listMatch =
+			trimmed.match( /^[-*]\s+(.+)$/ ) ||
+			trimmed.match( /^\d+[.)]\s+(.+)$/ );
+		if ( listMatch ) {
+			currentListItems.push( markdownInlineToHtml( listMatch[ 1 ] ) );
+			continue;
+		}
+
+		// Regular paragraph
+		flushList();
+		blocks.push( {
+			name: 'core/paragraph',
+			attributes: { content: markdownInlineToHtml( trimmed ) },
+		} );
+	}
+
+	flushList();
+	return blocks;
+}
+
+/**
  * Register the content-generate ability with the chat system.
  */
 export function registerContentGenerate() {
 	registerAbility( 'wp-agentic-admin/content-generate', {
 		label: 'Generate page content',
 		description:
-			'Write new content for an empty page. Fill a page with generated headings, paragraphs, and lists about a topic.',
+			'Write new content for an empty page. Args: topic (what to write about). Optional: content (pre-written text to insert directly — use when you already have content e.g. from search results), title (heading for the page).',
 
 		keywords: [
 			'generate content',
@@ -261,6 +355,9 @@ export function registerContentGenerate() {
 			if ( ! result?.success ) {
 				return result?.message || 'Content generation failed.';
 			}
+			if ( result.fromContent ) {
+				return `Successfully inserted ${ result.blockCount } content blocks about "${ result.topic }" into the editor using the provided content.`;
+			}
 			return `Successfully generated ${ result.blockCount } content blocks about "${ result.topic }" and inserted them into the editor.`;
 		},
 
@@ -307,12 +404,93 @@ export function registerContentGenerate() {
 			const topic =
 				params.topic || extractTopic( params.userMessage || '' );
 
-			if ( ! topic ) {
+			if ( ! topic && ! params.content ) {
 				return {
 					success: false,
 					message:
 						'Please specify a topic. For example: "Generate content about WordPress security best practices"',
 				};
+			}
+
+			// Fast path: pre-written content from the ReAct agent (e.g. after web search)
+			if ( params.content ) {
+				log.info(
+					'Inserting pre-written content for topic:',
+					topic || '(from content)'
+				);
+				const compactBlocks = contentToBlocks(
+					params.content,
+					params.title
+				);
+
+				if ( compactBlocks.length === 0 ) {
+					return {
+						success: false,
+						message:
+							'The provided content could not be converted to blocks.',
+					};
+				}
+
+				const blocks = compactFormatToBlocks( compactBlocks );
+
+				if ( blocks.length === 0 ) {
+					return {
+						success: false,
+						message:
+							'Failed to create blocks from the provided content.',
+					};
+				}
+
+				replaceEditorBlocks( blocks );
+
+				// Set the WordPress post title
+				if ( params.title ) {
+					setEditorPostTitle( params.title );
+				} else {
+					// Auto-extract title from first heading
+					const firstHeading = compactBlocks.find(
+						( b ) => b.name === 'core/heading'
+					);
+					if ( firstHeading?.attributes?.content ) {
+						// Strip HTML tags for a clean post title
+						const plainTitle =
+							firstHeading.attributes.content.replace(
+								/<[^>]+>/g,
+								''
+							);
+						setEditorPostTitle( plainTitle );
+					}
+				}
+
+				return {
+					success: true,
+					topic: topic || params.title || 'provided content',
+					blockCount: blocks.length,
+					usedFallback: false,
+					fromContent: true,
+					message: `Inserted ${ blocks.length } block(s) into the editor.`,
+				};
+			}
+
+			// Extract search context from prior tool results (if any)
+			let searchContext = '';
+			if ( params._priorResults?.length ) {
+				const searchObs = params._priorResults.find(
+					( o ) => o.tool && o.tool.includes( 'search' )
+				);
+				if ( searchObs?.result?.data?.results ) {
+					const results = searchObs.result.data.results;
+					searchContext =
+						'\n\nUse these research findings:\n' +
+						results
+							.map( ( r ) => `- ${ r.title }: ${ r.snippet }` )
+							.join( '\n' );
+					log.info(
+						'Including search context:',
+						results.length,
+						'results'
+					);
+				}
 			}
 
 			// Try to generate content via LLM
@@ -331,7 +509,7 @@ export function registerContentGenerate() {
 							},
 							{
 								role: 'user',
-								content: `Generate content about: ${ topic }`,
+								content: `Generate content about: ${ topic }${ searchContext }`,
 							},
 						],
 						temperature: 0.7,
@@ -390,7 +568,7 @@ export function registerContentGenerate() {
 			};
 		},
 
-		requiresConfirmation: true,
+		requiresConfirmation: false,
 	} );
 }
 

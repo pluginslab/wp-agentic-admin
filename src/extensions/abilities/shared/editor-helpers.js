@@ -103,13 +103,24 @@ export function compactFormatToBlocks( compactBlocks ) {
 				return null;
 			}
 
+			// Sanitize block name: strip trailing punctuation the LLM may add
+			const name = block.name
+				.trim()
+				.replace( /[!.,;:?]+$/, '' )
+				.toLowerCase();
+
+			// Validate block name format (namespace/block-name)
+			if ( ! /^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/.test( name ) ) {
+				return null;
+			}
+
 			const innerBlocks = block.innerBlocks
 				? compactFormatToBlocks( block.innerBlocks )
 				: [];
 
 			try {
 				return wp.blocks.createBlock(
-					block.name,
+					name,
 					block.attributes || {},
 					innerBlocks
 				);
@@ -144,5 +155,18 @@ export function getEditorPostTitle() {
 		);
 	} catch ( e ) {
 		return '';
+	}
+}
+
+/**
+ * Set the post title in the editor.
+ *
+ * @param {string} title - The new post title.
+ */
+export function setEditorPostTitle( title ) {
+	try {
+		wp.data.dispatch( 'core/editor' ).editPost( { title } );
+	} catch ( e ) {
+		// Editor store not available — ignore silently
 	}
 }
