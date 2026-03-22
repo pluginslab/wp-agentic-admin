@@ -36,15 +36,6 @@ const REMOTE_CONTEXT_OPTIONS = [
 const STORAGE_KEY = 'wp_agentic_admin_context_size';
 const REMOTE_CONTEXT_KEY = 'wp_agentic_admin_remote_context_size';
 
-const TIER_COLORS = {
-	minimal: '#d63638',
-	conservative: '#dba617',
-	balanced: '#00a32a',
-	generous: '#2271b1',
-	maximum: '#8c1aff',
-	unknown: '#757575',
-};
-
 function getSavedContextSizes() {
 	try {
 		const saved = localStorage.getItem( STORAGE_KEY );
@@ -124,12 +115,13 @@ const SettingsTab = () => {
 		}
 		setRecommendations( recs );
 
-		// Initialize selected sizes from saved or defaults
+		// Initialize selected sizes from saved, recommendation, or defaults
 		const initial = {};
 		const saved = getSavedContextSizes();
 		for ( const model of models ) {
 			initial[ model.id ] = String(
 				saved[ model.id ] ||
+					recs[ model.id ]?.recommended ||
 					MODEL_CONTEXT_SIZES[ model.id ] ||
 					MODEL_CONTEXT_SIZES.default
 			);
@@ -149,17 +141,6 @@ const SettingsTab = () => {
 		setSavedSizes( getSavedContextSizes() );
 		setSavedNotice( modelId );
 		setTimeout( () => setSavedNotice( null ), 3000 );
-	};
-
-	const handleApplyRecommendation = ( modelId ) => {
-		const rec = recommendations[ modelId ];
-		if ( ! rec ) {
-			return;
-		}
-		setSelectedSizes( ( prev ) => ( {
-			...prev,
-			[ modelId ]: String( rec.recommended ),
-		} ) );
 	};
 
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
@@ -263,37 +244,6 @@ const SettingsTab = () => {
 							</h4>
 						</CardHeader>
 						<CardBody>
-							{ rec && rec.tier !== 'unknown' && (
-								<div className="wp-agentic-admin-settings-tab__recommendation">
-									<span
-										className="wp-agentic-admin-settings-tab__tier-badge"
-										style={ {
-											background:
-												TIER_COLORS[ rec.tier ] ||
-												TIER_COLORS.unknown,
-										} }
-									>
-										{ rec.tier }
-									</span>
-									<span className="wp-agentic-admin-settings-tab__rec-text">
-										Recommended:{ ' ' }
-										<strong>
-											{ rec.recommended.toLocaleString() }{ ' ' }
-											tokens
-										</strong>
-									</span>
-									<Button
-										variant="link"
-										onClick={ () =>
-											handleApplyRecommendation(
-												model.id
-											)
-										}
-									>
-										Apply
-									</Button>
-								</div>
-							) }
 							{ rec && (
 								<p className="wp-agentic-admin-settings-tab__reasoning">
 									{ rec.reasoning }
@@ -304,7 +254,18 @@ const SettingsTab = () => {
 								<SelectControl
 									label="Context window size"
 									value={ selectedValue }
-									options={ CONTEXT_OPTIONS }
+									options={ CONTEXT_OPTIONS.map(
+										( opt ) => ( {
+											...opt,
+											label:
+												rec &&
+												String( rec.recommended ) ===
+													opt.value
+													? opt.label +
+													  ' - Recommended'
+													: opt.label,
+										} )
+									) }
 									onChange={ ( val ) =>
 										setSelectedSizes( ( prev ) => ( {
 											...prev,
