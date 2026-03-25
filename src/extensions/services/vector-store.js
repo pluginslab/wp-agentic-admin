@@ -386,6 +386,49 @@ function getChunkCount() {
 }
 
 /**
+ * Reload the Voy index and chunk metadata from IndexedDB.
+ * Used after the indexing worker finishes persisting new data.
+ *
+ * @return {Promise<void>}
+ */
+async function reload() {
+	voyInstance = null;
+	chunkMetadata = [];
+	initialized = false;
+	initializing = false;
+	await loadVoy();
+	initialized = true;
+	log.info(
+		`Reloaded index from IndexedDB (${ chunkMetadata.length } chunks).`
+	);
+}
+
+/**
+ * Build the Voy index from pre-computed embeddings and persist.
+ * Used after the indexing worker returns embeddings from a background thread.
+ *
+ * @param {Object[]} embeddings Pre-computed Voy embedding entries.
+ * @param {Object[]} metadata   Chunk metadata array.
+ * @return {Promise<number>} Number of chunks indexed.
+ */
+async function buildFromEmbeddings( embeddings, metadata ) {
+	if ( ! initialized ) {
+		await init();
+	}
+
+	const { Voy } = await import( 'voy-search' );
+	voyInstance = new Voy( { embeddings } );
+	chunkMetadata = metadata;
+
+	await persist();
+
+	log.info(
+		`Built index from ${ metadata.length } pre-computed embeddings.`
+	);
+	return metadata.length;
+}
+
+/**
  * Clear the index and persisted data.
  *
  * @return {Promise<void>}
@@ -406,6 +449,8 @@ const vectorStore = {
 	isReady,
 	getChunkCount,
 	clear,
+	reload,
+	buildFromEmbeddings,
 };
 
 export default vectorStore;

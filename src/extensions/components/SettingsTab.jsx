@@ -20,6 +20,10 @@ import {
 	buildIndex,
 	clearIndex,
 	getKBStatus,
+	subscribe as kbSubscribe,
+	isBuilding as kbIsBuilding,
+	getProgress as kbGetProgress,
+	getError as kbGetError,
 } from '../services/knowledge-base';
 
 const CONTEXT_OPTIONS = [
@@ -121,11 +125,22 @@ const SettingsTab = () => {
 	} );
 	const [ remoteContextSaved, setRemoteContextSaved ] = useState( false );
 
-	// Knowledge Base state
+	// Knowledge Base — read from singleton so state survives tab switches.
 	const [ kbStatus, setKbStatus ] = useState( getKBStatus );
-	const [ kbBuilding, setKbBuilding ] = useState( false );
-	const [ kbProgress, setKbProgress ] = useState( null );
-	const [ kbError, setKbError ] = useState( null );
+	const [ kbBuilding, setKbBuilding ] = useState( kbIsBuilding );
+	const [ kbProgress, setKbProgress ] = useState( kbGetProgress );
+	const [ kbError, setKbError ] = useState( kbGetError );
+
+	useEffect( () => {
+		return kbSubscribe( () => {
+			setKbBuilding( kbIsBuilding() );
+			setKbProgress( kbGetProgress() );
+			setKbError( kbGetError() );
+			if ( ! kbIsBuilding() ) {
+				setKbStatus( getKBStatus() );
+			}
+		} );
+	}, [] );
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -178,33 +193,18 @@ const SettingsTab = () => {
 	};
 
 	const handleBuildIndex = async () => {
-		setKbBuilding( true );
-		setKbError( null );
-		setKbProgress( {
-			phase: 'starting',
-			message: 'Starting...',
-			percent: 0,
-		} );
-
 		try {
-			const status = await buildIndex( ( progress ) => {
-				setKbProgress( progress );
-			} );
-			setKbStatus( status );
-		} catch ( err ) {
-			setKbError( err.message );
-		} finally {
-			setKbBuilding( false );
+			await buildIndex();
+		} catch {
+			// Error is already stored in the singleton and surfaced via subscribe.
 		}
 	};
 
 	const handleClearIndex = async () => {
 		try {
 			await clearIndex();
-			setKbStatus( null );
-			setKbProgress( null );
-		} catch ( err ) {
-			setKbError( err.message );
+		} catch {
+			// Error surfaced via subscribe.
 		}
 	};
 

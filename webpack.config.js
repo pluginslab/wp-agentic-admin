@@ -47,6 +47,15 @@ module.exports = {
 			),
 			filename: 'whisper-worker.js',
 		},
+
+		// Indexing Web Worker - background embedding + Voy indexing
+		'indexing-worker': {
+			import: path.resolve(
+				__dirname,
+				'src/extensions/services/indexing-worker.js'
+			),
+			filename: 'indexing-worker.js',
+		},
 	},
 
 	output: {
@@ -73,9 +82,10 @@ module.exports = {
 			...defaultConfig.optimization?.splitChunks,
 			cacheGroups: {
 				...defaultConfig.optimization?.splitChunks?.cacheGroups,
-				// Don't split the service worker or whisper worker
+				// Don't split the service worker or web workers
 				sw: false,
 				'whisper-worker': false,
+				'indexing-worker': false,
 			},
 		},
 		runtimeChunk: false, // SW needs runtime included
