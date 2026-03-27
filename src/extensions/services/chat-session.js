@@ -283,8 +283,7 @@ class ChatSession {
 		//    leading to stale answers (issue #158)
 		const relevantMessages = this.messages.filter(
 			( m ) =>
-				m.type === MessageType.USER ||
-				m.type === MessageType.ASSISTANT
+				m.type === MessageType.USER || m.type === MessageType.ASSISTANT
 		);
 
 		const history = relevantMessages.map( ( m ) => ( {

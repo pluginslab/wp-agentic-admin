@@ -7,15 +7,34 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 import ChatContainer from './ChatContainer';
 import ModelStatus from './ModelStatus';
 import WebGPUFallback from './WebGPUFallback';
 import modelLoader from '../services/model-loader';
+import { getBundleById } from '../data/ability-bundles';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'EditorSidebar' );
 
 const EditorSidebar = () => {
+	// Auto-select "Create Content" bundle on blank pages (no title, no blocks)
+	const isBlankPage = useSelect( ( select ) => {
+		const title =
+			select( 'core/editor' ).getEditedPostAttribute( 'title' ) || '';
+		const blocks = select( 'core/block-editor' ).getBlocks();
+		// Blank = no title and either no blocks or a single empty paragraph
+		const hasNoContent =
+			blocks.length === 0 ||
+			( blocks.length === 1 &&
+				blocks[ 0 ].name === 'core/paragraph' &&
+				! blocks[ 0 ].attributes?.content );
+		return ! title.trim() && hasNoContent;
+	}, [] );
+	const defaultBundle = isBlankPage
+		? getBundleById( 'content-create' )
+		: null;
+
 	const [ modelReady, setModelReady ] = useState( false );
 	const [ webGPUError, setWebGPUError ] = useState( null );
 	const [ isExecuting, setIsExecuting ] = useState( false );
@@ -106,6 +125,7 @@ const EditorSidebar = () => {
 					modelReady={ modelReady }
 					isLoading={ isExecuting }
 					setIsLoading={ setIsExecuting }
+					defaultBundle={ defaultBundle }
 				/>
 			) }
 		</div>

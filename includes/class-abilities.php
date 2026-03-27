@@ -255,6 +255,22 @@ class Abilities {
 			wp_agentic_admin_register_query_database();
 		}
 
+		if ( function_exists( 'wp_agentic_admin_register_schema_extract' ) ) {
+			wp_agentic_admin_register_schema_extract();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_wp_api_extract' ) ) {
+			wp_agentic_admin_register_wp_api_extract();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_docs_extract' ) ) {
+			wp_agentic_admin_register_docs_extract();
+		}
+
+		if ( function_exists( 'wp_agentic_admin_register_codebase_extract' ) ) {
+			wp_agentic_admin_register_codebase_extract();
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_web_search' ) ) {
 			wp_agentic_admin_register_web_search();
 		}

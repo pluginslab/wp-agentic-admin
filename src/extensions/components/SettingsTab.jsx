@@ -16,6 +16,11 @@ import modelLoader, {
 	ModelLoader,
 	MODEL_CONTEXT_SIZES,
 } from '../services/model-loader';
+import {
+	buildIndex,
+	clearIndex,
+	getKBStatus,
+} from '../services/knowledge-base';
 
 const CONTEXT_OPTIONS = [
 	{ label: '2,048 tokens (minimal)', value: '2048' },
@@ -74,6 +79,29 @@ function saveThinkingPrefs( prefs ) {
 	localStorage.setItem( THINKING_STORAGE_KEY, JSON.stringify( prefs ) );
 }
 
+/**
+ * Format a timestamp as a relative time string.
+ *
+ * @param {number} timestamp Unix timestamp in milliseconds.
+ * @return {string} Relative time (e.g. "2 hours ago").
+ */
+function timeAgo( timestamp ) {
+	const seconds = Math.floor( ( Date.now() - timestamp ) / 1000 );
+	if ( seconds < 60 ) {
+		return 'just now';
+	}
+	const minutes = Math.floor( seconds / 60 );
+	if ( minutes < 60 ) {
+		return `${ minutes } minute${ minutes !== 1 ? 's' : '' } ago`;
+	}
+	const hours = Math.floor( minutes / 60 );
+	if ( hours < 24 ) {
+		return `${ hours } hour${ hours !== 1 ? 's' : '' } ago`;
+	}
+	const days = Math.floor( hours / 24 );
+	return `${ days } day${ days !== 1 ? 's' : '' } ago`;
+}
+
 const SettingsTab = () => {
 	const [ gpuInfo, setGpuInfo ] = useState( null );
 	const [ recommendations, setRecommendations ] = useState( {} );
@@ -92,6 +120,12 @@ const SettingsTab = () => {
 		}
 	} );
 	const [ remoteContextSaved, setRemoteContextSaved ] = useState( false );
+
+	// Knowledge Base state
+	const [ kbStatus, setKbStatus ] = useState( getKBStatus );
+	const [ kbBuilding, setKbBuilding ] = useState( false );
+	const [ kbProgress, setKbProgress ] = useState( null );
+	const [ kbError, setKbError ] = useState( null );
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -143,10 +177,173 @@ const SettingsTab = () => {
 		setTimeout( () => setSavedNotice( null ), 3000 );
 	};
 
+	const handleBuildIndex = async () => {
+		setKbBuilding( true );
+		setKbError( null );
+		setKbProgress( {
+			phase: 'starting',
+			message: 'Starting...',
+			percent: 0,
+		} );
+
+		try {
+			const status = await buildIndex( ( progress ) => {
+				setKbProgress( progress );
+			} );
+			setKbStatus( status );
+		} catch ( err ) {
+			setKbError( err.message );
+		} finally {
+			setKbBuilding( false );
+		}
+	};
+
+	const handleClearIndex = async () => {
+		try {
+			await clearIndex();
+			setKbStatus( null );
+			setKbProgress( null );
+		} catch ( err ) {
+			setKbError( err.message );
+		}
+	};
+
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
 
 	return (
 		<div className="wp-agentic-admin-settings-tab">
+			<div className="wp-agentic-admin-settings-tab__header">
+				<h3 className="wp-agentic-admin-settings-tab__title">
+					Settings
+				</h3>
+				<p className="wp-agentic-admin-settings-tab__intro">
+					Configure GPU, context windows, and model behavior.
+				</p>
+			</div>
+			<Card>
+				<CardHeader>
+					<h3 style={ { margin: 0 } }>Knowledge Base</h3>
+				</CardHeader>
+				<CardBody>
+					<p
+						className="wp-agentic-admin-settings-tab__description"
+						style={ { marginTop: 0 } }
+					>
+						Build a local search index from your site&apos;s code,
+						database schema, WordPress API signatures, and reference
+						documentation. The AI assistant automatically consults
+						this knowledge base when answering questions.
+					</p>
+
+					{ kbStatus && ! kbBuilding && (
+						<table
+							className="wp-agentic-admin-settings-tab__gpu-table"
+							style={ { marginBottom: '16px' } }
+						>
+							<tbody>
+								<tr>
+									<td>
+										<strong>Last built</strong>
+									</td>
+									<td>{ timeAgo( kbStatus.lastIndexed ) }</td>
+								</tr>
+								<tr>
+									<td>
+										<strong>Total chunks</strong>
+									</td>
+									<td>
+										{ kbStatus.totalChunks.toLocaleString() }
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<strong>Code files</strong>
+									</td>
+									<td>{ kbStatus.codeFiles }</td>
+								</tr>
+								<tr>
+									<td>
+										<strong>DB tables</strong>
+									</td>
+									<td>{ kbStatus.schemaTables }</td>
+								</tr>
+								<tr>
+									<td>
+										<strong>API signatures</strong>
+									</td>
+									<td>{ kbStatus.apiChunks } chunks</td>
+								</tr>
+								<tr>
+									<td>
+										<strong>Reference docs</strong>
+									</td>
+									<td>{ kbStatus.docsChunks } chunks</td>
+								</tr>
+							</tbody>
+						</table>
+					) }
+
+					{ kbBuilding && kbProgress && (
+						<div style={ { marginBottom: '16px' } }>
+							<p style={ { margin: '0 0 8px' } }>
+								{ kbProgress.message }
+							</p>
+							<div
+								style={ {
+									background: '#e0e0e0',
+									borderRadius: '4px',
+									height: '8px',
+									overflow: 'hidden',
+								} }
+							>
+								<div
+									style={ {
+										background: '#007cba',
+										height: '100%',
+										width: `${ kbProgress.percent }%`,
+										transition: 'width 0.3s ease',
+									} }
+								/>
+							</div>
+						</div>
+					) }
+
+					{ kbError && (
+						<Notice
+							status="error"
+							isDismissible={ true }
+							onDismiss={ () => setKbError( null ) }
+							style={ { marginBottom: '12px' } }
+						>
+							{ kbError }
+						</Notice>
+					) }
+
+					<div
+						className="wp-agentic-admin-settings-tab__actions"
+						style={ { display: 'flex', gap: '8px' } }
+					>
+						<Button
+							variant="primary"
+							onClick={ handleBuildIndex }
+							disabled={ kbBuilding }
+							isBusy={ kbBuilding }
+						>
+							{ kbStatus ? 'Rebuild Index' : 'Build Index' }
+						</Button>
+						{ kbStatus && ! kbBuilding && (
+							<Button
+								variant="tertiary"
+								isDestructive
+								onClick={ handleClearIndex }
+							>
+								Clear Index
+							</Button>
+						) }
+					</div>
+				</CardBody>
+			</Card>
+
 			<Card>
 				<CardHeader>
 					<h3 style={ { margin: 0 } }>GPU Information</h3>

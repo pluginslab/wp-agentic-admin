@@ -321,6 +321,16 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
 		},
 
+		// ── Content generation & optimization ─────────────────────
+		{
+			input: 'generate content about dog training',
+			expectTool: 'wp-agentic-admin/content-generate',
+		},
+		{
+			input: 'fill this page with content about cooking tips',
+			expectTool: 'wp-agentic-admin/content-generate',
+		},
+
 		// ── No-tool tests (pure knowledge questions) ───────────────
 		{
 			input: 'what is a transient in WordPress?',

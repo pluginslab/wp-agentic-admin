@@ -11,6 +11,7 @@
  */
 
 import { createLogger } from '../utils/logger';
+import vectorStore from './vector-store';
 
 const log = createLogger( 'ReactAgent' );
 
@@ -117,12 +118,14 @@ class ReactAgent {
 	async execute( userMessage, conversationHistory = [], options = {} ) {
 		log.info( 'Starting ReAct loop for:', userMessage );
 
-		// Store tool filter for this execution
+		// Store tool filter and web search context for this execution
 		this.currentToolFilter = options.toolFilter || null;
+		this.webSearchContext = options.webSearchContext || null;
 
 		const engine = this.modelLoader.getEngine();
 		if ( ! engine ) {
 			this.currentToolFilter = null;
+			this.webSearchContext = null;
 			return {
 				success: false,
 				finalAnswer:
@@ -139,8 +142,9 @@ class ReactAgent {
 			conversationHistory
 		);
 
-		// Clean up tool filter
+		// Clean up tool filter and web search context
 		this.currentToolFilter = null;
+		this.webSearchContext = null;
 
 		// Store last result for test observability
 		this.lastResult = result;
@@ -164,11 +168,64 @@ class ReactAgent {
 		const toolsUsed = [];
 		let iteration = 0;
 
+		// Auto-consult: inject relevant RAG context before the ReAct loop.
+		// Only runs when the user has enabled the knowledge base toggle.
+		let augmentedMessage = userMessage;
+		try {
+			if ( options.docSearch ) {
+				await vectorStore.init();
+				if ( vectorStore.isReady() ) {
+				const ragResults = await vectorStore.search( userMessage, 2 );
+				if ( ragResults.length > 0 ) {
+					// Budget: ~1750 chars max for injected context.
+					let context = '[Relevant knowledge base context]\n';
+					let charBudget = 1750;
+
+					for ( const result of ragResults ) {
+						const snippet = result.content.slice(
+							0,
+							Math.min( result.content.length, charBudget )
+						);
+						context += `${ result.path }: ${ snippet }\n`;
+						charBudget -= snippet.length + result.path.length + 3;
+						if ( charBudget <= 0 ) {
+							break;
+						}
+					}
+
+					context += '[End context]\n\n';
+					augmentedMessage = context + userMessage;
+					log.info(
+						`Auto-consult: injected ${ ragResults.length } RAG results (${ context.length } chars)`
+					);
+				}
+				}
+			}
+		} catch ( e ) {
+			// Auto-consult is best-effort — don't block the agent.
+			log.warn( 'Auto-consult RAG failed:', e.message );
+		}
+
 		const messages = [
 			{ role: 'system', content: systemPrompt },
 			...conversationHistory,
-			{ role: 'user', content: userMessage },
+			{ role: 'user', content: augmentedMessage },
 		];
+
+		// Inject web search results as context before the user message
+		if ( this.webSearchContext ) {
+			messages.push( {
+				role: 'user',
+				content: `Web search results:\n${ this.webSearchContext }`,
+			} );
+			messages.push( {
+				role: 'assistant',
+				content:
+					'{"action": "final_answer", "content": "I have the search results. Let me use them to help you."}',
+			} );
+		}
+
+		messages.push( { role: 'user', content: userMessage } );
 
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;
@@ -317,6 +374,22 @@ class ReactAgent {
 
 					log.info( `LLM requested tool: ${ toolName }`, toolArgs );
 
+					// Guard: small models occasionally omit the tool name entirely.
+					if ( ! toolName ) {
+						log.warn(
+							'LLM returned tool_call with no tool name — skipping iteration'
+						);
+						observations.push( {
+							tool: 'unknown',
+							args: toolArgs,
+							result: {
+								success: false,
+								error: 'No tool name provided by model.',
+							},
+						} );
+						continue;
+					}
+
 					// Detect repeated tool calls (same tool twice in a row)
 					if (
 						toolsUsed.length > 0 &&
@@ -345,7 +418,8 @@ class ReactAgent {
 					const toolResult = await this.executeTool(
 						toolName,
 						toolArgs,
-						userMessage
+						userMessage,
+						observations
 					);
 
 					// Resolve the actual tool object (handles bare names without namespace).
@@ -726,12 +800,22 @@ class ReactAgent {
 	/**
 	 * Execute a single tool
 	 *
-	 * @param {string} toolId      - Tool ID
-	 * @param {Object} args        - Tool arguments
-	 * @param {string} userMessage - Original user message
+	 * @param {string} toolId            - Tool ID
+	 * @param {Object} args              - Tool arguments
+	 * @param {string} userMessage       - Original user message
+	 * @param {Array}  priorObservations - Results from previous tool calls in this loop
 	 * @return {Promise<Object>} Tool result
 	 */
-	async executeTool( toolId, args, userMessage ) {
+	async executeTool( toolId, args, userMessage, priorObservations = [] ) {
+		// Guard against missing tool name (model returned tool_call with no tool field).
+		if ( ! toolId ) {
+			log.warn( 'executeTool called with undefined toolId' );
+			return {
+				success: false,
+				error: 'No tool name provided by model.',
+			};
+		}
+
 		// Enforce bundle filter — block tools outside the active bundle
 		if (
 			this.currentToolFilter &&
@@ -785,8 +869,12 @@ class ReactAgent {
 		this.callbacks.onToolStart( toolId );
 
 		try {
-			// Execute the tool
-			const result = await tool.execute( { userMessage, ...args } );
+			// Execute the tool (pass prior observations for context-aware tools)
+			const result = await tool.execute( {
+				userMessage,
+				...args,
+				_priorResults: priorObservations,
+			} );
 
 			const toolSuccess = isToolResultSuccess( result );
 			this.callbacks.onToolEnd( toolId, result, toolSuccess );

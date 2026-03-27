@@ -22,7 +22,7 @@ describe( 'ExternalEngine', () => {
 
 	beforeEach( () => {
 		jest.clearAllMocks();
-		
+
 		// Mock window.wpAgenticAdmin
 		global.window = {
 			wpAgenticAdmin: {
@@ -76,7 +76,11 @@ describe( 'ExternalEngine', () => {
 	} );
 
 	it( 'should handle gpt-5 models correctly', async () => {
-		const gpt5Engine = new ExternalEngine( endpointUrl, 'gpt-5.1-preview', apiKey );
+		const gpt5Engine = new ExternalEngine(
+			endpointUrl,
+			'gpt-5.1-preview',
+			apiKey
+		);
 		await gpt5Engine.chat.completions.create( {
 			messages: [ { role: 'user', content: 'hello' } ],
 			max_tokens: 200,
