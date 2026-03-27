@@ -56,6 +56,12 @@ export function registerCoreSiteInfo() {
 			'site charset',
 			'site language',
 			'bloginfo',
+			'site url',
+			'siteurl',
+			'site address',
+			'home url',
+			'web address',
+			'my url',
 		],
 
 		initialMessage: 'Fetching site information...',
