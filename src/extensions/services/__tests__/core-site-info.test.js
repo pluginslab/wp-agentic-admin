@@ -3,7 +3,7 @@
  *
  * Tests contextual field filtering in interpretResult and parseIntent.
  * Verifies that the LLM receives focused interpretations when users
- * ask about specific fields (issue #79).
+ * ask about specific fields (issue #109).
  */
 
 // We need to mock the agentic-abilities-api before importing the module
