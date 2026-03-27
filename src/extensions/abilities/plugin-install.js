@@ -162,7 +162,7 @@ export function registerPluginInstall() {
 			return executeAbility( 'wp-agentic-admin/plugin-install', params );
 		},
 
-		requiresConfirmation: false,
+		requiresConfirmation: true,
 	} );
 }
 
