@@ -18,6 +18,7 @@ const ABILITY_BUNDLES = [
 			'wp-agentic-admin/plugin-list',
 			'wp-agentic-admin/plugin-activate',
 			'wp-agentic-admin/plugin-deactivate',
+			'wp-agentic-admin/plugin-install',
 			'wp-agentic-admin/theme-list',
 			'wp-agentic-admin/update-check',
 		],
