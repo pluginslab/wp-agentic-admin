@@ -127,6 +127,7 @@ class ReactAgent {
 		if ( ! engine ) {
 			this.currentToolFilter = null;
 			this.webSearchContext = null;
+			this.docSearch = false;
 			return {
 				success: false,
 				finalAnswer:
