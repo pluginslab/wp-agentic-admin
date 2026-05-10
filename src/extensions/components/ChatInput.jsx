@@ -5,7 +5,7 @@
  *
  */
 
-import { useState, useRef, useEffect, useCallback } from '@wordpress/element';
+import { useState, useRef, useEffect } from '@wordpress/element';
 import vectorStore from '../services/vector-store';
 import { Dropdown, Icon } from '@wordpress/components';
 import {
