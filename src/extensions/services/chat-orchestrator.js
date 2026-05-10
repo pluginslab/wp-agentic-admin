@@ -383,6 +383,7 @@ class ChatOrchestrator {
 	 * @param {Array}       toolFilter       - Optional array of tool IDs to constrain the agent
 	 * @param {string|null} webSearchContext - Formatted search results from pre-step
 	 * @param {string|null} bundleId         - Active bundle identifier
+	 * @param               docSearch
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
 	async processWithReact(
