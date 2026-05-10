@@ -121,11 +121,13 @@ class ReactAgent {
 		// Store tool filter and web search context for this execution
 		this.currentToolFilter = options.toolFilter || null;
 		this.webSearchContext = options.webSearchContext || null;
+		this.docSearch = options.docSearch || false;
 
 		const engine = this.modelLoader.getEngine();
 		if ( ! engine ) {
 			this.currentToolFilter = null;
 			this.webSearchContext = null;
+			this.docSearch = false;
 			return {
 				success: false,
 				finalAnswer:
@@ -145,6 +147,7 @@ class ReactAgent {
 		// Clean up tool filter and web search context
 		this.currentToolFilter = null;
 		this.webSearchContext = null;
+		this.docSearch = false;
 
 		// Store last result for test observability
 		this.lastResult = result;
@@ -172,33 +175,37 @@ class ReactAgent {
 		// Only runs when the user has enabled the knowledge base toggle.
 		let augmentedMessage = userMessage;
 		try {
-			if ( options.docSearch ) {
+			if ( this.docSearch ) {
 				await vectorStore.init();
 				if ( vectorStore.isReady() ) {
-				const ragResults = await vectorStore.search( userMessage, 2 );
-				if ( ragResults.length > 0 ) {
-					// Budget: ~1750 chars max for injected context.
-					let context = '[Relevant knowledge base context]\n';
-					let charBudget = 1750;
-
-					for ( const result of ragResults ) {
-						const snippet = result.content.slice(
-							0,
-							Math.min( result.content.length, charBudget )
-						);
-						context += `${ result.path }: ${ snippet }\n`;
-						charBudget -= snippet.length + result.path.length + 3;
-						if ( charBudget <= 0 ) {
-							break;
-						}
-					}
-
-					context += '[End context]\n\n';
-					augmentedMessage = context + userMessage;
-					log.info(
-						`Auto-consult: injected ${ ragResults.length } RAG results (${ context.length } chars)`
+					const ragResults = await vectorStore.search(
+						userMessage,
+						2
 					);
-				}
+					if ( ragResults.length > 0 ) {
+						// Budget: ~1750 chars max for injected context.
+						let context = '[Relevant knowledge base context]\n';
+						let charBudget = 1750;
+
+						for ( const result of ragResults ) {
+							const snippet = result.content.slice(
+								0,
+								Math.min( result.content.length, charBudget )
+							);
+							context += `${ result.path }: ${ snippet }\n`;
+							charBudget -=
+								snippet.length + result.path.length + 3;
+							if ( charBudget <= 0 ) {
+								break;
+							}
+						}
+
+						context += '[End context]\n\n';
+						augmentedMessage = context + userMessage;
+						log.info(
+							`Auto-consult: injected ${ ragResults.length } RAG results (${ context.length } chars)`
+						);
+					}
 				}
 			}
 		} catch ( e ) {

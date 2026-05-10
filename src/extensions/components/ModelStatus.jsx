@@ -404,8 +404,14 @@ const ModelStatus = ( {
 				remoteApiKey
 			);
 			setRemoteModels( models );
-			if ( models.length > 0 && ! selectedRemoteModel ) {
+			const modelIds = models.map( ( m ) => m.id );
+			if (
+				models.length > 0 &&
+				( ! selectedRemoteModel ||
+					! modelIds.includes( selectedRemoteModel ) )
+			) {
 				setSelectedRemoteModel( models[ 0 ].id );
+				saveProviderSettings( { remoteModel: models[ 0 ].id } );
 			}
 			saveProviderSettings( { remoteUrl, remoteApiKey } );
 		} catch ( err ) {
