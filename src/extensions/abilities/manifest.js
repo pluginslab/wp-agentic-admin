@@ -53,13 +53,10 @@ import { registerQueryDatabase } from './query-database';
 import { registerReadFile } from './read-file';
 import { registerWpConfigList } from './wp-config-list';
 
-// Labs (parked) abilities — still imported so PR 1 ships identical behavior;
-// PR 3 deletes the truly-dead ones and PR 4 flips the default to off.
+// Labs (parked) abilities — still imported so they ship in the bundle;
+// off by default once PR 4 flips the resolve() to exclude labs.
 import { registerWriteFile } from './write-file';
 import { registerContentGenerate } from './content-generate';
-import { registerBackupCheck } from './backup-check';
-import { registerOpcodeCacheStatus } from './opcode-cache-status';
-import { registerDiskUsage } from './disk-usage';
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
 
@@ -121,9 +118,6 @@ export const REGISTRARS = {
 	// LABS — opt-in.
 	'write-file': registerWriteFile,
 	'content-generate': registerContentGenerate,
-	'backup-check': registerBackupCheck,
-	'opcode-cache-status': registerOpcodeCacheStatus,
-	'disk-usage': registerDiskUsage,
 	'discover-plugin-abilities': registerDiscoverPluginAbilities,
 	'run-plugin-ability': registerRunPluginAbility,
 };
@@ -144,9 +138,6 @@ export const LOCAL_ONLY_ABILITIES = new Set( [
 export const LABS_ABILITIES = new Set( [
 	'write-file',
 	'content-generate',
-	'backup-check',
-	'opcode-cache-status',
-	'disk-usage',
 	'discover-plugin-abilities',
 	'run-plugin-ability',
 ] );

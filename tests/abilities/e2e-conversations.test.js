@@ -110,17 +110,5 @@ module.exports = {
 				},
 			],
 		},
-
-		// ── Disk usage (single turn) ────────────────────────────────
-		{
-			name: 'Disk usage check',
-			turns: [
-				{
-					input: 'how much disk space is my site using?',
-					expectTool: 'wp-agentic-admin/disk-usage',
-					expectAnswer: /MB|GB|size|upload|total/i,
-				},
-			],
-		},
 	],
 };

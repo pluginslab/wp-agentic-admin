@@ -116,9 +116,6 @@ function wp_agentic_admin_labs_abilities(): array {
 	return array(
 		'write-file'                => 'wp_agentic_admin_register_write_file',
 		// content-generate is JS-only (lives in the JS labs manifest).
-		'backup-check'              => 'wp_agentic_admin_register_backup_check',
-		'opcode-cache-status'       => 'wp_agentic_admin_register_opcode_cache_status',
-		'disk-usage'                => 'wp_agentic_admin_register_disk_usage',
 		'discover-plugin-abilities' => 'wp_agentic_admin_register_discover_plugin_abilities',
 		'run-plugin-ability'        => 'wp_agentic_admin_register_run_plugin_ability',
 	);
