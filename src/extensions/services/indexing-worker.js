@@ -17,8 +17,10 @@
 
 /* eslint-disable no-console */
 
+// Pinned to a specific patch version so a compromised CDN range can't silently
+// ship new code to every user. Bump deliberately when upgrading.
 const TRANSFORMERS_CDN =
-	'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
+	'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
 const BATCH_SIZE = 10;
 
