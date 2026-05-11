@@ -39,14 +39,9 @@ module.exports = {
 			filename: 'sw.js', // Output as sw.js directly, not sw.index.js
 		},
 
-		// Whisper Web Worker - self-contained bundle for speech-to-text
-		'whisper-worker': {
-			import: path.resolve(
-				__dirname,
-				'src/extensions/services/whisper-worker.js'
-			),
-			filename: 'whisper-worker.js',
-		},
+		// Whisper Web Worker — source preserved in src/extensions/services/
+		// and src/extensions/components/VoiceButton.jsx for v1.4 (per roadmap).
+		// Re-add this entry to ship voice input again.
 
 		// Indexing Web Worker - background embedding + Voy indexing
 		'indexing-worker': {
@@ -84,7 +79,6 @@ module.exports = {
 				...defaultConfig.optimization?.splitChunks?.cacheGroups,
 				// Don't split the service worker or web workers
 				sw: false,
-				'whisper-worker': false,
 				'indexing-worker': false,
 			},
 		},
