@@ -39,11 +39,11 @@ function wp_agentic_admin_register_user_list(): void {
 						'items'       => array(
 							'type'       => 'object',
 							'properties' => array(
-								'username'    => array( 'type' => 'string' ),
+								'username'     => array( 'type' => 'string' ),
 								'display_name' => array( 'type' => 'string' ),
-								'email'       => array( 'type' => 'string' ),
-								'role'        => array( 'type' => 'string' ),
-								'registered'  => array( 'type' => 'string' ),
+								'email'        => array( 'type' => 'string' ),
+								'role'         => array( 'type' => 'string' ),
+								'registered'   => array( 'type' => 'string' ),
 							),
 						),
 						'description' => __( 'List of users.', 'wp-agentic-admin' ),
@@ -82,7 +82,12 @@ function wp_agentic_admin_register_user_list(): void {
  * @return array
  */
 function wp_agentic_admin_execute_user_list( array $input = array() ): array {
-	$wp_users = get_users( array( 'orderby' => 'registered', 'order' => 'DESC' ) );
+	$wp_users = get_users(
+		array(
+			'orderby' => 'registered',
+			'order'   => 'DESC',
+		)
+	);
 	$users    = array();
 
 	foreach ( $wp_users as $user ) {

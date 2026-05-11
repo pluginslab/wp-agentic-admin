@@ -91,8 +91,8 @@ function wp_agentic_admin_execute_update_check( array $input = array() ): array 
 	// Core updates.
 	$core_updates = get_core_updates();
 	$core_info    = array(
-		'current'   => get_bloginfo( 'version' ),
-		'available' => false,
+		'current'     => get_bloginfo( 'version' ),
+		'available'   => false,
 		'new_version' => '',
 	);
 
@@ -107,8 +107,10 @@ function wp_agentic_admin_execute_update_check( array $input = array() ): array 
 
 	foreach ( $plugin_updates as $file => $data ) {
 		$plugins_needing[] = array(
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Name and Version are WordPress plugin data properties.
 			'name'        => $data->Name,
 			'slug'        => $file,
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 			'current'     => $data->Version,
 			'new_version' => $data->update->new_version,
 		);

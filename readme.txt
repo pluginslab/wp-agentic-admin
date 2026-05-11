@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.9.5
+Stable tag: 0.10.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,25 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 5. Start chatting!
 
 == Changelog ==
+
+= 0.10.0 =
+* CloudFest Hackathon 2026 release: 78 PRs merged, 42+ abilities shipped by 11 contributors
+* New: Plugin Abilities Platform, third-party plugins can auto-register abilities with the AI assistant
+* New: Voice input via local Whisper model, all audio stays on-device
+* New: In-browser RAG knowledge base with vector embeddings computed client-side
+* New: Settings UI with GPU detection, context window tuning, and knowledge base toggle
+* New: External AI provider support (Ollama, LM Studio, OpenAI, any compatible endpoint) via PHP REST proxy
+* New: WebMCP bridge for external AI agents via navigator.modelContext
+* New: "Check if Hacked" multi-step security workflow
+* New: Gutenberg editor sidebar and admin bar chat integrations
+* New: 28+ new abilities including web-search, security-scan, plugin vulnerability scanning, read-file, write-file, query-database, content-generate, and more
+* New: E2E test runner mirroring browser ReAct loop
+* New: CI/CD via GitHub Actions (PHP lint, JS lint, unit tests, build check)
+* New: Feedback system with thumbs up/down stored locally
+* New: Distribution zip for WordPress Playground compatibility
+* Improved: WCAG 2.2 AA accessibility compliance
+* Improved: GPU capability detection with f32 precision fallback
+* Improved: Fuzzy plugin name matching for activate/deactivate actions
 
 = 0.9.5 =
 * New: Split Gutenberg Integration into three separate goals — Block Editor Chat Window (Goal 7), Update Post Content Ability (Goal 8), WASM Dev Docs Abilities (Goal 9)

@@ -217,8 +217,8 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 		$dirs_to_scan[] = get_theme_root();
 	}
 
-	$files_scanned   = 0;
-	$findings        = array();
+	$files_scanned      = 0;
+	$findings           = array();
 	$scanned_plugins    = array();
 	$scanned_themes     = array();
 	$scanned_mu_plugins = array();
@@ -285,10 +285,10 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 			)
 		);
 
-		$normalized_dir  = wp_normalize_path( $dir );
-		$is_plugin_dir   = $normalized_dir === wp_normalize_path( WP_PLUGIN_DIR );
-		$mu_plugin_dir   = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
-		$is_mu_dir       = $normalized_dir === wp_normalize_path( $mu_plugin_dir );
+		$normalized_dir = wp_normalize_path( $dir );
+		$is_plugin_dir  = wp_normalize_path( WP_PLUGIN_DIR ) === $normalized_dir;
+		$mu_plugin_dir  = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$is_mu_dir      = wp_normalize_path( $mu_plugin_dir ) === $normalized_dir;
 
 		foreach ( $iterator as $file_info ) {
 			if ( ! $file_info->isFile() ) {
@@ -311,7 +311,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 
 			if ( $is_mu_dir ) {
 				// MU-plugins can be single files or directories.
-				$mu_name = $top_dir ? $top_dir : $file_info->getFilename();
+				$mu_name                        = $top_dir ? $top_dir : $file_info->getFilename();
 				$scanned_mu_plugins[ $mu_name ] = true;
 			} elseif ( $top_dir ) {
 				if ( $is_plugin_dir ) {
@@ -488,7 +488,7 @@ function wp_agentic_admin_resolve_theme_names( array $slugs ): array {
 	$result = array();
 
 	foreach ( $slugs as $slug ) {
-		$theme = wp_get_theme( $slug );
+		$theme    = wp_get_theme( $slug );
 		$result[] = array(
 			'slug' => $slug,
 			'name' => $theme->exists() ? $theme->get( 'Name' ) : $slug,

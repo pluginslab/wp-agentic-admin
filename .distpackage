@@ -4,6 +4,7 @@ sw-loader.php
 uninstall.php
 build-extensions/
 languages/
+readme.txt
 README.md
 CLOUDFEST_HACKATHON.md
 docs/

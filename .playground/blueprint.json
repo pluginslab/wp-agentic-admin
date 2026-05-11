@@ -16,8 +16,14 @@
   },
   "steps": [
     {
-      "step": "activatePlugin",
-      "pluginPath": "wp-content/plugins/wp-agentic-admin/wp-agentic-admin.php"
+      "step": "installPlugin",
+      "pluginZipFile": {
+        "resource": "url",
+        "url": "https://github.com/pluginslab/wp-agentic-admin/releases/download/v0.10.0/wp-agentic-admin.zip"
+      },
+      "options": {
+        "activate": true
+      }
     },
     {
       "step": "setSiteOptions",

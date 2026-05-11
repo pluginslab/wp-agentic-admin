@@ -181,7 +181,7 @@ const getLoadingStage = ( message, progress ) => {
  * @param {string|null} props.initPhase     - Current initialization phase ('checking', 'loading', or null)
  * @param {string}      props.initMessage   - Message to display during initialization
  * @param {number}      props.initProgress  - Progress percentage during initialization
- * @param               props.onModelUnload
+ * @param {Function}    props.onModelUnload - Callback when model is unloaded
  */
 const ModelStatus = ( {
 	onModelReady,
@@ -404,8 +404,14 @@ const ModelStatus = ( {
 				remoteApiKey
 			);
 			setRemoteModels( models );
-			if ( models.length > 0 && ! selectedRemoteModel ) {
+			const modelIds = models.map( ( m ) => m.id );
+			if (
+				models.length > 0 &&
+				( ! selectedRemoteModel ||
+					! modelIds.includes( selectedRemoteModel ) )
+			) {
 				setSelectedRemoteModel( models[ 0 ].id );
+				saveProviderSettings( { remoteModel: models[ 0 ].id } );
 			}
 			saveProviderSettings( { remoteUrl, remoteApiKey } );
 		} catch ( err ) {

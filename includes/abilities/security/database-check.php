@@ -237,7 +237,7 @@ function wp_agentic_admin_check_options_base64(): array {
 /**
  * Check options table for eval() injections.
  *
- * eval() in stored options is almost always malicious.
+ * Eval() in stored options is almost always malicious.
  *
  * @return array Check result.
  */
@@ -297,9 +297,8 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 		$values[]        = $pattern;
 	}
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared -- Dynamic number of LIKE patterns; WHERE clause is built from safe literal strings.
 	$rows = $wpdb->get_results(
-		// phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Dynamic number of LIKE patterns.
 		$wpdb->prepare(
 			"SELECT option_name, LEFT(option_value, 200) AS option_value_preview
 			FROM {$wpdb->options}
@@ -308,6 +307,7 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 			...$values
 		)
 	);
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared
 
 	$findings = array();
 	foreach ( $rows as $row ) {
@@ -547,13 +547,13 @@ function wp_agentic_admin_check_suspicious_admins(): array {
 
 	$recent_admins = get_users(
 		array(
-			'role'         => 'administrator',
-			'date_query'   => array(
+			'role'       => 'administrator',
+			'date_query' => array(
 				array(
 					'after' => '30 days ago',
 				),
 			),
-			'fields'       => array( 'ID', 'user_login', 'user_email', 'user_registered' ),
+			'fields'     => array( 'ID', 'user_login', 'user_email', 'user_registered' ),
 		)
 	);
 

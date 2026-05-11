@@ -111,7 +111,8 @@ function wp_agentic_admin_format_bytes( int $bytes ): string {
 	$i     = 0;
 	$size  = (float) $bytes;
 
-	while ( $size >= 1024 && $i < count( $units ) - 1 ) {
+	$unit_count = count( $units );
+	while ( $size >= 1024 && $i < $unit_count - 1 ) {
 		$size /= 1024;
 		++$i;
 	}
