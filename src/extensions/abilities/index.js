@@ -1,174 +1,41 @@
 /**
  * Abilities Index
  *
- * Exports all ability registration functions.
- * Includes both WP-Agentic-Admin custom abilities and
- * WordPress 6.9+ core ability wrappers.
+ * Registers all enabled abilities by iterating the manifest. The list of
+ * enabled slugs comes from PHP (window.wpAgenticAdmin.enabledAbilities)
+ * once PR 4 wires that up; for now we iterate every entry in REGISTRARS
+ * so behavior matches the pre-manifest state.
+ *
+ * See: src/extensions/abilities/manifest.js, includes/abilities-manifest.php
  */
 
-// WP-Agentic-Admin custom abilities
 import { createLogger } from '../utils/logger';
 import webmcpBridge from '../services/webmcp-bridge';
-import { registerErrorLogRead } from './error-log-read';
+import { REGISTRARS } from './manifest';
 
 const log = createLogger( 'Abilities' );
-import { registerCacheFlush } from './cache-flush';
-import { registerDbOptimize } from './db-optimize';
-import { registerPluginList } from './plugin-list';
-import { registerPluginDeactivate } from './plugin-deactivate';
-import { registerPluginActivate } from './plugin-activate';
-import { registerPluginInstall } from './plugin-install';
-import { registerSiteHealth } from './site-health';
-import { registerTransientFlush } from './transient-flush';
-import { registerCronList } from './cron-list';
-import { registerRewriteFlush } from './rewrite-flush';
-import { registerRewriteList } from './rewrite-list';
-import { registerRevisionCleanup } from './revision-cleanup';
-import { registerThemeList } from './theme-list';
-import { registerCurrentUserRole } from './current-user-role';
-import { registerUserList } from './user-list';
-import { registerUpdateCheck } from './update-check';
-import { registerDiskUsage } from './disk-usage';
-import { registerCommentStats } from './comment-stats';
-import { registerSecurityScan } from './security-scan';
-import { registerPostList } from './post-list';
-import { registerReadFile } from './read-file';
-import { registerErrorLogSearch } from './error-log-search';
-import { registerOpcodeCacheStatus } from './opcode-cache-status';
-import { registerBackupCheck } from './backup-check';
-import { registerWriteFile } from './write-file';
-import { registerQueryDatabase } from './query-database';
-import { registerWebSearch } from './web-search';
-import { registerCoreSiteInfo } from './core-site-info';
-
-import { registerCoreEnvironmentInfo } from './core-environment-info';
-import { registerVerifyCoreChecksums } from './verify-core-checksums';
-import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
-import { registerDatabaseCheck } from './database-check';
-import { registerFileScan } from './file-scan';
-import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
-import { registerCodebaseIndex } from './codebase-index';
-import { registerCodeSearch } from './code-search';
-import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
-import { registerRunPluginAbility } from './run-plugin-ability';
-import { registerWpConfigList } from './wp-config-list';
-import { registerContentGenerate } from './content-generate';
-
-// Re-export individual functions for external use
-export { registerErrorLogRead } from './error-log-read';
-export { registerCacheFlush } from './cache-flush';
-export { registerDbOptimize } from './db-optimize';
-export { registerPluginList } from './plugin-list';
-export { registerPluginDeactivate } from './plugin-deactivate';
-export { registerPluginActivate } from './plugin-activate';
-export { registerPluginInstall } from './plugin-install';
-export { registerSiteHealth } from './site-health';
-export { registerTransientFlush } from './transient-flush';
-export { registerCronList } from './cron-list';
-export { registerRewriteFlush } from './rewrite-flush';
-export { registerRewriteList } from './rewrite-list';
-export { registerRevisionCleanup } from './revision-cleanup';
-export { registerThemeList } from './theme-list';
-export { registerCurrentUserRole } from './current-user-role';
-export { registerUserList } from './user-list';
-export { registerUpdateCheck } from './update-check';
-export { registerDiskUsage } from './disk-usage';
-export { registerCommentStats } from './comment-stats';
-export { registerSecurityScan } from './security-scan';
-export { registerPostList } from './post-list';
-export { registerReadFile } from './read-file';
-export { registerErrorLogSearch } from './error-log-search';
-export { registerOpcodeCacheStatus } from './opcode-cache-status';
-export { registerBackupCheck } from './backup-check';
-export { registerWriteFile } from './write-file';
-export { registerQueryDatabase } from './query-database';
-export { registerWebSearch } from './web-search';
-export { registerCoreSiteInfo } from './core-site-info';
-
-export { registerCoreEnvironmentInfo } from './core-environment-info';
-export { registerVerifyCoreChecksums } from './verify-core-checksums';
-export { registerVerifyPluginChecksums } from './verify-plugin-checksums';
-export { registerDatabaseCheck } from './database-check';
-export { registerFileScan } from './file-scan';
-export { registerRoleCapabilitiesCheck } from './role-capabilities-check';
-export { registerCoreEditorBlocks } from './core-editor-blocks';
-export { registerCodebaseIndex } from './codebase-index';
-export { registerCodeSearch } from './code-search';
-export { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
-export { registerRunPluginAbility } from './run-plugin-ability';
-export { registerWpConfigList } from './wp-config-list';
-export { registerContentGenerate } from './content-generate';
 
 /**
- * Register all abilities.
- *
- * This function is called during initialization to register
- * all abilities with the chat system, including:
- * - WP-Agentic-Admin custom abilities (wp-agentic-admin/*)
- * - WordPress 6.9+ core ability wrappers (core/*)
+ * Register all enabled abilities.
  */
 export function registerAllAbilities() {
-	// WP-Agentic-Admin custom abilities
-	registerErrorLogRead();
-	registerCacheFlush();
-	registerDbOptimize();
-	registerPluginList();
-	registerPluginDeactivate();
-	registerPluginActivate();
-	registerPluginInstall();
-	registerSiteHealth();
-	registerTransientFlush();
-	registerCronList();
-	registerRewriteFlush();
-	registerRewriteList();
-	registerRevisionCleanup();
-	registerThemeList();
-	registerCurrentUserRole();
-	registerUserList();
-	registerUpdateCheck();
-	registerDiskUsage();
-	registerCommentStats();
-	registerSecurityScan();
-	registerPostList();
-	registerReadFile();
-	registerErrorLogSearch();
-	registerOpcodeCacheStatus();
-	registerBackupCheck();
-	registerWriteFile();
-	registerQueryDatabase();
-	registerWebSearch();
+	const enabled =
+		window.wpAgenticAdmin?.enabledAbilities ?? Object.keys( REGISTRARS );
 
-	// Security abilities
-	registerVerifyCoreChecksums();
-	registerVerifyPluginChecksums();
-	registerDatabaseCheck();
-	registerFileScan();
-	registerRoleCapabilitiesCheck();
+	let registered = 0;
+	for ( const slug of enabled ) {
+		const fn = REGISTRARS[ slug ];
+		if ( fn ) {
+			fn();
+			registered++;
+		} else {
+			log.warn( `No JS registrar for enabled ability: ${ slug }` );
+		}
+	}
 
-	// WordPress 6.9+ core ability wrappers
-	// These provide chat-friendly interfaces for WordPress core abilities
-	// Note: core/get-user-info is not included as it has show_in_rest=false
-	registerCoreSiteInfo();
+	log.info( `Registered ${ registered } abilities.` );
 
-	registerCoreEnvironmentInfo();
-
-	// RAG abilities — local codebase indexing and search
-	registerCodebaseIndex();
-	registerCodeSearch();
-
-	// Dynamic ability discovery — PoC for calling plugin abilities
-	registerDiscoverPluginAbilities();
-	registerRunPluginAbility();
-
-	// WP-Config constants listing
-	registerWpConfigList();
-
-	// Content editing abilities
-	registerContentGenerate();
-
-	log.info( 'All abilities registered (including WordPress core wrappers)' );
-
-	// Bridge registered abilities to WebMCP for external AI agents
+	// Bridge registered abilities to WebMCP for external AI agents.
 	if ( webmcpBridge.isSupported() ) {
 		webmcpBridge.initialize();
 	}
