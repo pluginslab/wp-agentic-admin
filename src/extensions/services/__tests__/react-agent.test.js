@@ -345,6 +345,60 @@ describe( 'ReactAgent', () => {
 		} );
 	} );
 
+	describe( 'Per-call instance state cleanup', () => {
+		it( 'clears toolFilter / webSearchContext / docSearch after a successful run', async () => {
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "ok"}'
+			);
+
+			await reactAgent.execute( 'hi', [], {
+				toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+				webSearchContext: 'some context',
+				docSearch: true,
+			} );
+
+			expect( reactAgent.currentToolFilter ).toBeNull();
+			expect( reactAgent.webSearchContext ).toBeNull();
+			expect( reactAgent.docSearch ).toBe( false );
+		} );
+
+		it( 'clears state even when execute throws (try/finally guard)', async () => {
+			// Force getEngine to throw — this bubbles out of execute().
+			mockModelLoader.getEngine.mockImplementation( () => {
+				throw new Error( 'engine boom' );
+			} );
+
+			await expect(
+				reactAgent.execute( 'hi', [], {
+					toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+					webSearchContext: 'some context',
+					docSearch: true,
+				} )
+			).rejects.toThrow( /engine boom/ );
+
+			expect( reactAgent.currentToolFilter ).toBeNull();
+			expect( reactAgent.webSearchContext ).toBeNull();
+			expect( reactAgent.docSearch ).toBe( false );
+		} );
+
+		it( 'clears state on the early-return "Model not loaded" path', async () => {
+			mockModelLoader.getEngine.mockReturnValue( null );
+
+			const result = await reactAgent.execute( 'hi', [], {
+				toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+				webSearchContext: 'some context',
+				docSearch: true,
+			} );
+
+			expect( result.success ).toBe( false );
+			expect( result.error ).toBe( 'Model not loaded' );
+			expect( reactAgent.currentToolFilter ).toBeNull();
+			expect( reactAgent.webSearchContext ).toBeNull();
+			expect( reactAgent.docSearch ).toBe( false );
+		} );
+	} );
+
 	describe( 'Confirmation Handling', () => {
 		it( 'should request confirmation for tools that require it', async () => {
 			// Add a tool that requires confirmation

@@ -123,35 +123,35 @@ class ReactAgent {
 		this.webSearchContext = options.webSearchContext || null;
 		this.docSearch = options.docSearch || false;
 
-		const engine = this.modelLoader.getEngine();
-		if ( ! engine ) {
+		try {
+			const engine = this.modelLoader.getEngine();
+			if ( ! engine ) {
+				return {
+					success: false,
+					finalAnswer:
+						'The AI model is not loaded yet. Please load the model first.',
+					iterations: 0,
+					toolsUsed: [],
+					observations: [],
+					error: 'Model not loaded',
+				};
+			}
+
+			const result = await this.executeWithPromptBased(
+				userMessage,
+				conversationHistory
+			);
+
+			// Store last result for test observability
+			this.lastResult = result;
+			return result;
+		} finally {
+			// Guarantee per-call state never leaks into the next invocation,
+			// even if executeWithPromptBased throws.
 			this.currentToolFilter = null;
 			this.webSearchContext = null;
 			this.docSearch = false;
-			return {
-				success: false,
-				finalAnswer:
-					'The AI model is not loaded yet. Please load the model first.',
-				iterations: 0,
-				toolsUsed: [],
-				observations: [],
-				error: 'Model not loaded',
-			};
 		}
-
-		const result = await this.executeWithPromptBased(
-			userMessage,
-			conversationHistory
-		);
-
-		// Clean up tool filter and web search context
-		this.currentToolFilter = null;
-		this.webSearchContext = null;
-		this.docSearch = false;
-
-		// Store last result for test observability
-		this.lastResult = result;
-		return result;
 	}
 
 	/**
