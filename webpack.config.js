@@ -9,7 +9,6 @@
 
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const path = require( 'path' );
-const webpack = require( 'webpack' );
 
 module.exports = {
 	...defaultConfig,
@@ -57,17 +56,6 @@ module.exports = {
 		...defaultConfig.output,
 		path: path.resolve( __dirname, 'build-extensions' ),
 	},
-
-	// Always inline FEEDBACK_S3_ENDPOINT at build time so `process.env.*` is
-	// never a runtime reference in the browser (process is not defined there).
-	plugins: [
-		...( defaultConfig.plugins || [] ),
-		new webpack.DefinePlugin( {
-			'process.env.FEEDBACK_S3_ENDPOINT': JSON.stringify(
-				process.env.FEEDBACK_S3_ENDPOINT || ''
-			),
-		} ),
-	],
 
 	// Service Worker specific optimizations
 	optimization: {

@@ -9,9 +9,7 @@ import { cog } from '@wordpress/icons';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
-import FeedbackTab from './components/FeedbackTab';
 import SettingsTab from './components/SettingsTab';
-import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
@@ -218,15 +216,6 @@ const App = () => {
 			title: 'Plugin Abilities',
 			className: 'wp-agentic-admin-tab',
 		},
-		...( FEEDBACK_UPLOAD_ENABLED
-			? [
-					{
-						name: 'feedback',
-						title: 'Feedback',
-						className: 'wp-agentic-admin-tab',
-					},
-			  ]
-			: [] ),
 	];
 
 	/**
@@ -258,8 +247,6 @@ const App = () => {
 				return <AbilityBrowser />;
 			case 'plugin-abilities':
 				return <PluginAbilitiesPanel />;
-			case 'feedback':
-				return <FeedbackTab />;
 			default:
 				return null;
 		}
