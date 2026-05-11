@@ -101,8 +101,8 @@ class Settings {
 						'options'     => array(
 							'Qwen2.5-7B-Instruct-q4f16_1-MLC' => 'Qwen 2.5 7B F16 (Recommended)',
 							'Qwen2.5-7B-Instruct-q4f32_1-MLC' => 'Qwen 2.5 7B F32 (No shader-f16 needed)',
-							'Qwen3-1.7B-q4f16_1-MLC'          => 'Qwen 3 1.7B F16 (Lightweight)',
-							'Qwen3-1.7B-q4f32_1-MLC'          => 'Qwen 3 1.7B F32 (Lightweight, no shader-f16 needed)',
+							'Qwen3-1.7B-q4f16_1-MLC' => 'Qwen 3 1.7B F16 (Lightweight)',
+							'Qwen3-1.7B-q4f32_1-MLC' => 'Qwen 3 1.7B F32 (Lightweight, no shader-f16 needed)',
 						),
 						'default'     => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin' ),

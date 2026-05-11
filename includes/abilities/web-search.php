@@ -170,6 +170,7 @@ function wp_agentic_admin_parse_ddg_html( string $html, int $num_results = 5 ): 
 			break;
 		}
 
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- textContent is a DOM API property.
 		$title = trim( $link->textContent );
 		$href  = $link->getAttribute( 'href' );
 
@@ -184,7 +185,7 @@ function wp_agentic_admin_parse_ddg_html( string $html, int $num_results = 5 ): 
 		}
 
 		// Find the corresponding snippet.
-		$snippet = '';
+		$snippet       = '';
 		$snippet_nodes = $xpath->query( '//a[contains(@class, "result__snippet")]' );
 		if ( $snippet_nodes && $snippet_nodes->length > $index ) {
 			$snippet = trim( $snippet_nodes->item( $index )->textContent );

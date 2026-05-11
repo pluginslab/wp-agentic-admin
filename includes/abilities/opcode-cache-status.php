@@ -34,15 +34,15 @@ function wp_agentic_admin_register_opcode_cache_status(): void {
 			'output_schema'       => array(
 				'type'       => 'object',
 				'properties' => array(
-					'enabled'        => array(
+					'enabled'    => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether OPcache is enabled.', 'wp-agentic-admin' ),
 					),
-					'memory'         => array(
+					'memory'     => array(
 						'type'        => 'object',
 						'description' => __( 'Memory usage info.', 'wp-agentic-admin' ),
 					),
-					'statistics'     => array(
+					'statistics' => array(
 						'type'        => 'object',
 						'description' => __( 'Cache statistics.', 'wp-agentic-admin' ),
 					),

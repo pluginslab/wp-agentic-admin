@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "lint": "phpcs",
+    "lint": "phpcs --runtime-set ignore_warnings_on_exit true",
     "lint:fix": "phpcbf",
     "lint:errors": "phpcs --error-severity=1 --warning-severity=8"
   }

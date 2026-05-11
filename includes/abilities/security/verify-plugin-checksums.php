@@ -132,10 +132,10 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 		}
 
 		// Verify files against checksums.
-		$plugin_dir    = WP_PLUGIN_DIR . '/' . dirname( $plugin_file );
-		$is_single     = ! str_contains( $plugin_file, '/' );
-		$base_dir      = $is_single ? WP_PLUGIN_DIR : $plugin_dir;
-		$issues        = array();
+		$plugin_dir = WP_PLUGIN_DIR . '/' . dirname( $plugin_file );
+		$is_single  = ! str_contains( $plugin_file, '/' );
+		$base_dir   = $is_single ? WP_PLUGIN_DIR : $plugin_dir;
+		$issues     = array();
 
 		foreach ( $checksums as $file => $hashes ) {
 			$file_path = $base_dir . '/' . $file;
@@ -302,13 +302,13 @@ function wp_agentic_admin_fetch_plugin_checksums( string $slug, string $version 
  */
 function wp_agentic_admin_verify_file_checksum( string $file_path, array $hashes ): bool {
 	if ( ! empty( $hashes['sha256'] ) ) {
-		$actual = hash_file( 'sha256', $file_path );
+		$actual   = hash_file( 'sha256', $file_path );
 		$expected = (array) $hashes['sha256'];
 		return in_array( $actual, $expected, true );
 	}
 
 	if ( ! empty( $hashes['md5'] ) ) {
-		$actual = md5_file( $file_path );
+		$actual   = md5_file( $file_path );
 		$expected = (array) $hashes['md5'];
 		return in_array( $actual, $expected, true );
 	}

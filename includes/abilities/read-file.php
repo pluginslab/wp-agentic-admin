@@ -161,8 +161,8 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 		);
 	}
 
-	$real_path      = wp_normalize_path( $real_path );
-	$real_abspath   = wp_normalize_path( realpath( ABSPATH ) );
+	$real_path    = wp_normalize_path( $real_path );
+	$real_abspath = wp_normalize_path( realpath( ABSPATH ) );
 
 	// Security: ensure the file is within the WordPress root directory.
 	if ( ! str_starts_with( $real_path, $real_abspath ) ) {

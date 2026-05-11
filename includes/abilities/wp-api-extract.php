@@ -293,8 +293,8 @@ function wp_agentic_admin_execute_wp_api_extract( array $input = array() ): arra
 	}
 
 	return array(
-		'success'      => true,
-		'chunks'       => $chunks,
-		'total_files'  => $total_files,
+		'success'     => true,
+		'chunks'      => $chunks,
+		'total_files' => $total_files,
 	);
 }
