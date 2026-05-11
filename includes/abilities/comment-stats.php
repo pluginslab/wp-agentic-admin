@@ -34,23 +34,23 @@ function wp_agentic_admin_register_comment_stats(): void {
 			'output_schema'       => array(
 				'type'       => 'object',
 				'properties' => array(
-					'total'       => array(
+					'total'    => array(
 						'type'        => 'integer',
 						'description' => __( 'Total comments.', 'wp-agentic-admin' ),
 					),
-					'approved'    => array(
+					'approved' => array(
 						'type'        => 'integer',
 						'description' => __( 'Approved comments.', 'wp-agentic-admin' ),
 					),
-					'pending'     => array(
+					'pending'  => array(
 						'type'        => 'integer',
 						'description' => __( 'Pending comments.', 'wp-agentic-admin' ),
 					),
-					'spam'        => array(
+					'spam'     => array(
 						'type'        => 'integer',
 						'description' => __( 'Spam comments.', 'wp-agentic-admin' ),
 					),
-					'trash'       => array(
+					'trash'    => array(
 						'type'        => 'integer',
 						'description' => __( 'Trashed comments.', 'wp-agentic-admin' ),
 					),

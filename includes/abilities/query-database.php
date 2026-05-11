@@ -159,7 +159,7 @@ function wp_agentic_admin_execute_query_database( array $input = array() ): arra
 	if ( null === $results ) {
 		return array(
 			'success' => false,
-			'message' => $wpdb->last_error ?: 'Query failed.',
+			'message' => ! empty( $wpdb->last_error ) ? $wpdb->last_error : 'Query failed.',
 			'results' => array(),
 			'rows'    => 0,
 		);

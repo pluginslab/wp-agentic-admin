@@ -181,7 +181,7 @@ const getLoadingStage = ( message, progress ) => {
  * @param {string|null} props.initPhase     - Current initialization phase ('checking', 'loading', or null)
  * @param {string}      props.initMessage   - Message to display during initialization
  * @param {number}      props.initProgress  - Progress percentage during initialization
- * @param               props.onModelUnload
+ * @param {Function}    props.onModelUnload - Callback when model is unloaded
  */
 const ModelStatus = ( {
 	onModelReady,

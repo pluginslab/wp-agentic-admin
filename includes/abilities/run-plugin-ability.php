@@ -80,7 +80,7 @@ function wp_agentic_admin_register_run_plugin_ability(): void {
  * @return array Execution result.
  */
 function wp_agentic_admin_run_plugin_ability( $input = array() ): array {
-	$input = (array) $input;
+	$input      = (array) $input;
 	$ability_id = isset( $input['ability_id'] ) ? $input['ability_id'] : '';
 	$args       = isset( $input['args'] ) ? $input['args'] : array();
 

@@ -245,8 +245,8 @@ class Abilities {
 
 		if ( function_exists( 'wp_agentic_admin_register_role_capabilities_check' ) ) {
 			wp_agentic_admin_register_role_capabilities_check();
-    }
-    
+		}
+
 		if ( function_exists( 'wp_agentic_admin_register_write_file' ) ) {
 			wp_agentic_admin_register_write_file();
 		}

@@ -138,6 +138,12 @@ function wp_agentic_admin_get_plugin_icons(): array {
 	return $icons;
 }
 
+/**
+ * Execute the discover plugin abilities request.
+ *
+ * @param array $input Optional input parameters.
+ * @return array Result with discovered plugin abilities.
+ */
 function wp_agentic_admin_execute_discover_plugin_abilities( $input = array() ): array {
 	$input = (array) $input;
 	if ( ! function_exists( 'wp_get_abilities' ) ) {

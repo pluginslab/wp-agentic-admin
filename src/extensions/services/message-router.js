@@ -51,20 +51,6 @@ const ACTION_WORDS = [
 ];
 
 /**
- * Words that signal a pure knowledge question (no action desired).
- */
-const QUESTION_WORDS = [
-	'what is',
-	'what are',
-	'what does',
-	'explain',
-	'define',
-	'difference between',
-	'tell me about',
-	'meaning of',
-];
-
-/**
  * @typedef {Object} RouteResult
  * @property {'workflow'|'react'|'conversational'} type       - Route type
  * @property {Object}                              [workflow] - Workflow definition (if type is 'workflow')
@@ -99,16 +85,6 @@ function matchesToolKeywords( message ) {
  */
 function hasActionIntent( message ) {
 	return ACTION_WORDS.some( ( word ) => message.includes( word ) );
-}
-
-/**
- * Check if a message is a pure knowledge question.
- *
- * @param {string} message - Lowercased user message
- * @return {boolean} True if message is a knowledge question
- */
-function isKnowledgeQuestion( message ) {
-	return QUESTION_WORDS.some( ( word ) => message.startsWith( word ) );
 }
 
 /**

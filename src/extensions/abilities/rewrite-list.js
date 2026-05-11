@@ -90,10 +90,9 @@ export function registerRewriteList() {
 		/**
 		 * Execute the ability.
 		 *
-		 * @param {Object} params - Parameters from the chat system.
 		 * @return {Promise<Object>} The result from PHP.
 		 */
-		execute: async ( params ) => {
+		execute: async () => {
 			return executeAbility( 'wp-agentic-admin/rewrite-list', {} );
 		},
 

@@ -39,31 +39,31 @@ function wp_agentic_admin_register_uploads_scan(): void {
 			'output_schema'       => array(
 				'type'       => 'object',
 				'properties' => array(
-					'success'            => array(
+					'success'           => array(
 						'type'        => 'boolean',
 						'description' => __( 'Whether the scan completed.', 'wp-agentic-admin' ),
 					),
-					'message'            => array(
+					'message'           => array(
 						'type'        => 'string',
 						'description' => __( 'Status message.', 'wp-agentic-admin' ),
 					),
-					'areas_scanned'      => array(
+					'areas_scanned'     => array(
 						'type'        => 'array',
 						'description' => __( 'Areas that were scanned (uploads, root, .well-known).', 'wp-agentic-admin' ),
 					),
-					'total_files'        => array(
+					'total_files'       => array(
 						'type'        => 'integer',
 						'description' => __( 'Total files found in uploads.', 'wp-agentic-admin' ),
 					),
-					'suspicious_count'   => array(
+					'suspicious_count'  => array(
 						'type'        => 'integer',
 						'description' => __( 'Number of suspicious files found.', 'wp-agentic-admin' ),
 					),
-					'suspicious_files'   => array(
+					'suspicious_files'  => array(
 						'type'        => 'array',
 						'description' => __( 'List of suspicious files with details.', 'wp-agentic-admin' ),
 					),
-					'htaccess_findings'  => array(
+					'htaccess_findings' => array(
 						'type'        => 'array',
 						'description' => __( 'Any .htaccess files found in uploads subdirectories.', 'wp-agentic-admin' ),
 					),
@@ -101,11 +101,26 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 
 	// Extensions that should never appear in uploads, root, or .well-known.
 	$dangerous_extensions = array(
-		'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'phar',
-		'cgi', 'pl', 'py', 'rb', 'sh', 'bash',
-		'asp', 'aspx',
+		'php',
+		'php3',
+		'php4',
+		'php5',
+		'php7',
+		'php8',
+		'phtml',
+		'phar',
+		'cgi',
+		'pl',
+		'py',
+		'rb',
+		'sh',
+		'bash',
+		'asp',
+		'aspx',
 		'jsp',
-		'exe', 'dll', 'so',
+		'exe',
+		'dll',
+		'so',
 	);
 
 	/**
@@ -446,7 +461,7 @@ function wp_agentic_admin_classify_dangerous_file( string $filename, array $dang
  */
 function wp_agentic_admin_get_all_extensions( string $filename ): array {
 	// Remove leading dot from hidden files.
-	$name = ltrim( $filename, '.' );
+	$name  = ltrim( $filename, '.' );
 	$parts = explode( '.', $name );
 
 	// Remove the base name, keep only extensions.

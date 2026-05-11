@@ -164,7 +164,7 @@ export function registerVerifyPluginChecksums() {
 		/**
 		 * Execute the ability.
 		 *
-		 * @param  params
+		 * @param {Object} params - Execution parameters.
 		 * @return {Promise<Object>} The result from the PHP ability.
 		 */
 		execute: async ( params ) => {

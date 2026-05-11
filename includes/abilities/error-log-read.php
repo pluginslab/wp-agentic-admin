@@ -105,7 +105,7 @@ function wp_agentic_admin_execute_error_log_read( array $input = array() ): arra
 
 	// Read the last N lines efficiently without loading the entire file into memory.
 	// Uses SplFileObject to seek from the end, safe for multi-hundred-MB debug.log files.
-	$file        = new \SplFileObject( $log_file, 'r' );
+	$file = new \SplFileObject( $log_file, 'r' );
 	$file->seek( PHP_INT_MAX );
 	$total_lines = $file->key();
 
@@ -113,12 +113,14 @@ function wp_agentic_admin_execute_error_log_read( array $input = array() ): arra
 	$entries  = array();
 	$line_num = max( 0, $total_lines - 1 );
 
-	while ( count( $entries ) < $lines && $line_num >= 0 ) {
+	$entry_count = 0;
+	while ( $entry_count < $lines && $line_num >= 0 ) {
 		$file->seek( $line_num );
 		$line = rtrim( $file->current(), "\r\n" );
 
 		if ( '' !== $line ) {
 			array_unshift( $entries, $line );
+			++$entry_count;
 		}
 
 		--$line_num;

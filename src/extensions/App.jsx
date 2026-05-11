@@ -288,13 +288,9 @@ const App = () => {
 					<Button
 						icon={ cog }
 						className={ `wp-agentic-admin-settings-toggle${
-							showSettings
-								? ' is-active'
-								: ''
+							showSettings ? ' is-active' : ''
 						}` }
-						onClick={ () =>
-							setShowSettings( ( prev ) => ! prev )
-						}
+						onClick={ () => setShowSettings( ( prev ) => ! prev ) }
 						label="Settings"
 					>
 						Settings

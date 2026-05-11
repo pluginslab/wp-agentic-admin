@@ -74,11 +74,11 @@ function wp_agentic_admin_register_docs_extract(): void {
  * @return array Array of chunk arrays.
  */
 function wp_agentic_admin_chunk_markdown( string $content, string $file_name ): array {
-	$lines       = explode( "\n", $content );
-	$chunks      = array();
-	$current     = array();
+	$lines           = explode( "\n", $content );
+	$chunks          = array();
+	$current         = array();
 	$current_heading = '';
-	$start_line  = 1;
+	$start_line      = 1;
 
 	foreach ( $lines as $idx => $line ) {
 		// Detect ## or ### headings (not # which is the doc title).

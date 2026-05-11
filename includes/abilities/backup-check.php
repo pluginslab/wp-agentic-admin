@@ -168,8 +168,8 @@ function wp_agentic_admin_get_last_backup_time( string $plugin_slug ): string {
 			// Duplicator stores packages in its own table.
 			$table = $wpdb->prefix . 'duplicator_packages';
 			if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table ) {
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-				$last = $wpdb->get_var( "SELECT MAX(created) FROM `$table` WHERE status = 100" );
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is validated via SHOW TABLES above.
+				$last = $wpdb->get_var( "SELECT MAX(created) FROM `{$table}` WHERE status = 100" );
 				if ( $last ) {
 					return $last;
 				}
