@@ -141,3 +141,18 @@ export const LABS_ABILITIES = new Set( [
 	'discover-plugin-abilities',
 	'run-plugin-ability',
 ] );
+
+/**
+ * JS-only abilities (no PHP register function). PHP's enabledAbilities
+ * list doesn't include these, so index.js adds them back when iterating.
+ * Members that also live in LABS_ABILITIES are still gated by labs.
+ */
+export const JS_ONLY_ABILITIES = new Set( [
+	'current-user-role',
+	'core-site-info',
+	'core-environment-info',
+	'codebase-index',
+	'code-search',
+	'wp-config-list',
+	'content-generate', // also LABS
+] );
