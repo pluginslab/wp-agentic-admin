@@ -877,7 +877,7 @@ const ChatContainer = ( {
 						? 'Load the AI model to start chatting...'
 						: isLoading || isStreaming
 						? 'Thinking...'
-						: 'Describe your issue or what you want to do… (hold Space to speak)'
+						: 'Describe your issue or what you want to do…'
 				}
 				defaultBundle={ defaultBundle }
 			/>
