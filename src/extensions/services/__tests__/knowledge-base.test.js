@@ -275,9 +275,7 @@ describe( 'knowledge-base', () => {
 			expect( workerInstances.length ).toBe( 1 );
 			expect( workerInstances[ 0 ].terminated ).toBe( true );
 			expect(
-				JSON.parse(
-					localStorage.getItem( 'agentic_admin_kb_status' )
-				)
+				JSON.parse( localStorage.getItem( 'agentic_admin_kb_status' ) )
 			).toMatchObject( { totalChunks: 1 } );
 		} );
 

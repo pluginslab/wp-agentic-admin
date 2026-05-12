@@ -979,9 +979,7 @@ class ModelLoader {
 	static getEffectiveContextSize( modelId ) {
 		// Check per-model localStorage override first
 		try {
-			const saved = localStorage.getItem(
-				'agentic_admin_context_size'
-			);
+			const saved = localStorage.getItem( 'agentic_admin_context_size' );
 			if ( saved ) {
 				const parsed = JSON.parse( saved );
 				if ( parsed[ modelId ] ) {
