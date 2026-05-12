@@ -10,7 +10,6 @@
  */
 
 import { createLogger } from '../utils/logger';
-import webmcpBridge from '../services/webmcp-bridge';
 import { REGISTRARS } from './manifest';
 
 const log = createLogger( 'Abilities' );
@@ -34,11 +33,6 @@ export function registerAllAbilities() {
 	}
 
 	log.info( `Registered ${ registered } abilities.` );
-
-	// Bridge registered abilities to WebMCP for external AI agents.
-	if ( webmcpBridge.isSupported() ) {
-		webmcpBridge.initialize();
-	}
 }
 
 export default registerAllAbilities;
