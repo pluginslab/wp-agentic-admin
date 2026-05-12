@@ -18,7 +18,6 @@
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-agentic-admin
- * Domain Path: /languages
  * Requires at least: 6.9
  * Requires PHP: 8.2
  * Tested up to: 6.9
@@ -64,7 +63,10 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			}
 
 			$this->define_constants();
-			$this->load_textdomain();
+
+			// Translations: WordPress 4.6+ loads them automatically for plugins
+			// hosted on WordPress.org, so no explicit load_plugin_textdomain()
+			// call is needed here.
 
 			// Load functions first (provides wp_agentic_admin_register_ability API).
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
@@ -159,20 +161,6 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			define( 'WP_AGENTIC_ADMIN_FILE', __FILE__ );
 			define( 'WP_AGENTIC_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 			define( 'WP_AGENTIC_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-		}
-
-		/**
-		 * Load plugin text domain for translations.
-		 *
-		 * @since 0.1.0
-		 * @return void
-		 */
-		private function load_textdomain(): void {
-			load_plugin_textdomain(
-				'wp-agentic-admin',
-				false,
-				dirname( plugin_basename( __FILE__ ) ) . '/languages'
-			);
 		}
 
 		/**
