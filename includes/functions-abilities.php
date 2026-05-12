@@ -47,11 +47,12 @@ function wp_agentic_admin_register_ability( string $id, array $php_args, array $
 	if ( empty( $id ) || ! preg_match( '/^[a-z0-9-]+\/[a-z0-9-]+$/', $id ) ) {
 		_doing_it_wrong(
 			__FUNCTION__,
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- __() is a translation function, output is escaped by _doing_it_wrong()
-			sprintf(
-				/* translators: %s: ability ID */
-				__( 'Invalid ability ID format: %s. Must be in format "namespace/ability-name".', 'wp-agentic-admin' ),
-				$id
+			esc_html(
+				sprintf(
+					/* translators: %s: ability ID */
+					__( 'Invalid ability ID format: %s. Must be in format "namespace/ability-name".', 'wp-agentic-admin' ),
+					$id
+				)
 			),
 			'1.0.0'
 		);
