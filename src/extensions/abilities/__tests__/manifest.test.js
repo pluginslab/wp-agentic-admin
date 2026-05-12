@@ -21,7 +21,12 @@ jest.mock( '../../utils/logger', () => ( {
 	} ),
 } ) );
 
-import { REGISTRARS, LOCAL_ONLY_ABILITIES, LABS_ABILITIES } from '../manifest';
+import {
+	REGISTRARS,
+	LOCAL_ONLY_ABILITIES,
+	LABS_ABILITIES,
+	JS_ONLY_ABILITIES,
+} from '../manifest';
 
 describe( 'abilities manifest', () => {
 	it( 'every registrar is a function', () => {
@@ -110,6 +115,28 @@ describe( 'abilities manifest', () => {
 	it( 'expected local-only slugs match the privacy gate plan', () => {
 		expect( [ ...LOCAL_ONLY_ABILITIES ].sort() ).toEqual(
 			[ 'query-database', 'read-file', 'wp-config-list' ].sort()
+		);
+	} );
+
+	it( 'every JS_ONLY ability exists in REGISTRARS', () => {
+		for ( const slug of JS_ONLY_ABILITIES ) {
+			expect( REGISTRARS ).toHaveProperty( slug );
+		}
+	} );
+
+	it( 'JS_ONLY contains the expected mix of CORE / LOCAL_ONLY / LABS abilities', () => {
+		// These have no PHP register function — PHP enabledAbilities will
+		// never include them, so JS must add them back on its own.
+		expect( [ ...JS_ONLY_ABILITIES ].sort() ).toEqual(
+			[
+				'current-user-role',
+				'core-site-info',
+				'core-environment-info',
+				'codebase-index',
+				'code-search',
+				'wp-config-list', // also LOCAL_ONLY
+				'content-generate', // also LABS
+			].sort()
 		);
 	} );
 } );

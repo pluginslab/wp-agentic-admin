@@ -144,6 +144,11 @@ class Admin_Page {
 			$abilities_js_config = wp_agentic_admin_get_abilities_js_config();
 		}
 
+		// Resolve the PHP-side enabled abilities (CORE + LOCAL_ONLY + LABS-if-enabled),
+		// then expose to JS so the manifest can mirror the PHP gate.
+		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
+		$enabled_abilities = array_keys( wp_agentic_admin_resolve_enabled_abilities() );
+
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
@@ -160,6 +165,8 @@ class Admin_Page {
 			),
 			'browserRequirements' => Utils::get_browser_requirements(),
 			'abilities'           => $abilities_js_config,
+			'enabledAbilities'    => $enabled_abilities,
+			'enableLabs'          => wp_agentic_admin_labs_enabled(),
 			'i18n'                => array(
 				'loading'            => __( 'Loading AI model...', 'wp-agentic-admin' ),
 				'ready'              => __( 'AI assistant ready', 'wp-agentic-admin' ),
