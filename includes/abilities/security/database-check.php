@@ -297,7 +297,11 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 		$values[]        = $pattern;
 	}
 
-	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared -- Dynamic number of LIKE patterns; WHERE clause is built from safe literal strings.
+	// The WHERE clause is built from literal "option_value LIKE %s" fragments
+	// in a fixed-size loop over $suspicious_patterns — no user input touches
+	// the SQL string. The %s count always matches ...$values, but phpcs can't
+	// see through the implode + spread to verify that statically.
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 	$rows = $wpdb->get_results(
 		$wpdb->prepare(
 			"SELECT option_name, LEFT(option_value, 200) AS option_value_preview
@@ -307,7 +311,7 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 			...$values
 		)
 	);
-	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 	$findings = array();
 	foreach ( $rows as $row ) {
@@ -500,7 +504,12 @@ function wp_agentic_admin_check_posts_hidden_links(): array {
 function wp_agentic_admin_check_usermeta_injections(): array {
 	global $wpdb;
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+	// Slow meta_key scan is intentional — this is a security audit that
+	// looks for injected payloads anywhere in usermeta. The LIMIT 50 and
+	// admin-only permission_callback (in the parent ability registration)
+	// keep the blast radius small. Caching is skipped: stale results would
+	// hide a fresh injection.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 	$rows = $wpdb->get_results(
 		$wpdb->prepare(
 			"SELECT user_id, meta_key, LEFT(meta_value, 200) AS meta_value_preview
@@ -519,6 +528,7 @@ function wp_agentic_admin_check_usermeta_injections(): array {
 	foreach ( $rows as $row ) {
 		$findings[] = array(
 			'user_id'    => (int) $row->user_id,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- this is a PHP array key in our response, not a WP_Query argument.
 			'meta_key'   => $row->meta_key,
 			'preview'    => $row->meta_value_preview,
 			'risk_score' => 9.0, // Code injection in user meta is almost always malicious.
