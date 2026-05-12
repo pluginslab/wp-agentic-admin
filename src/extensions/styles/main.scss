@@ -1082,39 +1082,32 @@
 }
 
 // Tabs
+//
+// Four mutually-exclusive views: chat, abilities, plugin-abilities,
+// settings. The first three sit on the left; Settings is visually pushed
+// to the right via flex margin-left:auto but is the same kind of element.
 .wp-agentic-admin-tabs-wrapper {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
 	min-height: 0;
-	position: relative;
-
-	// When the Settings cog (a sibling of the TabPanel, conceptually a 4th
-	// tab) is active, no left-side tab should appear selected. The cog
-	// itself gets .is-active via React; this hides the chat/abilities/
-	// plugin-abilities underline so only one view reads as "selected".
-	//
-	// Two underlines to suppress:
-	//   - box-shadow on the tab itself (3px blue active-state inset)
-	//   - ::after pseudo (1.5px blue focus-visible indicator)
-	&--settings-active .wp-agentic-admin-tabs
-		.components-tab-panel__tabs-item.is-active {
-		box-shadow: none;
-
-		&::after {
-			background: transparent;
-		}
-	}
 }
 
+.wp-agentic-admin-tabs {
+	display: flex;
+	align-items: stretch;
+	border-bottom: 1px solid #c3c4c7;
+	flex-shrink: 0;
+	background: #fff;
+}
+
+.wp-agentic-admin-tab,
 .wp-agentic-admin-settings-toggle {
-	position: absolute;
-	top: 0;
-	right: 0;
-	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	height: 48px;
 	padding: 0 16px;
-	gap: 6px;
 	border: none;
 	border-radius: 0;
 	background: transparent;
@@ -1122,9 +1115,6 @@
 	font-weight: 500;
 	font-size: 13px;
 	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 
 	&:hover,
 	&:focus {
@@ -1138,36 +1128,9 @@
 	}
 }
 
-.wp-agentic-admin-tabs {
-	margin-bottom: 0;
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	min-height: 0;
-
-	.components-tab-panel__tabs {
-		border-bottom: 1px solid #c3c4c7;
-		margin-bottom: 0;
-		flex-shrink: 0;
-		padding-right: 110px; // Space for the settings gear icon + label
-	}
-
-	.components-tab-panel__tabs-item {
-		font-weight: 500;
-		padding: 12px 16px;
-
-		&.is-active {
-			box-shadow: inset 0 -3px 0 0 #2271b1;
-		}
-	}
-
-	// The tab panel content wrapper
-	> div:last-child {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		min-height: 0;
-	}
+.wp-agentic-admin-settings-toggle {
+	margin-left: auto; // Push Settings to the right edge of the tab strip
+	gap: 6px;
 }
 
 .wp-agentic-admin-tab-content {
