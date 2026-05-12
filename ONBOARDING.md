@@ -1,4 +1,4 @@
-# Welcome to WP Agentic Admin
+# Welcome to Agentic Admin for WordPress
 
 Hey, nice to see you here. Before we start building, let me walk you through the project — what it does, how it works, and where you'll be spending your time today.
 
@@ -12,7 +12,7 @@ This guide is split into two parts:
 
 ### What are we building?
 
-WP Agentic Admin is an AI assistant that lives inside the WordPress admin. You type plain English — "why is my site slow?", "list my plugins", "flush the cache" — and the AI figures out what to do, calls the right WordPress functions, and gives you an answer.
+Agentic Admin for WordPress is an AI assistant that lives inside the WordPress admin. You type plain English — "why is my site slow?", "list my plugins", "flush the cache" — and the AI figures out what to do, calls the right WordPress functions, and gives you an answer.
 
 The twist: **everything runs locally in the browser**. No cloud APIs, no API keys, no data leaving the device. The AI model (Qwen 3 1.7B, about 1.2 GB) runs directly on the user's GPU via WebGPU. It's privacy-first by design.
 

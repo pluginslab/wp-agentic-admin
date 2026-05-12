@@ -93,7 +93,7 @@ if ('gpu' in navigator) {
 }
 ```
 
-WP Agentic Admin automatically detects WebGPU availability when you load the settings page.
+Agentic Admin for WordPress automatically detects WebGPU availability when you load the settings page.
 
 ## GPU Requirements
 
@@ -172,7 +172,7 @@ When you load a model, here's what happens:
 
 ## Fallback: CPU Mode (WASM)
 
-If WebGPU isn't available, WP Agentic Admin can fall back to **WASM** (WebAssembly) — running the model on CPU instead of GPU.
+If WebGPU isn't available, Agentic Admin for WordPress can fall back to **WASM** (WebAssembly) — running the model on CPU instead of GPU.
 
 **WASM Mode:**
 - ✅ Works on any device
@@ -242,6 +242,6 @@ As the standard matures, browser-based AI will become faster and more accessible
 
 ## Summary
 
-WebGPU is a modern browser API that provides GPU access for AI inference. It's dramatically faster than CPU processing (10-100x) but requires compatible hardware (4-8GB VRAM, Chrome 113+). WP Agentic Admin uses WebGPU to run language models locally, with WASM CPU fallback for unsupported devices.
+WebGPU is a modern browser API that provides GPU access for AI inference. It's dramatically faster than CPU processing (10-100x) but requires compatible hardware (4-8GB VRAM, Chrome 113+). Agentic Admin for WordPress uses WebGPU to run language models locally, with WASM CPU fallback for unsupported devices.
 
 **Next:** [WebLLM Library](04-webllm.md)

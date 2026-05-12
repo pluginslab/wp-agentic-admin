@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_write_file(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_write_file(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/write-file',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Write File', 'wp-agentic-admin' ),
-			'description'         => __( 'Edit WordPress files with automatic backup.', 'wp-agentic-admin' ),
+			'label'               => __( 'Write File', 'agentic-admin' ),
+			'description'         => __( 'Edit WordPress files with automatic backup.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -35,17 +35,17 @@ function wp_agentic_admin_register_write_file(): void {
 				'properties'           => array(
 					'file_path' => array(
 						'type'        => 'string',
-						'description' => __( 'File path relative to WordPress root.', 'wp-agentic-admin' ),
+						'description' => __( 'File path relative to WordPress root.', 'agentic-admin' ),
 					),
 					'content'   => array(
 						'type'        => 'string',
-						'description' => __( 'Content to write.', 'wp-agentic-admin' ),
+						'description' => __( 'Content to write.', 'agentic-admin' ),
 					),
 					'mode'      => array(
 						'type'        => 'string',
 						'enum'        => array( 'replace', 'append', 'prepend' ),
 						'default'     => 'replace',
-						'description' => __( 'Write mode: replace, append, or prepend.', 'wp-agentic-admin' ),
+						'description' => __( 'Write mode: replace, append, or prepend.', 'agentic-admin' ),
 					),
 				),
 				'required'             => array( 'file_path', 'content' ),
@@ -56,19 +56,19 @@ function wp_agentic_admin_register_write_file(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the write succeeded.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the write succeeded.', 'agentic-admin' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'backup'  => array(
 						'type'        => 'string',
-						'description' => __( 'Backup file path.', 'wp-agentic-admin' ),
+						'description' => __( 'Backup file path.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_write_file',
+			'execute_callback'    => 'agentic_admin_execute_write_file',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -84,7 +84,7 @@ function wp_agentic_admin_register_write_file(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'write', 'edit', 'modify', 'change', 'fix', 'add line', 'add code', 'enable debug', 'update file', 'functions.php', 'wp-config', '.htaccess' ),
-			'initialMessage' => __( "I'll edit that file...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll edit that file...", 'agentic-admin' ),
 		)
 	);
 }
@@ -95,7 +95,7 @@ function wp_agentic_admin_register_write_file(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_write_file( array $input = array() ): array {
+function agentic_admin_execute_write_file( array $input = array() ): array {
 	$file_path = isset( $input['file_path'] ) ? sanitize_text_field( $input['file_path'] ) : '';
 	$content   = isset( $input['content'] ) ? $input['content'] : '';
 	$mode      = isset( $input['mode'] ) ? sanitize_text_field( $input['mode'] ) : 'replace';

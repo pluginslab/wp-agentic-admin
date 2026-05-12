@@ -1,5 +1,5 @@
 /**
- * WP Agentic Admin - Block Editor Plugin Entry Point
+ * Agentic Admin for WordPress - Block Editor Plugin Entry Point
  *
  * Registers a PluginSidebar in the Gutenberg block editor,
  * providing AI chat functionality while editing content.
@@ -13,7 +13,7 @@ import { PluginSidebar } from '@wordpress/editor';
 import EditorSidebar from './components/EditorSidebar';
 import './styles/editor-sidebar.scss';
 
-registerPlugin( 'wp-agentic-admin', {
+registerPlugin( 'agentic-admin', {
 	icon: 'superhero-alt',
 	render: () => (
 		<PluginSidebar

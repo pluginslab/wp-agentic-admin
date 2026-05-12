@@ -1,6 +1,6 @@
 # Tool Selection at Scale (RLM Approach)
 
-As WP Agentic Admin grows from 14 abilities to 50+, a critical challenge emerges: how does a small language model (1.7B-7B parameters) efficiently select the right tool when hundreds are available?
+As Agentic Admin for WordPress grows from 14 abilities to 50+, a critical challenge emerges: how does a small language model (1.7B-7B parameters) efficiently select the right tool when hundreds are available?
 
 ## The Problem
 
@@ -55,7 +55,7 @@ More options = more confusion = worse tool selection accuracy.
 
 ### Third-Party Extensions
 
-WP Agentic Admin's extensibility means third-party plugins can register abilities:
+Agentic Admin for WordPress's extensibility means third-party plugins can register abilities:
 
 ```
 Core abilities:         14

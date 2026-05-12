@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_web_search(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_web_search(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/web-search',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Web Search', 'wp-agentic-admin' ),
-			'description'         => __( 'Search the web for documentation and troubleshooting.', 'wp-agentic-admin' ),
+			'label'               => __( 'Web Search', 'agentic-admin' ),
+			'description'         => __( 'Search the web for documentation and troubleshooting.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -31,12 +31,12 @@ function wp_agentic_admin_register_web_search(): void {
 				'properties'           => array(
 					'query'       => array(
 						'type'        => 'string',
-						'description' => __( 'Search query.', 'wp-agentic-admin' ),
+						'description' => __( 'Search query.', 'agentic-admin' ),
 					),
 					'num_results' => array(
 						'type'        => 'integer',
 						'default'     => 5,
-						'description' => __( 'Number of results to return.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of results to return.', 'agentic-admin' ),
 					),
 				),
 				'required'             => array( 'query' ),
@@ -47,19 +47,19 @@ function wp_agentic_admin_register_web_search(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the search succeeded.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the search succeeded.', 'agentic-admin' ),
 					),
 					'results' => array(
 						'type'        => 'array',
-						'description' => __( 'Search results.', 'wp-agentic-admin' ),
+						'description' => __( 'Search results.', 'agentic-admin' ),
 					),
 					'total'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of results.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of results.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_web_search',
+			'execute_callback'    => 'agentic_admin_execute_web_search',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -75,7 +75,7 @@ function wp_agentic_admin_register_web_search(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'search', 'google', 'look up', 'find', 'documentation', 'docs', 'how to' ),
-			'initialMessage' => __( "I'll search the web for that...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll search the web for that...", 'agentic-admin' ),
 		)
 	);
 }
@@ -88,7 +88,7 @@ function wp_agentic_admin_register_web_search(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_web_search( array $input = array() ): array {
+function agentic_admin_execute_web_search( array $input = array() ): array {
 	$query       = isset( $input['query'] ) ? sanitize_text_field( $input['query'] ) : '';
 	$num_results = isset( $input['num_results'] ) ? min( absint( $input['num_results'] ), 10 ) : 5;
 
@@ -124,7 +124,7 @@ function wp_agentic_admin_execute_web_search( array $input = array() ): array {
 	}
 
 	$html    = wp_remote_retrieve_body( $response );
-	$results = wp_agentic_admin_parse_ddg_html( $html, $num_results );
+	$results = agentic_admin_parse_ddg_html( $html, $num_results );
 
 	return array(
 		'success' => true,
@@ -141,7 +141,7 @@ function wp_agentic_admin_execute_web_search( array $input = array() ): array {
  * @param int    $num_results Max results to return.
  * @return array Parsed results with title, url, snippet.
  */
-function wp_agentic_admin_parse_ddg_html( string $html, int $num_results = 5 ): array {
+function agentic_admin_parse_ddg_html( string $html, int $num_results = 5 ): array {
 	$results = array();
 
 	if ( empty( $html ) ) {

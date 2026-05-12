@@ -17,20 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_plugin_activate(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_plugin_activate(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/plugin-activate',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Activate Plugin', 'wp-agentic-admin' ),
-			'description'         => __( 'Activate a specific plugin by its name or slug.', 'wp-agentic-admin' ),
+			'label'               => __( 'Activate Plugin', 'agentic-admin' ),
+			'description'         => __( 'Activate a specific plugin by its name or slug.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin name or file path (slug) to activate.', 'wp-agentic-admin' ),
+						'description' => __( 'The plugin name or file path (slug) to activate.', 'agentic-admin' ),
 					),
 				),
 				'required'             => array( 'plugin' ),
@@ -41,15 +41,15 @@ function wp_agentic_admin_register_plugin_activate(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the plugin was successfully activated.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the plugin was successfully activated.', 'agentic-admin' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_plugin_activate',
+			'execute_callback'    => 'agentic_admin_execute_plugin_activate',
 			'permission_callback' => function () {
 				return current_user_can( 'activate_plugins' );
 			},
@@ -59,14 +59,14 @@ function wp_agentic_admin_register_plugin_activate(): void {
 					'readonly'     => false,
 					'destructive'  => false, // Activation is less destructive than deactivation.
 					'idempotent'   => true,
-					'instructions' => __( 'This will activate the specified plugin. Make sure the plugin is compatible with your WordPress version.', 'wp-agentic-admin' ),
+					'instructions' => __( 'This will activate the specified plugin. Make sure the plugin is compatible with your WordPress version.', 'agentic-admin' ),
 				),
 			),
 		),
 		// JS configuration for chat interface.
 		array(
 			'keywords'             => array( 'activate', 'enable', 'turn on', 'activate plugin' ),
-			'initialMessage'       => __( 'Activating the plugin...', 'wp-agentic-admin' ),
+			'initialMessage'       => __( 'Activating the plugin...', 'agentic-admin' ),
 			'requiresConfirmation' => false, // Less risky than deactivation.
 		)
 	);
@@ -78,13 +78,13 @@ function wp_agentic_admin_register_plugin_activate(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_plugin_activate( array $input = array() ): array {
+function agentic_admin_execute_plugin_activate( array $input = array() ): array {
 	if ( empty( $input['plugin'] ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'No plugin specified.', 'wp-agentic-admin' ),
+			'message' => __( 'No plugin specified.', 'agentic-admin' ),
 		);
 	}
 
-	return wp_agentic_admin_activate_plugin_by_slug( $input['plugin'] );
+	return agentic_admin_activate_plugin_by_slug( $input['plugin'] );
 }

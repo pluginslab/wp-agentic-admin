@@ -104,19 +104,19 @@ const AdminSidebar = () => {
 
 				// Check saved provider preference
 				const savedProvider = localStorage.getItem(
-					'wp_agentic_admin_provider'
+					'agentic_admin_provider'
 				);
 
 				if ( savedProvider === 'remote' ) {
 					const url = localStorage.getItem(
-						'wp_agentic_admin_remote_url'
+						'agentic_admin_remote_url'
 					);
 					const remoteModel = localStorage.getItem(
-						'wp_agentic_admin_remote_model'
+						'agentic_admin_remote_model'
 					);
 					const apiKey =
 						localStorage.getItem(
-							'wp_agentic_admin_remote_api_key'
+							'agentic_admin_remote_api_key'
 						) || '';
 					if ( url && remoteModel ) {
 						log.info( 'Remote provider saved, auto-connecting...' );

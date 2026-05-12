@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_read_file(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_read_file(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/read-file',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Read File', 'wp-agentic-admin' ),
-			'description'         => __( 'Read a WordPress file with sensitive data (credentials, keys, salts) automatically redacted.', 'wp-agentic-admin' ),
+			'label'               => __( 'Read File', 'agentic-admin' ),
+			'description'         => __( 'Read a WordPress file with sensitive data (credentials, keys, salts) automatically redacted.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,20 +36,20 @@ function wp_agentic_admin_register_read_file(): void {
 				'properties'           => array(
 					'file_path' => array(
 						'type'        => 'string',
-						'description' => __( 'Path to the file relative to ABSPATH (e.g. wp-config.php or wp-content/themes/mytheme/functions.php).', 'wp-agentic-admin' ),
+						'description' => __( 'Path to the file relative to ABSPATH (e.g. wp-config.php or wp-content/themes/mytheme/functions.php).', 'agentic-admin' ),
 					),
 					'offset'    => array(
 						'type'        => 'integer',
 						'default'     => 0,
 						'minimum'     => 0,
-						'description' => __( 'Line number to start reading from (0-based).', 'wp-agentic-admin' ),
+						'description' => __( 'Line number to start reading from (0-based).', 'agentic-admin' ),
 					),
 					'lines'     => array(
 						'type'        => 'integer',
 						'default'     => 100,
 						'minimum'     => 1,
 						'maximum'     => 500,
-						'description' => __( 'Maximum number of lines to return.', 'wp-agentic-admin' ),
+						'description' => __( 'Maximum number of lines to return.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -59,35 +59,35 @@ function wp_agentic_admin_register_read_file(): void {
 				'properties' => array(
 					'success'        => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the file was read successfully.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the file was read successfully.', 'agentic-admin' ),
 					),
 					'message'        => array(
 						'type'        => 'string',
-						'description' => __( 'Human-readable status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Human-readable status message.', 'agentic-admin' ),
 					),
 					'file_path'      => array(
 						'type'        => 'string',
-						'description' => __( 'Resolved file path relative to ABSPATH.', 'wp-agentic-admin' ),
+						'description' => __( 'Resolved file path relative to ABSPATH.', 'agentic-admin' ),
 					),
 					'content'        => array(
 						'type'        => 'string',
-						'description' => __( 'File contents with sensitive data redacted.', 'wp-agentic-admin' ),
+						'description' => __( 'File contents with sensitive data redacted.', 'agentic-admin' ),
 					),
 					'total_lines'    => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of lines in the file.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of lines in the file.', 'agentic-admin' ),
 					),
 					'lines_returned' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of lines returned in this response.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of lines returned in this response.', 'agentic-admin' ),
 					),
 					'was_redacted'   => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether any sensitive values were redacted from the output.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether any sensitive values were redacted from the output.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_read_file',
+			'execute_callback'    => 'agentic_admin_execute_read_file',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -103,7 +103,7 @@ function wp_agentic_admin_register_read_file(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'read', 'show', 'view', 'open', 'display', 'cat', 'file', 'config', 'htaccess', 'functions.php', 'wp-config', 'wp-config.php', 'contents', 'source' ),
-			'initialMessage' => __( "I'll read that file for you...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll read that file for you...", 'agentic-admin' ),
 		)
 	);
 }
@@ -114,7 +114,7 @@ function wp_agentic_admin_register_read_file(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_read_file( array $input = array() ): array {
+function agentic_admin_execute_read_file( array $input = array() ): array {
 	$raw_path = isset( $input['file_path'] ) ? sanitize_text_field( $input['file_path'] ) : '';
 	$offset   = isset( $input['offset'] ) ? absint( $input['offset'] ) : 0;
 	$lines    = isset( $input['lines'] ) ? absint( $input['lines'] ) : 100;
@@ -123,7 +123,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 	if ( '' === $raw_path ) {
 		return array(
 			'success' => false,
-			'message' => __( 'No file path provided.', 'wp-agentic-admin' ),
+			'message' => __( 'No file path provided.', 'agentic-admin' ),
 		);
 	}
 
@@ -140,7 +140,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 		// e.g. "functions.php" → active theme, "style.css" → active theme, "wp-config.php" → ABSPATH.
 		$bare_name = basename( $raw_path );
 		if ( $bare_name === $raw_path && false === strpos( $raw_path, '/' ) ) {
-			$absolute_path = wp_agentic_admin_resolve_bare_filename( $raw_path, $abspath );
+			$absolute_path = agentic_admin_resolve_bare_filename( $raw_path, $abspath );
 		} else {
 			// Strip any leading slash before joining.
 			$absolute_path = wp_normalize_path( $abspath . ltrim( $raw_path, '/\\' ) );
@@ -155,7 +155,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 			'success' => false,
 			'message' => sprintf(
 				/* translators: %s: file path */
-				__( 'File not found: %s', 'wp-agentic-admin' ),
+				__( 'File not found: %s', 'agentic-admin' ),
 				$raw_path
 			),
 		);
@@ -168,21 +168,21 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 	if ( ! str_starts_with( $real_path, $real_abspath ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'Access denied: file is outside the WordPress root directory.', 'wp-agentic-admin' ),
+			'message' => __( 'Access denied: file is outside the WordPress root directory.', 'agentic-admin' ),
 		);
 	}
 
 	if ( ! is_readable( $real_path ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'File exists but is not readable.', 'wp-agentic-admin' ),
+			'message' => __( 'File exists but is not readable.', 'agentic-admin' ),
 		);
 	}
 
 	if ( is_dir( $real_path ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'Path points to a directory, not a file.', 'wp-agentic-admin' ),
+			'message' => __( 'Path points to a directory, not a file.', 'agentic-admin' ),
 		);
 	}
 
@@ -209,7 +209,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 	$content = implode( "\n", $all_lines );
 
 	// Redact sensitive values before the content leaves PHP.
-	list( $content, $was_redacted ) = wp_agentic_admin_redact_sensitive_data( $content );
+	list( $content, $was_redacted ) = agentic_admin_redact_sensitive_data( $content );
 
 	$relative_path = ltrim( str_replace( $real_abspath, '', $real_path ), '/' );
 
@@ -217,7 +217,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
 		'success'        => true,
 		'message'        => sprintf(
 			/* translators: %s: file path */
-			__( 'Read file: %s', 'wp-agentic-admin' ),
+			__( 'Read file: %s', 'agentic-admin' ),
 			$relative_path
 		),
 		'file_path'      => $relative_path,
@@ -238,7 +238,7 @@ function wp_agentic_admin_execute_read_file( array $input = array() ): array {
  * @param string $abspath  Normalised ABSPATH.
  * @return string Absolute path to the best candidate (may not exist).
  */
-function wp_agentic_admin_resolve_bare_filename( string $filename, string $abspath ): string {
+function agentic_admin_resolve_bare_filename( string $filename, string $abspath ): string {
 	// Always-at-root files.
 	$root_files = array( 'wp-config.php', '.htaccess', 'robots.txt', 'wp-login.php', 'wp-cron.php', 'xmlrpc.php', 'index.php' );
 	if ( in_array( $filename, $root_files, true ) ) {
@@ -269,7 +269,7 @@ function wp_agentic_admin_resolve_bare_filename( string $filename, string $abspa
  * @param string $content Raw file content.
  * @return array{0: string, 1: bool} Tuple of [redacted content, whether any values were replaced].
  */
-function wp_agentic_admin_redact_sensitive_data( string $content ): array {
+function agentic_admin_redact_sensitive_data( string $content ): array {
 	$was_redacted = false;
 
 	// Redact any define() where the constant name looks sensitive.

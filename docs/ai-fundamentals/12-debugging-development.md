@@ -1,6 +1,6 @@
 # Debugging & Development
 
-A comprehensive guide to debugging issues, monitoring performance, and developing new features for WP Agentic Admin.
+A comprehensive guide to debugging issues, monitoring performance, and developing new features for Agentic Admin for WordPress.
 
 ## Development Environment Setup
 
@@ -182,7 +182,7 @@ Monitor REST API calls:
 
 ## Test Hook API
 
-WP Agentic Admin exposes `window.__wpAgenticTestHook` for debugging:
+Agentic Admin for WordPress exposes `window.__wpAgenticTestHook` for debugging:
 
 ### Available Methods
 
@@ -537,7 +537,7 @@ See [TESTING.md](../../tests/TESTING.md) for complete E2E testing guide.
 
 ### JavaScript Logging
 
-WP Agentic Admin uses a centralized logger:
+Agentic Admin for WordPress uses a centralized logger:
 
 ```javascript
 import { log } from '../utils/logger';
@@ -733,7 +733,7 @@ When something isn't working, check:
 
 ## Summary
 
-Debugging WP Agentic Admin requires familiarity with browser DevTools (Console, Network, Application, Performance tabs), the test hook API for inspecting ReAct execution, and common troubleshooting patterns (model loading, Service Worker state, ability execution). Development workflow involves building assets, testing with unit tests and E2E suites, and following WordPress coding standards. The centralized logging system and performance profiling utilities help diagnose issues and optimize performance.
+Debugging Agentic Admin for WordPress requires familiarity with browser DevTools (Console, Network, Application, Performance tabs), the test hook API for inspecting ReAct execution, and common troubleshooting patterns (model loading, Service Worker state, ability execution). Development workflow involves building assets, testing with unit tests and E2E suites, and following WordPress coding standards. The centralized logging system and performance profiling utilities help diagnose issues and optimize performance.
 
 **End of AI Fundamentals Guide**
 

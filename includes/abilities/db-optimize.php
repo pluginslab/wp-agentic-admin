@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_db_optimize(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_db_optimize(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/db-optimize',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Optimize Database', 'wp-agentic-admin' ),
-			'description'         => __( 'Optimize WordPress database tables.', 'wp-agentic-admin' ),
+			'label'               => __( 'Optimize Database', 'agentic-admin' ),
+			'description'         => __( 'Optimize WordPress database tables.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,20 +36,20 @@ function wp_agentic_admin_register_db_optimize(): void {
 				'properties' => array(
 					'success'          => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the optimization was successful.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the optimization was successful.', 'agentic-admin' ),
 					),
 					'tables_optimized' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of tables optimized.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of tables optimized.', 'agentic-admin' ),
 					),
 					'tables'           => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'List of optimized table names.', 'wp-agentic-admin' ),
+						'description' => __( 'List of optimized table names.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_db_optimize',
+			'execute_callback'    => 'agentic_admin_execute_db_optimize',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -65,7 +65,7 @@ function wp_agentic_admin_register_db_optimize(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'database', 'db', 'optimize', 'slow', 'performance', 'speed', 'cleanup', 'clean up' ),
-			'initialMessage' => __( 'Optimizing the database...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Optimizing the database...', 'agentic-admin' ),
 		)
 	);
 }
@@ -76,7 +76,7 @@ function wp_agentic_admin_register_db_optimize(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_db_optimize( array $input = array() ): array {
+function agentic_admin_execute_db_optimize( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Required for database optimization.
 	global $wpdb;

@@ -18,13 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_verify_core_checksums(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_verify_core_checksums(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/verify-core-checksums',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Verify Core Checksums', 'wp-agentic-admin' ),
-			'description'         => __( 'Verify WordPress core file checksums against the official API and show diffs for modified files.', 'wp-agentic-admin' ),
+			'label'               => __( 'Verify Core Checksums', 'agentic-admin' ),
+			'description'         => __( 'Verify WordPress core file checksums against the official API and show diffs for modified files.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -32,7 +32,7 @@ function wp_agentic_admin_register_verify_core_checksums(): void {
 				'properties'           => array(
 					'include_diffs' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Include diffs for modified files by fetching originals from WordPress.org.', 'wp-agentic-admin' ),
+						'description' => __( 'Include diffs for modified files by fetching originals from WordPress.org.', 'agentic-admin' ),
 						'default'     => true,
 					),
 				),
@@ -43,39 +43,39 @@ function wp_agentic_admin_register_verify_core_checksums(): void {
 				'properties' => array(
 					'success'           => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the checksum verification completed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the checksum verification completed.', 'agentic-admin' ),
 					),
 					'message'           => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'wordpress_version' => array(
 						'type'        => 'string',
-						'description' => __( 'WordPress version checked.', 'wp-agentic-admin' ),
+						'description' => __( 'WordPress version checked.', 'agentic-admin' ),
 					),
 					'total_files'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Total core files checked.', 'wp-agentic-admin' ),
+						'description' => __( 'Total core files checked.', 'agentic-admin' ),
 					),
 					'failed_count'      => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of files with checksum mismatches.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of files with checksum mismatches.', 'agentic-admin' ),
 					),
 					'missing_count'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of missing core files.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of missing core files.', 'agentic-admin' ),
 					),
 					'extra_count'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of unknown files found in core directories.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of unknown files found in core directories.', 'agentic-admin' ),
 					),
 					'failed_files'      => array(
 						'type'        => 'array',
-						'description' => __( 'List of files that failed verification.', 'wp-agentic-admin' ),
+						'description' => __( 'List of files that failed verification.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_verify_core_checksums',
+			'execute_callback'    => 'agentic_admin_execute_verify_core_checksums',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -91,7 +91,7 @@ function wp_agentic_admin_register_verify_core_checksums(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'checksum', 'verify', 'integrity', 'hacked', 'compromised', 'modified', 'core', 'security', 'malware', 'tampered', 'changed files' ),
-			'initialMessage' => __( 'Verifying WordPress core file checksums...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Verifying WordPress core file checksums...', 'agentic-admin' ),
 		)
 	);
 }
@@ -102,7 +102,7 @@ function wp_agentic_admin_register_verify_core_checksums(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_verify_core_checksums( array $input = array() ): array {
+function agentic_admin_execute_verify_core_checksums( array $input = array() ): array {
 	$include_diffs = isset( $input['include_diffs'] ) ? (bool) $input['include_diffs'] : true;
 	$wp_version    = get_bloginfo( 'version' );
 	$locale        = get_locale();
@@ -119,7 +119,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 			'success'           => false,
 			'message'           => sprintf(
 				/* translators: %s: WordPress version */
-				__( 'Could not retrieve checksums for WordPress %s.', 'wp-agentic-admin' ),
+				__( 'Could not retrieve checksums for WordPress %s.', 'agentic-admin' ),
 				$wp_version
 			),
 			'wordpress_version' => $wp_version,
@@ -159,7 +159,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 			$failed_files[] = array(
 				'file'   => $file,
 				'status' => 'missing',
-				'detail' => __( 'File does not exist but is expected in WordPress core.', 'wp-agentic-admin' ),
+				'detail' => __( 'File does not exist but is expected in WordPress core.', 'agentic-admin' ),
 			);
 			continue;
 		}
@@ -176,7 +176,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 			);
 
 			if ( $include_diffs ) {
-				$diff = wp_agentic_admin_get_core_file_diff( $file, $wp_version, $file_path );
+				$diff = agentic_admin_get_core_file_diff( $file, $wp_version, $file_path );
 				if ( null !== $diff ) {
 					$entry['diff'] = $diff;
 				}
@@ -189,14 +189,14 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 	// Scan for extra/unknown files, matching WP-CLI's core verify-checksums behavior:
 	// 1. Recursively scan wp-admin/ and wp-includes/.
 	// 2. Check root-level wp-* files (excluding wp-config.php).
-	$extra_files = wp_agentic_admin_find_extra_core_files( $known_files );
+	$extra_files = agentic_admin_find_extra_core_files( $known_files );
 
 	foreach ( $extra_files as $extra_file ) {
 		++$extra_count;
 		$failed_files[] = array(
 			'file'   => $extra_file,
 			'status' => 'extra',
-			'detail' => __( 'File is not part of WordPress core and should not be in this directory.', 'wp-agentic-admin' ),
+			'detail' => __( 'File is not part of WordPress core and should not be in this directory.', 'agentic-admin' ),
 		);
 	}
 
@@ -205,7 +205,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 	if ( 0 === $failed_count ) {
 		$message = sprintf(
 			/* translators: 1: total files, 2: WordPress version */
-			__( 'All %1$d core files passed checksum verification for WordPress %2$s. No extra files detected.', 'wp-agentic-admin' ),
+			__( 'All %1$d core files passed checksum verification for WordPress %2$s. No extra files detected.', 'agentic-admin' ),
 			$total_files,
 			$wp_version
 		);
@@ -215,7 +215,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 		if ( $modified_count > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of modified files */
-				_n( '%d modified file', '%d modified files', $modified_count, 'wp-agentic-admin' ),
+				_n( '%d modified file', '%d modified files', $modified_count, 'agentic-admin' ),
 				$modified_count
 			);
 		}
@@ -223,7 +223,7 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 		if ( $missing_count > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of missing files */
-				_n( '%d missing file', '%d missing files', $missing_count, 'wp-agentic-admin' ),
+				_n( '%d missing file', '%d missing files', $missing_count, 'agentic-admin' ),
 				$missing_count
 			);
 		}
@@ -231,14 +231,14 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
 		if ( $extra_count > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of extra files */
-				_n( '%d unknown extra file', '%d unknown extra files', $extra_count, 'wp-agentic-admin' ),
+				_n( '%d unknown extra file', '%d unknown extra files', $extra_count, 'agentic-admin' ),
 				$extra_count
 			);
 		}
 
 		$message = sprintf(
 			/* translators: 1: failure details, 2: total files, 3: WordPress version */
-			__( 'Checksum verification found %1$s out of %2$d core files for WordPress %3$s.', 'wp-agentic-admin' ),
+			__( 'Checksum verification found %1$s out of %2$d core files for WordPress %3$s.', 'agentic-admin' ),
 			implode( ', ', $parts ),
 			$total_files,
 			$wp_version
@@ -268,14 +268,14 @@ function wp_agentic_admin_execute_verify_core_checksums( array $input = array() 
  * @param string $file_path Absolute path to the local file.
  * @return string|null Unified diff string, or null on failure.
  */
-function wp_agentic_admin_get_core_file_diff( string $file, string $version, string $file_path ): ?string {
+function agentic_admin_get_core_file_diff( string $file, string $version, string $file_path ): ?string {
 	$original_url = sprintf(
 		'https://core.svn.wordpress.org/tags/%s/%s',
 		$version,
 		$file
 	);
 
-	return wp_agentic_admin_get_remote_file_diff( $original_url, $file_path, "a/{$file}", "b/{$file}" );
+	return agentic_admin_get_remote_file_diff( $original_url, $file_path, "a/{$file}", "b/{$file}" );
 }
 
 /**
@@ -291,7 +291,7 @@ function wp_agentic_admin_get_core_file_diff( string $file, string $version, str
  * @param array $known_files Associative array of known core file paths from checksums.
  * @return array List of extra file paths (relative to ABSPATH).
  */
-function wp_agentic_admin_find_extra_core_files( array $known_files ): array {
+function agentic_admin_find_extra_core_files( array $known_files ): array {
 	$extra_files = array();
 
 	// 1. Recursively scan wp-admin/ and wp-includes/.

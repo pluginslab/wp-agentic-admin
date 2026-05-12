@@ -1,6 +1,6 @@
 # Running AI in the Browser
 
-Most AI tools today send your data to cloud servers for processing. WP Agentic Admin takes a different approach: the AI runs entirely in your web browser.
+Most AI tools today send your data to cloud servers for processing. Agentic Admin for WordPress takes a different approach: the AI runs entirely in your web browser.
 
 ## Traditional Approach: Cloud APIs
 
@@ -26,7 +26,7 @@ For WordPress admin tasks, this means your site's error logs, plugin lists, data
 
 ## Browser-Based AI: Local Processing
 
-WP Agentic Admin downloads the AI model once to your browser and runs it locally:
+Agentic Admin for WordPress downloads the AI model once to your browser and runs it locally:
 
 ```
 Your Computer (Browser → GPU → AI Model → Response)
@@ -70,7 +70,7 @@ Cloud API pricing adds up:
 
 With 100 diagnostic sessions per month, you could easily spend $50-200/month.
 
-**WP Agentic Admin:** $0/month after the initial model download.
+**Agentic Admin for WordPress:** $0/month after the initial model download.
 
 ### 3. No Rate Limits
 
@@ -83,7 +83,7 @@ During a critical outage, you might hit rate limits when you need AI assistance 
 
 ### 4. Offline Capability
 
-Once the model is downloaded, WP Agentic Admin works without internet:
+Once the model is downloaded, Agentic Admin for WordPress works without internet:
 - Diagnose issues on local development sites
 - Work from locations with unreliable connectivity
 - No dependency on external service uptime
@@ -118,7 +118,7 @@ The model is stored in your browser's cache (IndexedDB), not re-downloaded on ev
 
 ## Multi-Tab Support via Service Worker
 
-Browser-based AI has a challenge: when you navigate to a different WordPress admin page, the model is typically unloaded from memory. WP Agentic Admin solves this with [Service Worker persistence](07-service-worker-persistence.md) — the model stays loaded even when you switch pages.
+Browser-based AI has a challenge: when you navigate to a different WordPress admin page, the model is typically unloaded from memory. Agentic Admin for WordPress solves this with [Service Worker persistence](07-service-worker-persistence.md) — the model stays loaded even when you switch pages.
 
 ## Security Considerations
 
@@ -148,7 +148,7 @@ Browser-based AI isn't always the best choice:
 - You work offline frequently
 - You want no rate limits
 
-WP Agentic Admin's Hackathon Goal #3 is to support both modes, giving users choice.
+Agentic Admin for WordPress's Hackathon Goal #3 is to support both modes, giving users choice.
 
 ## Summary
 

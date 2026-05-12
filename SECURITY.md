@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in WP Agentic Admin, please report it responsibly.
+If you discover a security vulnerability in Agentic Admin for WordPress, please report it responsibly.
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
@@ -12,7 +12,7 @@ You should receive a response within 48 hours. We will work with you to understa
 
 ## Scope
 
-This policy covers the WP Agentic Admin WordPress plugin, including:
+This policy covers the Agentic Admin for WordPress WordPress plugin, including:
 
 - PHP backend code (REST API endpoints, abilities, settings)
 - JavaScript frontend code (React components, service worker, chat interface)

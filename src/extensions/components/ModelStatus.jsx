@@ -28,11 +28,11 @@ const log = createLogger( 'ModelStatus' );
  * localStorage keys for provider settings
  */
 const STORAGE_KEYS = {
-	model: 'wp_agentic_admin_model',
-	provider: 'wp_agentic_admin_provider',
-	remoteUrl: 'wp_agentic_admin_remote_url',
-	remoteModel: 'wp_agentic_admin_remote_model',
-	remoteApiKey: 'wp_agentic_admin_remote_api_key',
+	model: 'agentic_admin_model',
+	provider: 'agentic_admin_provider',
+	remoteUrl: 'agentic_admin_remote_url',
+	remoteModel: 'agentic_admin_remote_model',
+	remoteApiKey: 'agentic_admin_remote_api_key',
 };
 
 /**

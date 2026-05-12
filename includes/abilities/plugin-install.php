@@ -17,24 +17,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_plugin_install(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_plugin_install(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/plugin-install',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Install Plugin', 'wp-agentic-admin' ),
-			'description'         => __( 'Install a plugin from the WordPress.org plugin directory by name or slug.', 'wp-agentic-admin' ),
+			'label'               => __( 'Install Plugin', 'agentic-admin' ),
+			'description'         => __( 'Install a plugin from the WordPress.org plugin directory by name or slug.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin'   => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin name or slug to install from WordPress.org.', 'wp-agentic-admin' ),
+						'description' => __( 'The plugin name or slug to install from WordPress.org.', 'agentic-admin' ),
 					),
 					'activate' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether to activate the plugin after installing.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether to activate the plugin after installing.', 'agentic-admin' ),
 						'default'     => false,
 					),
 				),
@@ -46,15 +46,15 @@ function wp_agentic_admin_register_plugin_install(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the plugin was successfully installed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the plugin was successfully installed.', 'agentic-admin' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_plugin_install',
+			'execute_callback'    => 'agentic_admin_execute_plugin_install',
 			'permission_callback' => function () {
 				return current_user_can( 'install_plugins' );
 			},
@@ -64,14 +64,14 @@ function wp_agentic_admin_register_plugin_install(): void {
 					'readonly'     => false,
 					'destructive'  => false,
 					'idempotent'   => true,
-					'instructions' => __( 'This will download and install a plugin from WordPress.org. The plugin will not be activated unless explicitly requested.', 'wp-agentic-admin' ),
+					'instructions' => __( 'This will download and install a plugin from WordPress.org. The plugin will not be activated unless explicitly requested.', 'agentic-admin' ),
 				),
 			),
 		),
 		// JS configuration for chat interface.
 		array(
 			'keywords'             => array( 'install', 'download', 'add plugin', 'get plugin', 'install plugin' ),
-			'initialMessage'       => __( 'Installing the plugin...', 'wp-agentic-admin' ),
+			'initialMessage'       => __( 'Installing the plugin...', 'agentic-admin' ),
 			'requiresConfirmation' => true,
 		)
 	);
@@ -83,11 +83,11 @@ function wp_agentic_admin_register_plugin_install(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_plugin_install( array $input = array() ): array {
+function agentic_admin_execute_plugin_install( array $input = array() ): array {
 	if ( empty( $input['plugin'] ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'No plugin specified.', 'wp-agentic-admin' ),
+			'message' => __( 'No plugin specified.', 'agentic-admin' ),
 		);
 	}
 
@@ -102,21 +102,21 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 	if ( '' === $plugin_slug ) {
 		return array(
 			'success' => false,
-			'message' => __( 'Invalid plugin slug.', 'wp-agentic-admin' ),
+			'message' => __( 'Invalid plugin slug.', 'agentic-admin' ),
 		);
 	}
 
 	// Check if plugin is already installed.
-	$resolved = wp_agentic_admin_resolve_plugin( $plugin_slug );
+	$resolved = agentic_admin_resolve_plugin( $plugin_slug );
 	if ( null !== $resolved['plugin_file'] && $resolved['certainty'] >= 8.0 ) {
-		$plugin_data = wp_agentic_admin_get_plugin_by_slug( $resolved['plugin_file'] );
-		$status      = $plugin_data && $plugin_data['active'] ? __( 'active', 'wp-agentic-admin' ) : __( 'inactive', 'wp-agentic-admin' );
+		$plugin_data = agentic_admin_get_plugin_by_slug( $resolved['plugin_file'] );
+		$status      = $plugin_data && $plugin_data['active'] ? __( 'active', 'agentic-admin' ) : __( 'inactive', 'agentic-admin' );
 
 		return array(
 			'success'       => true,
 			'message'       => sprintf(
 				/* translators: 1: plugin name, 2: plugin status */
-				__( 'Plugin "%1$s" is already installed (%2$s).', 'wp-agentic-admin' ),
+				__( 'Plugin "%1$s" is already installed (%2$s).', 'agentic-admin' ),
 				$resolved['plugin_name'],
 				$status
 			),
@@ -164,7 +164,7 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 			'success' => false,
 			'message' => sprintf(
 				/* translators: 1: plugin slug, 2: error message */
-				__( 'Could not find plugin "%1$s" on WordPress.org: %2$s', 'wp-agentic-admin' ),
+				__( 'Could not find plugin "%1$s" on WordPress.org: %2$s', 'agentic-admin' ),
 				$plugin_slug,
 				$api->get_error_message()
 			),
@@ -177,7 +177,7 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 			'success' => false,
 			'message' => sprintf(
 				/* translators: %s: plugin name */
-				__( 'No download link available for "%s".', 'wp-agentic-admin' ),
+				__( 'No download link available for "%s".', 'agentic-admin' ),
 				$api->name ?? $plugin_slug
 			),
 		);
@@ -193,7 +193,7 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 			'success' => false,
 			'message' => sprintf(
 				/* translators: 1: plugin name, 2: error message */
-				__( 'Failed to install "%1$s": %2$s', 'wp-agentic-admin' ),
+				__( 'Failed to install "%1$s": %2$s', 'agentic-admin' ),
 				$api->name,
 				$result->get_error_message()
 			),
@@ -210,14 +210,14 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 		} elseif ( ! empty( $feedback ) ) {
 			$error_msg = implode( ' ', $feedback );
 		} else {
-			$error_msg = __( 'Unknown error during installation.', 'wp-agentic-admin' );
+			$error_msg = __( 'Unknown error during installation.', 'agentic-admin' );
 		}
 
 		return array(
 			'success' => false,
 			'message' => sprintf(
 				/* translators: 1: plugin name, 2: error message */
-				__( 'Failed to install "%1$s": %2$s', 'wp-agentic-admin' ),
+				__( 'Failed to install "%1$s": %2$s', 'agentic-admin' ),
 				$api->name,
 				$error_msg
 			),
@@ -231,7 +231,7 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 		// Clear the plugin cache so get_plugins() picks up the new plugin.
 		wp_clean_plugins_cache();
 
-		$installed = wp_agentic_admin_resolve_plugin( $plugin_slug );
+		$installed = agentic_admin_resolve_plugin( $plugin_slug );
 		if ( null !== $installed['plugin_file'] ) {
 			$activate_result = activate_plugin( $installed['plugin_file'] );
 			$activated       = ! is_wp_error( $activate_result );
@@ -240,20 +240,20 @@ function wp_agentic_admin_execute_plugin_install( array $input = array() ): arra
 
 	$message = sprintf(
 		/* translators: %s: plugin name */
-		__( 'Plugin "%s" has been installed successfully.', 'wp-agentic-admin' ),
+		__( 'Plugin "%s" has been installed successfully.', 'agentic-admin' ),
 		$api->name
 	);
 
 	if ( $activate && $activated ) {
 		$message = sprintf(
 			/* translators: %s: plugin name */
-			__( 'Plugin "%s" has been installed and activated successfully.', 'wp-agentic-admin' ),
+			__( 'Plugin "%s" has been installed and activated successfully.', 'agentic-admin' ),
 			$api->name
 		);
 	} elseif ( $activate && ! $activated ) {
 		$message = sprintf(
 			/* translators: %s: plugin name */
-			__( 'Plugin "%s" was installed but could not be activated.', 'wp-agentic-admin' ),
+			__( 'Plugin "%s" was installed but could not be activated.', 'agentic-admin' ),
 			$api->name
 		);
 	}

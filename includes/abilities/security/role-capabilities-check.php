@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_role_capabilities_check(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_role_capabilities_check(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/role-capabilities-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Check Role Capabilities', 'wp-agentic-admin' ),
-			'description'         => __( 'Compare site role capabilities against WordPress defaults to detect privilege escalation or tampering.', 'wp-agentic-admin' ),
+			'label'               => __( 'Check Role Capabilities', 'agentic-admin' ),
+			'description'         => __( 'Compare site role capabilities against WordPress defaults to detect privilege escalation or tampering.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -38,27 +38,27 @@ function wp_agentic_admin_register_role_capabilities_check(): void {
 				'properties' => array(
 					'success'      => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the check completed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the check completed.', 'agentic-admin' ),
 					),
 					'message'      => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'total_issues' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total differences found.', 'wp-agentic-admin' ),
+						'description' => __( 'Total differences found.', 'agentic-admin' ),
 					),
 					'roles'        => array(
 						'type'        => 'array',
-						'description' => __( 'Per-role comparison results.', 'wp-agentic-admin' ),
+						'description' => __( 'Per-role comparison results.', 'agentic-admin' ),
 					),
 					'extra_roles'  => array(
 						'type'        => 'array',
-						'description' => __( 'Roles that do not exist in default WordPress.', 'wp-agentic-admin' ),
+						'description' => __( 'Roles that do not exist in default WordPress.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_role_capabilities_check',
+			'execute_callback'    => 'agentic_admin_execute_role_capabilities_check',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -74,7 +74,7 @@ function wp_agentic_admin_register_role_capabilities_check(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'role', 'roles', 'capabilities', 'permissions', 'privilege', 'escalation', 'user role', 'subscriber', 'editor', 'admin capabilities' ),
-			'initialMessage' => __( 'Comparing role capabilities against WordPress defaults...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Comparing role capabilities against WordPress defaults...', 'agentic-admin' ),
 		)
 	);
 }
@@ -85,9 +85,9 @@ function wp_agentic_admin_register_role_capabilities_check(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_role_capabilities_check( array $input = array() ): array {
+function agentic_admin_execute_role_capabilities_check( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
-	$defaults     = wp_agentic_admin_get_default_role_capabilities();
+	$defaults     = agentic_admin_get_default_role_capabilities();
 	$current      = wp_roles()->roles;
 	$roles_result = array();
 	$total_issues = 0;
@@ -120,7 +120,7 @@ function wp_agentic_admin_execute_role_capabilities_check( array $input = array(
 		++$total_issues;
 
 		// Risk depends on which role gained capabilities.
-		$risk = wp_agentic_admin_calculate_role_risk( $role_slug, $added, $removed );
+		$risk = agentic_admin_calculate_role_risk( $role_slug, $added, $removed );
 
 		$roles_result[] = array(
 			'role'       => $role_slug,
@@ -156,26 +156,26 @@ function wp_agentic_admin_execute_role_capabilities_check( array $input = array(
 	}
 
 	if ( 0 === $total_issues && empty( $extra_roles ) ) {
-		$message = __( 'All default WordPress roles match their expected capabilities. No modifications detected.', 'wp-agentic-admin' );
+		$message = __( 'All default WordPress roles match their expected capabilities. No modifications detected.', 'agentic-admin' );
 	} else {
 		$parts = array();
 		if ( $total_issues > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of modified roles */
-				_n( '%d default role modified', '%d default roles modified', $total_issues, 'wp-agentic-admin' ),
+				_n( '%d default role modified', '%d default roles modified', $total_issues, 'agentic-admin' ),
 				$total_issues
 			);
 		}
 		if ( ! empty( $extra_roles ) ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of extra roles */
-				_n( '%d non-default role found', '%d non-default roles found', count( $extra_roles ), 'wp-agentic-admin' ),
+				_n( '%d non-default role found', '%d non-default roles found', count( $extra_roles ), 'agentic-admin' ),
 				count( $extra_roles )
 			);
 		}
 		$message = sprintf(
 			/* translators: %s: details */
-			__( 'Role capabilities check: %s.', 'wp-agentic-admin' ),
+			__( 'Role capabilities check: %s.', 'agentic-admin' ),
 			implode( ', ', $parts )
 		);
 	}
@@ -201,7 +201,7 @@ function wp_agentic_admin_execute_role_capabilities_check( array $input = array(
  * @param array  $removed   Capabilities removed from defaults.
  * @return float Risk score 1.0–10.0.
  */
-function wp_agentic_admin_calculate_role_risk( string $role_slug, array $added, array $removed ): float {
+function agentic_admin_calculate_role_risk( string $role_slug, array $added, array $removed ): float {
 	if ( empty( $added ) ) {
 		// Only removals — likely intentional hardening.
 		return 3.0;
@@ -237,7 +237,7 @@ function wp_agentic_admin_calculate_role_risk( string $role_slug, array $added, 
  *
  * @return array Associative array of role => capabilities (cap => true).
  */
-function wp_agentic_admin_get_default_role_capabilities(): array {
+function agentic_admin_get_default_role_capabilities(): array {
 	/**
 	 * Filters the default role capabilities used as the baseline comparison.
 	 *
@@ -246,7 +246,7 @@ function wp_agentic_admin_get_default_role_capabilities(): array {
 	 * @param array $defaults Associative array of role => capabilities.
 	 */
 	return apply_filters(
-		'wp_agentic_admin_default_role_capabilities',
+		'agentic_admin_default_role_capabilities',
 		array(
 			'administrator' => array(
 				'switch_themes'          => true,

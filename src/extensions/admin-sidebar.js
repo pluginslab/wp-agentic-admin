@@ -1,5 +1,5 @@
 /**
- * WP Agentic Admin - Admin Sidebar Entry Point
+ * Agentic Admin for WordPress - Admin Sidebar Entry Point
  *
  * Renders an AI chat sidebar on all wp-admin pages.
  * Toggled via a superhero icon in the WordPress admin bar.

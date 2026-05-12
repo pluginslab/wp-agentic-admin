@@ -19,27 +19,27 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_revision_cleanup(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_revision_cleanup(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/revision-cleanup',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Clean Up Revisions', 'wp-agentic-admin' ),
-			'description'         => __( 'Delete old post revisions to reduce database size.', 'wp-agentic-admin' ),
+			'label'               => __( 'Clean Up Revisions', 'agentic-admin' ),
+			'description'         => __( 'Delete old post revisions to reduce database size.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'keep_last' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of revisions to keep per post. Set to 0 to delete all revisions.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of revisions to keep per post. Set to 0 to delete all revisions.', 'agentic-admin' ),
 						'default'     => 3,
 						'minimum'     => 0,
 						'maximum'     => 100,
 					),
 					'dry_run'   => array(
 						'type'        => 'boolean',
-						'description' => __( 'If true, only report what would be deleted without actually deleting.', 'wp-agentic-admin' ),
+						'description' => __( 'If true, only report what would be deleted without actually deleting.', 'agentic-admin' ),
 						'default'     => false,
 					),
 				),
@@ -50,35 +50,35 @@ function wp_agentic_admin_register_revision_cleanup(): void {
 				'properties' => array(
 					'success'         => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the operation was successful.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the operation was successful.', 'agentic-admin' ),
 					),
 					'message'         => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'deleted_count'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of revisions deleted.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of revisions deleted.', 'agentic-admin' ),
 					),
 					'total_revisions' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total revisions before cleanup.', 'wp-agentic-admin' ),
+						'description' => __( 'Total revisions before cleanup.', 'agentic-admin' ),
 					),
 					'kept_count'      => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of revisions kept.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of revisions kept.', 'agentic-admin' ),
 					),
 					'dry_run'         => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether this was a dry run.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether this was a dry run.', 'agentic-admin' ),
 					),
 					'space_saved'     => array(
 						'type'        => 'string',
-						'description' => __( 'Estimated space saved.', 'wp-agentic-admin' ),
+						'description' => __( 'Estimated space saved.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_revision_cleanup',
+			'execute_callback'    => 'agentic_admin_execute_revision_cleanup',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -94,7 +94,7 @@ function wp_agentic_admin_register_revision_cleanup(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'revision', 'revisions', 'cleanup', 'clean', 'delete', 'post', 'database', 'bloat', 'space' ),
-			'initialMessage' => __( 'Analyzing post revisions...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Analyzing post revisions...', 'agentic-admin' ),
 		)
 	);
 }
@@ -105,7 +105,7 @@ function wp_agentic_admin_register_revision_cleanup(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_revision_cleanup( array $input = array() ): array {
+function agentic_admin_execute_revision_cleanup( array $input = array() ): array {
 	global $wpdb;
 
 	$keep_last = isset( $input['keep_last'] ) ? absint( $input['keep_last'] ) : 3;
@@ -127,7 +127,7 @@ function wp_agentic_admin_execute_revision_cleanup( array $input = array() ): ar
 	if ( 0 === $total_revisions ) {
 		return array(
 			'success'         => true,
-			'message'         => __( 'No revisions found. Your database is already clean!', 'wp-agentic-admin' ),
+			'message'         => __( 'No revisions found. Your database is already clean!', 'agentic-admin' ),
 			'deleted_count'   => 0,
 			'total_revisions' => 0,
 			'kept_count'      => 0,
@@ -169,7 +169,7 @@ function wp_agentic_admin_execute_revision_cleanup( array $input = array() ): ar
 	if ( 0 === $delete_count ) {
 		$message = sprintf(
 			/* translators: 1: total revisions, 2: keep_last setting */
-			__( 'Found %1$d revisions. All posts have %2$d or fewer revisions, nothing to delete.', 'wp-agentic-admin' ),
+			__( 'Found %1$d revisions. All posts have %2$d or fewer revisions, nothing to delete.', 'agentic-admin' ),
 			$total_revisions,
 			$keep_last
 		);
@@ -191,7 +191,7 @@ function wp_agentic_admin_execute_revision_cleanup( array $input = array() ): ar
 	if ( $dry_run ) {
 		$message = sprintf(
 			/* translators: 1: delete count, 2: total revisions, 3: space saved */
-			__( 'Dry run: Would delete %1$d of %2$d revisions (estimated %3$s). Run without dry_run to actually delete.', 'wp-agentic-admin' ),
+			__( 'Dry run: Would delete %1$d of %2$d revisions (estimated %3$s). Run without dry_run to actually delete.', 'agentic-admin' ),
 			$delete_count,
 			$total_revisions,
 			$space_saved
@@ -209,7 +209,7 @@ function wp_agentic_admin_execute_revision_cleanup( array $input = array() ): ar
 
 		$message = sprintf(
 			/* translators: 1: deleted count, 2: total revisions, 3: kept count, 4: space saved */
-			__( 'Deleted %1$d revisions. Kept %3$d most recent revisions per post. Estimated space saved: %4$s.', 'wp-agentic-admin' ),
+			__( 'Deleted %1$d revisions. Kept %3$d most recent revisions per post. Estimated space saved: %4$s.', 'agentic-admin' ),
 			$deleted,
 			$total_revisions,
 			$kept_count,

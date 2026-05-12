@@ -42,8 +42,8 @@ const REMOTE_CONTEXT_OPTIONS = [
 	{ label: '131,072 tokens (128K)', value: '131072' },
 ];
 
-const STORAGE_KEY = 'wp_agentic_admin_context_size';
-const REMOTE_CONTEXT_KEY = 'wp_agentic_admin_remote_context_size';
+const STORAGE_KEY = 'agentic_admin_context_size';
+const REMOTE_CONTEXT_KEY = 'agentic_admin_remote_context_size';
 
 function getSavedContextSizes() {
 	try {
@@ -60,7 +60,7 @@ function saveContextSize( modelId, size ) {
 	localStorage.setItem( STORAGE_KEY, JSON.stringify( saved ) );
 }
 
-const THINKING_STORAGE_KEY = 'wp_agentic_admin_thinking';
+const THINKING_STORAGE_KEY = 'agentic_admin_thinking';
 
 function getSavedThinkingPrefs() {
 	try {

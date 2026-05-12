@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_query_database(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_query_database(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/query-database',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Query Database', 'wp-agentic-admin' ),
-			'description'         => __( 'Execute read-only SQL queries for site inspection.', 'wp-agentic-admin' ),
+			'label'               => __( 'Query Database', 'agentic-admin' ),
+			'description'         => __( 'Execute read-only SQL queries for site inspection.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -31,7 +31,7 @@ function wp_agentic_admin_register_query_database(): void {
 				'properties'           => array(
 					'query' => array(
 						'type'        => 'string',
-						'description' => __( 'SQL SELECT query to execute.', 'wp-agentic-admin' ),
+						'description' => __( 'SQL SELECT query to execute.', 'agentic-admin' ),
 					),
 				),
 				'required'             => array( 'query' ),
@@ -42,19 +42,19 @@ function wp_agentic_admin_register_query_database(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the query succeeded.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the query succeeded.', 'agentic-admin' ),
 					),
 					'results' => array(
 						'type'        => 'array',
-						'description' => __( 'Query results.', 'wp-agentic-admin' ),
+						'description' => __( 'Query results.', 'agentic-admin' ),
 					),
 					'rows'    => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of rows returned.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of rows returned.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_query_database',
+			'execute_callback'    => 'agentic_admin_execute_query_database',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -70,7 +70,7 @@ function wp_agentic_admin_register_query_database(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'query', 'database', 'sql', 'select', 'table', 'rows' ),
-			'initialMessage' => __( "I'll run that query...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll run that query...", 'agentic-admin' ),
 		)
 	);
 }
@@ -81,7 +81,7 @@ function wp_agentic_admin_register_query_database(): void {
  *
  * @var int
  */
-const WP_AGENTIC_ADMIN_QUERY_MAX_LENGTH = 2000;
+const AGENTIC_ADMIN_QUERY_MAX_LENGTH = 2000;
 
 /**
  * Column names that must never appear in a query — neither in SELECT lists
@@ -94,7 +94,7 @@ const WP_AGENTIC_ADMIN_QUERY_MAX_LENGTH = 2000;
  *
  * @return string[]
  */
-function wp_agentic_admin_sensitive_columns(): array {
+function agentic_admin_sensitive_columns(): array {
 	return array(
 		'user_pass',
 		'user_email',
@@ -109,12 +109,12 @@ function wp_agentic_admin_sensitive_columns(): array {
  * @param string $query SQL query string.
  * @return string|true True if safe, otherwise an error message.
  */
-function wp_agentic_admin_check_query_safety( string $query ) {
-	if ( strlen( $query ) > WP_AGENTIC_ADMIN_QUERY_MAX_LENGTH ) {
+function agentic_admin_check_query_safety( string $query ) {
+	if ( strlen( $query ) > AGENTIC_ADMIN_QUERY_MAX_LENGTH ) {
 		return sprintf(
 			/* translators: %d: maximum query length in characters */
-			__( 'Query exceeds the maximum length of %d characters.', 'wp-agentic-admin' ),
-			WP_AGENTIC_ADMIN_QUERY_MAX_LENGTH
+			__( 'Query exceeds the maximum length of %d characters.', 'agentic-admin' ),
+			AGENTIC_ADMIN_QUERY_MAX_LENGTH
 		);
 	}
 
@@ -122,24 +122,24 @@ function wp_agentic_admin_check_query_safety( string $query ) {
 
 	// Must start with SELECT, SHOW, DESCRIBE, or EXPLAIN.
 	if ( ! preg_match( '/^\s*(SELECT|SHOW|DESCRIBE|EXPLAIN)\b/i', $upper ) ) {
-		return __( 'Only SELECT, SHOW, DESCRIBE, and EXPLAIN queries are allowed.', 'wp-agentic-admin' );
+		return __( 'Only SELECT, SHOW, DESCRIBE, and EXPLAIN queries are allowed.', 'agentic-admin' );
 	}
 
 	$forbidden = array( 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'TRUNCATE', 'CREATE', 'REPLACE', 'GRANT', 'REVOKE' );
 	foreach ( $forbidden as $keyword ) {
 		if ( preg_match( '/\b' . $keyword . '\b/', $upper ) ) {
-			return __( 'Only SELECT, SHOW, DESCRIBE, and EXPLAIN queries are allowed.', 'wp-agentic-admin' );
+			return __( 'Only SELECT, SHOW, DESCRIBE, and EXPLAIN queries are allowed.', 'agentic-admin' );
 		}
 	}
 
 	// Block any reference to sensitive columns (in SELECT lists, WHERE
 	// clauses, JOIN conditions — anywhere). Even read access via WHERE
 	// leaks information by row-count side-channel. See issue #166.
-	foreach ( wp_agentic_admin_sensitive_columns() as $col ) {
+	foreach ( agentic_admin_sensitive_columns() as $col ) {
 		if ( preg_match( '/\b' . preg_quote( $col, '/' ) . '\b/i', $query ) ) {
 			return sprintf(
 				/* translators: %s: sensitive column name */
-				__( 'Queries that reference the sensitive column "%s" are blocked.', 'wp-agentic-admin' ),
+				__( 'Queries that reference the sensitive column "%s" are blocked.', 'agentic-admin' ),
 				$col
 			);
 		}
@@ -158,8 +158,8 @@ function wp_agentic_admin_check_query_safety( string $query ) {
  * @param array $row Associative array of column => value.
  * @return array Row with sensitive columns replaced by [REDACTED].
  */
-function wp_agentic_admin_redact_sensitive_row( array $row ): array {
-	foreach ( wp_agentic_admin_sensitive_columns() as $col ) {
+function agentic_admin_redact_sensitive_row( array $row ): array {
+	foreach ( agentic_admin_sensitive_columns() as $col ) {
 		if ( array_key_exists( $col, $row ) ) {
 			$row[ $col ] = '[REDACTED]';
 		}
@@ -173,7 +173,7 @@ function wp_agentic_admin_redact_sensitive_row( array $row ): array {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_query_database( array $input = array() ): array {
+function agentic_admin_execute_query_database( array $input = array() ): array {
 	global $wpdb;
 
 	$query = isset( $input['query'] ) ? trim( $input['query'] ) : '';
@@ -181,13 +181,13 @@ function wp_agentic_admin_execute_query_database( array $input = array() ): arra
 	if ( empty( $query ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'No query provided.', 'wp-agentic-admin' ),
+			'message' => __( 'No query provided.', 'agentic-admin' ),
 			'results' => array(),
 			'rows'    => 0,
 		);
 	}
 
-	$safety = wp_agentic_admin_check_query_safety( $query );
+	$safety = agentic_admin_check_query_safety( $query );
 	if ( true !== $safety ) {
 		return array(
 			'success' => false,
@@ -217,7 +217,7 @@ function wp_agentic_admin_execute_query_database( array $input = array() ): arra
 	if ( null === $results ) {
 		return array(
 			'success' => false,
-			'message' => ! empty( $wpdb->last_error ) ? $wpdb->last_error : __( 'Query failed.', 'wp-agentic-admin' ),
+			'message' => ! empty( $wpdb->last_error ) ? $wpdb->last_error : __( 'Query failed.', 'agentic-admin' ),
 			'results' => array(),
 			'rows'    => 0,
 		);
@@ -226,7 +226,7 @@ function wp_agentic_admin_execute_query_database( array $input = array() ): arra
 	// Limit to 50 rows, then redact any sensitive columns that snuck
 	// through (e.g. via SELECT *).
 	$results = array_map(
-		'wp_agentic_admin_redact_sensitive_row',
+		'agentic_admin_redact_sensitive_row',
 		array_slice( $results, 0, 50 )
 	);
 
