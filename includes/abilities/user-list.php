@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_user_list(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_user_list(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/user-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'List Users', 'wp-agentic-admin' ),
-			'description'         => __( 'List all WordPress users with their roles and registration dates.', 'wp-agentic-admin' ),
+			'label'               => __( 'List Users', 'agentic-admin' ),
+			'description'         => __( 'List all WordPress users with their roles and registration dates.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -46,15 +46,15 @@ function wp_agentic_admin_register_user_list(): void {
 								'registered'   => array( 'type' => 'string' ),
 							),
 						),
-						'description' => __( 'List of users.', 'wp-agentic-admin' ),
+						'description' => __( 'List of users.', 'agentic-admin' ),
 					),
 					'total' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of users.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of users.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_user_list',
+			'execute_callback'    => 'agentic_admin_execute_user_list',
 			'permission_callback' => function () {
 				return current_user_can( 'list_users' );
 			},
@@ -70,7 +70,7 @@ function wp_agentic_admin_register_user_list(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'user', 'users', 'members', 'accounts', 'admins', 'authors' ),
-			'initialMessage' => __( "I'll check your WordPress users...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll check your WordPress users...", 'agentic-admin' ),
 		)
 	);
 }
@@ -81,7 +81,7 @@ function wp_agentic_admin_register_user_list(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_user_list( array $input = array() ): array {
+function agentic_admin_execute_user_list( array $input = array() ): array {
 	$wp_users = get_users(
 		array(
 			'orderby' => 'registered',

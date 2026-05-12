@@ -193,7 +193,7 @@ describe( 'knowledge-base', () => {
 		} );
 
 		it( 'getKBStatus() returns null when localStorage holds invalid JSON', () => {
-			localStorage.setItem( 'wp_agentic_admin_kb_status', '{not-json' );
+			localStorage.setItem( 'agentic_admin_kb_status', '{not-json' );
 			expect( kb.getKBStatus() ).toBeNull();
 		} );
 	} );
@@ -234,7 +234,7 @@ describe( 'knowledge-base', () => {
 	describe( 'clearIndex', () => {
 		it( 'delegates to vectorStore and removes persisted status', async () => {
 			localStorage.setItem(
-				'wp_agentic_admin_kb_status',
+				'agentic_admin_kb_status',
 				JSON.stringify( { totalChunks: 5 } )
 			);
 
@@ -243,7 +243,7 @@ describe( 'knowledge-base', () => {
 			expect( mockVectorStore.init ).toHaveBeenCalled();
 			expect( mockVectorStore.clear ).toHaveBeenCalled();
 			expect(
-				localStorage.getItem( 'wp_agentic_admin_kb_status' )
+				localStorage.getItem( 'agentic_admin_kb_status' )
 			).toBeNull();
 			expect( kb.getProgress() ).toBeNull();
 			expect( kb.getError() ).toBeNull();
@@ -275,9 +275,7 @@ describe( 'knowledge-base', () => {
 			expect( workerInstances.length ).toBe( 1 );
 			expect( workerInstances[ 0 ].terminated ).toBe( true );
 			expect(
-				JSON.parse(
-					localStorage.getItem( 'wp_agentic_admin_kb_status' )
-				)
+				JSON.parse( localStorage.getItem( 'agentic_admin_kb_status' ) )
 			).toMatchObject( { totalChunks: 1 } );
 		} );
 

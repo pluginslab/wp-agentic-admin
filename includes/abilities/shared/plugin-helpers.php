@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'all'.
  * @return array Array with plugins list and counts.
  */
-function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): array {
+function agentic_admin_get_all_plugins( string $status_filter = 'all' ): array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -57,14 +57,14 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
 		if ( $plugin['active'] ) {
 			$actions[] = array(
 				'label'        => $plugin['name'],
-				'button_label' => __( 'Deactivate', 'wp-agentic-admin' ),
+				'button_label' => __( 'Deactivate', 'agentic-admin' ),
 				'action'       => 'wp-agentic-admin/plugin-deactivate',
 				'args'         => array( 'plugin' => $plugin['slug'] ),
 			);
 		} else {
 			$actions[] = array(
 				'label'        => $plugin['name'],
-				'button_label' => __( 'Activate', 'wp-agentic-admin' ),
+				'button_label' => __( 'Activate', 'agentic-admin' ),
 				'action'       => 'wp-agentic-admin/plugin-activate',
 				'args'         => array( 'plugin' => $plugin['slug'] ),
 			);
@@ -101,7 +101,7 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
  *     @type array       $candidates  Top candidates with their certainty scores.
  * }
  */
-function wp_agentic_admin_resolve_plugin( string $identifier ): array {
+function agentic_admin_resolve_plugin( string $identifier ): array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -248,7 +248,7 @@ function wp_agentic_admin_resolve_plugin( string $identifier ): array {
  * @param string $plugin_file The plugin file path (slug).
  * @return array|null Plugin data array or null if not found.
  */
-function wp_agentic_admin_get_plugin_by_slug( string $plugin_file ): ?array {
+function agentic_admin_get_plugin_by_slug( string $plugin_file ): ?array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -281,9 +281,9 @@ function wp_agentic_admin_get_plugin_by_slug( string $plugin_file ): ?array {
  * @param string $plugin_identifier The plugin file path, name, or partial match.
  * @return array Result with success status, message, certainty, and optional actions.
  */
-function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): array {
+function agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): array {
 	$plugin_identifier = sanitize_text_field( $plugin_identifier );
-	$resolved          = wp_agentic_admin_resolve_plugin( $plugin_identifier );
+	$resolved          = agentic_admin_resolve_plugin( $plugin_identifier );
 
 	// No match at all.
 	if ( null === $resolved['plugin_file'] ) {
@@ -291,7 +291,7 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 			'success'   => false,
 			'message'   => sprintf(
 				/* translators: %s: plugin identifier */
-				__( 'No plugin found matching "%s".', 'wp-agentic-admin' ),
+				__( 'No plugin found matching "%s".', 'agentic-admin' ),
 				$plugin_identifier
 			),
 			'certainty' => 0.0,
@@ -300,11 +300,11 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 
 	// Low certainty — return candidates as action buttons.
 	if ( $resolved['certainty'] < 8.0 ) {
-		return wp_agentic_admin_build_candidate_response(
+		return agentic_admin_build_candidate_response(
 			$resolved,
 			$plugin_identifier,
 			'wp-agentic-admin/plugin-activate',
-			__( 'Activate', 'wp-agentic-admin' )
+			__( 'Activate', 'agentic-admin' )
 		);
 	}
 
@@ -318,7 +318,7 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 			'success'        => true,
 			'message'        => sprintf(
 				/* translators: %s: plugin name */
-				__( 'Plugin "%s" is already active.', 'wp-agentic-admin' ),
+				__( 'Plugin "%s" is already active.', 'agentic-admin' ),
 				$plugin_name
 			),
 			'matched_plugin' => $plugin_name,
@@ -335,7 +335,7 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 			'success'        => false,
 			'message'        => sprintf(
 				/* translators: 1: plugin name, 2: error message */
-				__( 'Failed to activate plugin "%1$s": %2$s', 'wp-agentic-admin' ),
+				__( 'Failed to activate plugin "%1$s": %2$s', 'agentic-admin' ),
 				$plugin_name,
 				$result->get_error_message()
 			),
@@ -350,7 +350,7 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 			'success'        => false,
 			'message'        => sprintf(
 				/* translators: %s: plugin name */
-				__( 'Failed to activate plugin "%s".', 'wp-agentic-admin' ),
+				__( 'Failed to activate plugin "%s".', 'agentic-admin' ),
 				$plugin_name
 			),
 			'matched_plugin' => $plugin_name,
@@ -362,7 +362,7 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
 		'success'        => true,
 		'message'        => sprintf(
 			/* translators: %s: plugin name */
-			__( 'Plugin "%s" has been activated successfully.', 'wp-agentic-admin' ),
+			__( 'Plugin "%s" has been activated successfully.', 'agentic-admin' ),
 			$plugin_name
 		),
 		'matched_plugin' => $plugin_name,
@@ -381,9 +381,9 @@ function wp_agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): 
  * @param string $plugin_identifier The plugin file path, name, or partial match.
  * @return array Result with success status, message, certainty, and optional actions.
  */
-function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier ): array {
+function agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier ): array {
 	$plugin_identifier = sanitize_text_field( $plugin_identifier );
-	$resolved          = wp_agentic_admin_resolve_plugin( $plugin_identifier );
+	$resolved          = agentic_admin_resolve_plugin( $plugin_identifier );
 
 	// No match at all.
 	if ( null === $resolved['plugin_file'] ) {
@@ -391,7 +391,7 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
 			'success'   => false,
 			'message'   => sprintf(
 				/* translators: %s: plugin identifier */
-				__( 'No plugin found matching "%s".', 'wp-agentic-admin' ),
+				__( 'No plugin found matching "%s".', 'agentic-admin' ),
 				$plugin_identifier
 			),
 			'certainty' => 0.0,
@@ -400,11 +400,11 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
 
 	// Low certainty — return candidates as action buttons.
 	if ( $resolved['certainty'] < 8.0 ) {
-		return wp_agentic_admin_build_candidate_response(
+		return agentic_admin_build_candidate_response(
 			$resolved,
 			$plugin_identifier,
 			'wp-agentic-admin/plugin-deactivate',
-			__( 'Deactivate', 'wp-agentic-admin' )
+			__( 'Deactivate', 'agentic-admin' )
 		);
 	}
 
@@ -418,7 +418,7 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
 			'success'        => true,
 			'message'        => sprintf(
 				/* translators: %s: plugin name */
-				__( 'Plugin "%s" is already inactive.', 'wp-agentic-admin' ),
+				__( 'Plugin "%s" is already inactive.', 'agentic-admin' ),
 				$plugin_name
 			),
 			'matched_plugin' => $plugin_name,
@@ -435,7 +435,7 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
 			'success'        => false,
 			'message'        => sprintf(
 				/* translators: %s: plugin name */
-				__( 'Failed to deactivate plugin "%s".', 'wp-agentic-admin' ),
+				__( 'Failed to deactivate plugin "%s".', 'agentic-admin' ),
 				$plugin_name
 			),
 			'matched_plugin' => $plugin_name,
@@ -447,7 +447,7 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
 		'success'        => true,
 		'message'        => sprintf(
 			/* translators: %s: plugin name */
-			__( 'Plugin "%s" has been deactivated.', 'wp-agentic-admin' ),
+			__( 'Plugin "%s" has been deactivated.', 'agentic-admin' ),
 			$plugin_name
 		),
 		'matched_plugin' => $plugin_name,
@@ -461,13 +461,13 @@ function wp_agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier )
  * Returns a structured response with action buttons for the top plugin
  * candidates, allowing the user to select the correct one.
  *
- * @param array  $resolved         Result from wp_agentic_admin_resolve_plugin().
+ * @param array  $resolved         Result from agentic_admin_resolve_plugin().
  * @param string $original_input   The user's original input string.
  * @param string $action_id        The ability action ID (e.g. "wp-agentic-admin/plugin-activate").
  * @param string $button_label     Label for the action button (e.g. "Activate").
  * @return array Response with actions for UI buttons.
  */
-function wp_agentic_admin_build_candidate_response( array $resolved, string $original_input, string $action_id, string $button_label ): array {
+function agentic_admin_build_candidate_response( array $resolved, string $original_input, string $action_id, string $button_label ): array {
 	$actions = array();
 
 	foreach ( $resolved['candidates'] as $candidate ) {
@@ -483,7 +483,7 @@ function wp_agentic_admin_build_candidate_response( array $resolved, string $ori
 		'success'   => false,
 		'message'   => sprintf(
 			/* translators: %s: user input */
-			__( 'Multiple plugins match "%s". Please select the correct one:', 'wp-agentic-admin' ),
+			__( 'Multiple plugins match "%s". Please select the correct one:', 'agentic-admin' ),
 			$original_input
 		),
 		'certainty' => $resolved['certainty'],
@@ -505,8 +505,8 @@ function wp_agentic_admin_build_candidate_response( array $resolved, string $ori
  * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'active'.
  * @return array Array with plugins and their vulnerabilities.
  */
-function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'active' ): array {
-	$plugins_data = wp_agentic_admin_get_all_plugins( $status_filter );
+function agentic_admin_scan_for_vulnerabilities( string $status_filter = 'active' ): array {
+	$plugins_data = agentic_admin_get_all_plugins( $status_filter );
 	$plugins      = $plugins_data['plugins'];
 
 	$total_vulnerabilities = 0;
@@ -516,7 +516,7 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 	foreach ( $plugins as $index => $plugin ) {
 		$plugin_name    = sanitize_text_field( $plugin['name'] );
 		$plugin_version = isset( $plugin['version'] ) ? (string) $plugin['version'] : '';
-		$plugin_slug    = wp_agentic_admin_normalize_plugin_slug( isset( $plugin['slug'] ) ? (string) $plugin['slug'] : '' );
+		$plugin_slug    = agentic_admin_normalize_plugin_slug( isset( $plugin['slug'] ) ? (string) $plugin['slug'] : '' );
 
 		$plugins[ $index ]['vulnerabilities']      = array();
 		$plugins[ $index ]['vulnerability_count']  = 0;
@@ -527,7 +527,7 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 			continue;
 		}
 
-		$cache_key = 'wp_agentic_admin_nvd_' . md5( strtolower( $plugin_name ) );
+		$cache_key = 'agentic_admin_nvd_' . md5( strtolower( $plugin_name ) );
 		$response  = get_transient( $cache_key );
 
 		if ( false === $response ) {
@@ -565,7 +565,7 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 		if ( 200 !== $status_code ) {
 			$plugins[ $index ]['scan_error'] = sprintf(
 				/* translators: %d: HTTP status code */
-				__( 'NVD request failed with status code %d.', 'wp-agentic-admin' ),
+				__( 'NVD request failed with status code %d.', 'agentic-admin' ),
 				$status_code
 			);
 			++$scan_errors;
@@ -593,12 +593,12 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 				continue;
 			}
 
-			$mitre_record = wp_agentic_admin_get_mitre_cve_record( $cve_id );
+			$mitre_record = agentic_admin_get_mitre_cve_record( $cve_id );
 			if ( is_wp_error( $mitre_record ) ) {
 				continue;
 			}
 
-			$mitre_match = wp_agentic_admin_is_plugin_version_affected_from_mitre(
+			$mitre_match = agentic_admin_is_plugin_version_affected_from_mitre(
 				$plugin_name,
 				$plugin_version,
 				$plugin_slug,
@@ -609,13 +609,13 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
 				continue;
 			}
 
-			$cvss = wp_agentic_admin_extract_cvss_data( $cve );
+			$cvss = agentic_admin_extract_cvss_data( $cve );
 
 			$plugins[ $index ]['vulnerabilities'][] = array(
 				'cve_id'                  => $cve_id,
 				'published'               => isset( $cve['published'] ) ? $cve['published'] : '',
 				'last_modified'           => isset( $cve['lastModified'] ) ? $cve['lastModified'] : '',
-				'description'             => wp_agentic_admin_extract_english_description( $cve ),
+				'description'             => agentic_admin_extract_english_description( $cve ),
 				'severity'                => isset( $cvss['severity'] ) ? $cvss['severity'] : '',
 				'base_score'              => isset( $cvss['base_score'] ) ? $cvss['base_score'] : null,
 				'vector'                  => isset( $cvss['vector'] ) ? $cvss['vector'] : '',
@@ -652,7 +652,7 @@ function wp_agentic_admin_scan_for_vulnerabilities( string $status_filter = 'act
  * @param string $plugin_file Plugin file path.
  * @return string
  */
-function wp_agentic_admin_normalize_plugin_slug( string $plugin_file ): string {
+function agentic_admin_normalize_plugin_slug( string $plugin_file ): string {
 	$plugin_file = trim( $plugin_file );
 
 	if ( '' === $plugin_file ) {
@@ -676,7 +676,7 @@ function wp_agentic_admin_normalize_plugin_slug( string $plugin_file ): string {
  * @param array  $mitre_record   MITRE CVE record payload.
  * @return bool|null True if affected, false if not affected, null if cannot decide.
  */
-function wp_agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_name, string $plugin_version, string $plugin_slug, array $mitre_record ): ?bool {
+function agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_name, string $plugin_version, string $plugin_slug, array $mitre_record ): ?bool {
 	if (
 		empty( $mitre_record['containers']['cna']['affected'] ) ||
 		! is_array( $mitre_record['containers']['cna']['affected'] )
@@ -730,8 +730,8 @@ function wp_agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_
 			}
 
 			$exact = isset( $version_rule['version'] ) ? trim( (string) $version_rule['version'] ) : '';
-			$lt    = isset( $version_rule['lessThan'] ) ? wp_agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThan'] ) : '';
-			$lte   = isset( $version_rule['lessThanOrEqual'] ) ? wp_agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThanOrEqual'] ) : '';
+			$lt    = isset( $version_rule['lessThan'] ) ? agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThan'] ) : '';
+			$lte   = isset( $version_rule['lessThanOrEqual'] ) ? agentic_admin_normalize_mitre_bound( (string) $version_rule['lessThanOrEqual'] ) : '';
 
 			$in_range = true;
 
@@ -771,9 +771,9 @@ function wp_agentic_admin_is_plugin_version_affected_from_mitre( string $plugin_
  * @param string $cve_id CVE identifier.
  * @return array|WP_Error
  */
-function wp_agentic_admin_get_mitre_cve_record( string $cve_id ) {
+function agentic_admin_get_mitre_cve_record( string $cve_id ) {
 	$cve_id    = strtoupper( trim( $cve_id ) );
-	$cache_key = 'wp_agentic_admin_mitre_' . md5( $cve_id );
+	$cache_key = 'agentic_admin_mitre_' . md5( $cve_id );
 	$cached    = get_transient( $cache_key );
 
 	if ( false !== $cached ) {
@@ -799,10 +799,10 @@ function wp_agentic_admin_get_mitre_cve_record( string $cve_id ) {
 	$status_code = (int) wp_remote_retrieve_response_code( $response );
 	if ( 200 !== $status_code ) {
 		$error = new WP_Error(
-			'wp_agentic_admin_mitre_http_error',
+			'agentic_admin_mitre_http_error',
 			sprintf(
 				/* translators: %d: HTTP status code */
-				__( 'MITRE CVE request failed with status code %d.', 'wp-agentic-admin' ),
+				__( 'MITRE CVE request failed with status code %d.', 'agentic-admin' ),
 				$status_code
 			)
 		);
@@ -815,8 +815,8 @@ function wp_agentic_admin_get_mitre_cve_record( string $cve_id ) {
 
 	if ( ! is_array( $decoded ) ) {
 		$error = new WP_Error(
-			'wp_agentic_admin_mitre_invalid_json',
-			__( 'Invalid MITRE CVE response.', 'wp-agentic-admin' )
+			'agentic_admin_mitre_invalid_json',
+			__( 'Invalid MITRE CVE response.', 'agentic-admin' )
 		);
 		set_transient( $cache_key, $error, 5 * MINUTE_IN_SECONDS );
 		return $error;
@@ -833,7 +833,7 @@ function wp_agentic_admin_get_mitre_cve_record( string $cve_id ) {
  * @param string $bound Version bound.
  * @return string
  */
-function wp_agentic_admin_normalize_mitre_bound( string $bound ): string {
+function agentic_admin_normalize_mitre_bound( string $bound ): string {
 	$bound = trim( $bound );
 	$bound = preg_replace( '/^[<>=\s]+/', '', $bound );
 
@@ -846,7 +846,7 @@ function wp_agentic_admin_normalize_mitre_bound( string $bound ): string {
  * @param array $cve CVE payload.
  * @return string
  */
-function wp_agentic_admin_extract_english_description( array $cve ): string {
+function agentic_admin_extract_english_description( array $cve ): string {
 	if ( empty( $cve['descriptions'] ) || ! is_array( $cve['descriptions'] ) ) {
 		return '';
 	}
@@ -870,7 +870,7 @@ function wp_agentic_admin_extract_english_description( array $cve ): string {
  * @param array $cve CVE payload.
  * @return array
  */
-function wp_agentic_admin_extract_cvss_data( array $cve ): array {
+function agentic_admin_extract_cvss_data( array $cve ): array {
 	if ( empty( $cve['metrics'] ) || ! is_array( $cve['metrics'] ) ) {
 		return array();
 	}

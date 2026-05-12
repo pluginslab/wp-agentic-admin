@@ -1,6 +1,6 @@
-# Models in WP Agentic Admin
+# Models in Agentic Admin for WordPress
 
-WP Agentic Admin currently supports two language models, with plans to expand model selection during the CloudFest Hackathon.
+Agentic Admin for WordPress currently supports two language models, with plans to expand model selection during the CloudFest Hackathon.
 
 ## Current Models
 
@@ -58,7 +58,7 @@ WP Agentic Admin currently supports two language models, with plans to expand mo
 
 ## Why Qwen Models?
 
-WP Agentic Admin uses Qwen (Alibaba's open-source models) for several reasons:
+Agentic Admin for WordPress uses Qwen (Alibaba's open-source models) for several reasons:
 
 ### 1. Function Calling Support
 
@@ -85,7 +85,7 @@ This is critical for an AI assistant that should only perform WordPress admin ta
 
 ### 3. Multilingual Capability
 
-While WP Agentic Admin is English-first, Qwen models support:
+While Agentic Admin for WordPress is English-first, Qwen models support:
 - English (primary)
 - Spanish, French, German, Portuguese
 - Chinese, Japanese, Korean
@@ -219,7 +219,7 @@ WebLLM regularly updates their model catalog with:
 - Better quantization (q3, q2)
 - Optimized compilation
 
-WP Agentic Admin will track upstream WebLLM releases and update the model list accordingly. Users can always use the latest compatible models.
+Agentic Admin for WordPress will track upstream WebLLM releases and update the model list accordingly. Users can always use the latest compatible models.
 
 ## Switching Costs
 
@@ -277,6 +277,6 @@ See [CLOUDFEST_HACKATHON.md](../../CLOUDFEST_HACKATHON.md) for details.
 
 ## Summary
 
-WP Agentic Admin currently uses Qwen 3 1.7B (default, lightweight) or Qwen 2.5 7B (recommended, better accuracy). Qwen models are chosen for their function calling support, instruction following, open license, and strong performance at small sizes. The CloudFest Hackathon will add a Model Discovery UI and external AI provider support, expanding options for users.
+Agentic Admin for WordPress currently uses Qwen 3 1.7B (default, lightweight) or Qwen 2.5 7B (recommended, better accuracy). Qwen models are chosen for their function calling support, instruction following, open license, and strong performance at small sizes. The CloudFest Hackathon will add a Model Discovery UI and external AI provider support, expanding options for users.
 
 **Next:** [Service Worker Persistence](07-service-worker-persistence.md)

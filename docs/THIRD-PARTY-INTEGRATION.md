@@ -87,7 +87,7 @@ Then register your ability in JavaScript:
 (function() {
     // Wait for the API to be available
     if (typeof wp === 'undefined' || !wp.agenticAdmin) {
-        console.warn('WP Agentic Admin not available');
+        console.warn('Agentic Admin for WordPress not available');
         return;
     }
     
@@ -696,7 +696,7 @@ Here's a complete example of a third-party plugin adding an ability:
 <?php
 /**
  * Plugin Name: My Agentic Ability
- * Description: Adds a custom ability to WP Agentic Admin
+ * Description: Adds a custom ability to Agentic Admin for WordPress
  */
 
 // Register the ability

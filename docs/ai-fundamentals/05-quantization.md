@@ -48,7 +48,7 @@ Going from float32 to 4-bit quantization:
 | Qwen 3 1.7B | ~6.8 GB | ~1.2 GB | 82% smaller |
 | Qwen 2.5 7B | ~28 GB | ~4.5 GB | 84% smaller |
 
-This is how WP Agentic Admin fits a 7-billion parameter model into 4.5GB.
+This is how Agentic Admin for WordPress fits a 7-billion parameter model into 4.5GB.
 
 ## Quantization Formats in WebLLM
 
@@ -60,7 +60,7 @@ WebLLM uses hybrid quantization schemes that mix different precisions:
 - Most weights: 4 bits
 - Activations (intermediate calculations): 16 bits
 - Best balance for browser usage
-- **Used by:** Qwen 2.5 7B in WP Agentic Admin
+- **Used by:** Qwen 2.5 7B in Agentic Admin for WordPress
 
 **q4f32_1** — 4-bit weights, 32-bit activations
 - Weights: 4 bits (smaller)
@@ -117,7 +117,7 @@ You're trading poetic language quality for browser compatibility — a good trad
 
 ## Which Quantization Should You Use?
 
-### For WP Agentic Admin
+### For Agentic Admin for WordPress
 
 **Qwen 3 1.7B (q4f16)** — Default
 - Download: ~1.2 GB
@@ -222,6 +222,6 @@ WebLLM's q4f16 variants use mixed precision strategies, though the exact distrib
 
 ## Summary
 
-Quantization reduces model size by lowering numerical precision. WP Agentic Admin uses q4f16 quantization to fit 7-billion parameter models into ~4.5GB, making browser-based AI practical. The trade-off is slight accuracy loss (~5%), which is acceptable for structured WordPress tasks. Models are pre-quantized and distributed via CDN — your browser downloads the compressed version directly.
+Quantization reduces model size by lowering numerical precision. Agentic Admin for WordPress uses q4f16 quantization to fit 7-billion parameter models into ~4.5GB, making browser-based AI practical. The trade-off is slight accuracy loss (~5%), which is acceptable for structured WordPress tasks. Models are pre-quantized and distributed via CDN — your browser downloads the compressed version directly.
 
-**Next:** [Models in WP Agentic Admin](06-models-in-wp-agentic-admin.md)
+**Next:** [Models in Agentic Admin for WordPress](06-models-in-wp-agentic-admin.md)

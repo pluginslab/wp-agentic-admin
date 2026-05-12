@@ -68,7 +68,7 @@ class Settings {
 	 * @return void
 	 */
 	private function init_settings(): void {
-		$this->settings = get_option( 'wp_agentic_admin_settings', array() );
+		$this->settings = get_option( 'agentic_admin_settings', array() );
 	}
 
 	/**
@@ -78,7 +78,7 @@ class Settings {
 	 * @return array
 	 */
 	public function add_settings_link( array $links ): array {
-		$settings_link = '<a href="admin.php?page=wp-agentic-admin">' . __( 'Settings', 'wp-agentic-admin' ) . '</a>';
+		$settings_link = '<a href="admin.php?page=wp-agentic-admin">' . __( 'Settings', 'agentic-admin' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}
@@ -91,10 +91,10 @@ class Settings {
 	public function get_settings_config(): array {
 		return array(
 			'model'    => array(
-				'label'  => __( 'AI Model', 'wp-agentic-admin' ),
+				'label'  => __( 'AI Model', 'agentic-admin' ),
 				'fields' => array(
-					'wp_agentic_admin_model_id' => array(
-						'label'       => __( 'Model', 'wp-agentic-admin' ),
+					'agentic_admin_model_id' => array(
+						'label'       => __( 'Model', 'agentic-admin' ),
 						'type'        => 'select',
 						'options'     => array(
 							'Qwen2.5-7B-Instruct-q4f16_1-MLC' => 'Qwen 2.5 7B F16 (Recommended)',
@@ -103,24 +103,24 @@ class Settings {
 							'Qwen3-1.7B-q4f32_1-MLC' => 'Qwen 3 1.7B F32 (Lightweight, no shader-f16 needed)',
 						),
 						'default'     => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'wp-agentic-admin' ),
+						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'agentic-admin' ),
 					),
 				),
 			),
 			'behavior' => array(
-				'label'  => __( 'Behavior', 'wp-agentic-admin' ),
+				'label'  => __( 'Behavior', 'agentic-admin' ),
 				'fields' => array(
-					'wp_agentic_admin_confirm_destructive' => array(
-						'label'       => __( 'Confirm destructive actions', 'wp-agentic-admin' ),
+					'agentic_admin_confirm_destructive' => array(
+						'label'       => __( 'Confirm destructive actions', 'agentic-admin' ),
 						'type'        => 'checkbox',
 						'default'     => 1,
-						'description' => __( 'Always ask for confirmation before executing destructive abilities.', 'wp-agentic-admin' ),
+						'description' => __( 'Always ask for confirmation before executing destructive abilities.', 'agentic-admin' ),
 					),
-					'wp_agentic_admin_max_log_lines'       => array(
-						'label'       => __( 'Max log lines', 'wp-agentic-admin' ),
+					'agentic_admin_max_log_lines'       => array(
+						'label'       => __( 'Max log lines', 'agentic-admin' ),
 						'type'        => 'number',
 						'default'     => 100,
-						'description' => __( 'Maximum number of log lines to read at once.', 'wp-agentic-admin' ),
+						'description' => __( 'Maximum number of log lines to read at once.', 'agentic-admin' ),
 					),
 				),
 			),
@@ -187,7 +187,7 @@ class Settings {
 	 * @return void
 	 */
 	public function save(): void {
-		update_option( 'wp_agentic_admin_settings', $this->settings );
+		update_option( 'agentic_admin_settings', $this->settings );
 	}
 
 	/**

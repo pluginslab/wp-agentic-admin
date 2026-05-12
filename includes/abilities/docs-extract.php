@@ -18,13 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_docs_extract(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_docs_extract(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/docs-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Extract Reference Docs', 'wp-agentic-admin' ),
-			'description'         => __( 'Extract bundled WordPress reference documentation for knowledge base indexing.', 'wp-agentic-admin' ),
+			'label'               => __( 'Extract Reference Docs', 'agentic-admin' ),
+			'description'         => __( 'Extract bundled WordPress reference documentation for knowledge base indexing.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -37,15 +37,15 @@ function wp_agentic_admin_register_docs_extract(): void {
 				'properties' => array(
 					'chunks'      => array(
 						'type'        => 'array',
-						'description' => __( 'Doc section chunks.', 'wp-agentic-admin' ),
+						'description' => __( 'Doc section chunks.', 'agentic-admin' ),
 					),
 					'total_files' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total doc files processed.', 'wp-agentic-admin' ),
+						'description' => __( 'Total doc files processed.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_docs_extract',
+			'execute_callback'    => 'agentic_admin_execute_docs_extract',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -61,7 +61,7 @@ function wp_agentic_admin_register_docs_extract(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'docs', 'documentation', 'reference', 'extract docs' ),
-			'initialMessage' => __( 'Extracting reference documentation...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Extracting reference documentation...', 'agentic-admin' ),
 		)
 	);
 }
@@ -73,7 +73,7 @@ function wp_agentic_admin_register_docs_extract(): void {
  * @param string $file_name File name for chunk path.
  * @return array Array of chunk arrays.
  */
-function wp_agentic_admin_chunk_markdown( string $content, string $file_name ): array {
+function agentic_admin_chunk_markdown( string $content, string $file_name ): array {
 	$lines           = explode( "\n", $content );
 	$chunks          = array();
 	$current         = array();
@@ -127,7 +127,7 @@ function wp_agentic_admin_chunk_markdown( string $content, string $file_name ): 
  * @param array $input Input parameters (unused).
  * @return array
  */
-function wp_agentic_admin_execute_docs_extract( array $input = array() ): array {
+function agentic_admin_execute_docs_extract( array $input = array() ): array {
 	global $wp_filesystem;
 
 	if ( ! $wp_filesystem ) {
@@ -168,7 +168,7 @@ function wp_agentic_admin_execute_docs_extract( array $input = array() ): array 
 		}
 
 		$file_name   = basename( $file_path, '.md' );
-		$file_chunks = wp_agentic_admin_chunk_markdown( $content, $file_name );
+		$file_chunks = agentic_admin_chunk_markdown( $content, $file_name );
 		$chunks      = array_merge( $chunks, $file_chunks );
 		++$total_files;
 	}

@@ -1,6 +1,6 @@
-# Contributing to WP Agentic Admin
+# Contributing to Agentic Admin for WordPress
 
-Thank you for your interest in contributing to WP Agentic Admin! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to Agentic Admin for WordPress! This document provides guidelines and instructions for contributing to the project.
 
 ## Table of Contents
 
@@ -342,4 +342,4 @@ Don't hesitate to ask for help:
 - Join us on WordPress Slack: `#agentic-admin`
 - Comment on relevant issues
 
-Thank you for contributing to WP Agentic Admin! 🎉
+Thank you for contributing to Agentic Admin for WordPress! 🎉

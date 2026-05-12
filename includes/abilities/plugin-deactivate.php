@@ -17,20 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_plugin_deactivate(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_plugin_deactivate(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/plugin-deactivate',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Deactivate Plugin', 'wp-agentic-admin' ),
-			'description'         => __( 'Deactivate a specific plugin by its name or slug.', 'wp-agentic-admin' ),
+			'label'               => __( 'Deactivate Plugin', 'agentic-admin' ),
+			'description'         => __( 'Deactivate a specific plugin by its name or slug.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'plugin' => array(
 						'type'        => 'string',
-						'description' => __( 'The plugin name or file path (slug) to deactivate.', 'wp-agentic-admin' ),
+						'description' => __( 'The plugin name or file path (slug) to deactivate.', 'agentic-admin' ),
 					),
 				),
 				'required'             => array( 'plugin' ),
@@ -41,15 +41,15 @@ function wp_agentic_admin_register_plugin_deactivate(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the plugin was successfully deactivated.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the plugin was successfully deactivated.', 'agentic-admin' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_plugin_deactivate',
+			'execute_callback'    => 'agentic_admin_execute_plugin_deactivate',
 			'permission_callback' => function () {
 				return current_user_can( 'deactivate_plugins' );
 			},
@@ -59,16 +59,16 @@ function wp_agentic_admin_register_plugin_deactivate(): void {
 					'readonly'     => false,
 					'destructive'  => true,
 					'idempotent'   => true,
-					'instructions' => __( 'This will deactivate the specified plugin. The site may behave differently after deactivation.', 'wp-agentic-admin' ),
+					'instructions' => __( 'This will deactivate the specified plugin. The site may behave differently after deactivation.', 'agentic-admin' ),
 				),
 			),
 		),
 		// JS configuration for chat interface.
 		array(
 			'keywords'             => array( 'deactivate', 'disable', 'turn off', 'deactivate plugin' ),
-			'initialMessage'       => __( 'Deactivating the plugin...', 'wp-agentic-admin' ),
+			'initialMessage'       => __( 'Deactivating the plugin...', 'agentic-admin' ),
 			'requiresConfirmation' => true,
-			'confirmationMessage'  => __( 'Are you sure you want to deactivate this plugin? This may affect your site functionality.', 'wp-agentic-admin' ),
+			'confirmationMessage'  => __( 'Are you sure you want to deactivate this plugin? This may affect your site functionality.', 'agentic-admin' ),
 		)
 	);
 }
@@ -79,13 +79,13 @@ function wp_agentic_admin_register_plugin_deactivate(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_plugin_deactivate( array $input = array() ): array {
+function agentic_admin_execute_plugin_deactivate( array $input = array() ): array {
 	if ( empty( $input['plugin'] ) ) {
 		return array(
 			'success' => false,
-			'message' => __( 'No plugin specified.', 'wp-agentic-admin' ),
+			'message' => __( 'No plugin specified.', 'agentic-admin' ),
 		);
 	}
 
-	return wp_agentic_admin_deactivate_plugin_by_slug( $input['plugin'] );
+	return agentic_admin_deactivate_plugin_by_slug( $input['plugin'] );
 }

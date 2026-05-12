@@ -1,6 +1,6 @@
 # The ReAct Pattern
 
-ReAct (Reasoning + Acting) is the decision-making framework that powers WP Agentic Admin's AI assistant. Instead of answering questions from memory alone, the AI reasons about what information it needs, uses tools to get that information, and adapts its strategy based on observations.
+ReAct (Reasoning + Acting) is the decision-making framework that powers Agentic Admin for WordPress's AI assistant. Instead of answering questions from memory alone, the AI reasons about what information it needs, uses tools to get that information, and adapts its strategy based on observations.
 
 ## What is ReAct?
 
@@ -372,7 +372,7 @@ The ReAct loop stops when:
 
 ## ReAct vs Workflows
 
-WP Agentic Admin uses two execution modes:
+Agentic Admin for WordPress uses two execution modes:
 
 ### ReAct (Adaptive)
 
@@ -399,7 +399,7 @@ See [WORKFLOWS-GUIDE.md](../WORKFLOWS-GUIDE.md) for workflow details.
 
 ## Observability
 
-WP Agentic Admin exposes the ReAct loop for debugging via `window.__wpAgenticTestHook`:
+Agentic Admin for WordPress exposes the ReAct loop for debugging via `window.__wpAgenticTestHook`:
 
 ```javascript
 // Get last ReAct execution details
@@ -568,6 +568,6 @@ See [CLOUDFEST_HACKATHON.md § Tool Selection at Scale](../../CLOUDFEST_HACKATHO
 
 ## Summary
 
-The ReAct pattern enables WP Agentic Admin's AI to reason adaptively: it uses tools to gather information, observes results, and adjusts strategy in real-time. This bridges natural language understanding with WordPress operations, providing accurate, data-driven assistance. The loop continues until the goal is achieved or max iterations is reached, with each iteration consisting of Thought → Action → Observation.
+The ReAct pattern enables Agentic Admin for WordPress's AI to reason adaptively: it uses tools to gather information, observes results, and adjusts strategy in real-time. This bridges natural language understanding with WordPress operations, providing accurate, data-driven assistance. The loop continues until the goal is achieved or max iterations is reached, with each iteration consisting of Thought → Action → Observation.
 
 **Next:** [Tools & Abilities](09-tools-and-abilities.md)

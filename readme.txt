@@ -1,4 +1,4 @@
-=== WP Agentic Admin ===
+=== Agentic Admin for WordPress ===
 Contributors: pluginslab
 Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
@@ -12,7 +12,7 @@ A privacy-first AI Site Reliability Engineer running entirely in the browser via
 
 == Description ==
 
-WP Agentic Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
+Agentic Admin for WordPress transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
 
 = Features =
 

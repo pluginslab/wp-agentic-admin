@@ -18,12 +18,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_discover_plugin_abilities(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_discover_plugin_abilities(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/discover-plugin-abilities',
 		array(
-			'label'               => __( 'Discover Plugin Abilities', 'wp-agentic-admin' ),
-			'description'         => __( 'Discover abilities registered by other plugins on this WordPress site.', 'wp-agentic-admin' ),
+			'label'               => __( 'Discover Plugin Abilities', 'agentic-admin' ),
+			'description'         => __( 'Discover abilities registered by other plugins on this WordPress site.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -32,12 +32,12 @@ function wp_agentic_admin_register_discover_plugin_abilities(): void {
 					'category' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __( 'Optional category to filter abilities by.', 'wp-agentic-admin' ),
+						'description' => __( 'Optional category to filter abilities by.', 'agentic-admin' ),
 					),
 					'search'   => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __( 'Optional search term to filter abilities.', 'wp-agentic-admin' ),
+						'description' => __( 'Optional search term to filter abilities.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -47,15 +47,15 @@ function wp_agentic_admin_register_discover_plugin_abilities(): void {
 				'properties' => array(
 					'abilities' => array(
 						'type'        => 'array',
-						'description' => __( 'List of discovered plugin abilities.', 'wp-agentic-admin' ),
+						'description' => __( 'List of discovered plugin abilities.', 'agentic-admin' ),
 					),
 					'total'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of discovered abilities.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of discovered abilities.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_discover_plugin_abilities',
+			'execute_callback'    => 'agentic_admin_execute_discover_plugin_abilities',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -70,7 +70,7 @@ function wp_agentic_admin_register_discover_plugin_abilities(): void {
 		),
 		array(
 			'keywords'       => array( 'discover', 'find abilities', 'plugin abilities', 'other plugins abilities', 'available tools', 'what can' ),
-			'initialMessage' => __( 'Discovering abilities from other plugins...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Discovering abilities from other plugins...', 'agentic-admin' ),
 		)
 	);
 }
@@ -92,7 +92,7 @@ function wp_agentic_admin_register_discover_plugin_abilities(): void {
  *
  * @return array<string, string> Map of namespace => icon URL.
  */
-function wp_agentic_admin_get_plugin_icons(): array {
+function agentic_admin_get_plugin_icons(): array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -144,7 +144,7 @@ function wp_agentic_admin_get_plugin_icons(): array {
  * @param array $input Optional input parameters.
  * @return array Result with discovered plugin abilities.
  */
-function wp_agentic_admin_execute_discover_plugin_abilities( $input = array() ): array {
+function agentic_admin_execute_discover_plugin_abilities( $input = array() ): array {
 	$input = (array) $input;
 	if ( ! function_exists( 'wp_get_abilities' ) ) {
 		return array(
@@ -158,10 +158,10 @@ function wp_agentic_admin_execute_discover_plugin_abilities( $input = array() ):
 	// Some plugins (e.g. WooCommerce) only register abilities during MCP/REST requests.
 	// Re-fire the registration action so they get a chance to register here too.
 	// This is safe because wp_register_ability() deduplicates by name.
-	do_action( 'wp_agentic_admin_discover_abilities' );
+	do_action( 'agentic_admin_discover_abilities' );
 
 	$all_abilities = wp_get_abilities();
-	$plugin_icons  = wp_agentic_admin_get_plugin_icons();
+	$plugin_icons  = agentic_admin_get_plugin_icons();
 	$category      = isset( $input['category'] ) ? $input['category'] : '';
 	$search        = isset( $input['search'] ) ? strtolower( $input['search'] ) : '';
 
@@ -273,7 +273,7 @@ function wp_agentic_admin_execute_discover_plugin_abilities( $input = array() ):
 		'success'   => true,
 		'message'   => sprintf(
 			/* translators: %d: number of abilities */
-			__( 'Found %d plugin abilities from other plugins.', 'wp-agentic-admin' ),
+			__( 'Found %d plugin abilities from other plugins.', 'agentic-admin' ),
 			count( $external )
 		),
 		'abilities' => $external,

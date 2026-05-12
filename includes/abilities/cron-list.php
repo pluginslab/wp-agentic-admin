@@ -19,20 +19,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_cron_list(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_cron_list(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/cron-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'List Cron Events', 'wp-agentic-admin' ),
-			'description'         => __( 'List all scheduled WordPress cron events and their next run times.', 'wp-agentic-admin' ),
+			'label'               => __( 'List Cron Events', 'agentic-admin' ),
+			'description'         => __( 'List all scheduled WordPress cron events and their next run times.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'show_overdue' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Highlight overdue cron events.', 'wp-agentic-admin' ),
+						'description' => __( 'Highlight overdue cron events.', 'agentic-admin' ),
 						'default'     => true,
 					),
 				),
@@ -43,27 +43,27 @@ function wp_agentic_admin_register_cron_list(): void {
 				'properties' => array(
 					'success'       => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the operation was successful.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the operation was successful.', 'agentic-admin' ),
 					),
 					'message'       => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'total_events'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of cron events.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of cron events.', 'agentic-admin' ),
 					),
 					'overdue_count' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of overdue events.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of overdue events.', 'agentic-admin' ),
 					),
 					'events'        => array(
 						'type'        => 'array',
-						'description' => __( 'List of cron events.', 'wp-agentic-admin' ),
+						'description' => __( 'List of cron events.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_cron_list',
+			'execute_callback'    => 'agentic_admin_execute_cron_list',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -79,7 +79,7 @@ function wp_agentic_admin_register_cron_list(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'cron', 'scheduled', 'tasks', 'events', 'jobs', 'wp-cron', 'schedule', 'background' ),
-			'initialMessage' => __( 'Fetching scheduled cron events...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Fetching scheduled cron events...', 'agentic-admin' ),
 		)
 	);
 }
@@ -90,7 +90,7 @@ function wp_agentic_admin_register_cron_list(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_cron_list( array $input = array() ): array {
+function agentic_admin_execute_cron_list( array $input = array() ): array {
 	$show_overdue = isset( $input['show_overdue'] ) ? (bool) $input['show_overdue'] : true;
 	$crons        = _get_cron_array();
 	$events       = array();
@@ -100,7 +100,7 @@ function wp_agentic_admin_execute_cron_list( array $input = array() ): array {
 	if ( empty( $crons ) ) {
 		return array(
 			'success'       => true,
-			'message'       => __( 'No cron events scheduled.', 'wp-agentic-admin' ),
+			'message'       => __( 'No cron events scheduled.', 'agentic-admin' ),
 			'total_events'  => 0,
 			'overdue_count' => 0,
 			'events'        => array(),
@@ -125,7 +125,7 @@ function wp_agentic_admin_execute_cron_list( array $input = array() ): array {
 						$schedule_name = $schedules[ $schedule_name ]['display'];
 					}
 				} else {
-					$schedule_name = __( 'One-time', 'wp-agentic-admin' );
+					$schedule_name = __( 'One-time', 'agentic-admin' );
 				}
 
 				$events[] = array(
@@ -155,7 +155,7 @@ function wp_agentic_admin_execute_cron_list( array $input = array() ): array {
 	if ( $overdue > 0 && $show_overdue ) {
 		$message = sprintf(
 			/* translators: 1: total events, 2: overdue count */
-			__( 'Found %1$d scheduled cron events. %2$d are overdue and may need attention.', 'wp-agentic-admin' ),
+			__( 'Found %1$d scheduled cron events. %2$d are overdue and may need attention.', 'agentic-admin' ),
 			$total,
 			$overdue
 		);
@@ -166,7 +166,7 @@ function wp_agentic_admin_execute_cron_list( array $input = array() ): array {
 				'Found %d scheduled cron event.',
 				'Found %d scheduled cron events.',
 				$total,
-				'wp-agentic-admin'
+				'agentic-admin'
 			),
 			$total
 		);

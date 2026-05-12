@@ -26,7 +26,7 @@ A **Service Worker** is a background script that runs independently of web pages
 - Cache resources
 - Handle background tasks
 
-For WP Agentic Admin, the Service Worker loads the model **once** and keeps it in memory, serving inference requests from any WordPress admin page.
+For Agentic Admin for WordPress, the Service Worker loads the model **once** and keeps it in memory, serving inference requests from any WordPress admin page.
 
 ## How It Works
 
@@ -183,7 +183,7 @@ Safari supports Service Workers but **does not allow WebGPU access from Service 
 
 **Fallback behavior:**
 
-On Safari, WP Agentic Admin automatically falls back to **page mode**:
+On Safari, Agentic Admin for WordPress automatically falls back to **page mode**:
 - Model loads in the page context (not Service Worker)
 - Model unloads when navigating away
 - Must reload on each visit to Agentic Admin page
@@ -192,7 +192,7 @@ The plugin detects Safari and uses page mode transparently — no configuration 
 
 ## UI Indicator
 
-WP Agentic Admin shows a **"Persistent"** badge in the model status area when Service Worker mode is active:
+Agentic Admin for WordPress shows a **"Persistent"** badge in the model status area when Service Worker mode is active:
 
 ```
 ┌─────────────────────────────────────┐

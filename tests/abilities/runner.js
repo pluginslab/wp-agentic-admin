@@ -453,7 +453,7 @@ function printResults( results, totalTime ) {
 ( async () => {
 	console.log( '' );
 	console.log( '╔══════════════════════════════════════════════╗' );
-	console.log( '║   WP Agentic Admin — Ability Test Runner    ║' );
+	console.log( '║   Agentic Admin for WordPress — Ability Test Runner    ║' );
 	console.log( '║   Backend: Ollama (local)                   ║' );
 	console.log( '╚══════════════════════════════════════════════╝' );
 	console.log( '' );

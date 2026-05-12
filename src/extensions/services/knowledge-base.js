@@ -15,7 +15,7 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'KnowledgeBase' );
 
-const STATUS_KEY = 'wp_agentic_admin_kb_status';
+const STATUS_KEY = 'agentic_admin_kb_status';
 
 /* ── Singleton state ─────────────────────────────────────────────────── */
 

@@ -9,7 +9,7 @@
  *   - LOCAL_ONLY Hidden from the LLM when an external AI provider is active.
  *   - LABS       Opt-in. Preserved for v1.x add-on releases. Off by default
  *                in v0.11+ (enabled via PHP's WP_AGENTIC_ADMIN_ENABLE_LABS
- *                constant or the wp_agentic_admin_enabled_abilities filter).
+ *                constant or the agentic_admin_enabled_abilities filter).
  *
  * NOTE for PR 1: REGISTRARS contains every ability so behavior is unchanged.
  * The category sets exist for future use by PR 4 (which will read the

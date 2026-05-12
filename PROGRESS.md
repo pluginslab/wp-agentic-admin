@@ -1,6 +1,6 @@
 # CloudFest Hackathon 2026 — Progress Tracker
 
-Live progress for the WP Agentic Admin hackathon project. Updated as milestones are reached.
+Live progress for the Agentic Admin for WordPress hackathon project. Updated as milestones are reached.
 
 ## Day 3 — March 22
 

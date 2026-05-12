@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_site_health(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_site_health(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/site-health',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Site Health', 'wp-agentic-admin' ),
-			'description'         => __( 'Get comprehensive site health information.', 'wp-agentic-admin' ),
+			'label'               => __( 'Site Health', 'agentic-admin' ),
+			'description'         => __( 'Get comprehensive site health information.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,51 +36,51 @@ function wp_agentic_admin_register_site_health(): void {
 				'properties' => array(
 					'wordpress_version' => array(
 						'type'        => 'string',
-						'description' => __( 'WordPress version.', 'wp-agentic-admin' ),
+						'description' => __( 'WordPress version.', 'agentic-admin' ),
 					),
 					'php_version'       => array(
 						'type'        => 'string',
-						'description' => __( 'PHP version.', 'wp-agentic-admin' ),
+						'description' => __( 'PHP version.', 'agentic-admin' ),
 					),
 					'mysql_version'     => array(
 						'type'        => 'string',
-						'description' => __( 'MySQL version.', 'wp-agentic-admin' ),
+						'description' => __( 'MySQL version.', 'agentic-admin' ),
 					),
 					'site_url'          => array(
 						'type'        => 'string',
-						'description' => __( 'Site URL.', 'wp-agentic-admin' ),
+						'description' => __( 'Site URL.', 'agentic-admin' ),
 					),
 					'home_url'          => array(
 						'type'        => 'string',
-						'description' => __( 'Home URL.', 'wp-agentic-admin' ),
+						'description' => __( 'Home URL.', 'agentic-admin' ),
 					),
 					'is_multisite'      => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether this is a multisite installation.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether this is a multisite installation.', 'agentic-admin' ),
 					),
 					'active_theme'      => array(
 						'type'        => 'object',
-						'description' => __( 'Active theme information.', 'wp-agentic-admin' ),
+						'description' => __( 'Active theme information.', 'agentic-admin' ),
 					),
 					'debug_mode'        => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether debug mode is enabled.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether debug mode is enabled.', 'agentic-admin' ),
 					),
 					'memory_limit'      => array(
 						'type'        => 'string',
-						'description' => __( 'PHP memory limit.', 'wp-agentic-admin' ),
+						'description' => __( 'PHP memory limit.', 'agentic-admin' ),
 					),
 					'max_upload_size'   => array(
 						'type'        => 'string',
-						'description' => __( 'Maximum upload size.', 'wp-agentic-admin' ),
+						'description' => __( 'Maximum upload size.', 'agentic-admin' ),
 					),
 					'server_software'   => array(
 						'type'        => 'string',
-						'description' => __( 'Server software.', 'wp-agentic-admin' ),
+						'description' => __( 'Server software.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_site_health',
+			'execute_callback'    => 'agentic_admin_execute_site_health',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -96,7 +96,7 @@ function wp_agentic_admin_register_site_health(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'health', 'version', 'php', 'mysql', 'info', 'status', 'server', 'wordpress version', 'wp version', 'memory', 'memory limit', 'theme', 'url', 'site url', 'home url' ),
-			'initialMessage' => __( 'Let me check that for you...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Let me check that for you...', 'agentic-admin' ),
 		)
 	);
 }
@@ -107,7 +107,7 @@ function wp_agentic_admin_register_site_health(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_site_health( array $input = array() ): array {
+function agentic_admin_execute_site_health( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 	global $wpdb;
 

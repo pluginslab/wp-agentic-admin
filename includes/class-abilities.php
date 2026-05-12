@@ -4,7 +4,7 @@
  *
  * Loads and registers SRE abilities using the extensible registration API.
  * Third-party plugins can register their own abilities by hooking into
- * the 'wp_agentic_admin_register_abilities' action.
+ * the 'agentic_admin_register_abilities' action.
  *
  * @license GPL-2.0-or-later
  * @package WPAgenticAdmin
@@ -69,8 +69,8 @@ class Abilities {
 		\wp_register_ability_category(
 			'sre-tools',
 			array(
-				'label'       => \__( 'SRE Tools', 'wp-agentic-admin' ),
-				'description' => \__( 'Site Reliability Engineering tools for diagnostics and maintenance.', 'wp-agentic-admin' ),
+				'label'       => \__( 'SRE Tools', 'agentic-admin' ),
+				'description' => \__( 'Site Reliability Engineering tools for diagnostics and maintenance.', 'agentic-admin' ),
 			)
 		);
 	}
@@ -124,13 +124,13 @@ class Abilities {
 	 * Register core abilities and fire action for third-party plugins.
 	 *
 	 * This is called on 'wp_abilities_api_init' to ensure the WP Abilities API
-	 * is ready. Third-party plugins should hook into 'wp_agentic_admin_register_abilities'
+	 * is ready. Third-party plugins should hook into 'agentic_admin_register_abilities'
 	 * to register their own abilities.
 	 */
 	public function register_core_abilities(): void {
 		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
 
-		foreach ( wp_agentic_admin_resolve_enabled_abilities() as $slug => $register_fn ) {
+		foreach ( agentic_admin_resolve_enabled_abilities() as $slug => $register_fn ) {
 			if ( function_exists( $register_fn ) ) {
 				$register_fn();
 			} else {
@@ -151,13 +151,13 @@ class Abilities {
 		 * Fires after core abilities are registered.
 		 *
 		 * Third-party plugins can use this action to register their own abilities
-		 * using the wp_agentic_admin_register_ability() function.
+		 * using the agentic_admin_register_ability() function.
 		 *
 		 * @since 0.1.0
 		 *
 		 * @example
-		 * add_action( 'wp_agentic_admin_register_abilities', function() {
-		 *     wp_agentic_admin_register_ability(
+		 * add_action( 'agentic_admin_register_abilities', function() {
+		 *     agentic_admin_register_ability(
 		 *         'my-plugin/my-ability',
 		 *         array(
 		 *             'label'            => 'My Ability',
@@ -173,6 +173,6 @@ class Abilities {
 		 *     );
 		 * });
 		 */
-		\do_action( 'wp_agentic_admin_register_abilities' );
+		\do_action( 'agentic_admin_register_abilities' );
 	}
 }

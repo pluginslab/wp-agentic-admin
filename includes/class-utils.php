@@ -35,7 +35,7 @@ class Utils {
 	 * @return array
 	 */
 	public static function get_block_editor_post_types(): array {
-		$cache_key = 'wp_agentic_admin_post_types';
+		$cache_key = 'agentic_admin_post_types';
 		$cached    = get_transient( $cache_key );
 
 		if ( false !== $cached && is_array( $cached ) ) {
@@ -57,15 +57,15 @@ class Utils {
 		// Cache for 1 hour.
 		set_transient( $cache_key, $supported_post_types, HOUR_IN_SECONDS );
 
-		return apply_filters( 'wp_agentic_admin_supported_post_types', $supported_post_types );
+		return apply_filters( 'agentic_admin_supported_post_types', $supported_post_types );
 	}
 
 	/**
 	 * Clear cache helper.
 	 */
 	public static function clear_cache(): void {
-		delete_transient( 'wp_agentic_admin_post_types' );
-		delete_transient( 'wp_agentic_admin_cache' );
+		delete_transient( 'agentic_admin_post_types' );
+		delete_transient( 'agentic_admin_cache' );
 	}
 
 	/**

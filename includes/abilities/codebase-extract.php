@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_codebase_extract(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_codebase_extract(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/codebase-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Extract Codebase', 'wp-agentic-admin' ),
-			'description'         => __( 'Extract code chunks from active theme and plugins for indexing.', 'wp-agentic-admin' ),
+			'label'               => __( 'Extract Codebase', 'agentic-admin' ),
+			'description'         => __( 'Extract code chunks from active theme and plugins for indexing.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -35,12 +35,12 @@ function wp_agentic_admin_register_codebase_extract(): void {
 					'offset' => array(
 						'type'        => 'integer',
 						'default'     => 0,
-						'description' => __( 'File offset for pagination.', 'wp-agentic-admin' ),
+						'description' => __( 'File offset for pagination.', 'agentic-admin' ),
 					),
 					'limit'  => array(
 						'type'        => 'integer',
 						'default'     => 50,
-						'description' => __( 'Max files per page.', 'wp-agentic-admin' ),
+						'description' => __( 'Max files per page.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -50,19 +50,19 @@ function wp_agentic_admin_register_codebase_extract(): void {
 				'properties' => array(
 					'chunks'      => array(
 						'type'        => 'array',
-						'description' => __( 'Code chunks with path, line range, and content.', 'wp-agentic-admin' ),
+						'description' => __( 'Code chunks with path, line range, and content.', 'agentic-admin' ),
 					),
 					'total_files' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of scannable files.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of scannable files.', 'agentic-admin' ),
 					),
 					'has_more'    => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether more pages are available.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether more pages are available.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_codebase_extract',
+			'execute_callback'    => 'agentic_admin_execute_codebase_extract',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -78,7 +78,7 @@ function wp_agentic_admin_register_codebase_extract(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'extract', 'codebase', 'code', 'source' ),
-			'initialMessage' => __( 'Extracting code from your site...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Extracting code from your site...', 'agentic-admin' ),
 		)
 	);
 }
@@ -88,7 +88,7 @@ function wp_agentic_admin_register_codebase_extract(): void {
  *
  * @return string[] Array of absolute file paths.
  */
-function wp_agentic_admin_collect_code_files(): array {
+function agentic_admin_collect_code_files(): array {
 	$files = array();
 
 	// Skip directories.
@@ -108,7 +108,7 @@ function wp_agentic_admin_collect_code_files(): array {
 	if ( is_dir( $theme_dir ) ) {
 		$files = array_merge(
 			$files,
-			wp_agentic_admin_scan_directory( $theme_dir, $extensions, $skip_dirs, $skip_patterns, $max_size )
+			agentic_admin_scan_directory( $theme_dir, $extensions, $skip_dirs, $skip_patterns, $max_size )
 		);
 	}
 
@@ -130,7 +130,7 @@ function wp_agentic_admin_collect_code_files(): array {
 		}
 
 		// Skip ourselves.
-		if ( 'wp-agentic-admin' === $plugin_slug ) {
+		if ( 'agentic-admin' === $plugin_slug ) {
 			continue;
 		}
 
@@ -138,7 +138,7 @@ function wp_agentic_admin_collect_code_files(): array {
 		if ( is_dir( $plugin_dir ) ) {
 			$files = array_merge(
 				$files,
-				wp_agentic_admin_scan_directory( $plugin_dir, $extensions, $skip_dirs, $skip_patterns, $max_size )
+				agentic_admin_scan_directory( $plugin_dir, $extensions, $skip_dirs, $skip_patterns, $max_size )
 			);
 		}
 	}
@@ -158,7 +158,7 @@ function wp_agentic_admin_collect_code_files(): array {
  * @param int      $depth         Current recursion depth.
  * @return string[] Array of file paths.
  */
-function wp_agentic_admin_scan_directory(
+function agentic_admin_scan_directory(
 	string $dir,
 	array $extensions,
 	array $skip_dirs,
@@ -187,7 +187,7 @@ function wp_agentic_admin_scan_directory(
 			}
 			$files = array_merge(
 				$files,
-				wp_agentic_admin_scan_directory(
+				agentic_admin_scan_directory(
 					$item->getPathname(),
 					$extensions,
 					$skip_dirs,
@@ -239,7 +239,7 @@ function wp_agentic_admin_scan_directory(
  * @param string $base_path Base path to strip for relative paths.
  * @return array Array of chunk arrays with path, start_line, end_line, content, type.
  */
-function wp_agentic_admin_chunk_file( string $file_path, string $base_path ): array {
+function agentic_admin_chunk_file( string $file_path, string $base_path ): array {
 	global $wp_filesystem;
 	if ( ! $wp_filesystem ) {
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -272,14 +272,14 @@ function wp_agentic_admin_chunk_file( string $file_path, string $base_path ): ar
 	$chunks = array();
 
 	if ( 'php' === $ext ) {
-		$chunks = wp_agentic_admin_chunk_php( $lines, $relative_path );
+		$chunks = agentic_admin_chunk_php( $lines, $relative_path );
 	} elseif ( 'js' === $ext ) {
-		$chunks = wp_agentic_admin_chunk_js( $lines, $relative_path );
+		$chunks = agentic_admin_chunk_js( $lines, $relative_path );
 	}
 
 	// Fallback: if no chunks found, split into ~40-line blocks.
 	if ( empty( $chunks ) ) {
-		$chunks = wp_agentic_admin_chunk_by_lines( $lines, $relative_path, 40 );
+		$chunks = agentic_admin_chunk_by_lines( $lines, $relative_path, 40 );
 	}
 
 	return $chunks;
@@ -292,7 +292,7 @@ function wp_agentic_admin_chunk_file( string $file_path, string $base_path ): ar
  * @param string   $relative_path Relative file path.
  * @return array Array of chunks.
  */
-function wp_agentic_admin_chunk_php( array $lines, string $relative_path ): array {
+function agentic_admin_chunk_php( array $lines, string $relative_path ): array {
 	$chunks        = array();
 	$current_start = 0;
 	$brace_depth   = 0;
@@ -376,7 +376,7 @@ function wp_agentic_admin_chunk_php( array $lines, string $relative_path ): arra
  * @param string   $relative_path Relative file path.
  * @return array Array of chunks.
  */
-function wp_agentic_admin_chunk_js( array $lines, string $relative_path ): array {
+function agentic_admin_chunk_js( array $lines, string $relative_path ): array {
 	$chunks        = array();
 	$current_start = 0;
 	$brace_depth   = 0;
@@ -461,7 +461,7 @@ function wp_agentic_admin_chunk_js( array $lines, string $relative_path ): array
  * @param int      $block_size    Lines per block.
  * @return array Array of chunks.
  */
-function wp_agentic_admin_chunk_by_lines( array $lines, string $relative_path, int $block_size = 40 ): array {
+function agentic_admin_chunk_by_lines( array $lines, string $relative_path, int $block_size = 40 ): array {
 	$chunks = array();
 	$total  = count( $lines );
 
@@ -489,11 +489,11 @@ function wp_agentic_admin_chunk_by_lines( array $lines, string $relative_path, i
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_codebase_extract( array $input = array() ): array {
+function agentic_admin_execute_codebase_extract( array $input = array() ): array {
 	$offset = isset( $input['offset'] ) ? max( 0, absint( $input['offset'] ) ) : 0;
 	$limit  = isset( $input['limit'] ) ? min( absint( $input['limit'] ), 100 ) : 50;
 
-	$all_files   = wp_agentic_admin_collect_code_files();
+	$all_files   = agentic_admin_collect_code_files();
 	$total_files = count( $all_files );
 
 	// Paginate files.
@@ -506,7 +506,7 @@ function wp_agentic_admin_execute_codebase_extract( array $input = array() ): ar
 	$chunks = array();
 
 	foreach ( $page_files as $file_path ) {
-		$file_chunks = wp_agentic_admin_chunk_file( $file_path, $wp_content_dir );
+		$file_chunks = agentic_admin_chunk_file( $file_path, $wp_content_dir );
 		foreach ( $file_chunks as $chunk ) {
 			$chunks[] = $chunk;
 		}

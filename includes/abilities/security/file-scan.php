@@ -21,13 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_file_scan(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_file_scan(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/file-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Scan Files for Malware Patterns', 'wp-agentic-admin' ),
-			'description'         => __( 'Scan PHP files in themes and plugins for obfuscation, shell execution, backdoors, and injected code.', 'wp-agentic-admin' ),
+			'label'               => __( 'Scan Files for Malware Patterns', 'agentic-admin' ),
+			'description'         => __( 'Scan PHP files in themes and plugins for obfuscation, shell execution, backdoors, and injected code.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -35,12 +35,12 @@ function wp_agentic_admin_register_file_scan(): void {
 				'properties'           => array(
 					'scan_plugins' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Scan plugin files.', 'wp-agentic-admin' ),
+						'description' => __( 'Scan plugin files.', 'agentic-admin' ),
 						'default'     => true,
 					),
 					'scan_themes'  => array(
 						'type'        => 'boolean',
-						'description' => __( 'Scan theme files.', 'wp-agentic-admin' ),
+						'description' => __( 'Scan theme files.', 'agentic-admin' ),
 						'default'     => true,
 					),
 				),
@@ -51,27 +51,27 @@ function wp_agentic_admin_register_file_scan(): void {
 				'properties' => array(
 					'success'       => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the scan completed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the scan completed.', 'agentic-admin' ),
 					),
 					'message'       => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'files_scanned' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total PHP files scanned.', 'wp-agentic-admin' ),
+						'description' => __( 'Total PHP files scanned.', 'agentic-admin' ),
 					),
 					'total_hits'    => array(
 						'type'        => 'integer',
-						'description' => __( 'Total files with suspicious patterns.', 'wp-agentic-admin' ),
+						'description' => __( 'Total files with suspicious patterns.', 'agentic-admin' ),
 					),
 					'findings'      => array(
 						'type'        => 'array',
-						'description' => __( 'List of files with matched patterns.', 'wp-agentic-admin' ),
+						'description' => __( 'List of files with matched patterns.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_file_scan',
+			'execute_callback'    => 'agentic_admin_execute_file_scan',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -87,7 +87,7 @@ function wp_agentic_admin_register_file_scan(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'file scan', 'malware scan', 'scan files', 'obfuscated', 'backdoor', 'shell', 'eval', 'infected files', 'scan themes', 'scan plugins' ),
-			'initialMessage' => __( 'Scanning PHP files for malware patterns...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Scanning PHP files for malware patterns...', 'agentic-admin' ),
 		)
 	);
 }
@@ -102,13 +102,13 @@ function wp_agentic_admin_register_file_scan(): void {
  * so this file does not contain the literal function names it scans for.
  * Otherwise the scanner would flag its own source code.
  *
- * Filterable via the `wp_agentic_admin_file_scan_patterns` hook.
+ * Filterable via the `agentic_admin_file_scan_patterns` hook.
  *
  * @return array Array of pattern definitions.
  */
-function wp_agentic_admin_get_malware_patterns(): array {
+function agentic_admin_get_malware_patterns(): array {
 	// NOTE: This plugin's own directory is excluded from scanning via the
-	// wp_agentic_admin_file_scan_excluded_paths filter (see execute function),
+	// agentic_admin_file_scan_excluded_paths filter (see execute function),
 	// so these literal strings won't trigger self-detection.
 	$patterns = array(
 		array(
@@ -186,7 +186,7 @@ function wp_agentic_admin_get_malware_patterns(): array {
 	 *
 	 * @param array $patterns Array of pattern definitions.
 	 */
-	return apply_filters( 'wp_agentic_admin_file_scan_patterns', $patterns );
+	return apply_filters( 'agentic_admin_file_scan_patterns', $patterns );
 }
 
 /**
@@ -195,12 +195,12 @@ function wp_agentic_admin_get_malware_patterns(): array {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
+function agentic_admin_execute_file_scan( array $input = array() ): array {
 	$scan_plugins = isset( $input['scan_plugins'] ) ? (bool) $input['scan_plugins'] : true;
 	$scan_themes  = isset( $input['scan_themes'] ) ? (bool) $input['scan_themes'] : true;
 
 	$risk_threshold = 6.0;
-	$patterns       = wp_agentic_admin_get_malware_patterns();
+	$patterns       = agentic_admin_get_malware_patterns();
 	$dirs_to_scan   = array();
 
 	if ( $scan_plugins ) {
@@ -233,7 +233,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 	 *
 	 * @param array $skip_dirs Array of directory basenames to skip.
 	 */
-	$skip_dirs = apply_filters( 'wp_agentic_admin_file_scan_skip_dirs', $skip_dirs );
+	$skip_dirs = apply_filters( 'agentic_admin_file_scan_skip_dirs', $skip_dirs );
 
 	// Exclude this plugin's own directory — it contains pattern strings that would self-trigger.
 	$self_dir = defined( 'WP_AGENTIC_ADMIN_PLUGIN_DIR' ) ? wp_normalize_path( WP_AGENTIC_ADMIN_PLUGIN_DIR ) : '';
@@ -249,7 +249,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 	 * @param array $excluded_paths Array of absolute paths to exclude.
 	 */
 	$excluded_paths = apply_filters(
-		'wp_agentic_admin_file_scan_excluded_paths',
+		'agentic_admin_file_scan_excluded_paths',
 		$self_dir ? array( $self_dir ) : array()
 	);
 
@@ -303,7 +303,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 			++$files_scanned;
 
 			$file_path = $file_info->getPathname();
-			$relative  = wp_agentic_admin_get_content_relative_path( $file_path );
+			$relative  = agentic_admin_get_content_relative_path( $file_path );
 
 			// Track which plugin/theme/mu-plugin this file belongs to.
 			$relative_to_dir = substr( $file_path, strlen( $dir ) + 1 );
@@ -321,7 +321,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 				}
 			}
 
-			$file_matches = wp_agentic_admin_scan_file_for_patterns( $file_path, $patterns );
+			$file_matches = agentic_admin_scan_file_for_patterns( $file_path, $patterns );
 
 			if ( ! empty( $file_matches ) ) {
 				// Use the highest risk score among matched patterns.
@@ -360,14 +360,14 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 	if ( 0 === $total_hits ) {
 		$message = sprintf(
 			/* translators: 1: files scanned, 2: filtered count */
-			__( 'Scanned %1$d PHP files. No high-risk patterns detected (threshold: 6.0/10). %2$d low-risk matches filtered out.', 'wp-agentic-admin' ),
+			__( 'Scanned %1$d PHP files. No high-risk patterns detected (threshold: 6.0/10). %2$d low-risk matches filtered out.', 'agentic-admin' ),
 			$files_scanned,
 			$filtered_out
 		);
 	} else {
 		$message = sprintf(
 			/* translators: 1: high risk count, 2: files scanned, 3: filtered count */
-			__( 'Scanned %2$d PHP files. Found %1$d file(s) with high-risk patterns (score >= 6.0/10). %3$d low-risk matches filtered out.', 'wp-agentic-admin' ),
+			__( 'Scanned %2$d PHP files. Found %1$d file(s) with high-risk patterns (score >= 6.0/10). %3$d low-risk matches filtered out.', 'agentic-admin' ),
 			$total_hits,
 			$files_scanned,
 			$filtered_out
@@ -375,8 +375,8 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
 	}
 
 	// Resolve scanned plugin/theme slugs to names.
-	$plugins_list    = wp_agentic_admin_resolve_plugin_names( array_keys( $scanned_plugins ) );
-	$themes_list     = wp_agentic_admin_resolve_theme_names( array_keys( $scanned_themes ) );
+	$plugins_list    = agentic_admin_resolve_plugin_names( array_keys( $scanned_plugins ) );
+	$themes_list     = agentic_admin_resolve_theme_names( array_keys( $scanned_themes ) );
 	$mu_plugins_list = array_keys( $scanned_mu_plugins );
 	sort( $mu_plugins_list );
 
@@ -404,7 +404,7 @@ function wp_agentic_admin_execute_file_scan( array $input = array() ): array {
  * @param array  $patterns  Patterns to scan for.
  * @return array Matched patterns with details.
  */
-function wp_agentic_admin_scan_file_for_patterns( string $file_path, array $patterns ): array {
+function agentic_admin_scan_file_for_patterns( string $file_path, array $patterns ): array {
 	// Skip files larger than 2MB — likely not PHP source.
 	if ( filesize( $file_path ) > 2 * 1024 * 1024 ) {
 		return array();
@@ -442,7 +442,7 @@ function wp_agentic_admin_scan_file_for_patterns( string $file_path, array $patt
  * @param array $slugs Array of plugin directory slugs.
  * @return array Array of { slug, name } objects.
  */
-function wp_agentic_admin_resolve_plugin_names( array $slugs ): array {
+function agentic_admin_resolve_plugin_names( array $slugs ): array {
 	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
@@ -484,7 +484,7 @@ function wp_agentic_admin_resolve_plugin_names( array $slugs ): array {
  * @param array $slugs Array of theme directory slugs.
  * @return array Array of { slug, name } objects.
  */
-function wp_agentic_admin_resolve_theme_names( array $slugs ): array {
+function agentic_admin_resolve_theme_names( array $slugs ): array {
 	$result = array();
 
 	foreach ( $slugs as $slug ) {
@@ -511,7 +511,7 @@ function wp_agentic_admin_resolve_theme_names( array $slugs ): array {
  * @param string $absolute_path Absolute file path.
  * @return string Relative path from wp-content.
  */
-function wp_agentic_admin_get_content_relative_path( string $absolute_path ): string {
+function agentic_admin_get_content_relative_path( string $absolute_path ): string {
 	$content_dir = WP_CONTENT_DIR;
 
 	if ( str_starts_with( $absolute_path, $content_dir ) ) {
