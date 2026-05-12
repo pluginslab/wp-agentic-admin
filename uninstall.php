@@ -18,10 +18,10 @@ delete_transient( 'wp_agentic_admin_post_types' );
 
 // 2. Multisite Cleanup.
 if ( is_multisite() ) {
-	$sites = get_sites();
+	$wp_agentic_admin_sites = get_sites();
 
-	foreach ( $sites as $site ) {
-		switch_to_blog( $site->blog_id );
+	foreach ( $wp_agentic_admin_sites as $wp_agentic_admin_site ) {
+		switch_to_blog( $wp_agentic_admin_site->blog_id );
 
 		delete_option( 'wp_agentic_admin_settings' );
 		delete_option( 'wp_agentic_admin_version' );
