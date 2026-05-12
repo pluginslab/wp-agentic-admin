@@ -43,6 +43,15 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			const isOpen = container.classList.toggle( 'is-open' );
 			toggleBtn.classList.toggle( 'is-active', isOpen );
 			toggleLink.setAttribute( 'aria-expanded', String( isOpen ) );
+			// First open kicks the AdminSidebar React component out of
+			// its "wait" state so it can run the WebGPU check and start
+			// auto-loading the model. Subsequent opens are no-ops on
+			// React's side. See AdminSidebar.jsx.
+			if ( isOpen ) {
+				window.dispatchEvent(
+					new CustomEvent( 'wp-agentic-admin/sidebar-opened' )
+				);
+			}
 		} );
 	}
 
