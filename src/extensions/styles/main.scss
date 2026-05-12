@@ -1093,9 +1093,17 @@
 	// tab) is active, no left-side tab should appear selected. The cog
 	// itself gets .is-active via React; this hides the chat/abilities/
 	// plugin-abilities underline so only one view reads as "selected".
+	//
+	// Two underlines to suppress:
+	//   - box-shadow on the tab itself (3px blue active-state inset)
+	//   - ::after pseudo (1.5px blue focus-visible indicator)
 	&--settings-active .wp-agentic-admin-tabs
 		.components-tab-panel__tabs-item.is-active {
 		box-shadow: none;
+
+		&::after {
+			background: transparent;
+		}
 	}
 }
 

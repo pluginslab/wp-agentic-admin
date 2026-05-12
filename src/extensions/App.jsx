@@ -245,12 +245,27 @@ const App = () => {
 	return (
 		<div className="wp-agentic-admin-app">
 			<div className="wp-agentic-admin-main">
+				{ /* Event delegation: the wrapper itself isn't interactive — keyboard users
+					tab into the actual <button role="tab"> children, so the a11y warnings
+					about non-interactive click handlers don't apply. */ }
+				{ /* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */ }
 				<div
 					className={ `wp-agentic-admin-tabs-wrapper${
 						showSettings
 							? ' wp-agentic-admin-tabs-wrapper--settings-active'
 							: ''
 					}` }
+					onClick={ ( e ) => {
+						// TabPanel.onSelect only fires on tab CHANGE, but
+						// clicking the already-active tab while Settings is
+						// open should still close Settings. Catch it here.
+						if (
+							showSettings &&
+							e.target.closest( '[role="tab"]' )
+						) {
+							setShowSettings( false );
+						}
+					} }
 				>
 					<TabPanel
 						className="wp-agentic-admin-tabs"
