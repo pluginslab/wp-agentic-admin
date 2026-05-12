@@ -1,4 +1,4 @@
-# WP-Agentic-Admin
+# WP Agentic Admin
 
 ![WP Agentic Admin - CloudFest Hackathon 2026](.github/assets/cloudfest-2026-hackathon.png)
 
@@ -6,9 +6,9 @@
 
 A privacy-first AI assistant that runs entirely in your browser, helping you diagnose and fix WordPress issues through natural language commands.
 
-## What is WP-Agentic-Admin?
+## What is WP Agentic Admin?
 
-WP-Agentic-Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English:
+WP Agentic Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English:
 
 > "My site is throwing 500 errors"
 
@@ -33,7 +33,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 
 ## Architecture
 
-WP-Agentic-Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI decides tool selection one action at a time:
+WP Agentic Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI decides tool selection one action at a time:
 
 ### System Design
 
@@ -113,14 +113,14 @@ Click the badge above to launch a fully working WordPress instance with WP Agent
 
 ## Installation
 
-1. Download and install WP-Agentic-Admin
+1. Download and install WP Agentic Admin
 2. Navigate to "Agentic Admin" in your WordPress admin menu
 3. Wait for the AI model to download (one-time, ~1.2GB for Qwen 3 1.7B or ~4.5GB for Qwen 2.5 7B)
 4. Start chatting!
 
 ## Persistent AI Mode
 
-WP-Agentic-Admin uses **Service Worker technology** to keep the AI model loaded in memory, even when navigating between WordPress admin pages. This provides several benefits:
+WP Agentic Admin uses **Service Worker technology** to keep the AI model loaded in memory, even when navigating between WordPress admin pages. This provides several benefits:
 
 ### Benefits
 
