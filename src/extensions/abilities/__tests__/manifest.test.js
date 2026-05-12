@@ -101,9 +101,6 @@ describe( 'abilities manifest', () => {
 			[
 				'write-file',
 				'content-generate',
-				'backup-check',
-				'opcode-cache-status',
-				'disk-usage',
 				'discover-plugin-abilities',
 				'run-plugin-ability',
 			].sort()
