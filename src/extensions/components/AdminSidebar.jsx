@@ -50,10 +50,39 @@ const AdminSidebar = () => {
 	);
 	const [ initProgress, setInitProgress ] = useState( 5 );
 
+	// Most wp-admin page loads never open the sidebar. Defer the WebGPU
+	// check + 1.2 GB model load until the user actually opens it.
+	// Toggle in admin-sidebar.js dispatches 'wp-agentic-admin/sidebar-opened'
+	// on first open. Issue #116.
+	const [ hasOpened, setHasOpened ] = useState( () =>
+		typeof document !== 'undefined'
+			? document
+					.getElementById( 'wp-agentic-admin-sidebar' )
+					?.classList.contains( 'is-open' ) || false
+			: false
+	);
+
+	useEffect( () => {
+		if ( hasOpened ) {
+			return undefined;
+		}
+		const handler = () => setHasOpened( true );
+		window.addEventListener( 'wp-agentic-admin/sidebar-opened', handler );
+		return () =>
+			window.removeEventListener(
+				'wp-agentic-admin/sidebar-opened',
+				handler
+			);
+	}, [ hasOpened ] );
+
 	/**
-	 * Background WebGPU check and auto-load cached model on mount
+	 * Background WebGPU check and auto-load cached model — runs only
+	 * after the user opens the sidebar for the first time.
 	 */
 	useEffect( () => {
+		if ( ! hasOpened ) {
+			return;
+		}
 		const initializeApp = async () => {
 			try {
 				setInitMessage( 'Checking WebGPU support...' );
@@ -134,7 +163,7 @@ const AdminSidebar = () => {
 		};
 
 		initializeApp();
-	}, [] );
+	}, [ hasOpened ] );
 
 	const handleModelReady = useCallback( () => {
 		setModelReady( true );
