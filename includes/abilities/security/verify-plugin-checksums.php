@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_verify_plugin_checksums(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_verify_plugin_checksums(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/verify-plugin-checksums',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Verify Plugin Checksums', 'wp-agentic-admin' ),
-			'description'         => __( 'Verify installed plugin file checksums against the WordPress.org API.', 'wp-agentic-admin' ),
+			'label'               => __( 'Verify Plugin Checksums', 'agentic-admin' ),
+			'description'         => __( 'Verify installed plugin file checksums against the WordPress.org API.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -33,7 +33,7 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
 				'properties'           => array(
 					'include_diffs' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Include diffs for modified files by fetching originals from WordPress.org SVN.', 'wp-agentic-admin' ),
+						'description' => __( 'Include diffs for modified files by fetching originals from WordPress.org SVN.', 'agentic-admin' ),
 						'default'     => true,
 					),
 				),
@@ -44,35 +44,35 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
 				'properties' => array(
 					'success'        => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether all verifiable plugins passed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether all verifiable plugins passed.', 'agentic-admin' ),
 					),
 					'message'        => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'total_plugins'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Total installed plugins checked.', 'wp-agentic-admin' ),
+						'description' => __( 'Total installed plugins checked.', 'agentic-admin' ),
 					),
 					'verified_count' => array(
 						'type'        => 'integer',
-						'description' => __( 'Plugins that passed verification.', 'wp-agentic-admin' ),
+						'description' => __( 'Plugins that passed verification.', 'agentic-admin' ),
 					),
 					'failed_count'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Plugins with checksum issues.', 'wp-agentic-admin' ),
+						'description' => __( 'Plugins with checksum issues.', 'agentic-admin' ),
 					),
 					'skipped_count'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Plugins skipped (no checksums available).', 'wp-agentic-admin' ),
+						'description' => __( 'Plugins skipped (no checksums available).', 'agentic-admin' ),
 					),
 					'results'        => array(
 						'type'        => 'array',
-						'description' => __( 'Per-plugin verification results.', 'wp-agentic-admin' ),
+						'description' => __( 'Per-plugin verification results.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_verify_plugin_checksums',
+			'execute_callback'    => 'agentic_admin_execute_verify_plugin_checksums',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -88,7 +88,7 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'plugin checksum', 'verify plugin', 'plugin integrity', 'plugin hacked', 'plugin modified', 'plugin security', 'plugin malware' ),
-			'initialMessage' => __( 'Verifying plugin file checksums...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Verifying plugin file checksums...', 'agentic-admin' ),
 		)
 	);
 }
@@ -99,7 +99,7 @@ function wp_agentic_admin_register_verify_plugin_checksums(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array() ): array {
+function agentic_admin_execute_verify_plugin_checksums( array $input = array() ): array {
 	$include_diffs = isset( $input['include_diffs'] ) ? (bool) $input['include_diffs'] : true;
 
 	if ( ! function_exists( 'get_plugins' ) ) {
@@ -113,12 +113,12 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 	$skipped     = 0;
 
 	foreach ( $all_plugins as $plugin_file => $plugin_data ) {
-		$slug    = wp_agentic_admin_get_plugin_slug( $plugin_file );
+		$slug    = agentic_admin_get_plugin_slug( $plugin_file );
 		$version = $plugin_data['Version'];
 		$name    = $plugin_data['Name'];
 
 		// Fetch checksums from WordPress.org.
-		$checksums = wp_agentic_admin_fetch_plugin_checksums( $slug, $version );
+		$checksums = agentic_admin_fetch_plugin_checksums( $slug, $version );
 
 		if ( false === $checksums ) {
 			++$skipped;
@@ -126,7 +126,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 				'plugin' => $name,
 				'slug'   => $slug,
 				'status' => 'skipped',
-				'detail' => __( 'No checksums available on WordPress.org.', 'wp-agentic-admin' ),
+				'detail' => __( 'No checksums available on WordPress.org.', 'agentic-admin' ),
 			);
 			continue;
 		}
@@ -148,14 +148,14 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 				continue;
 			}
 
-			if ( ! wp_agentic_admin_verify_file_checksum( $file_path, $hashes ) ) {
+			if ( ! agentic_admin_verify_file_checksum( $file_path, $hashes ) ) {
 				$issue = array(
 					'file'   => $file,
 					'status' => 'modified',
 				);
 
 				if ( $include_diffs ) {
-					$diff = wp_agentic_admin_get_plugin_file_diff( $slug, $version, $file, $file_path );
+					$diff = agentic_admin_get_plugin_file_diff( $slug, $version, $file, $file_path );
 					if ( null !== $diff ) {
 						$issue['diff'] = $diff;
 					}
@@ -166,7 +166,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 		}
 
 		// Detect extra files not in the checksums.
-		$local_files = wp_agentic_admin_get_plugin_files( $base_dir, $is_single, $plugin_file );
+		$local_files = agentic_admin_get_plugin_files( $base_dir, $is_single, $plugin_file );
 
 		foreach ( $local_files as $local_file ) {
 			if ( ! isset( $checksums[ $local_file ] ) ) {
@@ -183,7 +183,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 				'plugin' => $name,
 				'slug'   => $slug,
 				'status' => 'verified',
-				'detail' => __( 'All files match checksums.', 'wp-agentic-admin' ),
+				'detail' => __( 'All files match checksums.', 'agentic-admin' ),
 			);
 		} else {
 			++$failed;
@@ -203,7 +203,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 	if ( $verified > 0 ) {
 		$parts[] = sprintf(
 			/* translators: %d: number of verified plugins */
-			_n( '%d plugin verified', '%d plugins verified', $verified, 'wp-agentic-admin' ),
+			_n( '%d plugin verified', '%d plugins verified', $verified, 'agentic-admin' ),
 			$verified
 		);
 	}
@@ -211,7 +211,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 	if ( $failed > 0 ) {
 		$parts[] = sprintf(
 			/* translators: %d: number of failed plugins */
-			_n( '%d plugin with issues', '%d plugins with issues', $failed, 'wp-agentic-admin' ),
+			_n( '%d plugin with issues', '%d plugins with issues', $failed, 'agentic-admin' ),
 			$failed
 		);
 	}
@@ -219,14 +219,14 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
 	if ( $skipped > 0 ) {
 		$parts[] = sprintf(
 			/* translators: %d: number of skipped plugins */
-			_n( '%d plugin skipped (no checksums)', '%d plugins skipped (no checksums)', $skipped, 'wp-agentic-admin' ),
+			_n( '%d plugin skipped (no checksums)', '%d plugins skipped (no checksums)', $skipped, 'agentic-admin' ),
 			$skipped
 		);
 	}
 
 	$message = sprintf(
 		/* translators: 1: total plugins, 2: result details */
-		__( 'Checked %1$d plugins: %2$s.', 'wp-agentic-admin' ),
+		__( 'Checked %1$d plugins: %2$s.', 'agentic-admin' ),
 		$total,
 		implode( ', ', $parts )
 	);
@@ -251,7 +251,7 @@ function wp_agentic_admin_execute_verify_plugin_checksums( array $input = array(
  * @param string $plugin_file Plugin file path (e.g., "akismet/akismet.php" or "hello.php").
  * @return string Plugin slug.
  */
-function wp_agentic_admin_get_plugin_slug( string $plugin_file ): string {
+function agentic_admin_get_plugin_slug( string $plugin_file ): string {
 	if ( str_contains( $plugin_file, '/' ) ) {
 		return dirname( $plugin_file );
 	}
@@ -266,7 +266,7 @@ function wp_agentic_admin_get_plugin_slug( string $plugin_file ): string {
  * @param string $version Plugin version.
  * @return array|false Associative array of file => hash data, or false if unavailable.
  */
-function wp_agentic_admin_fetch_plugin_checksums( string $slug, string $version ): array|false {
+function agentic_admin_fetch_plugin_checksums( string $slug, string $version ): array|false {
 	$url = sprintf(
 		'https://downloads.wordpress.org/plugin-checksums/%s/%s.json',
 		rawurlencode( $slug ),
@@ -300,7 +300,7 @@ function wp_agentic_admin_fetch_plugin_checksums( string $slug, string $version 
  * @param array  $hashes    Expected hashes with 'sha256' and/or 'md5' keys.
  * @return bool True if the file matches.
  */
-function wp_agentic_admin_verify_file_checksum( string $file_path, array $hashes ): bool {
+function agentic_admin_verify_file_checksum( string $file_path, array $hashes ): bool {
 	if ( ! empty( $hashes['sha256'] ) ) {
 		$actual   = hash_file( 'sha256', $file_path );
 		$expected = (array) $hashes['sha256'];
@@ -324,7 +324,7 @@ function wp_agentic_admin_verify_file_checksum( string $file_path, array $hashes
  * @param string $plugin_file Plugin file path.
  * @return array List of file paths relative to the base directory.
  */
-function wp_agentic_admin_get_plugin_files( string $base_dir, bool $is_single, string $plugin_file ): array {
+function agentic_admin_get_plugin_files( string $base_dir, bool $is_single, string $plugin_file ): array {
 	$files = array();
 
 	// Single-file plugins have no directory to scan for extras.
@@ -365,7 +365,7 @@ function wp_agentic_admin_get_plugin_files( string $base_dir, bool $is_single, s
  * @param string $file_path Absolute path to the local file.
  * @return string|null Unified diff string, or null on failure.
  */
-function wp_agentic_admin_get_plugin_file_diff( string $slug, string $version, string $file, string $file_path ): ?string {
+function agentic_admin_get_plugin_file_diff( string $slug, string $version, string $file, string $file_path ): ?string {
 	$original_url = sprintf(
 		'https://plugins.svn.wordpress.org/%s/tags/%s/%s',
 		rawurlencode( $slug ),
@@ -373,5 +373,5 @@ function wp_agentic_admin_get_plugin_file_diff( string $slug, string $version, s
 		$file
 	);
 
-	return wp_agentic_admin_get_remote_file_diff( $original_url, $file_path, "a/{$slug}/{$file}", "b/{$slug}/{$file}" );
+	return agentic_admin_get_remote_file_diff( $original_url, $file_path, "a/{$slug}/{$file}", "b/{$slug}/{$file}" );
 }

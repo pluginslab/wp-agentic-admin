@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_error_log_search(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_error_log_search(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/error-log-search',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Search Error Log', 'wp-agentic-admin' ),
-			'description'         => __( 'Filter debug.log by keyword and severity level.', 'wp-agentic-admin' ),
+			'label'               => __( 'Search Error Log', 'agentic-admin' ),
+			'description'         => __( 'Filter debug.log by keyword and severity level.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,18 +36,18 @@ function wp_agentic_admin_register_error_log_search(): void {
 					'keyword' => array(
 						'type'        => 'string',
 						'default'     => '',
-						'description' => __( 'Search keyword.', 'wp-agentic-admin' ),
+						'description' => __( 'Search keyword.', 'agentic-admin' ),
 					),
 					'level'   => array(
 						'type'        => 'string',
 						'default'     => '',
 						'enum'        => array( '', 'fatal', 'warning', 'notice', 'deprecated' ),
-						'description' => __( 'Error severity level filter.', 'wp-agentic-admin' ),
+						'description' => __( 'Error severity level filter.', 'agentic-admin' ),
 					),
 					'lines'   => array(
 						'type'        => 'integer',
 						'default'     => 100,
-						'description' => __( 'Number of log lines to scan.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of log lines to scan.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -57,19 +57,19 @@ function wp_agentic_admin_register_error_log_search(): void {
 				'properties' => array(
 					'matches' => array(
 						'type'        => 'array',
-						'description' => __( 'Matching log lines.', 'wp-agentic-admin' ),
+						'description' => __( 'Matching log lines.', 'agentic-admin' ),
 					),
 					'total'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of matches.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of matches.', 'agentic-admin' ),
 					),
 					'scanned' => array(
 						'type'        => 'integer',
-						'description' => __( 'Lines scanned.', 'wp-agentic-admin' ),
+						'description' => __( 'Lines scanned.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_error_log_search',
+			'execute_callback'    => 'agentic_admin_execute_error_log_search',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -85,7 +85,7 @@ function wp_agentic_admin_register_error_log_search(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'search', 'filter', 'error', 'fatal', 'warning', 'log' ),
-			'initialMessage' => __( "I'll search the error log...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll search the error log...", 'agentic-admin' ),
 		)
 	);
 }
@@ -96,7 +96,7 @@ function wp_agentic_admin_register_error_log_search(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_error_log_search( array $input = array() ): array {
+function agentic_admin_execute_error_log_search( array $input = array() ): array {
 	$keyword   = isset( $input['keyword'] ) ? sanitize_text_field( $input['keyword'] ) : '';
 	$level     = isset( $input['level'] ) ? sanitize_text_field( $input['level'] ) : '';
 	$max_lines = isset( $input['lines'] ) ? min( absint( $input['lines'] ), 500 ) : 100;

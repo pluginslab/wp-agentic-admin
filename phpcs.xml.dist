@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="WPAgenticAdmin">
-	<description>WordPress Coding Standards for WP Agentic Admin</description>
+<ruleset name="AgenticAdmin">
+	<description>WordPress Coding Standards for Agentic Admin for WordPress</description>
 	<file>.</file>
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
@@ -15,14 +15,20 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="wp-agentic-admin"/>
+				<element value="agentic-admin"/>
 			</property>
 		</properties>
 	</rule>
+	<!-- Allowed prefixes for plugin globals.
+	     - agentic_admin: new function prefix (WP.org-required, no "wp_" lookalike)
+	     - WP_AGENTIC_ADMIN: legacy constant prefix, kept for now to avoid a
+	       broad rename (constants are not WP.org-checked).
+	     - WPAgenticAdmin: legacy namespace, same reason. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="wp_agentic_admin"/>
+				<element value="agentic_admin"/>
+				<element value="WP_AGENTIC_ADMIN"/>
 				<element value="WPAgenticAdmin"/>
 			</property>
 		</properties>

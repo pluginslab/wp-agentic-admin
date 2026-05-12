@@ -1,5 +1,5 @@
 /**
- * Custom Webpack Configuration for WP Agentic Admin
+ * Custom Webpack Configuration for Agentic Admin for WordPress
  *
  * Extends the default @wordpress/scripts config to add:
  * - Service Worker as a separate entry point (no chunking, self-contained)

@@ -955,7 +955,7 @@ Explain what went wrong and suggest what the user might try next.`;
 	 */
 	static getThinkingPreferences() {
 		try {
-			const saved = localStorage.getItem( 'wp_agentic_admin_thinking' );
+			const saved = localStorage.getItem( 'agentic_admin_thinking' );
 			if ( saved ) {
 				return JSON.parse( saved );
 			}

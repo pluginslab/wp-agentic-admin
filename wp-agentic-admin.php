@@ -1,6 +1,6 @@
 <?php
 /**
- * WP Agentic Admin - Main Plugin File
+ * Agentic Admin for WordPress - Main Plugin File
  *
  * @license GPL-2.0-or-later
  * @package WPAgenticAdmin
@@ -9,16 +9,15 @@
 
 // phpcs:ignore WordPress.Files.FileName.InvalidClassFileName -- This is the main plugin file, not a class file.
 /**
- * Plugin Name: WP Agentic Admin
- * Plugin URI: https://pluginslab.com/wp-agentic-admin
- * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming WP-Admin into a natural language command center via the WordPress Abilities API.
+ * Plugin Name: Agentic Admin for WordPress
+ * Plugin URI: https://pluginslab.com/agentic-admin
+ * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming wp-admin into a natural language command center via the WordPress Abilities API.
  * Version: 0.10.0
  * Author: Pluginslab
  * Author URI: https://pluginslab.com
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: wp-agentic-admin
- * Domain Path: /languages
+ * Text Domain: agentic-admin
  * Requires at least: 6.9
  * Requires PHP: 8.2
  * Tested up to: 6.9
@@ -33,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 
 	/**
-	 * Main plugin class for WP Agentic Admin.
+	 * Main plugin class for Agentic Admin for WordPress.
 	 *
 	 * @since 0.1.0
 	 */
@@ -64,9 +63,12 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			}
 
 			$this->define_constants();
-			$this->load_textdomain();
 
-			// Load functions first (provides wp_agentic_admin_register_ability API).
+			// Translations: WordPress 4.6+ loads them automatically for plugins
+			// hosted on WordPress.org, so no explicit load_plugin_textdomain()
+			// call is needed here.
+
+			// Load functions first (provides agentic_admin_register_ability API).
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
 
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
@@ -139,8 +141,8 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 					<?php
 					printf(
 					/* translators: %s: Plugin name */
-						esc_html__( '%s requires WordPress 6.9 or higher for the Abilities API.', 'wp-agentic-admin' ),
-						'<strong>WP Agentic Admin</strong>'
+						esc_html__( '%s requires WordPress 6.9 or higher for the Abilities API.', 'agentic-admin' ),
+						'<strong>Agentic Admin for WordPress</strong>'
 					);
 					?>
 				</p>
@@ -162,24 +164,10 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		}
 
 		/**
-		 * Load plugin text domain for translations.
-		 *
-		 * @since 0.1.0
-		 * @return void
-		 */
-		private function load_textdomain(): void {
-			load_plugin_textdomain(
-				'wp-agentic-admin',
-				false,
-				dirname( plugin_basename( __FILE__ ) ) . '/languages'
-			);
-		}
-
-		/**
 		 * Activation hook
 		 */
 		public static function activate(): void {
-			update_option( 'wp_agentic_admin_version', '0.10.0' );
+			update_option( 'agentic_admin_version', '0.10.0' );
 			flush_rewrite_rules();
 		}
 
@@ -187,7 +175,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		 * Deactivation hook
 		 */
 		public static function deactivate(): void {
-			delete_transient( 'wp_agentic_admin_cache' );
+			delete_transient( 'agentic_admin_cache' );
 			flush_rewrite_rules();
 		}
 	}

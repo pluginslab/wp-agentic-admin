@@ -18,13 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_schema_extract(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_schema_extract(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/schema-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Extract Database Schema', 'wp-agentic-admin' ),
-			'description'         => __( 'Extract database table schemas for knowledge base indexing.', 'wp-agentic-admin' ),
+			'label'               => __( 'Extract Database Schema', 'agentic-admin' ),
+			'description'         => __( 'Extract database table schemas for knowledge base indexing.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -37,15 +37,15 @@ function wp_agentic_admin_register_schema_extract(): void {
 				'properties' => array(
 					'chunks'       => array(
 						'type'        => 'array',
-						'description' => __( 'Schema chunks with table info.', 'wp-agentic-admin' ),
+						'description' => __( 'Schema chunks with table info.', 'agentic-admin' ),
 					),
 					'total_tables' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total tables extracted.', 'wp-agentic-admin' ),
+						'description' => __( 'Total tables extracted.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_schema_extract',
+			'execute_callback'    => 'agentic_admin_execute_schema_extract',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -61,7 +61,7 @@ function wp_agentic_admin_register_schema_extract(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'schema', 'database', 'tables', 'extract schema' ),
-			'initialMessage' => __( 'Extracting database schema...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Extracting database schema...', 'agentic-admin' ),
 		)
 	);
 }
@@ -71,7 +71,7 @@ function wp_agentic_admin_register_schema_extract(): void {
  *
  * @return array<string, string> Map of short table name to description.
  */
-function wp_agentic_admin_get_core_table_context(): array {
+function agentic_admin_get_core_table_context(): array {
 	return array(
 		'posts'              => 'Stores blog posts, pages, custom post types, and revisions. Each row is a content item with title, content, status, author, and dates.',
 		'postmeta'           => 'Key-value metadata for posts. Stores custom fields, plugin data, and internal WordPress post metadata.',
@@ -97,7 +97,7 @@ function wp_agentic_admin_get_core_table_context(): array {
  * @param array $input Input parameters (unused).
  * @return array
  */
-function wp_agentic_admin_execute_schema_extract( array $input = array() ): array {
+function agentic_admin_execute_schema_extract( array $input = array() ): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -112,7 +112,7 @@ function wp_agentic_admin_execute_schema_extract( array $input = array() ): arra
 		);
 	}
 
-	$core_context      = wp_agentic_admin_get_core_table_context();
+	$core_context      = agentic_admin_get_core_table_context();
 	$sensitive_columns = array( 'user_pass', 'user_email', 'user_activation_key', 'session_tokens' );
 	$prefix            = $wpdb->prefix;
 	$chunks            = array();

@@ -16,8 +16,8 @@
  *
  * Or selectively via filter:
  *
- *     add_filter( 'wp_agentic_admin_enabled_abilities', function( $abilities ) {
- *         $abilities['write-file'] = 'wp_agentic_admin_register_write_file';
+ *     add_filter( 'agentic_admin_enabled_abilities', function( $abilities ) {
+ *         $abilities['write-file'] = 'agentic_admin_register_write_file';
  *         return $abilities;
  *     });
  *
@@ -34,54 +34,54 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return array<string, string> Map of ability slug → register function name.
  */
-function wp_agentic_admin_core_abilities(): array {
+function agentic_admin_core_abilities(): array {
 	return array(
 		// Diagnostics.
-		'site-health'             => 'wp_agentic_admin_register_site_health',
+		'site-health'             => 'agentic_admin_register_site_health',
 
 		// Security suite.
-		'security-scan'           => 'wp_agentic_admin_register_security_scan',
-		'verify-core-checksums'   => 'wp_agentic_admin_register_verify_core_checksums',
-		'verify-plugin-checksums' => 'wp_agentic_admin_register_verify_plugin_checksums',
-		'file-scan'               => 'wp_agentic_admin_register_file_scan',
-		'uploads-scan'            => 'wp_agentic_admin_register_uploads_scan',
-		'database-check'          => 'wp_agentic_admin_register_database_check',
-		'role-capabilities-check' => 'wp_agentic_admin_register_role_capabilities_check',
+		'security-scan'           => 'agentic_admin_register_security_scan',
+		'verify-core-checksums'   => 'agentic_admin_register_verify_core_checksums',
+		'verify-plugin-checksums' => 'agentic_admin_register_verify_plugin_checksums',
+		'file-scan'               => 'agentic_admin_register_file_scan',
+		'uploads-scan'            => 'agentic_admin_register_uploads_scan',
+		'database-check'          => 'agentic_admin_register_database_check',
+		'role-capabilities-check' => 'agentic_admin_register_role_capabilities_check',
 
 		// Troubleshooting.
-		'error-log-read'          => 'wp_agentic_admin_register_error_log_read',
-		'error-log-search'        => 'wp_agentic_admin_register_error_log_search',
-		'cron-list'               => 'wp_agentic_admin_register_cron_list',
-		'rewrite-list'            => 'wp_agentic_admin_register_rewrite_list',
+		'error-log-read'          => 'agentic_admin_register_error_log_read',
+		'error-log-search'        => 'agentic_admin_register_error_log_search',
+		'cron-list'               => 'agentic_admin_register_cron_list',
+		'rewrite-list'            => 'agentic_admin_register_rewrite_list',
 
 		// Inventory.
-		'plugin-list'             => 'wp_agentic_admin_register_plugin_list',
-		'theme-list'              => 'wp_agentic_admin_register_theme_list',
-		'user-list'               => 'wp_agentic_admin_register_user_list',
-		'post-list'               => 'wp_agentic_admin_register_post_list',
-		'comment-stats'           => 'wp_agentic_admin_register_comment_stats',
-		'update-check'            => 'wp_agentic_admin_register_update_check',
+		'plugin-list'             => 'agentic_admin_register_plugin_list',
+		'theme-list'              => 'agentic_admin_register_theme_list',
+		'user-list'               => 'agentic_admin_register_user_list',
+		'post-list'               => 'agentic_admin_register_post_list',
+		'comment-stats'           => 'agentic_admin_register_comment_stats',
+		'update-check'            => 'agentic_admin_register_update_check',
 
 		// Maintenance.
-		'cache-flush'             => 'wp_agentic_admin_register_cache_flush',
-		'transient-flush'         => 'wp_agentic_admin_register_transient_flush',
-		'rewrite-flush'           => 'wp_agentic_admin_register_rewrite_flush',
-		'db-optimize'             => 'wp_agentic_admin_register_db_optimize',
-		'revision-cleanup'        => 'wp_agentic_admin_register_revision_cleanup',
+		'cache-flush'             => 'agentic_admin_register_cache_flush',
+		'transient-flush'         => 'agentic_admin_register_transient_flush',
+		'rewrite-flush'           => 'agentic_admin_register_rewrite_flush',
+		'db-optimize'             => 'agentic_admin_register_db_optimize',
+		'revision-cleanup'        => 'agentic_admin_register_revision_cleanup',
 
 		// Plugin management.
-		'plugin-activate'         => 'wp_agentic_admin_register_plugin_activate',
-		'plugin-deactivate'       => 'wp_agentic_admin_register_plugin_deactivate',
-		'plugin-install'          => 'wp_agentic_admin_register_plugin_install',
+		'plugin-activate'         => 'agentic_admin_register_plugin_activate',
+		'plugin-deactivate'       => 'agentic_admin_register_plugin_deactivate',
+		'plugin-install'          => 'agentic_admin_register_plugin_install',
 
 		// Knowledge.
-		'web-search'              => 'wp_agentic_admin_register_web_search',
+		'web-search'              => 'agentic_admin_register_web_search',
 
 		// RAG infrastructure (used by the knowledge base — always on).
-		'schema-extract'          => 'wp_agentic_admin_register_schema_extract',
-		'wp-api-extract'          => 'wp_agentic_admin_register_wp_api_extract',
-		'docs-extract'            => 'wp_agentic_admin_register_docs_extract',
-		'codebase-extract'        => 'wp_agentic_admin_register_codebase_extract',
+		'schema-extract'          => 'agentic_admin_register_schema_extract',
+		'wp-api-extract'          => 'agentic_admin_register_wp_api_extract',
+		'docs-extract'            => 'agentic_admin_register_docs_extract',
+		'codebase-extract'        => 'agentic_admin_register_codebase_extract',
 	);
 }
 
@@ -94,26 +94,26 @@ function wp_agentic_admin_core_abilities(): array {
  *
  * @return array<string, string>
  */
-function wp_agentic_admin_local_only_abilities(): array {
+function agentic_admin_local_only_abilities(): array {
 	return array(
-		'query-database' => 'wp_agentic_admin_register_query_database',
-		'read-file'      => 'wp_agentic_admin_register_read_file',
+		'query-database' => 'agentic_admin_register_query_database',
+		'read-file'      => 'agentic_admin_register_read_file',
 	);
 }
 
 /**
  * Labs (parked) abilities — opt-in via WP_AGENTIC_ADMIN_ENABLE_LABS
- * or the wp_agentic_admin_enabled_abilities filter. Preserved for
+ * or the agentic_admin_enabled_abilities filter. Preserved for
  * v1.x add-on releases. Off by default.
  *
  * @return array<string, string>
  */
-function wp_agentic_admin_labs_abilities(): array {
+function agentic_admin_labs_abilities(): array {
 	return array(
-		'write-file'                => 'wp_agentic_admin_register_write_file',
+		'write-file'                => 'agentic_admin_register_write_file',
 		// content-generate is JS-only (lives in the JS labs manifest).
-		'discover-plugin-abilities' => 'wp_agentic_admin_register_discover_plugin_abilities',
-		'run-plugin-ability'        => 'wp_agentic_admin_register_run_plugin_ability',
+		'discover-plugin-abilities' => 'agentic_admin_register_discover_plugin_abilities',
+		'run-plugin-ability'        => 'agentic_admin_register_run_plugin_ability',
 	);
 }
 
@@ -122,19 +122,19 @@ function wp_agentic_admin_labs_abilities(): array {
  *
  * Core and local-only abilities always register. Labs only register when
  * the WP_AGENTIC_ADMIN_ENABLE_LABS constant is defined and truthy, or
- * when an entry is added back via the wp_agentic_admin_enabled_abilities
+ * when an entry is added back via the agentic_admin_enabled_abilities
  * filter.
  *
  * @return array<string, string>
  */
-function wp_agentic_admin_resolve_enabled_abilities(): array {
+function agentic_admin_resolve_enabled_abilities(): array {
 	$enabled = array_merge(
-		wp_agentic_admin_core_abilities(),
-		wp_agentic_admin_local_only_abilities()
+		agentic_admin_core_abilities(),
+		agentic_admin_local_only_abilities()
 	);
 
 	if ( defined( 'WP_AGENTIC_ADMIN_ENABLE_LABS' ) && WP_AGENTIC_ADMIN_ENABLE_LABS ) {
-		$enabled = array_merge( $enabled, wp_agentic_admin_labs_abilities() );
+		$enabled = array_merge( $enabled, agentic_admin_labs_abilities() );
 	}
 
 	/**
@@ -143,8 +143,8 @@ function wp_agentic_admin_resolve_enabled_abilities(): array {
 	 * Use this to selectively re-enable a labs ability without flipping
 	 * the global WP_AGENTIC_ADMIN_ENABLE_LABS constant:
 	 *
-	 *     add_filter( 'wp_agentic_admin_enabled_abilities', function ( $abilities ) {
-	 *         $abilities['write-file'] = 'wp_agentic_admin_register_write_file';
+	 *     add_filter( 'agentic_admin_enabled_abilities', function ( $abilities ) {
+	 *         $abilities['write-file'] = 'agentic_admin_register_write_file';
 	 *         return $abilities;
 	 *     });
 	 *
@@ -152,7 +152,7 @@ function wp_agentic_admin_resolve_enabled_abilities(): array {
 	 *
 	 * @param array<string, string> $enabled Map of slug → register function name.
 	 */
-	return (array) apply_filters( 'wp_agentic_admin_enabled_abilities', $enabled );
+	return (array) apply_filters( 'agentic_admin_enabled_abilities', $enabled );
 }
 
 /**
@@ -160,6 +160,6 @@ function wp_agentic_admin_resolve_enabled_abilities(): array {
  *
  * @return bool True when WP_AGENTIC_ADMIN_ENABLE_LABS is defined and truthy.
  */
-function wp_agentic_admin_labs_enabled(): bool {
+function agentic_admin_labs_enabled(): bool {
 	return defined( 'WP_AGENTIC_ADMIN_ENABLE_LABS' ) && WP_AGENTIC_ADMIN_ENABLE_LABS;
 }

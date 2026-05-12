@@ -1,4 +1,4 @@
-# Contributing to WP Agentic Admin
+# Contributing to Agentic Admin for WordPress
 
 Welcome, hackathon contributor! This is a quick-start guide to get you up and running.
 

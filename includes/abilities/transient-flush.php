@@ -19,20 +19,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_transient_flush(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_transient_flush(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/transient-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Flush Transients', 'wp-agentic-admin' ),
-			'description'         => __( 'Delete expired or all transients from the database.', 'wp-agentic-admin' ),
+			'label'               => __( 'Flush Transients', 'agentic-admin' ),
+			'description'         => __( 'Delete expired or all transients from the database.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'expired_only' => array(
 						'type'        => 'boolean',
-						'description' => __( 'If true, only delete expired transients. If false, delete all transients.', 'wp-agentic-admin' ),
+						'description' => __( 'If true, only delete expired transients. If false, delete all transients.', 'agentic-admin' ),
 						'default'     => true,
 					),
 				),
@@ -43,23 +43,23 @@ function wp_agentic_admin_register_transient_flush(): void {
 				'properties' => array(
 					'success'       => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the operation was successful.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the operation was successful.', 'agentic-admin' ),
 					),
 					'message'       => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'deleted_count' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of transients deleted.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of transients deleted.', 'agentic-admin' ),
 					),
 					'expired_only'  => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether only expired transients were deleted.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether only expired transients were deleted.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_transient_flush',
+			'execute_callback'    => 'agentic_admin_execute_transient_flush',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -75,7 +75,7 @@ function wp_agentic_admin_register_transient_flush(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'transient', 'transients', 'flush', 'clear', 'delete', 'expired', 'cleanup' ),
-			'initialMessage' => __( 'Flushing transients...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Flushing transients...', 'agentic-admin' ),
 		)
 	);
 }
@@ -86,7 +86,7 @@ function wp_agentic_admin_register_transient_flush(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_transient_flush( array $input = array() ): array {
+function agentic_admin_execute_transient_flush( array $input = array() ): array {
 	global $wpdb;
 
 	$expired_only = isset( $input['expired_only'] ) ? (bool) $input['expired_only'] : true;
@@ -151,7 +151,7 @@ function wp_agentic_admin_execute_transient_flush( array $input = array() ): arr
 				'Deleted %d expired transient.',
 				'Deleted %d expired transients.',
 				$deleted,
-				'wp-agentic-admin'
+				'agentic-admin'
 			),
 			$deleted
 		);
@@ -170,7 +170,7 @@ function wp_agentic_admin_execute_transient_flush( array $input = array() ): arr
 				'Deleted %d transient.',
 				'Deleted %d transients.',
 				$deleted,
-				'wp-agentic-admin'
+				'agentic-admin'
 			),
 			$deleted
 		);

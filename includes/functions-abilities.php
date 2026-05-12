@@ -19,8 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @var array
  */
-global $wp_agentic_admin_abilities;
-$wp_agentic_admin_abilities = array();
+global $agentic_admin_abilities;
+$agentic_admin_abilities = array();
 
 /**
  * Register a agentic ability.
@@ -40,18 +40,19 @@ $wp_agentic_admin_abilities = array();
  *                           - confirmationMessage: (string) Custom confirmation message.
  * @return bool True on success, false on failure.
  */
-function wp_agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool {
-	global $wp_agentic_admin_abilities;
+function agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool {
+	global $agentic_admin_abilities;
 
 	// Validate ID format.
 	if ( empty( $id ) || ! preg_match( '/^[a-z0-9-]+\/[a-z0-9-]+$/', $id ) ) {
 		_doing_it_wrong(
 			__FUNCTION__,
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- __() is a translation function, output is escaped by _doing_it_wrong()
-			sprintf(
-				/* translators: %s: ability ID */
-				__( 'Invalid ability ID format: %s. Must be in format "namespace/ability-name".', 'wp-agentic-admin' ),
-				$id
+			esc_html(
+				sprintf(
+					/* translators: %s: ability ID */
+					__( 'Invalid ability ID format: %s. Must be in format "namespace/ability-name".', 'agentic-admin' ),
+					$id
+				)
 			),
 			'1.0.0'
 		);
@@ -64,14 +65,14 @@ function wp_agentic_admin_register_ability( string $id, array $php_args, array $
 	}
 
 	// Store JS configuration for later use.
-	$wp_agentic_admin_abilities[ $id ] = array(
+	$agentic_admin_abilities[ $id ] = array(
 		'id'  => $id,
 		'php' => $php_args,
 		'js'  => wp_parse_args(
 			$js_args,
 			array(
 				'keywords'             => array(),
-				'initialMessage'       => __( 'Working on it...', 'wp-agentic-admin' ),
+				'initialMessage'       => __( 'Working on it...', 'agentic-admin' ),
 				'requiresConfirmation' => false,
 				'confirmationMessage'  => '',
 			)
@@ -89,14 +90,14 @@ function wp_agentic_admin_register_ability( string $id, array $php_args, array $
  * @param string $id Ability identifier.
  * @return bool True if ability was unregistered, false if it didn't exist.
  */
-function wp_agentic_admin_unregister_ability( string $id ): bool {
-	global $wp_agentic_admin_abilities;
+function agentic_admin_unregister_ability( string $id ): bool {
+	global $agentic_admin_abilities;
 
-	if ( ! isset( $wp_agentic_admin_abilities[ $id ] ) ) {
+	if ( ! isset( $agentic_admin_abilities[ $id ] ) ) {
 		return false;
 	}
 
-	unset( $wp_agentic_admin_abilities[ $id ] );
+	unset( $agentic_admin_abilities[ $id ] );
 
 	// Also unregister from WordPress Abilities API if available.
 	if ( function_exists( 'wp_unregister_ability' ) ) {
@@ -113,9 +114,9 @@ function wp_agentic_admin_unregister_ability( string $id ): bool {
  *
  * @return array Array of registered abilities.
  */
-function wp_agentic_admin_get_abilities(): array {
-	global $wp_agentic_admin_abilities;
-	return $wp_agentic_admin_abilities ?? array();
+function agentic_admin_get_abilities(): array {
+	global $agentic_admin_abilities;
+	return $agentic_admin_abilities ?? array();
 }
 
 /**
@@ -126,9 +127,9 @@ function wp_agentic_admin_get_abilities(): array {
  * @param string $id Ability identifier.
  * @return array|null Ability configuration or null if not found.
  */
-function wp_agentic_admin_get_ability( string $id ): ?array {
-	global $wp_agentic_admin_abilities;
-	return $wp_agentic_admin_abilities[ $id ] ?? null;
+function agentic_admin_get_ability( string $id ): ?array {
+	global $agentic_admin_abilities;
+	return $agentic_admin_abilities[ $id ] ?? null;
 }
 
 /**
@@ -141,12 +142,12 @@ function wp_agentic_admin_get_ability( string $id ): ?array {
  *
  * @return array Array of JS configurations keyed by ability ID.
  */
-function wp_agentic_admin_get_abilities_js_config(): array {
-	global $wp_agentic_admin_abilities;
+function agentic_admin_get_abilities_js_config(): array {
+	global $agentic_admin_abilities;
 
 	$js_configs = array();
 
-	foreach ( $wp_agentic_admin_abilities as $id => $ability ) {
+	foreach ( $agentic_admin_abilities as $id => $ability ) {
 		$js_config = $ability['js'];
 
 		// Include annotations from PHP config for operation type display.
@@ -181,7 +182,7 @@ function wp_agentic_admin_get_abilities_js_config(): array {
  * @param string $id Ability identifier.
  * @return bool True if ability exists.
  */
-function wp_agentic_admin_ability_exists( string $id ): bool {
-	global $wp_agentic_admin_abilities;
-	return isset( $wp_agentic_admin_abilities[ $id ] );
+function agentic_admin_ability_exists( string $id ): bool {
+	global $agentic_admin_abilities;
+	return isset( $agentic_admin_abilities[ $id ] );
 }

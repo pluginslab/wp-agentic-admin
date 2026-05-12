@@ -1,4 +1,4 @@
-# WP Agentic Admin - CloudFest Hackathon 2026
+# Agentic Admin for WordPress - CloudFest Hackathon 2026
 
 > **First time here?** Start with the [Onboarding Guide](ONBOARDING.md) — a walkthrough of the project, the codebase, and your role.
 
@@ -185,7 +185,7 @@ Abilities that go beyond read-only diagnostics — the agent can inspect files, 
 Expose all abilities and workflows as WebMCP tools so external browser agents can invoke them.
 
 **Starting point:** Abilities only callable via the internal ReAct agent in the sidebar chat.
-**Done when:** Chrome 146's built-in DevTools MCP or other local agents (OpenClaw, Claude Code) can discover and invoke WP Agentic Admin abilities via the native `navigator.modelContext` API.
+**Done when:** Chrome 146's built-in DevTools MCP or other local agents (OpenClaw, Claude Code) can discover and invoke Agentic Admin for WordPress abilities via the native `navigator.modelContext` API.
 **Demo:** From a local agent (OpenClaw/Claude Code), navigate to wp-admin, invoke `site-health` ability via WebMCP, receive structured response. Agent chains multiple abilities (e.g., `site-health` → reads console for errors → `cache-flush` → `db-optimize`) with full browser state visibility (performance traces, network logs, console output).
 **Skills needed:** React/JS, AI/ML, Chrome DevTools
 
@@ -203,7 +203,7 @@ Local agents (OpenClaw, Claude Code, etc.) gain structured access to WordPress o
 - Check console for JS errors
 - Read network trace to diagnose slow REST API calls
 - Take memory snapshot to debug plugin leaks
-- Call WP Agentic Admin abilities for WordPress-specific operations
+- Call Agentic Admin for WordPress abilities for WordPress-specific operations
 - Chain multiple abilities with full browser state feedback
 
 All **local**, all **real-time**, all **structured data** — the missing feedback loop for reliable WordPress automation.
@@ -215,16 +215,16 @@ Local agent task: "Debug why this WordPress site is slow"
 1. Chrome DevTools MCP: run Lighthouse audit
    → Response: "Largest Contentful Paint 4.2s, 47 orphaned cron events"
   ↓
-2. WebMCP → WP Agentic Admin: invoke site-health
+2. WebMCP → Agentic Admin for WordPress: invoke site-health
    → Response: "Critical: 47 cron events stuck, database size 2.4GB"
   ↓
 3. Chrome DevTools MCP: read console logs
    → Response: "PHP Warning: mysql slow query 8.3s on wp_options"
   ↓
-4. WebMCP → WP Agentic Admin: invoke cron-list
+4. WebMCP → Agentic Admin for WordPress: invoke cron-list
    → Response: [list of stuck cron events]
   ↓
-5. WebMCP → WP Agentic Admin: invoke db-optimize
+5. WebMCP → Agentic Admin for WordPress: invoke db-optimize
    → Confirmation prompt → User approves → Response: "Optimized 12 tables, reclaimed 340MB"
   ↓
 Final answer: "Site slowness caused by stuck cron events and bloated database. 

@@ -105,7 +105,7 @@ class AbilitiesAPI {
 	/**
 	 * Get a specific ability by namespace and name
 	 *
-	 * @param {string} namespace - Ability namespace (e.g., 'wp-agentic-admin')
+	 * @param {string} namespace - Ability namespace (e.g., 'agentic-admin')
 	 * @param {string} name      - Ability name (e.g., 'error-log-read')
 	 * @return {Promise<Object>} Ability details
 	 */

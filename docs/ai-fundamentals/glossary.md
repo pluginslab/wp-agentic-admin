@@ -16,7 +16,7 @@ The WordPress registration system for tools. PHP abilities are registered with `
 The lifecycle phase where a newly installed Service Worker takes control and can start intercepting requests. See [Ch. 7](07-service-worker-persistence.md).
 
 **Agent Pattern**
-An AI architecture where the model alternates between reasoning and acting, using tools to gather real information rather than guessing. WP Agentic Admin uses the ReAct variant. See [Ch. 8](08-react-pattern.md).
+An AI architecture where the model alternates between reasoning and acting, using tools to gather real information rather than guessing. Agentic Admin for WordPress uses the ReAct variant. See [Ch. 8](08-react-pattern.md).
 
 ## B
 
@@ -108,7 +108,7 @@ Phase 1 of tool selection: fast, deterministic matching of user message terms ag
 ## L
 
 **LLM (Large Language Model)**
-A neural network trained on massive text data that can generate human-like responses. WP Agentic Admin runs LLMs locally in the browser via WebLLM. See [Ch. 1](01-what-is-a-language-model.md).
+A neural network trained on massive text data that can generate human-like responses. Agentic Admin for WordPress runs LLMs locally in the browser via WebLLM. See [Ch. 1](01-what-is-a-language-model.md).
 
 ## M
 
@@ -146,7 +146,7 @@ Applying quantization after a model has been fully trained, rather than during t
 A compression technique that reduces model size by lowering the numerical precision of weights and activations. A 7B model at full precision (~14 GB) becomes ~4 GB at q4f16. See [Ch. 5](05-quantization.md).
 
 **q4f16 / q4f32**
-Quantization format notation: `q<weight-bits>f<activation-bits>`. q4f16 means 4-bit weights with 16-bit activations — the default format used by WP Agentic Admin. q4f32 uses 32-bit activations for higher quality at the cost of size. See [Ch. 5](05-quantization.md).
+Quantization format notation: `q<weight-bits>f<activation-bits>`. q4f16 means 4-bit weights with 16-bit activations — the default format used by Agentic Admin for WordPress. q4f32 uses 32-bit activations for higher quality at the cost of size. See [Ch. 5](05-quantization.md).
 
 ## R
 
@@ -162,7 +162,7 @@ A three-phase approach to tool selection at scale. Phase 1: fast keyword retriev
 ## S
 
 **Service Worker**
-A browser script that runs in the background, separate from the page. WP Agentic Admin uses a Service Worker to keep the model loaded across page navigations — without it, the model would unload every time you click a link. See [Ch. 7](07-service-worker-persistence.md).
+A browser script that runs in the background, separate from the page. Agentic Admin for WordPress uses a Service Worker to keep the model loaded across page navigations — without it, the model would unload every time you click a link. See [Ch. 7](07-service-worker-persistence.md).
 
 **Shader (WebGPU)**
 A program that runs on the GPU. WebLLM compiles model operations into WebGPU compute shaders for hardware-accelerated inference. See [Ch. 3](03-webgpu.md).

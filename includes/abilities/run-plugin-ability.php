@@ -18,24 +18,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_run_plugin_ability(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_run_plugin_ability(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/run-plugin-ability',
 		array(
-			'label'               => __( 'Run Plugin Ability', 'wp-agentic-admin' ),
-			'description'         => __( 'Run an ability from another plugin by its ID.', 'wp-agentic-admin' ),
+			'label'               => __( 'Run Plugin Ability', 'agentic-admin' ),
+			'description'         => __( 'Run an ability from another plugin by its ID.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'properties'           => array(
 					'ability_id' => array(
 						'type'        => 'string',
-						'description' => __( 'The full ability ID to execute (e.g. "my-plugin/my-ability").', 'wp-agentic-admin' ),
+						'description' => __( 'The full ability ID to execute (e.g. "my-plugin/my-ability").', 'agentic-admin' ),
 					),
 					'args'       => array(
 						'type'                 => 'object',
 						'default'              => (object) array(),
-						'description'          => __( 'Arguments to pass to the ability (based on its input_schema).', 'wp-agentic-admin' ),
+						'description'          => __( 'Arguments to pass to the ability (based on its input_schema).', 'agentic-admin' ),
 						'additionalProperties' => true,
 					),
 				),
@@ -49,7 +49,7 @@ function wp_agentic_admin_register_run_plugin_ability(): void {
 					'result'  => array( 'type' => 'object' ),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_run_plugin_ability',
+			'execute_callback'    => 'agentic_admin_run_plugin_ability',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -64,7 +64,7 @@ function wp_agentic_admin_register_run_plugin_ability(): void {
 		),
 		array(
 			'keywords'             => array( 'execute plugin', 'run ability', 'call ability', 'use ability' ),
-			'initialMessage'       => __( 'Executing plugin ability...', 'wp-agentic-admin' ),
+			'initialMessage'       => __( 'Executing plugin ability...', 'agentic-admin' ),
 			'requiresConfirmation' => true,
 		)
 	);
@@ -79,7 +79,7 @@ function wp_agentic_admin_register_run_plugin_ability(): void {
  * @param array $input Input parameters with ability_id and args.
  * @return array Execution result.
  */
-function wp_agentic_admin_run_plugin_ability( $input = array() ): array {
+function agentic_admin_run_plugin_ability( $input = array() ): array {
 	$input      = (array) $input;
 	$ability_id = isset( $input['ability_id'] ) ? $input['ability_id'] : '';
 	$args       = isset( $input['args'] ) ? $input['args'] : array();

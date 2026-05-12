@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_post_list(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_post_list(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/post-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'List Posts', 'wp-agentic-admin' ),
-			'description'         => __( 'List recent WordPress posts with their status.', 'wp-agentic-admin' ),
+			'label'               => __( 'List Posts', 'agentic-admin' ),
+			'description'         => __( 'List recent WordPress posts with their status.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,17 +36,17 @@ function wp_agentic_admin_register_post_list(): void {
 					'status'    => array(
 						'type'        => 'string',
 						'default'     => 'any',
-						'description' => __( 'Post status filter.', 'wp-agentic-admin' ),
+						'description' => __( 'Post status filter.', 'agentic-admin' ),
 					),
 					'post_type' => array(
 						'type'        => 'string',
 						'default'     => 'post',
-						'description' => __( 'Post type filter.', 'wp-agentic-admin' ),
+						'description' => __( 'Post type filter.', 'agentic-admin' ),
 					),
 					'count'     => array(
 						'type'        => 'integer',
 						'default'     => 10,
-						'description' => __( 'Number of posts to return.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of posts to return.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -56,15 +56,15 @@ function wp_agentic_admin_register_post_list(): void {
 				'properties' => array(
 					'posts' => array(
 						'type'        => 'array',
-						'description' => __( 'List of posts.', 'wp-agentic-admin' ),
+						'description' => __( 'List of posts.', 'agentic-admin' ),
 					),
 					'total' => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of posts returned.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of posts returned.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_post_list',
+			'execute_callback'    => 'agentic_admin_execute_post_list',
 			'permission_callback' => function () {
 				return current_user_can( 'edit_posts' );
 			},
@@ -80,7 +80,7 @@ function wp_agentic_admin_register_post_list(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'post', 'posts', 'articles', 'content', 'drafts', 'published' ),
-			'initialMessage' => __( "I'll fetch your recent posts...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll fetch your recent posts...", 'agentic-admin' ),
 		)
 	);
 }
@@ -91,7 +91,7 @@ function wp_agentic_admin_register_post_list(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_post_list( array $input = array() ): array {
+function agentic_admin_execute_post_list( array $input = array() ): array {
 	$status    = isset( $input['status'] ) ? sanitize_text_field( $input['status'] ) : 'any';
 	$post_type = isset( $input['post_type'] ) ? sanitize_text_field( $input['post_type'] ) : 'post';
 	$count     = isset( $input['count'] ) ? min( absint( $input['count'] ), 50 ) : 10;

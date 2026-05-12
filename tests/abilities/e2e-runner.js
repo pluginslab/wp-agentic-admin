@@ -216,7 +216,7 @@ async function chatCompletion( messages ) {
 async function wpExecuteTool( toolId, toolArgs = {} ) {
 	const parts = toolId.includes( '/' )
 		? toolId.split( '/' )
-		: [ 'wp-agentic-admin', toolId ];
+		: [ 'agentic-admin', toolId ];
 	const baseEndpoint = `${ wpUrl }/wp-json/wp-abilities/v1/abilities/${ parts[ 0 ] }/${ parts[ 1 ] }/run`;
 	const headers = {};
 
@@ -811,7 +811,7 @@ function evaluateTurn( turn, result ) {
 ( async () => {
 	console.log( '' );
 	console.log( '╔══════════════════════════════════════════════╗' );
-	console.log( '║   WP Agentic Admin — E2E Test Runner        ║' );
+	console.log( '║   Agentic Admin for WordPress — E2E Test Runner        ║' );
 	console.log( '║   Ollama + WP REST API (real tool calls)    ║' );
 	console.log( '╚══════════════════════════════════════════════╝' );
 	console.log( '' );

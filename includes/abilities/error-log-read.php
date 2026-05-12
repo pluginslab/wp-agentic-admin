@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_error_log_read(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_error_log_read(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/error-log-read',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Read Error Log', 'wp-agentic-admin' ),
-			'description'         => __( 'Read recent entries from the WordPress debug.log file.', 'wp-agentic-admin' ),
+			'label'               => __( 'Read Error Log', 'agentic-admin' ),
+			'description'         => __( 'Read recent entries from the WordPress debug.log file.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -34,7 +34,7 @@ function wp_agentic_admin_register_error_log_read(): void {
 						'default'     => 50,
 						'minimum'     => 1,
 						'maximum'     => 500,
-						'description' => __( 'Number of lines to read from the end of the log.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of lines to read from the end of the log.', 'agentic-admin' ),
 					),
 				),
 				'additionalProperties' => false,
@@ -45,23 +45,23 @@ function wp_agentic_admin_register_error_log_read(): void {
 					'entries'       => array(
 						'type'        => 'array',
 						'items'       => array( 'type' => 'string' ),
-						'description' => __( 'Array of log entries.', 'wp-agentic-admin' ),
+						'description' => __( 'Array of log entries.', 'agentic-admin' ),
 					),
 					'total_lines'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of lines in the log file.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of lines in the log file.', 'agentic-admin' ),
 					),
 					'file_exists'   => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the debug.log file exists.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the debug.log file exists.', 'agentic-admin' ),
 					),
 					'debug_enabled' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether WP_DEBUG_LOG is enabled.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether WP_DEBUG_LOG is enabled.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_error_log_read',
+			'execute_callback'    => 'agentic_admin_execute_error_log_read',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -77,7 +77,7 @@ function wp_agentic_admin_register_error_log_read(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'error', 'errors', 'log', 'logs', 'problem', 'issue', 'broken', 'white screen', 'crash', 'not working', 'bug', 'debug' ),
-			'initialMessage' => __( "I'll look at your error log...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll look at your error log...", 'agentic-admin' ),
 		)
 	);
 }
@@ -88,7 +88,7 @@ function wp_agentic_admin_register_error_log_read(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_error_log_read( array $input = array() ): array {
+function agentic_admin_execute_error_log_read( array $input = array() ): array {
 	$lines = isset( $input['lines'] ) ? absint( $input['lines'] ) : 50;
 
 	// Check if debug.log exists.

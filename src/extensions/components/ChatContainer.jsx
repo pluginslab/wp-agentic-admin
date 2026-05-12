@@ -568,7 +568,7 @@ const ChatContainer = ( {
 				} );
 			} );
 			if ( ! confirmed ) {
-				return;
+				return { success: false, cancelled: true };
 			}
 		}
 
@@ -589,11 +589,13 @@ const ChatContainer = ( {
 					? 'Action completed successfully.'
 					: 'Action failed.' );
 			sessionRef.current?.addAssistantMessage( msg );
+			return result;
 		} catch ( error ) {
 			log.error( 'Action execution error:', error );
 			sessionRef.current?.addAssistantMessage(
 				`Action failed: ${ error.message || 'Unknown error' }`
 			);
+			return { success: false, error: error.message };
 		}
 	}, [] );
 

@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_cache_flush(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_cache_flush(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/cache-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Flush Cache', 'wp-agentic-admin' ),
-			'description'         => __( 'Flush the WordPress object cache.', 'wp-agentic-admin' ),
+			'label'               => __( 'Flush Cache', 'agentic-admin' ),
+			'description'         => __( 'Flush the WordPress object cache.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,15 +36,15 @@ function wp_agentic_admin_register_cache_flush(): void {
 				'properties' => array(
 					'success' => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the cache was successfully flushed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the cache was successfully flushed.', 'agentic-admin' ),
 					),
 					'message' => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_cache_flush',
+			'execute_callback'    => 'agentic_admin_execute_cache_flush',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -60,7 +60,7 @@ function wp_agentic_admin_register_cache_flush(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'cache', 'flush', 'clear', 'purge', 'refresh', 'reset cache' ),
-			'initialMessage' => __( 'Flushing the cache...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Flushing the cache...', 'agentic-admin' ),
 		)
 	);
 }
@@ -71,14 +71,14 @@ function wp_agentic_admin_register_cache_flush(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_cache_flush( array $input = array() ): array {
+function agentic_admin_execute_cache_flush( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 	$result = wp_cache_flush();
 
 	return array(
 		'success' => $result,
 		'message' => $result
-			? __( 'Object cache flushed successfully.', 'wp-agentic-admin' )
-			: __( 'Failed to flush object cache.', 'wp-agentic-admin' ),
+			? __( 'Object cache flushed successfully.', 'agentic-admin' )
+			: __( 'Failed to flush object cache.', 'agentic-admin' ),
 	);
 }
