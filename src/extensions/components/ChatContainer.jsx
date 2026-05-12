@@ -32,7 +32,6 @@ import {
 import { Button, Modal, Notice, Snackbar } from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
-import FeedbackOptInBanner from './FeedbackOptInBanner';
 import {
 	chatOrchestrator,
 	ChatSession,
@@ -43,12 +42,6 @@ import {
 	getWorkflows,
 	toolRegistry,
 } from '../services';
-import {
-	getFeedbackOptIn,
-	setFeedbackOptIn,
-	saveFeedback,
-	FEEDBACK_UPLOAD_ENABLED,
-} from '../services/feedback';
 import { executeAbility } from '../services/agentic-abilities-api';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 import { createLogger } from '../utils/logger';
@@ -87,13 +80,8 @@ const ChatContainer = ( {
 	const [ workflowProgress, setWorkflowProgress ] = useState( null );
 	const [ isRunningWorkflow, setIsRunningWorkflow ] = useState( false );
 
-	// Copy feedback state
+	// "Copied to clipboard" toast state
 	const [ showCopiedSnackbar, setShowCopiedSnackbar ] = useState( false );
-
-	// Feedback opt-in state: null = not decided, true = opted in, false = declined
-	const [ feedbackOptIn, setFeedbackOptInState ] = useState( () =>
-		getFeedbackOptIn()
-	);
 
 	// Session ref to persist across renders
 	const sessionRef = useRef( null );
@@ -496,81 +484,6 @@ const ChatContainer = ( {
 	}, [] );
 
 	/**
-	 * Handle feedback opt-in acceptance
-	 */
-	const handleFeedbackAccept = useCallback( () => {
-		setFeedbackOptInState( true );
-		setFeedbackOptIn( true );
-	}, [] );
-
-	/**
-	 * Handle feedback opt-in decline
-	 */
-	const handleFeedbackDecline = useCallback( () => {
-		setFeedbackOptInState( false );
-		setFeedbackOptIn( false );
-	}, [] );
-
-	/**
-	 * Handle thumbs feedback from a message
-	 *
-	 * @param {string}      messageId - ID of the rated message
-	 * @param {string|null} rating    - 'up', 'down', or null (removed)
-	 */
-	const handleFeedback = useCallback(
-		( messageId, rating ) => {
-			if ( ! rating ) {
-				return;
-			}
-			// Collect ability IDs from the messages preceding this assistant response
-			const abilityIds = messages
-				.filter( ( m ) => m.type === 'ability_result' )
-				.map( ( m ) => m.abilityName )
-				.filter( Boolean );
-
-			// Full conversation up to and including the rated message
-			const msgIdx = messages.findIndex( ( m ) => m.id === messageId );
-			const conversation =
-				msgIdx !== -1
-					? messages
-							.slice( 0, msgIdx + 1 )
-							.filter(
-								( m ) =>
-									m.type === 'user' || m.type === 'assistant'
-							)
-							.map( ( m ) => ( {
-								role: m.type,
-								content: m.content,
-							} ) )
-					: [];
-
-			const model =
-				modelLoader.getModelId() ||
-				window.wpAgenticAdmin?.settings?.modelId ||
-				'';
-
-			const systemPrompt = chatOrchestrator.getSystemPrompt?.() || '';
-			const { temperature, maxTokens } =
-				chatOrchestrator.llmOptions || {};
-
-			saveFeedback( {
-				messageId,
-				sessionId: sessionRef.current?.id || '',
-				abilityIds,
-				rating,
-				systemPrompt,
-				conversation,
-				model,
-				generationConfig: {
-					temperature: temperature ?? null,
-					maxTokens: maxTokens ?? null,
-				},
-			} );
-		},
-		[ messages ]
-	);
-
-	/**
 	 * Copy all conversation to clipboard
 	 */
 	const copyAllConversation = useCallback( async () => {
@@ -789,21 +702,7 @@ const ChatContainer = ( {
 			<MessageList
 				messages={ displayMessages }
 				onAction={ handleAction }
-				feedbackOptIn={
-					FEEDBACK_UPLOAD_ENABLED && feedbackOptIn === true
-				}
-				onFeedback={ handleFeedback }
 			/>
-
-			{ /* Feedback opt-in banner — shown once, only after the first real exchange */ }
-			{ FEEDBACK_UPLOAD_ENABLED &&
-				feedbackOptIn === null &&
-				messages.length > 1 && (
-					<FeedbackOptInBanner
-						onAccept={ handleFeedbackAccept }
-						onDecline={ handleFeedbackDecline }
-					/>
-				) }
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (
