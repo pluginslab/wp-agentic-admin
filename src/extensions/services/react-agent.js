@@ -237,13 +237,20 @@ class ReactAgent {
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;
 			const hasToolResults = toolsUsed.length > 0;
+			// Suppress the streaming "thinking" UI when the user (or router)
+			// disabled thinking — even if Qwen ignores /nothink and emits
+			// <think> blocks anyway. We still process the tags internally
+			// (to strip them from the visible response) but never call the
+			// onThinking* callbacks.
+			const suppressThinkingUi =
+				this.config.disableThinking ||
+				( hasToolResults && this.config.disableThinkingAfterTool );
+
 			log.debug(
 				`ReAct iteration ${ iteration }/${
 					this.config.maxIterations
-				} (prompt-based mode, thinking: ${
-					hasToolResults && this.config.disableThinkingAfterTool
-						? 'off (post-tool)'
-						: 'on'
+				} (prompt-based mode, thinking UI: ${
+					suppressThinkingUi ? 'off' : 'on'
 				})`
 			);
 
@@ -265,12 +272,9 @@ class ReactAgent {
 					fullResponse += delta;
 
 					// Stream thinking tokens live (skip when thinking
-					// is disabled after tool results)
-					const thinkingSuppressed =
-						hasToolResults && this.config.disableThinkingAfterTool;
-
+					// is disabled — either by user setting or post-tool gate).
 					if (
-						! thinkingSuppressed &&
+						! suppressThinkingUi &&
 						fullResponse.includes( '<think>' ) &&
 						! fullResponse.includes( '</think>' )
 					) {

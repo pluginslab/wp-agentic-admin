@@ -1088,6 +1088,15 @@
 	flex: 1;
 	min-height: 0;
 	position: relative;
+
+	// When the Settings cog (a sibling of the TabPanel, conceptually a 4th
+	// tab) is active, no left-side tab should appear selected. The cog
+	// itself gets .is-active via React; this hides the chat/abilities/
+	// plugin-abilities underline so only one view reads as "selected".
+	&--settings-active .wp-agentic-admin-tabs
+		.components-tab-panel__tabs-item.is-active {
+		box-shadow: none;
+	}
 }
 
 .wp-agentic-admin-settings-toggle {

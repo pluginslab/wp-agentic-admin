@@ -245,7 +245,13 @@ const App = () => {
 	return (
 		<div className="wp-agentic-admin-app">
 			<div className="wp-agentic-admin-main">
-				<div className="wp-agentic-admin-tabs-wrapper">
+				<div
+					className={ `wp-agentic-admin-tabs-wrapper${
+						showSettings
+							? ' wp-agentic-admin-tabs-wrapper--settings-active'
+							: ''
+					}` }
+				>
 					<TabPanel
 						className="wp-agentic-admin-tabs"
 						tabs={ tabs }
