@@ -26,6 +26,70 @@ const MessageType = {
 };
 
 /**
+ * Pairs of abilities that are mutual inverses. After a successful click,
+ * the button flips to the inverse so its label reflects the new plugin
+ * state without needing a fresh plugin-list call.
+ */
+const INVERSE_ACTIONS = {
+	'wp-agentic-admin/plugin-activate': {
+		action: 'wp-agentic-admin/plugin-deactivate',
+		button_label: 'Deactivate',
+	},
+	'wp-agentic-admin/plugin-deactivate': {
+		action: 'wp-agentic-admin/plugin-activate',
+		button_label: 'Activate',
+	},
+};
+
+/**
+ * A single action button inside an ability_result message. Tracks its
+ * own loading state and, for known reversible pairs (plugin-activate ↔
+ * plugin-deactivate), flips after a successful click so the label and
+ * target action match the new state.
+ *
+ * @param {Object}   props          - Component props
+ * @param {Object}   props.action   - Action descriptor from the ability result
+ * @param {Function} props.onAction - Async (abilityId, args) → result
+ * @return {JSX.Element} The rendered button row
+ */
+const ActionButton = ( { action, onAction } ) => {
+	const [ override, setOverride ] = useState( null );
+	const [ loading, setLoading ] = useState( false );
+	const current = override ? { ...action, ...override } : action;
+
+	const handleClick = async () => {
+		setLoading( true );
+		try {
+			const result = await onAction( current.action, current.args );
+			if ( result && result.success !== false && ! result.error ) {
+				const inverse = INVERSE_ACTIONS[ current.action ];
+				if ( inverse ) {
+					setOverride( inverse );
+				}
+			}
+		} finally {
+			setLoading( false );
+		}
+	};
+
+	return (
+		<li className="agentic-action-list__item">
+			<span className="agentic-action-list__label">
+				{ current.label }
+			</span>
+			<button
+				className="agentic-action-list__button"
+				type="button"
+				onClick={ handleClick }
+				disabled={ loading }
+			>
+				{ loading ? '…' : current.button_label }
+			</button>
+		</li>
+	);
+};
+
+/**
  * Format timestamp for display
  *
  * @param {string} timestamp - ISO timestamp
@@ -492,28 +556,13 @@ const MessageItem = ( { message, onAction } ) => {
 						<div className="agentic-message__actions">
 							<ol className="agentic-action-list">
 								{ messageActions.map( ( action ) => (
-									<li
+									<ActionButton
 										key={ `${
 											action.action
 										}-${ JSON.stringify( action.args ) }` }
-										className="agentic-action-list__item"
-									>
-										<span className="agentic-action-list__label">
-											{ action.label }
-										</span>
-										<button
-											className="agentic-action-list__button"
-											type="button"
-											onClick={ () =>
-												onAction(
-													action.action,
-													action.args
-												)
-											}
-										>
-											{ action.button_label }
-										</button>
-									</li>
+										action={ action }
+										onAction={ onAction }
+									/>
 								) ) }
 							</ol>
 						</div>
