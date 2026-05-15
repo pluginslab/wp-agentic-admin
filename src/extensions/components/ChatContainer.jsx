@@ -335,6 +335,15 @@ const ChatContainer = ( {
 						error: msg.meta?.error,
 						timestamp: msg.timestamp,
 					};
+				case MessageType.FILE_VIEW:
+					return {
+						id: msg.id,
+						type: 'file_view',
+						content: msg.content,
+						file: msg.meta?.file,
+						meta: msg.meta,
+						timestamp: msg.timestamp,
+					};
 				case MessageType.SYSTEM:
 				default:
 					return {
@@ -521,6 +530,26 @@ const ChatContainer = ( {
 								: msg.result
 						}`;
 						break;
+					case 'file_view': {
+						prefix = 'Assistant:';
+						const f = msg.file || {};
+						const fence = '```';
+						const range =
+							f.totalLines > 0 &&
+							f.linesReturned > 0 &&
+							f.totalLines !== f.linesReturned
+								? ` (showing ${ f.linesReturned } of ${ f.totalLines } lines)`
+								: '';
+						const redacted = f.wasRedacted
+							? '\n\n> Sensitive values (credentials, keys, salts) have been redacted.'
+							: '';
+						content = `**\`${
+							f.filePath || ''
+						}\`**${ range }\n\n${ fence }${ f.language || '' }\n${
+							f.content || ''
+						}\n${ fence }${ redacted }`;
+						break;
+					}
 					case 'error':
 						prefix = 'Error:';
 						content = msg.content || msg.error;
@@ -538,8 +567,13 @@ const ChatContainer = ( {
 			} )
 			.join( '\n---\n\n' );
 
+		const v = window.wpAgenticAdmin || {};
+		const footer =
+			`\n---\nAgentic Admin v${ v.version || '?' } | ` +
+			`JS ${ v.jsVersion || '?' } | CSS ${ v.cssVersion || '?' }`;
+
 		try {
-			await navigator.clipboard.writeText( conversationText );
+			await navigator.clipboard.writeText( conversationText + footer );
 			setShowCopiedSnackbar( true );
 			log.info( 'Conversation copied to clipboard' );
 		} catch ( error ) {

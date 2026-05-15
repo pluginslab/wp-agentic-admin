@@ -21,6 +21,7 @@ export const MessageType = {
 	TOOL_RESULT: 'tool_result',
 	THINKING: 'thinking',
 	ERROR: 'error',
+	FILE_VIEW: 'file_view',
 };
 
 /**
@@ -172,6 +173,24 @@ class ChatSession {
 	addThinkingMessage( content ) {
 		return this.addMessage(
 			this.createMessage( MessageType.THINKING, content )
+		);
+	}
+
+	/**
+	 * Add a file view message (structured file display)
+	 *
+	 * @param {Object} payload - File payload (filePath, content, language,
+	 *                         totalLines, linesReturned, wasRedacted,
+	 *                         fallbackMarkdown).
+	 * @param {Object} [meta]  - Extra metadata (e.g. tps stats).
+	 * @return {Object} The added message
+	 */
+	addFileViewMessage( payload, meta = {} ) {
+		return this.addMessage(
+			this.createMessage( MessageType.FILE_VIEW, payload.filePath, {
+				...meta,
+				file: payload,
+			} )
 		);
 	}
 

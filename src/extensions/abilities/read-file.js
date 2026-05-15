@@ -185,7 +185,9 @@ export function registerReadFile() {
 
 			if ( ! filePath ) {
 				return {
-					error: 'I couldn\'t determine which file to read. Please specify a path, e.g. "read wp-config.php" or "show me wp-content/themes/mytheme/functions.php".',
+					success: false,
+					message:
+						'I couldn\'t determine which file to read. Please specify a path, e.g. "read wp-config.php" or "show me wp-content/themes/mytheme/functions.php".',
 				};
 			}
 
@@ -220,6 +222,32 @@ export function registerReadFile() {
 				`${ fence }${ lang }\n${ result.content }\n${ fence }` +
 				redactedNote
 			);
+		},
+
+		/**
+		 * Structured payload for the FileView component.
+		 *
+		 * Returned when the chat should render a dedicated <FileView> instead
+		 * of markdown (cleaner UX, avoids paragraph-only renderer collapsing
+		 * the file into a wall of <p> tags). Falls back to summarize() for
+		 * the error branch and for Copy All serialization.
+		 *
+		 * @param {Object} result - Result from PHP.
+		 * @return {Object|null} Structured payload or null when not applicable.
+		 */
+		renderDisplay: ( result ) => {
+			if ( ! result?.success ) {
+				return null;
+			}
+			return {
+				component: 'file',
+				filePath: result.file_path,
+				content: result.content,
+				language: detectLanguage( result.file_path || '' ),
+				totalLines: result.total_lines || 0,
+				linesReturned: result.lines_returned || 0,
+				wasRedacted: !! result.was_redacted,
+			};
 		},
 
 		/**
