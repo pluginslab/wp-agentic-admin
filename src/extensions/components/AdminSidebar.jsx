@@ -141,7 +141,9 @@ const AdminSidebar = () => {
 				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );
-				const isCached = await modelLoader.isModelCached();
+				const savedModel =
+					localStorage.getItem( 'agentic_admin_model' ) || undefined;
+				const isCached = await modelLoader.isModelCached( savedModel );
 
 				if ( isCached ) {
 					log.info( 'Model is cached, auto-loading...' );
@@ -149,7 +151,7 @@ const AdminSidebar = () => {
 					setInitMessage( 'Loading from cache...' );
 					setInitProgress( 35 );
 					try {
-						await modelLoader.load();
+						await modelLoader.load( savedModel );
 						setModelReady( true );
 					} catch ( loadErr ) {
 						log.error( 'Auto-load failed:', loadErr );
