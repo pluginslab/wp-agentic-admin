@@ -185,7 +185,9 @@ export function registerReadFile() {
 
 			if ( ! filePath ) {
 				return {
-					error: 'I couldn\'t determine which file to read. Please specify a path, e.g. "read wp-config.php" or "show me wp-content/themes/mytheme/functions.php".',
+					success: false,
+					message:
+						'I couldn\'t determine which file to read. Please specify a path, e.g. "read wp-config.php" or "show me wp-content/themes/mytheme/functions.php".',
 				};
 			}
 
