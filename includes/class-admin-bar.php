@@ -88,7 +88,7 @@ class Admin_Bar {
 		}
 
 		// Skip on the plugin's own settings page — the full app is already loaded.
-		if ( 'toplevel_page_wp-agentic-admin' === $hook ) {
+		if ( 'toplevel_page_agentic-admin' === $hook ) {
 			return;
 		}
 
@@ -145,7 +145,7 @@ class Admin_Bar {
 
 		// Don't render on the plugin page — the full app handles it.
 		$screen = get_current_screen();
-		if ( $screen && 'toplevel_page_wp-agentic-admin' === $screen->id ) {
+		if ( $screen && 'toplevel_page_agentic-admin' === $screen->id ) {
 			return;
 		}
 		?>
