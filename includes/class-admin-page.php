@@ -72,7 +72,7 @@ class Admin_Page {
 	 */
 	public function enqueue_scripts( string $hook ): void {
 		// Only load on our admin page.
-		if ( 'toplevel_page_wp-agentic-admin' !== $hook ) {
+		if ( 'toplevel_page_agentic-admin' !== $hook ) {
 			return;
 		}
 
