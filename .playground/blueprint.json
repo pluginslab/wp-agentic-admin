@@ -19,7 +19,7 @@
       "step": "installPlugin",
       "pluginZipFile": {
         "resource": "url",
-        "url": "https://github.com/pluginslab/wp-agentic-admin/releases/download/v0.10.0/wp-agentic-admin.zip"
+        "url": "https://github.com/pluginslab/wp-agentic-admin/releases/latest/download/wp-agentic-admin.zip"
       },
       "options": {
         "activate": true

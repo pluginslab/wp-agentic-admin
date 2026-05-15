@@ -50,10 +50,39 @@ const AdminSidebar = () => {
 	);
 	const [ initProgress, setInitProgress ] = useState( 5 );
 
+	// Most wp-admin page loads never open the sidebar. Defer the WebGPU
+	// check + 1.2 GB model load until the user actually opens it.
+	// Toggle in admin-sidebar.js dispatches 'wp-agentic-admin/sidebar-opened'
+	// on first open. Issue #116.
+	const [ hasOpened, setHasOpened ] = useState( () =>
+		typeof document !== 'undefined'
+			? document
+					.getElementById( 'wp-agentic-admin-sidebar' )
+					?.classList.contains( 'is-open' ) || false
+			: false
+	);
+
+	useEffect( () => {
+		if ( hasOpened ) {
+			return undefined;
+		}
+		const handler = () => setHasOpened( true );
+		window.addEventListener( 'wp-agentic-admin/sidebar-opened', handler );
+		return () =>
+			window.removeEventListener(
+				'wp-agentic-admin/sidebar-opened',
+				handler
+			);
+	}, [ hasOpened ] );
+
 	/**
-	 * Background WebGPU check and auto-load cached model on mount
+	 * Background WebGPU check and auto-load cached model — runs only
+	 * after the user opens the sidebar for the first time.
 	 */
 	useEffect( () => {
+		if ( ! hasOpened ) {
+			return;
+		}
 		const initializeApp = async () => {
 			try {
 				setInitMessage( 'Checking WebGPU support...' );
@@ -75,19 +104,19 @@ const AdminSidebar = () => {
 
 				// Check saved provider preference
 				const savedProvider = localStorage.getItem(
-					'wp_agentic_admin_provider'
+					'agentic_admin_provider'
 				);
 
 				if ( savedProvider === 'remote' ) {
 					const url = localStorage.getItem(
-						'wp_agentic_admin_remote_url'
+						'agentic_admin_remote_url'
 					);
 					const remoteModel = localStorage.getItem(
-						'wp_agentic_admin_remote_model'
+						'agentic_admin_remote_model'
 					);
 					const apiKey =
 						localStorage.getItem(
-							'wp_agentic_admin_remote_api_key'
+							'agentic_admin_remote_api_key'
 						) || '';
 					if ( url && remoteModel ) {
 						log.info( 'Remote provider saved, auto-connecting...' );
@@ -112,7 +141,9 @@ const AdminSidebar = () => {
 				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );
-				const isCached = await modelLoader.isModelCached();
+				const savedModel =
+					localStorage.getItem( 'agentic_admin_model' ) || undefined;
+				const isCached = await modelLoader.isModelCached( savedModel );
 
 				if ( isCached ) {
 					log.info( 'Model is cached, auto-loading...' );
@@ -120,7 +151,7 @@ const AdminSidebar = () => {
 					setInitMessage( 'Loading from cache...' );
 					setInitProgress( 35 );
 					try {
-						await modelLoader.load();
+						await modelLoader.load( savedModel );
 						setModelReady( true );
 					} catch ( loadErr ) {
 						log.error( 'Auto-load failed:', loadErr );
@@ -134,7 +165,7 @@ const AdminSidebar = () => {
 		};
 
 		initializeApp();
-	}, [] );
+	}, [ hasOpened ] );
 
 	const handleModelReady = useCallback( () => {
 		setModelReady( true );

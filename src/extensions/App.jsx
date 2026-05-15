@@ -1,21 +1,18 @@
 /**
- * WP Agentic Admin - Main App Component
+ * Agentic Admin for WordPress - Main App Component
  *
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { TabPanel, Notice, Button } from '@wordpress/components';
+import { Notice, Button } from '@wordpress/components';
 import { cog } from '@wordpress/icons';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
 import PluginAbilitiesPanel from './components/PluginAbilitiesPanel';
-import FeedbackTab from './components/FeedbackTab';
 import SettingsTab from './components/SettingsTab';
-import { FEEDBACK_UPLOAD_ENABLED } from './services/feedback';
 import ModelStatus from './components/ModelStatus';
 import WebGPUFallback from './components/WebGPUFallback';
 import modelLoader from './services/model-loader';
-import webmcpBridge from './services/webmcp-bridge';
 import { createLogger } from './utils/logger';
 
 const log = createLogger( 'App' );
@@ -24,7 +21,9 @@ const App = () => {
 	const [ modelReady, setModelReady ] = useState( false );
 	const [ webGPUError, setWebGPUError ] = useState( null );
 	const [ isExecuting, setIsExecuting ] = useState( false );
-	const [ showSettings, setShowSettings ] = useState( false );
+	// Active view — 'chat' | 'abilities' | 'plugin-abilities' | 'settings'.
+	// Settings is just another tab (positioned visually on the right via CSS).
+	const [ activeView, setActiveView ] = useState( 'chat' );
 	// Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
 	const [ initPhase, setInitPhase ] = useState( 'checking' );
 	const [ initMessage, setInitMessage ] = useState(
@@ -67,19 +66,19 @@ const App = () => {
 
 				// Check saved provider preference
 				const savedProvider = localStorage.getItem(
-					'wp_agentic_admin_provider'
+					'agentic_admin_provider'
 				);
 
 				if ( savedProvider === 'remote' ) {
 					const url = localStorage.getItem(
-						'wp_agentic_admin_remote_url'
+						'agentic_admin_remote_url'
 					);
 					const remoteModel = localStorage.getItem(
-						'wp_agentic_admin_remote_model'
+						'agentic_admin_remote_model'
 					);
 					const apiKey =
 						localStorage.getItem(
-							'wp_agentic_admin_remote_api_key'
+							'agentic_admin_remote_api_key'
 						) || '';
 					if ( url && remoteModel ) {
 						log.info( 'Remote provider saved, auto-connecting...' );
@@ -104,7 +103,9 @@ const App = () => {
 				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );
-				const isCached = await modelLoader.isModelCached();
+				const savedModel =
+					localStorage.getItem( 'agentic_admin_model' ) || undefined;
+				const isCached = await modelLoader.isModelCached( savedModel );
 
 				if ( isCached ) {
 					log.info( 'Model is cached, auto-loading...' );
@@ -112,7 +113,7 @@ const App = () => {
 					setInitMessage( 'Loading from cache...' );
 					setInitProgress( 35 );
 					try {
-						await modelLoader.load();
+						await modelLoader.load( savedModel );
 						setModelReady( true );
 					} catch ( loadErr ) {
 						log.error( 'Auto-load failed:', loadErr );
@@ -127,15 +128,6 @@ const App = () => {
 		};
 
 		initializeApp();
-	}, [] );
-
-	/**
-	 * Cleanup WebMCP bridge on unmount.
-	 */
-	useEffect( () => {
-		return () => {
-			webmcpBridge.cleanup();
-		};
 	}, [] );
 
 	/**
@@ -206,37 +198,18 @@ const App = () => {
 		{
 			name: 'chat',
 			title: 'Chat',
-			className: 'wp-agentic-admin-tab',
 		},
-		{
-			name: 'abilities',
-			title: 'Abilities',
-			className: 'wp-agentic-admin-tab',
-		},
-		{
-			name: 'plugin-abilities',
-			title: 'Plugin Abilities',
-			className: 'wp-agentic-admin-tab',
-		},
-		...( FEEDBACK_UPLOAD_ENABLED
-			? [
-					{
-						name: 'feedback',
-						title: 'Feedback',
-						className: 'wp-agentic-admin-tab',
-					},
-			  ]
-			: [] ),
+		{ name: 'abilities', title: 'Abilities' },
+		{ name: 'plugin-abilities', title: 'Plugin Abilities' },
 	];
 
 	/**
-	 * Render tab content
+	 * Render content for the active view.
 	 *
-	 * @param {Object} tab - The tab object to render
-	 * @return {JSX.Element} The rendered tab content
+	 * @return {JSX.Element} The rendered view.
 	 */
-	const renderTabContent = ( tab ) => {
-		switch ( tab.name ) {
+	const renderActiveView = () => {
+		switch ( activeView ) {
 			case 'chat':
 				// If WebGPU has a fatal error, show fallback
 				if ( webGPUError && ! modelReady ) {
@@ -258,8 +231,8 @@ const App = () => {
 				return <AbilityBrowser />;
 			case 'plugin-abilities':
 				return <PluginAbilitiesPanel />;
-			case 'feedback':
-				return <FeedbackTab />;
+			case 'settings':
+				return <SettingsTab />;
 			default:
 				return null;
 		}
@@ -269,32 +242,41 @@ const App = () => {
 		<div className="wp-agentic-admin-app">
 			<div className="wp-agentic-admin-main">
 				<div className="wp-agentic-admin-tabs-wrapper">
-					<TabPanel
+					<div
 						className="wp-agentic-admin-tabs"
-						tabs={ tabs }
-						initialTabName="chat"
-						onSelect={ () => setShowSettings( false ) }
+						role="tablist"
+						aria-label="Agentic Admin views"
 					>
-						{ ( tab ) => (
-							<div className="wp-agentic-admin-tab-content">
-								{ showSettings ? (
-									<SettingsTab />
-								) : (
-									renderTabContent( tab )
-								) }
-							</div>
-						) }
-					</TabPanel>
-					<Button
-						icon={ cog }
-						className={ `wp-agentic-admin-settings-toggle${
-							showSettings ? ' is-active' : ''
-						}` }
-						onClick={ () => setShowSettings( ( prev ) => ! prev ) }
-						label="Settings"
-					>
-						Settings
-					</Button>
+						{ tabs.map( ( tab ) => (
+							<button
+								key={ tab.name }
+								type="button"
+								role="tab"
+								aria-selected={ activeView === tab.name }
+								className={ `wp-agentic-admin-tab${
+									activeView === tab.name ? ' is-active' : ''
+								}` }
+								onClick={ () => setActiveView( tab.name ) }
+							>
+								{ tab.title }
+							</button>
+						) ) }
+						<Button
+							icon={ cog }
+							role="tab"
+							aria-selected={ activeView === 'settings' }
+							className={ `wp-agentic-admin-settings-toggle${
+								activeView === 'settings' ? ' is-active' : ''
+							}` }
+							onClick={ () => setActiveView( 'settings' ) }
+							label="Settings"
+						>
+							Settings
+						</Button>
+					</div>
+					<div className="wp-agentic-admin-tab-content">
+						{ renderActiveView() }
+					</div>
 				</div>
 			</div>
 

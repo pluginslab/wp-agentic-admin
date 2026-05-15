@@ -22,13 +22,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_uploads_scan(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_uploads_scan(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/uploads-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Scan Uploads for Suspicious Files', 'wp-agentic-admin' ),
-			'description'         => __( 'Scan uploads, WordPress root, and .well-known for PHP scripts, executables, and other suspicious files that may indicate a compromise.', 'wp-agentic-admin' ),
+			'label'               => __( 'Scan Uploads for Suspicious Files', 'agentic-admin' ),
+			'description'         => __( 'Scan uploads, WordPress root, and .well-known for PHP scripts, executables, and other suspicious files that may indicate a compromise.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -41,35 +41,35 @@ function wp_agentic_admin_register_uploads_scan(): void {
 				'properties' => array(
 					'success'           => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the scan completed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the scan completed.', 'agentic-admin' ),
 					),
 					'message'           => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'areas_scanned'     => array(
 						'type'        => 'array',
-						'description' => __( 'Areas that were scanned (uploads, root, .well-known).', 'wp-agentic-admin' ),
+						'description' => __( 'Areas that were scanned (uploads, root, .well-known).', 'agentic-admin' ),
 					),
 					'total_files'       => array(
 						'type'        => 'integer',
-						'description' => __( 'Total files found in uploads.', 'wp-agentic-admin' ),
+						'description' => __( 'Total files found in uploads.', 'agentic-admin' ),
 					),
 					'suspicious_count'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Number of suspicious files found.', 'wp-agentic-admin' ),
+						'description' => __( 'Number of suspicious files found.', 'agentic-admin' ),
 					),
 					'suspicious_files'  => array(
 						'type'        => 'array',
-						'description' => __( 'List of suspicious files with details.', 'wp-agentic-admin' ),
+						'description' => __( 'List of suspicious files with details.', 'agentic-admin' ),
 					),
 					'htaccess_findings' => array(
 						'type'        => 'array',
-						'description' => __( 'Any .htaccess files found in uploads subdirectories.', 'wp-agentic-admin' ),
+						'description' => __( 'Any .htaccess files found in uploads subdirectories.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_uploads_scan',
+			'execute_callback'    => 'agentic_admin_execute_uploads_scan',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -85,7 +85,7 @@ function wp_agentic_admin_register_uploads_scan(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'uploads', 'upload', 'media', 'suspicious files', 'php in uploads', 'backdoor uploads', 'scan uploads', 'uploaded malware', 'well-known', 'root files', 'dropped files' ),
-			'initialMessage' => __( 'Scanning the uploads directory for suspicious files...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Scanning the uploads directory for suspicious files...', 'agentic-admin' ),
 		)
 	);
 }
@@ -96,7 +96,7 @@ function wp_agentic_admin_register_uploads_scan(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array {
+function agentic_admin_execute_uploads_scan( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 
 	// Extensions that should never appear in uploads, root, or .well-known.
@@ -130,7 +130,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 	 *
 	 * @param array $dangerous_extensions Array of file extensions (without dots).
 	 */
-	$dangerous_extensions = apply_filters( 'wp_agentic_admin_uploads_dangerous_extensions', $dangerous_extensions );
+	$dangerous_extensions = apply_filters( 'agentic_admin_uploads_dangerous_extensions', $dangerous_extensions );
 
 	$total_files       = 0;
 	$suspicious_files  = array();
@@ -143,7 +143,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 
 	if ( is_dir( $base_dir ) ) {
 		$areas_scanned[] = 'uploads';
-		wp_agentic_admin_scan_directory_for_dangerous_files(
+		agentic_admin_scan_directory_for_dangerous_files(
 			$base_dir,
 			'uploads',
 			$dangerous_extensions,
@@ -160,7 +160,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 	$root_dir = untrailingslashit( ABSPATH );
 	if ( is_dir( $root_dir ) ) {
 		$areas_scanned[] = 'root';
-		wp_agentic_admin_scan_root_for_dangerous_files(
+		agentic_admin_scan_root_for_dangerous_files(
 			$root_dir,
 			$dangerous_extensions,
 			$total_files,
@@ -175,7 +175,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 	$well_known_dir = ABSPATH . '.well-known';
 	if ( is_dir( $well_known_dir ) ) {
 		$areas_scanned[] = '.well-known';
-		wp_agentic_admin_scan_directory_for_dangerous_files(
+		agentic_admin_scan_directory_for_dangerous_files(
 			$well_known_dir,
 			'.well-known',
 			$dangerous_extensions,
@@ -201,7 +201,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 	if ( 0 === $suspicious_count && 0 === $htaccess_count ) {
 		$message = sprintf(
 			/* translators: 1: total files, 2: areas scanned */
-			__( 'Scanned %1$d files across %2$s. No suspicious files found.', 'wp-agentic-admin' ),
+			__( 'Scanned %1$d files across %2$s. No suspicious files found.', 'agentic-admin' ),
 			$total_files,
 			$areas_label
 		);
@@ -211,7 +211,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 		if ( $suspicious_count > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of suspicious files */
-				_n( '%d suspicious file', '%d suspicious files', $suspicious_count, 'wp-agentic-admin' ),
+				_n( '%d suspicious file', '%d suspicious files', $suspicious_count, 'agentic-admin' ),
 				$suspicious_count
 			);
 		}
@@ -219,14 +219,14 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
 		if ( $htaccess_count > 0 ) {
 			$parts[] = sprintf(
 				/* translators: %d: number of .htaccess files */
-				_n( '%d .htaccess file', '%d .htaccess files', $htaccess_count, 'wp-agentic-admin' ),
+				_n( '%d .htaccess file', '%d .htaccess files', $htaccess_count, 'agentic-admin' ),
 				$htaccess_count
 			);
 		}
 
 		$message = sprintf(
 			/* translators: 1: findings summary, 2: total files, 3: areas scanned */
-			__( 'Found %1$s (%2$d files scanned across %3$s). These require investigation.', 'wp-agentic-admin' ),
+			__( 'Found %1$s (%2$d files scanned across %3$s). These require investigation.', 'agentic-admin' ),
 			implode( ' and ', $parts ),
 			$total_files,
 			$areas_label
@@ -256,7 +256,7 @@ function wp_agentic_admin_execute_uploads_scan( array $input = array() ): array 
  * @param bool   $recursive             Whether to scan recursively.
  * @return void
  */
-function wp_agentic_admin_scan_directory_for_dangerous_files(
+function agentic_admin_scan_directory_for_dangerous_files(
 	string $dir,
 	string $area_label,
 	array $dangerous_extensions,
@@ -309,7 +309,7 @@ function wp_agentic_admin_scan_directory_for_dangerous_files(
 			continue;
 		}
 
-		$result = wp_agentic_admin_classify_dangerous_file( $filename, $dangerous_extensions );
+		$result = agentic_admin_classify_dangerous_file( $filename, $dangerous_extensions );
 
 		if ( null !== $result ) {
 			$result['file']     = $relative;
@@ -334,7 +334,7 @@ function wp_agentic_admin_scan_directory_for_dangerous_files(
  * @param array  $htaccess_findings     Running list (by reference).
  * @return void
  */
-function wp_agentic_admin_scan_root_for_dangerous_files(
+function agentic_admin_scan_root_for_dangerous_files(
 	string $root_dir,
 	array $dangerous_extensions,
 	int &$total_files,
@@ -388,7 +388,7 @@ function wp_agentic_admin_scan_root_for_dangerous_files(
 			continue;
 		}
 
-		$result = wp_agentic_admin_classify_dangerous_file( $entry, $dangerous_extensions );
+		$result = agentic_admin_classify_dangerous_file( $entry, $dangerous_extensions );
 
 		if ( null !== $result ) {
 			$result['file']     = 'root/' . $entry;
@@ -408,8 +408,8 @@ function wp_agentic_admin_scan_root_for_dangerous_files(
  * @param array  $dangerous_extensions Extensions to flag.
  * @return array|null Findings array with risk_score, flags, dangerous_extensions — or null if safe.
  */
-function wp_agentic_admin_classify_dangerous_file( string $filename, array $dangerous_extensions ): ?array {
-	$extensions = wp_agentic_admin_get_all_extensions( $filename );
+function agentic_admin_classify_dangerous_file( string $filename, array $dangerous_extensions ): ?array {
+	$extensions = agentic_admin_get_all_extensions( $filename );
 	$matches    = array_intersect( $extensions, $dangerous_extensions );
 
 	if ( empty( $matches ) ) {
@@ -422,25 +422,25 @@ function wp_agentic_admin_classify_dangerous_file( string $filename, array $dang
 	$php_exts = array_intersect( $matches, array( 'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'phar' ) );
 	if ( ! empty( $php_exts ) ) {
 		$risk_score = 9.5;
-		$flags[]    = __( 'PHP executable', 'wp-agentic-admin' );
+		$flags[]    = __( 'PHP executable', 'agentic-admin' );
 	}
 
 	$shell_exts = array_intersect( $matches, array( 'sh', 'bash', 'cgi', 'pl', 'py', 'rb' ) );
 	if ( ! empty( $shell_exts ) ) {
 		$risk_score = max( $risk_score, 8.5 );
-		$flags[]    = __( 'Server-side script', 'wp-agentic-admin' );
+		$flags[]    = __( 'Server-side script', 'agentic-admin' );
 	}
 
 	$binary_exts = array_intersect( $matches, array( 'exe', 'dll', 'so' ) );
 	if ( ! empty( $binary_exts ) ) {
 		$risk_score = max( $risk_score, 8.0 );
-		$flags[]    = __( 'Binary executable', 'wp-agentic-admin' );
+		$flags[]    = __( 'Binary executable', 'agentic-admin' );
 	}
 
 	// Double extension — disguised file (e.g., shell.php.jpg).
 	if ( ! empty( $php_exts ) && count( $extensions ) > 1 ) {
 		$risk_score = 10.0;
-		$flags[]    = __( 'Double extension — disguised PHP file', 'wp-agentic-admin' );
+		$flags[]    = __( 'Double extension — disguised PHP file', 'agentic-admin' );
 	}
 
 	return array(
@@ -459,7 +459,7 @@ function wp_agentic_admin_classify_dangerous_file( string $filename, array $dang
  * @param string $filename The filename to parse.
  * @return array Array of lowercase extensions.
  */
-function wp_agentic_admin_get_all_extensions( string $filename ): array {
+function agentic_admin_get_all_extensions( string $filename ): array {
 	// Remove leading dot from hidden files.
 	$name  = ltrim( $filename, '.' );
 	$parts = explode( '.', $name );

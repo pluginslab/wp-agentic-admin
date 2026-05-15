@@ -42,7 +42,7 @@ These terms are used interchangeably, but technically:
 - Describes any executable function the AI can invoke
 - Example: The AI's "tools" include all registered abilities
 
-**In WP Agentic Admin:**
+**In Agentic Admin for WordPress:**
 - **Abilities** = backend PHP functions registered with WordPress
 - **Tools** = frontend JS wrappers + AI tool descriptions
 
@@ -147,7 +147,7 @@ registerAbility('wp-agentic-admin/plugin-list', {
 
 ## Current Abilities (14 Total)
 
-WP Agentic Admin ships with 14 abilities across different categories:
+Agentic Admin for WordPress ships with 14 abilities across different categories:
 
 ### Cache & Performance (4)
 

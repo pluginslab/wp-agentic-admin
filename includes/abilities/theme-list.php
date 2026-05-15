@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_theme_list(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_theme_list(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/theme-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'List Themes', 'wp-agentic-admin' ),
-			'description'         => __( 'List all installed themes with their activation status.', 'wp-agentic-admin' ),
+			'label'               => __( 'List Themes', 'agentic-admin' ),
+			'description'         => __( 'List all installed themes with their activation status.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -46,19 +46,19 @@ function wp_agentic_admin_register_theme_list(): void {
 								'parent'  => array( 'type' => 'string' ),
 							),
 						),
-						'description' => __( 'List of themes.', 'wp-agentic-admin' ),
+						'description' => __( 'List of themes.', 'agentic-admin' ),
 					),
 					'total'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of themes.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of themes.', 'agentic-admin' ),
 					),
 					'active' => array(
 						'type'        => 'string',
-						'description' => __( 'Slug of the active theme.', 'wp-agentic-admin' ),
+						'description' => __( 'Slug of the active theme.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_theme_list',
+			'execute_callback'    => 'agentic_admin_execute_theme_list',
 			'permission_callback' => function () {
 				return current_user_can( 'switch_themes' );
 			},
@@ -74,7 +74,7 @@ function wp_agentic_admin_register_theme_list(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'theme', 'themes', 'template', 'templates', 'appearance' ),
-			'initialMessage' => __( "I'll check your installed themes...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll check your installed themes...", 'agentic-admin' ),
 		)
 	);
 }
@@ -85,7 +85,7 @@ function wp_agentic_admin_register_theme_list(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_theme_list( array $input = array() ): array {
+function agentic_admin_execute_theme_list( array $input = array() ): array {
 	$installed    = wp_get_themes();
 	$active_theme = get_stylesheet();
 	$themes       = array();

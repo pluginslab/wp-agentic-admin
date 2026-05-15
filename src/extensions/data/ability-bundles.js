@@ -18,6 +18,7 @@ const ABILITY_BUNDLES = [
 			'wp-agentic-admin/plugin-list',
 			'wp-agentic-admin/plugin-activate',
 			'wp-agentic-admin/plugin-deactivate',
+			'wp-agentic-admin/plugin-install',
 			'wp-agentic-admin/theme-list',
 			'wp-agentic-admin/update-check',
 		],
@@ -30,7 +31,6 @@ const ABILITY_BUNDLES = [
 		abilities: [
 			'wp-agentic-admin/cache-flush',
 			'wp-agentic-admin/transient-flush',
-			'wp-agentic-admin/opcode-cache-status',
 			'wp-agentic-admin/db-optimize',
 			'wp-agentic-admin/revision-cleanup',
 			'wp-agentic-admin/cron-list',
@@ -48,7 +48,6 @@ const ABILITY_BUNDLES = [
 			'wp-agentic-admin/verify-core-checksums',
 			'wp-agentic-admin/verify-plugin-checksums',
 			'wp-agentic-admin/database-check',
-			'wp-agentic-admin/backup-check',
 		],
 	},
 	{
@@ -91,7 +90,6 @@ const ABILITY_BUNDLES = [
 			'core/get-site-info',
 			'core/get-environment-info',
 			'wp-agentic-admin/site-health',
-			'wp-agentic-admin/disk-usage',
 			'wp-agentic-admin/plugin-list',
 			'wp-agentic-admin/theme-list',
 		],

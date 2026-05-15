@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_comment_stats(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_comment_stats(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/comment-stats',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Comment Statistics', 'wp-agentic-admin' ),
-			'description'         => __( 'Show comment counts by status.', 'wp-agentic-admin' ),
+			'label'               => __( 'Comment Statistics', 'agentic-admin' ),
+			'description'         => __( 'Show comment counts by status.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,27 +36,27 @@ function wp_agentic_admin_register_comment_stats(): void {
 				'properties' => array(
 					'total'    => array(
 						'type'        => 'integer',
-						'description' => __( 'Total comments.', 'wp-agentic-admin' ),
+						'description' => __( 'Total comments.', 'agentic-admin' ),
 					),
 					'approved' => array(
 						'type'        => 'integer',
-						'description' => __( 'Approved comments.', 'wp-agentic-admin' ),
+						'description' => __( 'Approved comments.', 'agentic-admin' ),
 					),
 					'pending'  => array(
 						'type'        => 'integer',
-						'description' => __( 'Pending comments.', 'wp-agentic-admin' ),
+						'description' => __( 'Pending comments.', 'agentic-admin' ),
 					),
 					'spam'     => array(
 						'type'        => 'integer',
-						'description' => __( 'Spam comments.', 'wp-agentic-admin' ),
+						'description' => __( 'Spam comments.', 'agentic-admin' ),
 					),
 					'trash'    => array(
 						'type'        => 'integer',
-						'description' => __( 'Trashed comments.', 'wp-agentic-admin' ),
+						'description' => __( 'Trashed comments.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_comment_stats',
+			'execute_callback'    => 'agentic_admin_execute_comment_stats',
 			'permission_callback' => function () {
 				return current_user_can( 'moderate_comments' );
 			},
@@ -72,7 +72,7 @@ function wp_agentic_admin_register_comment_stats(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'comment', 'comments', 'spam', 'pending', 'moderation' ),
-			'initialMessage' => __( "I'll check your comment statistics...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll check your comment statistics...", 'agentic-admin' ),
 		)
 	);
 }
@@ -83,7 +83,7 @@ function wp_agentic_admin_register_comment_stats(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_comment_stats( array $input = array() ): array {
+function agentic_admin_execute_comment_stats( array $input = array() ): array {
 	$counts = wp_count_comments();
 
 	return array(

@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_database_check(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_database_check(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/database-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Database Security Check', 'wp-agentic-admin' ),
-			'description'         => __( 'Scan the WordPress database for indicators of compromise: injected scripts, base64 payloads, eval() calls, rogue cron jobs, and suspicious users.', 'wp-agentic-admin' ),
+			'label'               => __( 'Database Security Check', 'agentic-admin' ),
+			'description'         => __( 'Scan the WordPress database for indicators of compromise: injected scripts, base64 payloads, eval() calls, rogue cron jobs, and suspicious users.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -38,23 +38,23 @@ function wp_agentic_admin_register_database_check(): void {
 				'properties' => array(
 					'success'      => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the scan completed.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the scan completed.', 'agentic-admin' ),
 					),
 					'message'      => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'total_issues' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total suspicious findings.', 'wp-agentic-admin' ),
+						'description' => __( 'Total suspicious findings.', 'agentic-admin' ),
 					),
 					'checks'       => array(
 						'type'        => 'array',
-						'description' => __( 'Results of each individual check.', 'wp-agentic-admin' ),
+						'description' => __( 'Results of each individual check.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_database_check',
+			'execute_callback'    => 'agentic_admin_execute_database_check',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -70,7 +70,7 @@ function wp_agentic_admin_register_database_check(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'database check', 'db security', 'scan database', 'malware database', 'injected code', 'base64', 'eval', 'spam pages', 'rogue cron', 'suspicious users' ),
-			'initialMessage' => __( 'Scanning the database for indicators of compromise...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Scanning the database for indicators of compromise...', 'agentic-admin' ),
 		)
 	);
 }
@@ -81,7 +81,7 @@ function wp_agentic_admin_register_database_check(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_database_check( array $input = array() ): array {
+function agentic_admin_execute_database_check( array $input = array() ): array {
 	// phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required parameter for callback signature.
 	$checks       = array();
 	$total_issues = 0;
@@ -96,23 +96,23 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 	 *
 	 * @param float $threshold Risk score threshold (default 6.0).
 	 */
-	$threshold = apply_filters( 'wp_agentic_admin_db_check_threshold', 6.0 );
+	$threshold = apply_filters( 'agentic_admin_db_check_threshold', 6.0 );
 
 	// Run all checks.
 	$check_functions = array(
-		'wp_agentic_admin_check_options_base64',
-		'wp_agentic_admin_check_options_eval',
-		'wp_agentic_admin_check_options_suspicious_urls',
-		'wp_agentic_admin_check_posts_scripts',
-		'wp_agentic_admin_check_posts_base64_eval',
-		'wp_agentic_admin_check_posts_iframes',
-		'wp_agentic_admin_check_posts_hidden_links',
-		'wp_agentic_admin_check_usermeta_injections',
-		'wp_agentic_admin_check_suspicious_admins',
-		'wp_agentic_admin_check_rogue_cron_jobs',
-		'wp_agentic_admin_check_siteurl_integrity',
-		'wp_agentic_admin_check_comments_injections',
-		'wp_agentic_admin_check_widgets_injections',
+		'agentic_admin_check_options_base64',
+		'agentic_admin_check_options_eval',
+		'agentic_admin_check_options_suspicious_urls',
+		'agentic_admin_check_posts_scripts',
+		'agentic_admin_check_posts_base64_eval',
+		'agentic_admin_check_posts_iframes',
+		'agentic_admin_check_posts_hidden_links',
+		'agentic_admin_check_usermeta_injections',
+		'agentic_admin_check_suspicious_admins',
+		'agentic_admin_check_rogue_cron_jobs',
+		'agentic_admin_check_siteurl_integrity',
+		'agentic_admin_check_comments_injections',
+		'agentic_admin_check_widgets_injections',
 	);
 
 	/**
@@ -126,7 +126,7 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 	 *
 	 * @param array $check_functions Array of callable function names.
 	 */
-	$check_functions = apply_filters( 'wp_agentic_admin_db_check_functions', $check_functions );
+	$check_functions = apply_filters( 'agentic_admin_db_check_functions', $check_functions );
 
 	foreach ( $check_functions as $func ) {
 		$result = $func();
@@ -156,21 +156,21 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
 
 	if ( 0 === $total_issues ) {
 		$message = 0 === $total_raw
-			? __( 'Database scan complete. No findings detected.', 'wp-agentic-admin' )
+			? __( 'Database scan complete. No findings detected.', 'agentic-admin' )
 			: sprintf(
 				/* translators: %d: number of low-risk findings filtered out */
 				_n(
 					'Database scan complete. No high-risk findings. %d low-risk finding was filtered out (below 6.0/10).',
 					'Database scan complete. No high-risk findings. %d low-risk findings were filtered out (below 6.0/10).',
 					$filtered_out,
-					'wp-agentic-admin'
+					'agentic-admin'
 				),
 				$filtered_out
 			);
 	} else {
 		$message = sprintf(
 			/* translators: 1: number of high-risk findings, 2: risk threshold, 3: number filtered out */
-			__( 'Database scan complete. Found %1$d high-risk finding(s) (score >= %2$s/10). %3$d low-risk finding(s) filtered out.', 'wp-agentic-admin' ),
+			__( 'Database scan complete. Found %1$d high-risk finding(s) (score >= %2$s/10). %3$d low-risk finding(s) filtered out.', 'agentic-admin' ),
 			$total_issues,
 			number_format( $threshold, 1 ),
 			$filtered_out
@@ -200,7 +200,7 @@ function wp_agentic_admin_execute_database_check( array $input = array() ): arra
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_options_base64(): array {
+function agentic_admin_check_options_base64(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -227,8 +227,8 @@ function wp_agentic_admin_check_options_base64(): array {
 	}
 
 	return array(
-		'name'        => __( 'Options: base64_decode', 'wp-agentic-admin' ),
-		'description' => __( 'Options containing base64_decode() calls — often used to hide malware.', 'wp-agentic-admin' ),
+		'name'        => __( 'Options: base64_decode', 'agentic-admin' ),
+		'description' => __( 'Options containing base64_decode() calls — often used to hide malware.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -241,7 +241,7 @@ function wp_agentic_admin_check_options_base64(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_options_eval(): array {
+function agentic_admin_check_options_eval(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -265,8 +265,8 @@ function wp_agentic_admin_check_options_eval(): array {
 	}
 
 	return array(
-		'name'        => __( 'Options: eval() injections', 'wp-agentic-admin' ),
-		'description' => __( 'Options containing eval() calls — a strong indicator of injected code.', 'wp-agentic-admin' ),
+		'name'        => __( 'Options: eval() injections', 'agentic-admin' ),
+		'description' => __( 'Options containing eval() calls — a strong indicator of injected code.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -280,7 +280,7 @@ function wp_agentic_admin_check_options_eval(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_options_suspicious_urls(): array {
+function agentic_admin_check_options_suspicious_urls(): array {
 	global $wpdb;
 
 	$suspicious_patterns = array(
@@ -297,7 +297,11 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 		$values[]        = $pattern;
 	}
 
-	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared -- Dynamic number of LIKE patterns; WHERE clause is built from safe literal strings.
+	// The WHERE clause is built from literal "option_value LIKE %s" fragments
+	// in a fixed-size loop over $suspicious_patterns — no user input touches
+	// the SQL string. The %s count always matches ...$values, but phpcs can't
+	// see through the implode + spread to verify that statically.
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 	$rows = $wpdb->get_results(
 		$wpdb->prepare(
 			"SELECT option_name, LEFT(option_value, 200) AS option_value_preview
@@ -307,7 +311,7 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 			...$values
 		)
 	);
-	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 	$findings = array();
 	foreach ( $rows as $row ) {
@@ -319,8 +323,8 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
 	}
 
 	return array(
-		'name'        => __( 'Options: suspicious JavaScript', 'wp-agentic-admin' ),
-		'description' => __( 'Options containing script tags, document.write, redirects, or obfuscated JS.', 'wp-agentic-admin' ),
+		'name'        => __( 'Options: suspicious JavaScript', 'agentic-admin' ),
+		'description' => __( 'Options containing script tags, document.write, redirects, or obfuscated JS.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -334,7 +338,7 @@ function wp_agentic_admin_check_options_suspicious_urls(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_posts_scripts(): array {
+function agentic_admin_check_posts_scripts(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -360,8 +364,8 @@ function wp_agentic_admin_check_posts_scripts(): array {
 	}
 
 	return array(
-		'name'        => __( 'Posts: injected scripts', 'wp-agentic-admin' ),
-		'description' => __( 'Published posts/pages containing raw <script> tags.', 'wp-agentic-admin' ),
+		'name'        => __( 'Posts: injected scripts', 'agentic-admin' ),
+		'description' => __( 'Published posts/pages containing raw <script> tags.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -372,7 +376,7 @@ function wp_agentic_admin_check_posts_scripts(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_posts_base64_eval(): array {
+function agentic_admin_check_posts_base64_eval(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -399,8 +403,8 @@ function wp_agentic_admin_check_posts_base64_eval(): array {
 	}
 
 	return array(
-		'name'        => __( 'Posts: base64/eval injections', 'wp-agentic-admin' ),
-		'description' => __( 'Published posts containing base64_decode() or eval() calls.', 'wp-agentic-admin' ),
+		'name'        => __( 'Posts: base64/eval injections', 'agentic-admin' ),
+		'description' => __( 'Published posts containing base64_decode() or eval() calls.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -414,7 +418,7 @@ function wp_agentic_admin_check_posts_base64_eval(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_posts_iframes(): array {
+function agentic_admin_check_posts_iframes(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -440,8 +444,8 @@ function wp_agentic_admin_check_posts_iframes(): array {
 	}
 
 	return array(
-		'name'        => __( 'Posts: iframe injections', 'wp-agentic-admin' ),
-		'description' => __( 'Published posts containing <iframe> tags — review for hidden malicious embeds.', 'wp-agentic-admin' ),
+		'name'        => __( 'Posts: iframe injections', 'agentic-admin' ),
+		'description' => __( 'Published posts containing <iframe> tags — review for hidden malicious embeds.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -455,7 +459,7 @@ function wp_agentic_admin_check_posts_iframes(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_posts_hidden_links(): array {
+function agentic_admin_check_posts_hidden_links(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -482,8 +486,8 @@ function wp_agentic_admin_check_posts_hidden_links(): array {
 	}
 
 	return array(
-		'name'        => __( 'Posts: hidden content (SEO spam)', 'wp-agentic-admin' ),
-		'description' => __( 'Published posts with display:none or visibility:hidden — may indicate injected SEO spam links.', 'wp-agentic-admin' ),
+		'name'        => __( 'Posts: hidden content (SEO spam)', 'agentic-admin' ),
+		'description' => __( 'Published posts with display:none or visibility:hidden — may indicate injected SEO spam links.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -497,10 +501,15 @@ function wp_agentic_admin_check_posts_hidden_links(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_usermeta_injections(): array {
+function agentic_admin_check_usermeta_injections(): array {
 	global $wpdb;
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+	// Slow meta_key scan is intentional — this is a security audit that
+	// looks for injected payloads anywhere in usermeta. The LIMIT 50 and
+	// admin-only permission_callback (in the parent ability registration)
+	// keep the blast radius small. Caching is skipped: stale results would
+	// hide a fresh injection.
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 	$rows = $wpdb->get_results(
 		$wpdb->prepare(
 			"SELECT user_id, meta_key, LEFT(meta_value, 200) AS meta_value_preview
@@ -519,6 +528,7 @@ function wp_agentic_admin_check_usermeta_injections(): array {
 	foreach ( $rows as $row ) {
 		$findings[] = array(
 			'user_id'    => (int) $row->user_id,
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- this is a PHP array key in our response, not a WP_Query argument.
 			'meta_key'   => $row->meta_key,
 			'preview'    => $row->meta_value_preview,
 			'risk_score' => 9.0, // Code injection in user meta is almost always malicious.
@@ -526,8 +536,8 @@ function wp_agentic_admin_check_usermeta_injections(): array {
 	}
 
 	return array(
-		'name'        => __( 'User meta: injected code', 'wp-agentic-admin' ),
-		'description' => __( 'User meta fields containing eval(), base64_decode(), or script tags.', 'wp-agentic-admin' ),
+		'name'        => __( 'User meta: injected code', 'agentic-admin' ),
+		'description' => __( 'User meta fields containing eval(), base64_decode(), or script tags.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -542,7 +552,7 @@ function wp_agentic_admin_check_usermeta_injections(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_suspicious_admins(): array {
+function agentic_admin_check_suspicious_admins(): array {
 	$findings = array();
 
 	$recent_admins = get_users(
@@ -568,8 +578,8 @@ function wp_agentic_admin_check_suspicious_admins(): array {
 	}
 
 	return array(
-		'name'        => __( 'Recently created admins', 'wp-agentic-admin' ),
-		'description' => __( 'Administrator accounts created in the last 30 days — verify these are legitimate.', 'wp-agentic-admin' ),
+		'name'        => __( 'Recently created admins', 'agentic-admin' ),
+		'description' => __( 'Administrator accounts created in the last 30 days — verify these are legitimate.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -583,14 +593,14 @@ function wp_agentic_admin_check_suspicious_admins(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_rogue_cron_jobs(): array {
+function agentic_admin_check_rogue_cron_jobs(): array {
 	$findings = array();
 	$crons    = _get_cron_array();
 
 	if ( empty( $crons ) ) {
 		return array(
-			'name'        => __( 'Rogue cron jobs', 'wp-agentic-admin' ),
-			'description' => __( 'Cron events with suspicious hook names or callbacks.', 'wp-agentic-admin' ),
+			'name'        => __( 'Rogue cron jobs', 'agentic-admin' ),
+			'description' => __( 'Cron events with suspicious hook names or callbacks.', 'agentic-admin' ),
 			'count'       => 0,
 			'findings'    => array(),
 		);
@@ -628,7 +638,7 @@ function wp_agentic_admin_check_rogue_cron_jobs(): array {
 				if ( false !== stripos( $hook, $pattern ) ) {
 					$flags[] = sprintf(
 						/* translators: %s: suspicious pattern */
-						__( 'hook name contains "%s"', 'wp-agentic-admin' ),
+						__( 'hook name contains "%s"', 'agentic-admin' ),
 						$pattern
 					);
 				}
@@ -636,7 +646,7 @@ function wp_agentic_admin_check_rogue_cron_jobs(): array {
 
 			// Flag hooks with random-looking names (common in malware).
 			if ( preg_match( '/^[a-f0-9]{8,}$/', $hook ) ) {
-				$flags[] = __( 'hook name looks like a random hash', 'wp-agentic-admin' );
+				$flags[] = __( 'hook name looks like a random hash', 'agentic-admin' );
 			}
 
 			if ( ! empty( $flags ) ) {
@@ -654,8 +664,8 @@ function wp_agentic_admin_check_rogue_cron_jobs(): array {
 	}
 
 	return array(
-		'name'        => __( 'Rogue cron jobs', 'wp-agentic-admin' ),
-		'description' => __( 'Cron events with suspicious hook names — may indicate persistent malware.', 'wp-agentic-admin' ),
+		'name'        => __( 'Rogue cron jobs', 'agentic-admin' ),
+		'description' => __( 'Cron events with suspicious hook names — may indicate persistent malware.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -669,7 +679,7 @@ function wp_agentic_admin_check_rogue_cron_jobs(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_siteurl_integrity(): array {
+function agentic_admin_check_siteurl_integrity(): array {
 	$findings = array();
 
 	// siteurl and home control where WordPress loads from and where it redirects.
@@ -684,7 +694,7 @@ function wp_agentic_admin_check_siteurl_integrity(): array {
 
 	if ( $site_host !== $home_host ) {
 		$findings[] = array(
-			'issue'      => __( 'siteurl and home have different domains', 'wp-agentic-admin' ),
+			'issue'      => __( 'siteurl and home have different domains', 'agentic-admin' ),
 			'siteurl'    => $siteurl,
 			'home'       => $home,
 			'risk_score' => 8.0, // Domain mismatch is a strong indicator of hijacking.
@@ -695,14 +705,14 @@ function wp_agentic_admin_check_siteurl_integrity(): array {
 	if ( is_ssl() ) {
 		if ( str_starts_with( $siteurl, 'http://' ) ) {
 			$findings[] = array(
-				'issue'      => __( 'siteurl uses HTTP but site is served over HTTPS', 'wp-agentic-admin' ),
+				'issue'      => __( 'siteurl uses HTTP but site is served over HTTPS', 'agentic-admin' ),
 				'siteurl'    => $siteurl,
 				'risk_score' => 6.5, // May be misconfiguration, not necessarily malicious.
 			);
 		}
 		if ( str_starts_with( $home, 'http://' ) ) {
 			$findings[] = array(
-				'issue'      => __( 'home uses HTTP but site is served over HTTPS', 'wp-agentic-admin' ),
+				'issue'      => __( 'home uses HTTP but site is served over HTTPS', 'agentic-admin' ),
 				'home'       => $home,
 				'risk_score' => 6.5,
 			);
@@ -710,8 +720,8 @@ function wp_agentic_admin_check_siteurl_integrity(): array {
 	}
 
 	return array(
-		'name'        => __( 'Site URL integrity', 'wp-agentic-admin' ),
-		'description' => __( 'Checks if siteurl or home option have been tampered with or misconfigured.', 'wp-agentic-admin' ),
+		'name'        => __( 'Site URL integrity', 'agentic-admin' ),
+		'description' => __( 'Checks if siteurl or home option have been tampered with or misconfigured.', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -725,7 +735,7 @@ function wp_agentic_admin_check_siteurl_integrity(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_comments_injections(): array {
+function agentic_admin_check_comments_injections(): array {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -754,8 +764,8 @@ function wp_agentic_admin_check_comments_injections(): array {
 	}
 
 	return array(
-		'name'        => __( 'Comments: injected code', 'wp-agentic-admin' ),
-		'description' => __( 'Approved comments containing script tags, eval(), or base64_decode().', 'wp-agentic-admin' ),
+		'name'        => __( 'Comments: injected code', 'agentic-admin' ),
+		'description' => __( 'Approved comments containing script tags, eval(), or base64_decode().', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);
@@ -769,7 +779,7 @@ function wp_agentic_admin_check_comments_injections(): array {
  *
  * @return array Check result.
  */
-function wp_agentic_admin_check_widgets_injections(): array {
+function agentic_admin_check_widgets_injections(): array {
 	global $wpdb;
 
 	// Widget data is stored in options like widget_text, widget_custom_html, etc.
@@ -798,8 +808,8 @@ function wp_agentic_admin_check_widgets_injections(): array {
 	}
 
 	return array(
-		'name'        => __( 'Widgets: injected code', 'wp-agentic-admin' ),
-		'description' => __( 'Widget options containing script tags, eval(), or base64_decode().', 'wp-agentic-admin' ),
+		'name'        => __( 'Widgets: injected code', 'agentic-admin' ),
+		'description' => __( 'Widget options containing script tags, eval(), or base64_decode().', 'agentic-admin' ),
 		'count'       => count( $findings ),
 		'findings'    => $findings,
 	);

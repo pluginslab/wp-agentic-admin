@@ -1,14 +1,14 @@
-# WP-Agentic-Admin
+# Agentic Admin for WordPress
 
-![WP Agentic Admin - CloudFest Hackathon 2026](.github/assets/cloudfest-2026-hackathon.png)
+![Agentic Admin for WordPress - CloudFest Hackathon 2026](.github/assets/cloudfest-2026-hackathon.png)
 
 **The Local-First AI Site Reliability Engineer for WordPress**
 
 A privacy-first AI assistant that runs entirely in your browser, helping you diagnose and fix WordPress issues through natural language commands.
 
-## What is WP-Agentic-Admin?
+## What is Agentic Admin for WordPress?
 
-WP-Agentic-Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English:
+Agentic Admin for WordPress transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English:
 
 > "My site is throwing 500 errors"
 
@@ -33,7 +33,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 
 ## Architecture
 
-WP-Agentic-Admin uses a **ReAct (Reasoning + Acting) pattern** where the AI decides tool selection one action at a time:
+Agentic Admin for WordPress uses a **ReAct (Reasoning + Acting) pattern** where the AI decides tool selection one action at a time:
 
 ### System Design
 
@@ -109,18 +109,18 @@ Messages are routed through a simple 2-tier system:
 
 [![Open in WordPress Playground](https://img.shields.io/badge/Open%20in-WordPress%20Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/pluginslab/wp-agentic-admin/main/.playground/blueprint.json)
 
-Click the badge above to launch a fully working WordPress instance with WP Agentic Admin pre-installed — no setup required. Requires a browser with WebGPU support (Chrome or Edge).
+Click the badge above to launch a fully working WordPress instance with Agentic Admin for WordPress pre-installed — no setup required. Requires a browser with WebGPU support (Chrome or Edge).
 
 ## Installation
 
-1. Download and install WP-Agentic-Admin
+1. Download and install Agentic Admin for WordPress
 2. Navigate to "Agentic Admin" in your WordPress admin menu
 3. Wait for the AI model to download (one-time, ~1.2GB for Qwen 3 1.7B or ~4.5GB for Qwen 2.5 7B)
 4. Start chatting!
 
 ## Persistent AI Mode
 
-WP-Agentic-Admin uses **Service Worker technology** to keep the AI model loaded in memory, even when navigating between WordPress admin pages. This provides several benefits:
+Agentic Admin for WordPress uses **Service Worker technology** to keep the AI model loaded in memory, even when navigating between WordPress admin pages. This provides several benefits:
 
 ### Benefits
 
@@ -331,7 +331,7 @@ The `.mcp.json` at the project root configures WordPress-specific MCP servers (`
 
 ## Project Vision
 
-WP Agentic Admin aims to make WordPress site management accessible through natural language while maintaining privacy and security. We're building:
+Agentic Admin for WordPress aims to make WordPress site management accessible through natural language while maintaining privacy and security. We're building:
 
 1. **Privacy-First AI** - No external APIs, no data collection, fully local execution
 2. **Extensible Architecture** - Third-party plugins can add custom abilities via the WordPress Abilities API

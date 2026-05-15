@@ -49,7 +49,7 @@ But also:
 
 ## Why Smaller Models Work for WordPress
 
-WP Agentic Admin uses relatively small models (1.7B - 7B parameters) because:
+Agentic Admin for WordPress uses relatively small models (1.7B - 7B parameters) because:
 
 1. **Specific Domain** — WordPress administration is a well-defined problem space. The model doesn't need to know everything about the world, just how to work with WordPress.
 
@@ -63,7 +63,7 @@ WP Agentic Admin uses relatively small models (1.7B - 7B parameters) because:
 
 A large model like GPT-4 might use its vast knowledge to guess what's wrong.
 
-A small model in WP Agentic Admin:
+A small model in Agentic Admin for WordPress:
 1. Uses the `error-log-read` tool to get actual error messages
 2. Analyzes the concrete data
 3. Uses the `plugin-deactivate` tool to fix the issue
@@ -72,7 +72,7 @@ The tools compensate for the smaller model's limited knowledge.
 
 ## Temperature
 
-**Temperature** controls how random a model's output is. Low values (0.0-0.3) make output deterministic and focused; high values (0.7-1.0+) make it creative and varied. WP Agentic Admin uses **0.6** — reliable enough for structured tool calls, natural enough for human-readable explanations.
+**Temperature** controls how random a model's output is. Low values (0.0-0.3) make output deterministic and focused; high values (0.7-1.0+) make it creative and varied. Agentic Admin for WordPress uses **0.6** — reliable enough for structured tool calls, natural enough for human-readable explanations.
 
 ## Token Limits
 
@@ -96,10 +96,10 @@ When the conversation gets too long, older messages are removed to make room.
 ## Foundation vs Fine-Tuned Models
 
 - **Foundation Models** — Trained on general text, no specific task focus
-- **Instruct Models** — Fine-tuned to follow instructions (what WP Agentic Admin uses)
+- **Instruct Models** — Fine-tuned to follow instructions (what Agentic Admin for WordPress uses)
 - **Chat Models** — Optimized for back-and-forth conversations
 
-WP Agentic Admin uses **Qwen 3 1.7B Instruct** and **Qwen 2.5 7B Instruct** — models specifically trained to understand and execute instructions.
+Agentic Admin for WordPress uses **Qwen 3 1.7B Instruct** and **Qwen 2.5 7B Instruct** — models specifically trained to understand and execute instructions.
 
 ## What Language Models Can't Do
 
@@ -110,10 +110,10 @@ Despite their capabilities, language models have limitations:
 ❌ **No Memory Between Sessions** — Each conversation starts fresh  
 ❌ **Can't Access External Data** — Unless given tools to retrieve it
 
-This is why WP Agentic Admin pairs the language model with **abilities** — PHP functions that actually interact with WordPress.
+This is why Agentic Admin for WordPress pairs the language model with **abilities** — PHP functions that actually interact with WordPress.
 
 ## Summary
 
-A language model is a text prediction engine that learns patterns from training data. WP Agentic Admin uses small, instruction-tuned models (1.7B - 7B parameters) that are optimized for structured tasks. The models work best when paired with tools that provide real-time data and execution capabilities.
+A language model is a text prediction engine that learns patterns from training data. Agentic Admin for WordPress uses small, instruction-tuned models (1.7B - 7B parameters) that are optimized for structured tasks. The models work best when paired with tools that provide real-time data and execution capabilities.
 
 **Next:** [Running AI in the Browser](02-running-ai-in-browser.md)

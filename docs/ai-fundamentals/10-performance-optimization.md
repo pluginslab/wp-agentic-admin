@@ -1,6 +1,6 @@
 # Performance & Optimization
 
-Running AI models in the browser requires careful attention to performance. This guide covers how WP Agentic Admin optimizes for speed, memory usage, and user experience.
+Running AI models in the browser requires careful attention to performance. This guide covers how Agentic Admin for WordPress optimizes for speed, memory usage, and user experience.
 
 ## Performance Metrics
 
@@ -223,7 +223,7 @@ Models stored in IndexedDB compete with other website data:
 - User can grant more space
 - Or clear other site data
 
-**WP Agentic Admin strategy:**
+**Agentic Admin for WordPress strategy:**
 - Request persistent storage on first load
 - Prevents automatic eviction of model cache
 
@@ -240,7 +240,7 @@ Service Workers can be terminated by the browser to save resources:
 
 **Default termination:** 30 seconds of inactivity
 
-**WP Agentic Admin prevention:**
+**Agentic Admin for WordPress prevention:**
 - Periodic keepalive messages from page to SW
 - VRAM allocation keeps SW "busy" (browser avoids killing it)
 - Event listeners prevent idle termination
@@ -311,7 +311,7 @@ Control generation speed vs quality:
 | Temperature | Tokens/Sec | Quality | Use Case |
 |-------------|-----------|---------|----------|
 | 0.0 | Fastest | Deterministic | Structured tasks (tool calls) |
-| 0.6 | Fast | Balanced | **Default for WP Agentic Admin** |
+| 0.6 | Fast | Balanced | **Default for Agentic Admin for WordPress** |
 | 1.0+ | Slower | Creative | Open-ended responses |
 
 Lower temperature = faster inference (fewer candidate tokens evaluated)
@@ -592,6 +592,6 @@ Future:     Download pre-compiled shaders → Skip compilation
 
 ## Summary
 
-Performance optimization in WP Agentic Admin focuses on minimizing cold start time (progressive loading, smaller default model), reducing inference latency (streaming responses, temperature tuning), and managing VRAM efficiently (Service Worker persistence, model sharing). Key bottlenecks are model download (5-10 min first time), VRAM allocation (requires 2-5GB), and ReAct iteration overhead (2-5s per iteration). Future optimizations include tool pre-filtering (RLM), parallel execution, and model hot-swapping.
+Performance optimization in Agentic Admin for WordPress focuses on minimizing cold start time (progressive loading, smaller default model), reducing inference latency (streaming responses, temperature tuning), and managing VRAM efficiently (Service Worker persistence, model sharing). Key bottlenecks are model download (5-10 min first time), VRAM allocation (requires 2-5GB), and ReAct iteration overhead (2-5s per iteration). Future optimizations include tool pre-filtering (RLM), parallel execution, and model hot-swapping.
 
 **Next:** [Tool Selection at Scale (RLM Approach)](11-tool-selection-at-scale.md)

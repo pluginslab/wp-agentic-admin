@@ -1,6 +1,6 @@
 # AI Fundamentals
 
-A comprehensive guide to understanding how WP Agentic Admin brings AI to your browser.
+A comprehensive guide to understanding how Agentic Admin for WordPress brings AI to your browser.
 
 ## Overview
 
@@ -14,9 +14,9 @@ This guide covers everything from the basics of language models to advanced opti
 4. [WebLLM Library](04-webllm.md)
 5. [Quantization: Making Models Smaller](05-quantization.md)
 
-## Implementation in WP Agentic Admin
+## Implementation in Agentic Admin for WordPress
 
-6. [Models in WP Agentic Admin](06-models-in-wp-agentic-admin.md)
+6. [Models in Agentic Admin for WordPress](06-models-in-wp-agentic-admin.md)
 7. [Service Worker Persistence](07-service-worker-persistence.md)
 8. [The ReAct Pattern](08-react-pattern.md)
 9. [Tools & Abilities](09-tools-and-abilities.md)

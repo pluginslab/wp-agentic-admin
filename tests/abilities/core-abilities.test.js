@@ -93,26 +93,6 @@ module.exports = {
 			expectTool: 'wp-agentic-admin/error-log-search',
 		},
 
-		// ── Disk usage ────────────────────────────────────────────
-		{
-			input: 'how much disk space is my site using?',
-			expectTool: 'wp-agentic-admin/disk-usage',
-		},
-		{
-			input: 'check storage usage',
-			expectTool: 'wp-agentic-admin/disk-usage',
-		},
-
-		// ── OPcache status ────────────────────────────────────────
-		{
-			input: 'what is the opcache status?',
-			expectTool: 'wp-agentic-admin/opcode-cache-status',
-		},
-		{
-			input: 'is PHP opcode caching enabled?',
-			expectTool: 'wp-agentic-admin/opcode-cache-status',
-		},
-
 		// ── Comment stats ─────────────────────────────────────────
 		{
 			input: 'how many comments does my site have?',
@@ -141,16 +121,6 @@ module.exports = {
 		{
 			input: 'show me all draft posts',
 			expectTool: 'wp-agentic-admin/post-list',
-		},
-
-		// ── Backup check ──────────────────────────────────────────
-		{
-			input: 'do I have a backup plugin installed?',
-			expectTool: 'wp-agentic-admin/backup-check',
-		},
-		{
-			input: 'check my backup status',
-			expectTool: 'wp-agentic-admin/backup-check',
 		},
 
 		// ── File writing ──────────────────────────────────────────
@@ -286,15 +256,15 @@ module.exports = {
 		// ── Core WordPress info ────────────────────────────────────
 		{
 			input: 'what is the name of my site?',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what is my site URL?',
-			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what is my address URL',
-			expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+			expectTool: 'core/get-site-info',
 		},
 		{
 			input: 'what environment is this site running on?',
@@ -403,12 +373,12 @@ module.exports = {
 		},
 		{
 			input: 'what is my address URL',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 			source: '#79',
 		},
 		{
 			input: 'what is my site URL?',
-			expectTool: [ 'core/get-site-info', 'core/get-site-url' ],
+			expectTool: 'core/get-site-info',
 			source: '#79',
 		},
 

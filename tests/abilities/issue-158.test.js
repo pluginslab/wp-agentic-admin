@@ -76,8 +76,8 @@ module.exports = {
 					expectTool: 'wp-agentic-admin/site-health',
 				},
 				{
-					input: 'how much disk space am I using?',
-					expectTool: 'wp-agentic-admin/disk-usage',
+					input: 'list all installed themes',
+					expectTool: 'wp-agentic-admin/theme-list',
 				},
 			],
 		},

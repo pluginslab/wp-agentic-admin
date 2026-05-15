@@ -1,6 +1,6 @@
 # CloudFest Hackathon 2026 — Progress Tracker
 
-Live progress for the WP Agentic Admin hackathon project. Updated as milestones are reached.
+Live progress for the Agentic Admin for WordPress hackathon project. Updated as milestones are reached.
 
 ## Day 3 — March 22
 
@@ -22,7 +22,7 @@ On-device speech-to-text via **Whisper Tiny** (~40MB ONNX) running entirely in a
 ### Placeholder Fix + Package Sync (PR #173 by @robert81)
 Chat input now shows "Thinking..." during inference instead of stale "Load the AI model first". Fixes #147.
 
-**42 abilities**, **55 PRs merged**, **10 contributors**.
+**41 abilities**, **55 PRs merged**, **10 contributors**.
 
 ---
 
@@ -36,9 +36,8 @@ Chat input now shows "Thinking..." during inference instead of stale "Load the A
 ### Feedback Thumbs Up/Down Merged! (PR #103, code by @janvogt)
 Opt-in thumbs up/down rating on assistant messages. Feedback stored locally in the browser — nothing sent externally. Includes FeedbackOptInBanner, FeedbackTab in settings with rating stats, and server-side opt-in persistence via REST. Cherry-picked from @janvogt's PR #70 onto clean `dev` base.
 
-### read-file + core/get-site-url (PRs #99, #104)
+### read-file (PR #99)
 - **read-file** (PR #99 by @moritzbappert) — new contributor! Read WordPress files with code block rendering and sensitive data sanitization. 4/4 tests pass.
-- **core/get-site-url** (PR #104 by @0xLoopTheory) — focused site URL query, JS-only ability. 2/2 tests pass.
 
 ### current-user-role + agent improvements + crash fix (PRs #138, #137, #136, #135)
 - **current-user-role** (PR #138 by @0xLoopTheory) — "who am I logged in as?" / "am I an administrator?" 3/3 tests pass.
@@ -173,7 +172,7 @@ Our first hackathon contribution! A **theme-list ability** listing installed the
 
 ### Abilities (33 total)
 - [x] 29 plugin abilities: plugin list/activate/deactivate, theme list, user list, update check, disk usage, comment stats, security scan, post list, error log search, opcode cache status, backup check, write file, query database, web search, read file, verify core checksums, verify plugin checksums, database check, cache flush, db optimize, error log, cron list, revision cleanup, rewrite list/flush, site health, transient flush
-- [x] 4 core WordPress wrappers: get-site-info, get-site-url, get-environment-info, get-editor-blocks
+- [x] 3 core WordPress wrappers: get-site-info, get-environment-info, get-editor-blocks
 
 ### Testing
 - [x] 43 unit tests (Jest, mock LLM)

@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_update_check(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_update_check(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/update-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Check Updates', 'wp-agentic-admin' ),
-			'description'         => __( 'Check for available WordPress core, plugin, and theme updates.', 'wp-agentic-admin' ),
+			'label'               => __( 'Check Updates', 'agentic-admin' ),
+			'description'         => __( 'Check for available WordPress core, plugin, and theme updates.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,23 +36,23 @@ function wp_agentic_admin_register_update_check(): void {
 				'properties' => array(
 					'core'    => array(
 						'type'        => 'object',
-						'description' => __( 'Core update info.', 'wp-agentic-admin' ),
+						'description' => __( 'Core update info.', 'agentic-admin' ),
 					),
 					'plugins' => array(
 						'type'        => 'array',
-						'description' => __( 'Plugins with available updates.', 'wp-agentic-admin' ),
+						'description' => __( 'Plugins with available updates.', 'agentic-admin' ),
 					),
 					'themes'  => array(
 						'type'        => 'array',
-						'description' => __( 'Themes with available updates.', 'wp-agentic-admin' ),
+						'description' => __( 'Themes with available updates.', 'agentic-admin' ),
 					),
 					'total'   => array(
 						'type'        => 'integer',
-						'description' => __( 'Total number of available updates.', 'wp-agentic-admin' ),
+						'description' => __( 'Total number of available updates.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_update_check',
+			'execute_callback'    => 'agentic_admin_execute_update_check',
 			'permission_callback' => function () {
 				return current_user_can( 'update_core' );
 			},
@@ -68,7 +68,7 @@ function wp_agentic_admin_register_update_check(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'update', 'updates', 'outdated', 'upgrade', 'version' ),
-			'initialMessage' => __( "I'll check for available updates...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll check for available updates...", 'agentic-admin' ),
 		)
 	);
 }
@@ -79,7 +79,7 @@ function wp_agentic_admin_register_update_check(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_update_check( array $input = array() ): array {
+function agentic_admin_execute_update_check( array $input = array() ): array {
 	// Ensure update functions are available.
 	if ( ! function_exists( 'get_core_updates' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/update.php';

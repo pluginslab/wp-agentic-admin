@@ -123,34 +123,35 @@ class ReactAgent {
 		this.webSearchContext = options.webSearchContext || null;
 		this.docSearch = options.docSearch || false;
 
-		const engine = this.modelLoader.getEngine();
-		if ( ! engine ) {
+		try {
+			const engine = this.modelLoader.getEngine();
+			if ( ! engine ) {
+				return {
+					success: false,
+					finalAnswer:
+						'The AI model is not loaded yet. Please load the model first.',
+					iterations: 0,
+					toolsUsed: [],
+					observations: [],
+					error: 'Model not loaded',
+				};
+			}
+
+			const result = await this.executeWithPromptBased(
+				userMessage,
+				conversationHistory
+			);
+
+			// Store last result for test observability
+			this.lastResult = result;
+			return result;
+		} finally {
+			// Guarantee per-call state never leaks into the next invocation,
+			// even if executeWithPromptBased throws.
 			this.currentToolFilter = null;
 			this.webSearchContext = null;
-			return {
-				success: false,
-				finalAnswer:
-					'The AI model is not loaded yet. Please load the model first.',
-				iterations: 0,
-				toolsUsed: [],
-				observations: [],
-				error: 'Model not loaded',
-			};
+			this.docSearch = false;
 		}
-
-		const result = await this.executeWithPromptBased(
-			userMessage,
-			conversationHistory
-		);
-
-		// Clean up tool filter, web search context, and doc search
-		this.currentToolFilter = null;
-		this.webSearchContext = null;
-		this.docSearch = false;
-
-		// Store last result for test observability
-		this.lastResult = result;
-		return result;
 	}
 
 	/**
@@ -236,13 +237,20 @@ class ReactAgent {
 		while ( iteration < this.config.maxIterations ) {
 			iteration++;
 			const hasToolResults = toolsUsed.length > 0;
+			// Suppress the streaming "thinking" UI when the user (or router)
+			// disabled thinking — even if Qwen ignores /nothink and emits
+			// <think> blocks anyway. We still process the tags internally
+			// (to strip them from the visible response) but never call the
+			// onThinking* callbacks.
+			const suppressThinkingUi =
+				this.config.disableThinking ||
+				( hasToolResults && this.config.disableThinkingAfterTool );
+
 			log.debug(
 				`ReAct iteration ${ iteration }/${
 					this.config.maxIterations
-				} (prompt-based mode, thinking: ${
-					hasToolResults && this.config.disableThinkingAfterTool
-						? 'off (post-tool)'
-						: 'on'
+				} (prompt-based mode, thinking UI: ${
+					suppressThinkingUi ? 'off' : 'on'
 				})`
 			);
 
@@ -264,12 +272,9 @@ class ReactAgent {
 					fullResponse += delta;
 
 					// Stream thinking tokens live (skip when thinking
-					// is disabled after tool results)
-					const thinkingSuppressed =
-						hasToolResults && this.config.disableThinkingAfterTool;
-
+					// is disabled — either by user setting or post-tool gate).
 					if (
-						! thinkingSuppressed &&
+						! suppressThinkingUi &&
 						fullResponse.includes( '<think>' ) &&
 						! fullResponse.includes( '</think>' )
 					) {
@@ -959,8 +964,13 @@ class ReactAgent {
 		} else {
 			message = `Tool result: ${ truncatedResult }`;
 		}
+		// Remind the model that the user already sees the tool result
+		// rendered as a structured UI block (the ability_result message).
+		// Without this, small models tend to re-list every plugin/user/etc.
+		// in their final_answer prose, duplicating what's already on screen.
+		// Issue #181.
 		const suffix =
-			'\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide final_answer.';
+			"\n\nRemember: Respond with ONLY a JSON object. Either call another tool or provide a final_answer. The user already sees the tool result above — keep final_answer brief (one or two sentences). Don't re-list items the tool already returned.";
 		const nothink = this.config.disableThinkingAfterTool
 			? '\n\n/nothink'
 			: '';
@@ -998,7 +1008,7 @@ Final answer: {"action": "final_answer", "content": "Your answer here"}
 
 RULES:
 - One JSON object per response. No text before or after.
-- Summarize tool results for humans. Never copy raw JSON into final_answer.
+- The tool result is shown to the user as its own UI block — your final_answer should NOT re-list what the tool already returned. Keep final_answer brief (1–2 sentences of context or interpretation, never a full restatement).
 - If a tool fails, explain the failure in a final_answer.
 - Never retry a failed tool. Never invent tool names.
 - If no tool is needed, answer directly via final_answer.
@@ -1008,8 +1018,8 @@ EXAMPLE:
 User: "list plugins"
 {"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
 
-[Tool returns data]
-{"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
+[Tool returns the list — the user sees it rendered above]
+{"action": "final_answer", "content": "You have 2 plugins installed. One is active."}
 
 User: "what environment is this?"
 {"action": "tool_call", "tool": "core/get-environment-info", "args": {}}

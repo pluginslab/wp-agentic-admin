@@ -67,11 +67,11 @@ class Admin_Bar {
 			array(
 				'id'     => 'wp-agentic-admin-sidebar-toggle',
 				'parent' => 'top-secondary',
-				'title'  => '<span class="ab-icon" style="font-family:dashicons !important;display:inline-flex !important;align-items:center;justify-content:center;margin:0 3px;" aria-hidden="true">&#xf197;</span><span class="screen-reader-text">' . esc_html__( 'AI Assistant', 'wp-agentic-admin' ) . '</span>',
+				'title'  => '<span class="ab-icon" style="font-family:dashicons !important;display:inline-flex !important;align-items:center;justify-content:center;margin:0 3px;" aria-hidden="true">&#xf197;</span><span class="screen-reader-text">' . esc_html__( 'AI Assistant', 'agentic-admin' ) . '</span>',
 				'href'   => '#',
 				'meta'   => array(
 					'class' => 'wp-agentic-admin-toggle',
-					'title' => __( 'AI Assistant', 'wp-agentic-admin' ),
+					'title' => __( 'AI Assistant', 'agentic-admin' ),
 				),
 			)
 		);
@@ -88,7 +88,7 @@ class Admin_Bar {
 		}
 
 		// Skip on the plugin's own settings page — the full app is already loaded.
-		if ( 'toplevel_page_wp-agentic-admin' === $hook ) {
+		if ( 'toplevel_page_agentic-admin' === $hook ) {
 			return;
 		}
 
@@ -145,7 +145,7 @@ class Admin_Bar {
 
 		// Don't render on the plugin page — the full app handles it.
 		$screen = get_current_screen();
-		if ( $screen && 'toplevel_page_wp-agentic-admin' === $screen->id ) {
+		if ( $screen && 'toplevel_page_agentic-admin' === $screen->id ) {
 			return;
 		}
 		?>

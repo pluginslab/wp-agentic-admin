@@ -1,5 +1,5 @@
 /**
- * Custom Webpack Configuration for WP Agentic Admin
+ * Custom Webpack Configuration for Agentic Admin for WordPress
  *
  * Extends the default @wordpress/scripts config to add:
  * - Service Worker as a separate entry point (no chunking, self-contained)
@@ -9,7 +9,6 @@
 
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const path = require( 'path' );
-const webpack = require( 'webpack' );
 
 module.exports = {
 	...defaultConfig,
@@ -39,13 +38,17 @@ module.exports = {
 			filename: 'sw.js', // Output as sw.js directly, not sw.index.js
 		},
 
-		// Whisper Web Worker - self-contained bundle for speech-to-text
-		'whisper-worker': {
+		// Whisper Web Worker — source preserved in src/extensions/services/
+		// and src/extensions/components/VoiceButton.jsx for v1.4 (per roadmap).
+		// Re-add this entry to ship voice input again.
+
+		// Indexing Web Worker - background embedding + Voy indexing
+		'indexing-worker': {
 			import: path.resolve(
 				__dirname,
-				'src/extensions/services/whisper-worker.js'
+				'src/extensions/services/indexing-worker.js'
 			),
-			filename: 'whisper-worker.js',
+			filename: 'indexing-worker.js',
 		},
 	},
 
@@ -53,17 +56,6 @@ module.exports = {
 		...defaultConfig.output,
 		path: path.resolve( __dirname, 'build-extensions' ),
 	},
-
-	// Always inline FEEDBACK_S3_ENDPOINT at build time so `process.env.*` is
-	// never a runtime reference in the browser (process is not defined there).
-	plugins: [
-		...( defaultConfig.plugins || [] ),
-		new webpack.DefinePlugin( {
-			'process.env.FEEDBACK_S3_ENDPOINT': JSON.stringify(
-				process.env.FEEDBACK_S3_ENDPOINT || ''
-			),
-		} ),
-	],
 
 	// Service Worker specific optimizations
 	optimization: {
@@ -73,9 +65,9 @@ module.exports = {
 			...defaultConfig.optimization?.splitChunks,
 			cacheGroups: {
 				...defaultConfig.optimization?.splitChunks?.cacheGroups,
-				// Don't split the service worker or whisper worker
+				// Don't split the service worker or web workers
 				sw: false,
-				'whisper-worker': false,
+				'indexing-worker': false,
 			},
 		},
 		runtimeChunk: false, // SW needs runtime included

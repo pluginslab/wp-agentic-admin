@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param string $new_label    Label for the modified file in the diff header.
  * @return string|null Unified diff string, or null on failure.
  */
-function wp_agentic_admin_get_remote_file_diff( string $original_url, string $file_path, string $old_label, string $new_label ): ?string {
+function agentic_admin_get_remote_file_diff( string $original_url, string $file_path, string $old_label, string $new_label ): ?string {
 	$response = wp_remote_get(
 		$original_url,
 		array( 'timeout' => 10 )
@@ -42,7 +42,7 @@ function wp_agentic_admin_get_remote_file_diff( string $original_url, string $fi
 	$original_lines = explode( "\n", $original_content );
 	$local_lines    = explode( "\n", $local_content );
 
-	return wp_agentic_admin_generate_unified_diff( $original_lines, $local_lines, $old_label, $new_label );
+	return agentic_admin_generate_unified_diff( $original_lines, $local_lines, $old_label, $new_label );
 }
 
 /**
@@ -56,7 +56,7 @@ function wp_agentic_admin_get_remote_file_diff( string $original_url, string $fi
  * @param string $new_label Label for the modified file.
  * @return string Unified diff output.
  */
-function wp_agentic_admin_generate_unified_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
+function agentic_admin_generate_unified_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
 	// Use WordPress built-in Text_Diff if available.
 	if ( ! class_exists( 'Text_Diff', false ) ) {
 		$diff_file = ABSPATH . 'wp-includes/Text/Diff.php';
@@ -85,7 +85,7 @@ function wp_agentic_admin_generate_unified_diff( array $old_lines, array $new_li
 	}
 
 	// Fallback: simple line-by-line comparison.
-	return wp_agentic_admin_simple_diff( $old_lines, $new_lines, $old_label, $new_label );
+	return agentic_admin_simple_diff( $old_lines, $new_lines, $old_label, $new_label );
 }
 
 /**
@@ -97,7 +97,7 @@ function wp_agentic_admin_generate_unified_diff( array $old_lines, array $new_li
  * @param string $new_label Label for the modified file.
  * @return string Simple diff output.
  */
-function wp_agentic_admin_simple_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
+function agentic_admin_simple_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
 	$output      = "--- {$old_label}\n+++ {$new_label}\n";
 	$max_lines   = max( count( $old_lines ), count( $new_lines ) );
 	$has_changes = false;

@@ -979,9 +979,7 @@ class ModelLoader {
 	static getEffectiveContextSize( modelId ) {
 		// Check per-model localStorage override first
 		try {
-			const saved = localStorage.getItem(
-				'wp_agentic_admin_context_size'
-			);
+			const saved = localStorage.getItem( 'agentic_admin_context_size' );
 			if ( saved ) {
 				const parsed = JSON.parse( saved );
 				if ( parsed[ modelId ] ) {
@@ -1000,7 +998,7 @@ class ModelLoader {
 		// For remote/unknown models, check the remote context setting
 		try {
 			const remote = localStorage.getItem(
-				'wp_agentic_admin_remote_context_size'
+				'agentic_admin_remote_context_size'
 			);
 			if ( remote ) {
 				return parseInt( remote, 10 );

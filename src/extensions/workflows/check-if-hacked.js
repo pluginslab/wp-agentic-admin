@@ -357,6 +357,17 @@ export function registerCheckIfHackedWorkflow() {
 }
 
 /**
+ * Sanitize a string for safe insertion into a markdown table cell.
+ * Newlines end the row; pipes split cells.
+ *
+ * @param {string} s
+ * @return {string}
+ */
+function sanitizeCell( s ) {
+	return String( s ).replace( /\s+/g, ' ' ).replace( /\|/g, '\\|' ).trim();
+}
+
+/**
  * Format a single database finding for display.
  *
  * @param {Object} f - A finding object.
@@ -366,9 +377,11 @@ function formatDbFinding( f ) {
 	if ( f.option_name ) {
 		const preview = f.preview
 			? ': ' +
-			  ( f.preview.length > 80
-					? f.preview.substring( 0, 80 ) + '...'
-					: f.preview )
+			  sanitizeCell(
+					f.preview.length > 80
+						? f.preview.substring( 0, 80 ) + '...'
+						: f.preview
+			  )
 			: '';
 		return `\`${ f.option_name }\`${ preview }`;
 	}

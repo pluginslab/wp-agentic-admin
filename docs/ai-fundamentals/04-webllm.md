@@ -1,6 +1,6 @@
 # WebLLM Library
 
-WebLLM is an open-source JavaScript library that brings large language models to the browser. It's the engine that powers WP Agentic Admin's local AI capabilities.
+WebLLM is an open-source JavaScript library that brings large language models to the browser. It's the engine that powers Agentic Admin for WordPress's local AI capabilities.
 
 ## What is WebLLM?
 
@@ -24,7 +24,7 @@ WebLLM is a browser runtime for running LLMs entirely client-side using WebGPU. 
 WebLLM sits between your JavaScript code and the GPU:
 
 ```
-Your App (WP Agentic Admin)
+Your App (Agentic Admin for WordPress)
         ↓
    WebLLM Library
         ↓
@@ -66,7 +66,7 @@ const response = await engine.chat.completions.create({
 
 This makes it easy to swap between WebLLM and cloud APIs.
 
-## How WP Agentic Admin Uses WebLLM
+## How Agentic Admin for WordPress Uses WebLLM
 
 ### 1. Model Loading
 
@@ -91,7 +91,7 @@ const engine = await CreateMLCEngine('Qwen2.5-7B-Instruct-q4f16_1-MLC', {
 
 ### 2. Service Worker Persistence
 
-WP Agentic Admin uses WebLLM's Service Worker mode to keep the model loaded:
+Agentic Admin for WordPress uses WebLLM's Service Worker mode to keep the model loaded:
 
 ```javascript
 // In Service Worker (sw.js)
@@ -148,7 +148,7 @@ for await (const chunk of stream) {
 }
 ```
 
-WP Agentic Admin uses streaming to show the AI's response as it's generated, not all at once.
+Agentic Admin for WordPress uses streaming to show the AI's response as it's generated, not all at once.
 
 ## WebLLM vs Alternatives
 
@@ -161,11 +161,11 @@ WP Agentic Admin uses streaming to show the AI's response as it's generated, not
 | **Memory Efficiency** | Excellent (weights directly on GPU) | Limited (WASM heap bottleneck) |
 | **Model Format** | MLC-compiled | ONNX |
 | **Function Calling** | Via prompt templates | Native (Qwen chat template) |
-| **Status in WP Agentic Admin** | **Primary engine** | Experimental (parked) |
+| **Status in Agentic Admin for WordPress** | **Primary engine** | Experimental (parked) |
 
 **Why WebLLM Won:**
 
-WP Agentic Admin initially explored transformers.js but found that models larger than 1.5B failed during loading due to ONNX Runtime's WASM heap limits. WebLLM bypasses this by compiling weights directly to GPU shaders, avoiding WASM entirely.
+Agentic Admin for WordPress initially explored transformers.js but found that models larger than 1.5B failed during loading due to ONNX Runtime's WASM heap limits. WebLLM bypasses this by compiling weights directly to GPU shaders, avoiding WASM entirely.
 
 See [CLOUDFEST_HACKATHON.md § transformers.js investigation](../../CLOUDFEST_HACKATHON.md#transformersjs--onnx-runtime-as-alternative-engine) for technical details.
 
@@ -176,11 +176,11 @@ WebLLM maintains a catalog of pre-compiled models:
 **Small Models (< 3B):**
 - `Qwen2.5-0.5B-Instruct` — Tiny, fast, limited capability
 - `Qwen2.5-1.5B-Instruct` — Lightweight, decent for simple tasks
-- `Qwen3-1.7B-Instruct` — **Default for WP Agentic Admin** (balanced)
+- `Qwen3-1.7B-Instruct` — **Default for Agentic Admin for WordPress** (balanced)
 
 **Medium Models (3B - 7B):**
 - `Qwen2.5-3B-Instruct` — Good balance
-- `Qwen2.5-7B-Instruct` — **Recommended for WP Agentic Admin** (best accuracy)
+- `Qwen2.5-7B-Instruct` — **Recommended for Agentic Admin for WordPress** (best accuracy)
 - `Llama-3.2-3B-Instruct` — Alternative option
 
 **Large Models (> 7B):**
@@ -191,7 +191,7 @@ WebLLM maintains a catalog of pre-compiled models:
 
 ### Why Qwen Models?
 
-WP Agentic Admin uses Qwen (Alibaba's open-source models) because:
+Agentic Admin for WordPress uses Qwen (Alibaba's open-source models) because:
 
 1. **Function Calling Support** — Qwen models natively support tool/function calling via their chat template
 2. **Multilingual** — Strong English + other languages
@@ -221,7 +221,7 @@ WebLLM exposes several tuning parameters:
 temperature: 0.6  // 0.0 = deterministic, 1.0+ = creative
 ```
 
-WP Agentic Admin uses 0.6 for a balance between consistency and natural responses.
+Agentic Admin for WordPress uses 0.6 for a balance between consistency and natural responses.
 
 ### Max Tokens
 
@@ -229,7 +229,7 @@ WP Agentic Admin uses 0.6 for a balance between consistency and natural response
 max_tokens: 2048  // Maximum response length
 ```
 
-Controls how long the model's response can be. WP Agentic Admin uses 2048 tokens (~1500 words).
+Controls how long the model's response can be. Agentic Admin for WordPress uses 2048 tokens (~1500 words).
 
 ### Top-P (Nucleus Sampling)
 
@@ -237,7 +237,7 @@ Controls how long the model's response can be. WP Agentic Admin uses 2048 tokens
 top_p: 0.9  // Consider only top 90% probable tokens
 ```
 
-Another way to control randomness. WP Agentic Admin uses the default (0.9).
+Another way to control randomness. Agentic Admin for WordPress uses the default (0.9).
 
 ### Repetition Penalty
 
@@ -298,6 +298,6 @@ WebLLM is actively developed. Upcoming features:
 
 ## Summary
 
-WebLLM is the JavaScript library that enables browser-based LLM inference. It compiles models to WebGPU shaders via TVM, supports OpenAI-compatible APIs, and handles model downloading, caching, and Service Worker persistence. WP Agentic Admin uses WebLLM as its primary engine for running Qwen models locally on the GPU.
+WebLLM is the JavaScript library that enables browser-based LLM inference. It compiles models to WebGPU shaders via TVM, supports OpenAI-compatible APIs, and handles model downloading, caching, and Service Worker persistence. Agentic Admin for WordPress uses WebLLM as its primary engine for running Qwen models locally on the GPU.
 
 **Next:** [Quantization: Making Models Smaller](05-quantization.md)

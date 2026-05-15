@@ -1,10 +1,10 @@
-=== WP Agentic Admin ===
+=== Agentic Admin for WordPress ===
 Contributors: pluginslab
 Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.10.0
+Stable tag: 0.11.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ A privacy-first AI Site Reliability Engineer running entirely in the browser via
 
 == Description ==
 
-WP Agentic Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
+Agentic Admin for WordPress transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
 
 = Features =
 
@@ -37,6 +37,24 @@ WP Agentic Admin transforms your WordPress admin panel into an intelligent comma
 5. Start chatting!
 
 == Changelog ==
+
+= 0.11.0 =
+* Renamed: Plugin is now "Agentic Admin for WordPress". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
+* Removed: feedback system, WebMCP bridge, voice input, and three low-value abilities (backup-check, opcode-cache-status, disk-usage). Code preserved in git history; voice + write-file + content-generate + plugin-ecosystem abilities parked for v1.x as opt-in via WP_AGENTIC_ADMIN_ENABLE_LABS constant.
+* Security: blocked sensitive-column reads (user_email, user_pass) in query-database to prevent reconnaissance attacks (#166). Hardened query length cap and read-only verb gate.
+* Security: escaped output in functions-abilities.php (#121). Added sw-loader.php access-control rationale (#123). Documented direct-DB-call rationale in db-optimize and database-check.
+* Compliance: removed deprecated load_plugin_textdomain() call, prefixed uninstall.php globals, fixed nonexistent Domain Path header, excluded CLOUDFEST_HACKATHON.md from distribution build.
+* New: ability manifest as single source of truth for which abilities register, with a wp_agentic_admin_enabled_abilities filter for selective override. PHP authoritative for PHP-backed abilities; JS adds back the JS-only ones.
+* Fixed: thinking-disable setting now actually suppresses the streaming UI even when Qwen ignores /nothink (#181).
+* Fixed: Settings panel is now a real tab (not a stateful cog toggle). No more lingering Chat-tab underline or stale-state regressions (#197).
+* Fixed: Activate/Deactivate buttons on plugin-list rows now flip to the inverse action after a successful click (#179).
+* Fixed: AI model no longer preloads on every wp-admin page, deferred until the user opens the sidebar for the first time (#116).
+* Improved: post-tool summarization is brief (no re-listing items the user already sees in the tool result UI).
+* Improved: ChatInput keyboard handling simplified (Space inserts a space, no push-to-talk hijacking).
+* Improved: KB embedding moved to a Web Worker with persistent progress across tab switches.
+* Pinned: Transformers.js CDN URL to @3.8.1 (was floating @3 range), privacy-first plugin shouldn't depend on a CDN range that can ship new code without a deliberate bump.
+* Removed: 7 stale tab references and 6+ stale docs files (FEEDBACK-DEV.md).
+* Tests: 96 unit tests passing, plus the new manifest test suite (7 cases), index test suite (6 cases), knowledge-base test suite (16 cases), and react-agent regression tests (3 cases for the per-call state cleanup fix).
 
 = 0.10.0 =
 * CloudFest Hackathon 2026 release: 78 PRs merged, 42+ abilities shipped by 11 contributors

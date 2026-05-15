@@ -8,8 +8,8 @@
 
 import { useState } from '@wordpress/element';
 import AbilityPicker from './AbilityPicker';
+import FileView from './FileView';
 import { createLogger } from '../utils/logger';
-import { getMessageRating } from '../services/feedback';
 
 const log = createLogger( 'MessageItem' );
 
@@ -24,6 +24,71 @@ const MessageType = {
 	ABILITY_REQUEST: 'ability_request',
 	ABILITY_RESULT: 'ability_result',
 	ERROR: 'error',
+	FILE_VIEW: 'file_view',
+};
+
+/**
+ * Pairs of abilities that are mutual inverses. After a successful click,
+ * the button flips to the inverse so its label reflects the new plugin
+ * state without needing a fresh plugin-list call.
+ */
+const INVERSE_ACTIONS = {
+	'wp-agentic-admin/plugin-activate': {
+		action: 'wp-agentic-admin/plugin-deactivate',
+		button_label: 'Deactivate',
+	},
+	'wp-agentic-admin/plugin-deactivate': {
+		action: 'wp-agentic-admin/plugin-activate',
+		button_label: 'Activate',
+	},
+};
+
+/**
+ * A single action button inside an ability_result message. Tracks its
+ * own loading state and, for known reversible pairs (plugin-activate ↔
+ * plugin-deactivate), flips after a successful click so the label and
+ * target action match the new state.
+ *
+ * @param {Object}   props          - Component props
+ * @param {Object}   props.action   - Action descriptor from the ability result
+ * @param {Function} props.onAction - Async (abilityId, args) → result
+ * @return {JSX.Element} The rendered button row
+ */
+const ActionButton = ( { action, onAction } ) => {
+	const [ override, setOverride ] = useState( null );
+	const [ loading, setLoading ] = useState( false );
+	const current = override ? { ...action, ...override } : action;
+
+	const handleClick = async () => {
+		setLoading( true );
+		try {
+			const result = await onAction( current.action, current.args );
+			if ( result && result.success !== false && ! result.error ) {
+				const inverse = INVERSE_ACTIONS[ current.action ];
+				if ( inverse ) {
+					setOverride( inverse );
+				}
+			}
+		} finally {
+			setLoading( false );
+		}
+	};
+
+	return (
+		<li className="agentic-action-list__item">
+			<span className="agentic-action-list__label">
+				{ current.label }
+			</span>
+			<button
+				className="agentic-action-list__button"
+				type="button"
+				onClick={ handleClick }
+				disabled={ loading }
+			>
+				{ loading ? '…' : current.button_label }
+			</button>
+		</li>
+	);
 };
 
 /**
@@ -256,25 +321,15 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * MessageItem component
  *
- * @param {Object}        props               - Component props
- * @param {Object}        props.message       - Message object
- * @param {boolean}       props.feedbackOptIn - Whether the user has opted in to feedback
- * @param {Function|null} props.onFeedback    - Called with (messageId, rating) when a thumb is clicked
- * @param {Function}      props.onAction      - Callback to execute an ability action
+ * @param {Object}   props          - Component props
+ * @param {Object}   props.message  - Message object
+ * @param {Function} props.onAction - Callback to execute an ability action
  * @return {JSX.Element} Rendered message
  */
-const MessageItem = ( {
-	message,
-	feedbackOptIn = false,
-	onFeedback = null,
-	onAction,
-} ) => {
+const MessageItem = ( { message, onAction } ) => {
 	const { type, content, timestamp, prefillTps, decodeTps } = message;
 	const [ isExpanded, setIsExpanded ] = useState( false );
 	const [ copied, setCopied ] = useState( false );
-	const [ rating, setRating ] = useState( () =>
-		feedbackOptIn ? getMessageRating( message.id ) : null
-	);
 
 	/**
 	 * Copy message content to clipboard
@@ -291,19 +346,6 @@ const MessageItem = ( {
 			setTimeout( () => setCopied( false ), 2000 );
 		} catch ( err ) {
 			log.error( 'Failed to copy:', err );
-		}
-	};
-
-	/**
-	 * Handle thumbs-up / thumbs-down click
-	 *
-	 * @param {string} newRating - 'up' or 'down'
-	 */
-	const handleRating = ( newRating ) => {
-		const next = rating === newRating ? null : newRating;
-		setRating( next );
-		if ( onFeedback ) {
-			onFeedback( message.id, next );
 		}
 	};
 
@@ -516,28 +558,13 @@ const MessageItem = ( {
 						<div className="agentic-message__actions">
 							<ol className="agentic-action-list">
 								{ messageActions.map( ( action ) => (
-									<li
+									<ActionButton
 										key={ `${
 											action.action
 										}-${ JSON.stringify( action.args ) }` }
-										className="agentic-action-list__item"
-									>
-										<span className="agentic-action-list__label">
-											{ action.label }
-										</span>
-										<button
-											className="agentic-action-list__button"
-											type="button"
-											onClick={ () =>
-												onAction(
-													action.action,
-													action.args
-												)
-											}
-										>
-											{ action.button_label }
-										</button>
-									</li>
+										action={ action }
+										onAction={ onAction }
+									/>
 								) ) }
 							</ol>
 						</div>
@@ -554,62 +581,6 @@ const MessageItem = ( {
 							) }
 						</div>
 						<div className="agentic-message__actions">
-							{ feedbackOptIn && (
-								<div className="agentic-message__feedback">
-									<button
-										type="button"
-										className={ `agentic-message__thumb ${
-											rating === 'up'
-												? 'agentic-message__thumb--active'
-												: ''
-										}` }
-										onClick={ () => handleRating( 'up' ) }
-										title="Good response"
-									>
-										<svg
-											width="14"
-											height="14"
-											viewBox="0 0 24 24"
-											fill={
-												rating === 'up'
-													? 'currentColor'
-													: 'none'
-											}
-											stroke="currentColor"
-											strokeWidth="2"
-										>
-											<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
-											<path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-										</svg>
-									</button>
-									<button
-										type="button"
-										className={ `agentic-message__thumb ${
-											rating === 'down'
-												? 'agentic-message__thumb--active agentic-message__thumb--down'
-												: ''
-										}` }
-										onClick={ () => handleRating( 'down' ) }
-										title="Poor response"
-									>
-										<svg
-											width="14"
-											height="14"
-											viewBox="0 0 24 24"
-											fill={
-												rating === 'down'
-													? 'currentColor'
-													: 'none'
-											}
-											stroke="currentColor"
-											strokeWidth="2"
-										>
-											<path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z" />
-											<path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
-										</svg>
-									</button>
-								</div>
-							) }
 							<button
 								className={ `agentic-message__copy ${
 									copied
@@ -796,6 +767,27 @@ const MessageItem = ( {
 							<pre>{ formatAbilityResult( meta?.result ) }</pre>
 						</div>
 					) }
+				</div>
+			</div>
+		);
+	}
+
+	// File view — structured file content (read-file and similar)
+	if ( type === MessageType.FILE_VIEW ) {
+		const file = message.meta?.file || message.file;
+		return (
+			<div className="agentic-message agentic-message--assistant">
+				<div className="agentic-timeline" aria-hidden="true">
+					<div className="agentic-timeline__line" />
+					<div className="agentic-timeline__dot" />
+				</div>
+				<div className="agentic-message__content">
+					<FileView file={ file } />
+					<div className="agentic-message__footer">
+						<div className="agentic-message__time">
+							{ formatTime( timestamp ) }
+						</div>
+					</div>
 				</div>
 			</div>
 		);

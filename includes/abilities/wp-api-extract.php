@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_wp_api_extract(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_wp_api_extract(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/wp-api-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Extract WP API Signatures', 'wp-agentic-admin' ),
-			'description'         => __( 'Extract WordPress core function signatures and docblocks for knowledge base indexing.', 'wp-agentic-admin' ),
+			'label'               => __( 'Extract WP API Signatures', 'agentic-admin' ),
+			'description'         => __( 'Extract WordPress core function signatures and docblocks for knowledge base indexing.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -38,15 +38,15 @@ function wp_agentic_admin_register_wp_api_extract(): void {
 				'properties' => array(
 					'chunks'      => array(
 						'type'        => 'array',
-						'description' => __( 'API signature chunks.', 'wp-agentic-admin' ),
+						'description' => __( 'API signature chunks.', 'agentic-admin' ),
 					),
 					'total_files' => array(
 						'type'        => 'integer',
-						'description' => __( 'Total files scanned.', 'wp-agentic-admin' ),
+						'description' => __( 'Total files scanned.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_wp_api_extract',
+			'execute_callback'    => 'agentic_admin_execute_wp_api_extract',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -62,7 +62,7 @@ function wp_agentic_admin_register_wp_api_extract(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'wp api', 'wordpress functions', 'core api', 'extract api' ),
-			'initialMessage' => __( 'Extracting WordPress API signatures...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Extracting WordPress API signatures...', 'agentic-admin' ),
 		)
 	);
 }
@@ -72,7 +72,7 @@ function wp_agentic_admin_register_wp_api_extract(): void {
  *
  * @return string[] Array of absolute file paths.
  */
-function wp_agentic_admin_collect_wp_includes_files(): array {
+function agentic_admin_collect_wp_includes_files(): array {
 	$wp_includes = ABSPATH . 'wp-includes/';
 
 	if ( ! is_dir( $wp_includes ) ) {
@@ -99,7 +99,7 @@ function wp_agentic_admin_collect_wp_includes_files(): array {
 			}
 
 			// Scan specific subdirectories that have useful API functions.
-			$sub_files = wp_agentic_admin_scan_wp_includes_subdir( $item->getPathname() );
+			$sub_files = agentic_admin_scan_wp_includes_subdir( $item->getPathname() );
 			$files     = array_merge( $files, $sub_files );
 			continue;
 		}
@@ -131,7 +131,7 @@ function wp_agentic_admin_collect_wp_includes_files(): array {
  * @param string $dir Directory path.
  * @return string[] Array of file paths.
  */
-function wp_agentic_admin_scan_wp_includes_subdir( string $dir ): array {
+function agentic_admin_scan_wp_includes_subdir( string $dir ): array {
 	$files    = array();
 	$iterator = new DirectoryIterator( $dir );
 
@@ -164,7 +164,7 @@ function wp_agentic_admin_scan_wp_includes_subdir( string $dir ): array {
  * @param string $relative_path Relative path for chunk identification.
  * @return array Array of signature entries.
  */
-function wp_agentic_admin_extract_signatures( string $file_path, string $relative_path ): array {
+function agentic_admin_extract_signatures( string $file_path, string $relative_path ): array {
 	global $wp_filesystem;
 
 	if ( ! $wp_filesystem ) {
@@ -206,7 +206,7 @@ function wp_agentic_admin_extract_signatures( string $file_path, string $relativ
 			$entry = '';
 			if ( $docblock ) {
 				// Trim docblock to description + @param + @return only.
-				$entry = wp_agentic_admin_trim_docblock( $docblock ) . "\n";
+				$entry = agentic_admin_trim_docblock( $docblock ) . "\n";
 			}
 			$entry .= $sig;
 
@@ -223,7 +223,7 @@ function wp_agentic_admin_extract_signatures( string $file_path, string $relativ
  * @param string $docblock Full docblock string.
  * @return string Trimmed docblock.
  */
-function wp_agentic_admin_trim_docblock( string $docblock ): string {
+function agentic_admin_trim_docblock( string $docblock ): string {
 	$lines   = explode( "\n", $docblock );
 	$kept    = array();
 	$keeping = true;
@@ -264,15 +264,15 @@ function wp_agentic_admin_trim_docblock( string $docblock ): string {
  * @param array $input Input parameters (unused).
  * @return array
  */
-function wp_agentic_admin_execute_wp_api_extract( array $input = array() ): array {
-	$files       = wp_agentic_admin_collect_wp_includes_files();
+function agentic_admin_execute_wp_api_extract( array $input = array() ): array {
+	$files       = agentic_admin_collect_wp_includes_files();
 	$total_files = count( $files );
 	$chunks      = array();
 	$wp_includes = ABSPATH . 'wp-includes/';
 
 	foreach ( $files as $file_path ) {
 		$relative_path = str_replace( $wp_includes, '', $file_path );
-		$signatures    = wp_agentic_admin_extract_signatures( $file_path, $relative_path );
+		$signatures    = agentic_admin_extract_signatures( $file_path, $relative_path );
 
 		if ( empty( $signatures ) ) {
 			continue;

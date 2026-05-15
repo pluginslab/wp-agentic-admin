@@ -101,24 +101,12 @@ module.exports = {
 			turns: [
 				{
 					input: 'what is my site URL?',
-					expectTool: [ 'core/get-site-url', 'core/get-site-info' ],
+					expectTool: 'core/get-site-info',
 				},
 				{
 					input: 'is it using HTTPS?',
 					// Model may re-call site-url or answer from its summary
 					expectAnswer: /https|ssl|secure|yes/i,
-				},
-			],
-		},
-
-		// ── Disk usage (single turn) ────────────────────────────────
-		{
-			name: 'Disk usage check',
-			turns: [
-				{
-					input: 'how much disk space is my site using?',
-					expectTool: 'wp-agentic-admin/disk-usage',
-					expectAnswer: /MB|GB|size|upload|total/i,
 				},
 			],
 		},

@@ -4,7 +4,7 @@
  *
  * Loads and registers SRE abilities using the extensible registration API.
  * Third-party plugins can register their own abilities by hooking into
- * the 'wp_agentic_admin_register_abilities' action.
+ * the 'agentic_admin_register_abilities' action.
  *
  * @license GPL-2.0-or-later
  * @package WPAgenticAdmin
@@ -69,8 +69,8 @@ class Abilities {
 		\wp_register_ability_category(
 			'sre-tools',
 			array(
-				'label'       => \__( 'SRE Tools', 'wp-agentic-admin' ),
-				'description' => \__( 'Site Reliability Engineering tools for diagnostics and maintenance.', 'wp-agentic-admin' ),
+				'label'       => \__( 'SRE Tools', 'agentic-admin' ),
+				'description' => \__( 'Site Reliability Engineering tools for diagnostics and maintenance.', 'agentic-admin' ),
 			)
 		);
 	}
@@ -124,177 +124,40 @@ class Abilities {
 	 * Register core abilities and fire action for third-party plugins.
 	 *
 	 * This is called on 'wp_abilities_api_init' to ensure the WP Abilities API
-	 * is ready. Third-party plugins should hook into 'wp_agentic_admin_register_abilities'
+	 * is ready. Third-party plugins should hook into 'agentic_admin_register_abilities'
 	 * to register their own abilities.
 	 */
 	public function register_core_abilities(): void {
-		// Register our core abilities.
-		// Each function is defined in its respective file in includes/abilities/.
-		if ( function_exists( 'wp_agentic_admin_register_error_log_read' ) ) {
-			wp_agentic_admin_register_error_log_read();
-		}
+		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
 
-		if ( function_exists( 'wp_agentic_admin_register_cache_flush' ) ) {
-			wp_agentic_admin_register_cache_flush();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_db_optimize' ) ) {
-			wp_agentic_admin_register_db_optimize();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_plugin_list' ) ) {
-			wp_agentic_admin_register_plugin_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_plugin_deactivate' ) ) {
-			wp_agentic_admin_register_plugin_deactivate();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_plugin_activate' ) ) {
-			wp_agentic_admin_register_plugin_activate();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_site_health' ) ) {
-			wp_agentic_admin_register_site_health();
-		}
-
-		// WP-CLI-inspired abilities.
-		if ( function_exists( 'wp_agentic_admin_register_transient_flush' ) ) {
-			wp_agentic_admin_register_transient_flush();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_cron_list' ) ) {
-			wp_agentic_admin_register_cron_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_rewrite_flush' ) ) {
-			wp_agentic_admin_register_rewrite_flush();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_rewrite_list' ) ) {
-			wp_agentic_admin_register_rewrite_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_revision_cleanup' ) ) {
-			wp_agentic_admin_register_revision_cleanup();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_verify_core_checksums' ) ) {
-			wp_agentic_admin_register_verify_core_checksums();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_verify_plugin_checksums' ) ) {
-			wp_agentic_admin_register_verify_plugin_checksums();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_database_check' ) ) {
-			wp_agentic_admin_register_database_check();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_theme_list' ) ) {
-			wp_agentic_admin_register_theme_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_user_list' ) ) {
-			wp_agentic_admin_register_user_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_update_check' ) ) {
-			wp_agentic_admin_register_update_check();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_disk_usage' ) ) {
-			wp_agentic_admin_register_disk_usage();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_comment_stats' ) ) {
-			wp_agentic_admin_register_comment_stats();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_security_scan' ) ) {
-			wp_agentic_admin_register_security_scan();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_post_list' ) ) {
-			wp_agentic_admin_register_post_list();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_read_file' ) ) {
-			wp_agentic_admin_register_read_file();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_error_log_search' ) ) {
-			wp_agentic_admin_register_error_log_search();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_opcode_cache_status' ) ) {
-			wp_agentic_admin_register_opcode_cache_status();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_backup_check' ) ) {
-			wp_agentic_admin_register_backup_check();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_file_scan' ) ) {
-			wp_agentic_admin_register_file_scan();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_uploads_scan' ) ) {
-			wp_agentic_admin_register_uploads_scan();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_role_capabilities_check' ) ) {
-			wp_agentic_admin_register_role_capabilities_check();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_write_file' ) ) {
-			wp_agentic_admin_register_write_file();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_query_database' ) ) {
-			wp_agentic_admin_register_query_database();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_schema_extract' ) ) {
-			wp_agentic_admin_register_schema_extract();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_wp_api_extract' ) ) {
-			wp_agentic_admin_register_wp_api_extract();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_docs_extract' ) ) {
-			wp_agentic_admin_register_docs_extract();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_codebase_extract' ) ) {
-			wp_agentic_admin_register_codebase_extract();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_web_search' ) ) {
-			wp_agentic_admin_register_web_search();
-		}
-
-		// Dynamic ability discovery — PoC for calling plugin abilities.
-		if ( function_exists( 'wp_agentic_admin_register_discover_plugin_abilities' ) ) {
-			wp_agentic_admin_register_discover_plugin_abilities();
-		}
-
-		if ( function_exists( 'wp_agentic_admin_register_run_plugin_ability' ) ) {
-			wp_agentic_admin_register_run_plugin_ability();
+		foreach ( agentic_admin_resolve_enabled_abilities() as $slug => $register_fn ) {
+			if ( function_exists( $register_fn ) ) {
+				$register_fn();
+			} else {
+				// Surface manifest/code drift to developers without halting boot.
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
+				\trigger_error(
+					sprintf(
+						'wp-agentic-admin: enabled ability "%s" has no registrar function %s().',
+						\esc_html( $slug ),
+						\esc_html( $register_fn )
+					),
+					E_USER_WARNING
+				);
+			}
 		}
 
 		/**
 		 * Fires after core abilities are registered.
 		 *
 		 * Third-party plugins can use this action to register their own abilities
-		 * using the wp_agentic_admin_register_ability() function.
+		 * using the agentic_admin_register_ability() function.
 		 *
 		 * @since 0.1.0
 		 *
 		 * @example
-		 * add_action( 'wp_agentic_admin_register_abilities', function() {
-		 *     wp_agentic_admin_register_ability(
+		 * add_action( 'agentic_admin_register_abilities', function() {
+		 *     agentic_admin_register_ability(
 		 *         'my-plugin/my-ability',
 		 *         array(
 		 *             'label'            => 'My Ability',
@@ -310,6 +173,6 @@ class Abilities {
 		 *     );
 		 * });
 		 */
-		\do_action( 'wp_agentic_admin_register_abilities' );
+		\do_action( 'agentic_admin_register_abilities' );
 	}
 }

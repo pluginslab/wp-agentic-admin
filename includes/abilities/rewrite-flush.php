@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_rewrite_flush(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_rewrite_flush(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/rewrite-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Flush Rewrite Rules', 'wp-agentic-admin' ),
-			'description'         => __( 'Flush and regenerate WordPress permalink rewrite rules.', 'wp-agentic-admin' ),
+			'label'               => __( 'Flush Rewrite Rules', 'agentic-admin' ),
+			'description'         => __( 'Flush and regenerate WordPress permalink rewrite rules.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -38,19 +38,19 @@ function wp_agentic_admin_register_rewrite_flush(): void {
 				'properties' => array(
 					'success'             => array(
 						'type'        => 'boolean',
-						'description' => __( 'Whether the operation was successful.', 'wp-agentic-admin' ),
+						'description' => __( 'Whether the operation was successful.', 'agentic-admin' ),
 					),
 					'message'             => array(
 						'type'        => 'string',
-						'description' => __( 'Status message.', 'wp-agentic-admin' ),
+						'description' => __( 'Status message.', 'agentic-admin' ),
 					),
 					'permalink_structure' => array(
 						'type'        => 'string',
-						'description' => __( 'Current permalink structure.', 'wp-agentic-admin' ),
+						'description' => __( 'Current permalink structure.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_rewrite_flush',
+			'execute_callback'    => 'agentic_admin_execute_rewrite_flush',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -66,7 +66,7 @@ function wp_agentic_admin_register_rewrite_flush(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'flush rewrite', 'flush permalink', 'regenerate permalink', 'refresh rewrite', 'reset rewrite', '404', 'not found' ),
-			'initialMessage' => __( 'Flushing rewrite rules...', 'wp-agentic-admin' ),
+			'initialMessage' => __( 'Flushing rewrite rules...', 'agentic-admin' ),
 		)
 	);
 }
@@ -77,7 +77,7 @@ function wp_agentic_admin_register_rewrite_flush(): void {
  * @param array $input Input parameters (unused, included for API consistency).
  * @return array
  */
-function wp_agentic_admin_execute_rewrite_flush( array $input = array() ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+function agentic_admin_execute_rewrite_flush( array $input = array() ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 	// Flush the rewrite rules.
 	flush_rewrite_rules();
 
@@ -85,14 +85,14 @@ function wp_agentic_admin_execute_rewrite_flush( array $input = array() ): array
 	$permalink_structure = get_option( 'permalink_structure' );
 
 	if ( empty( $permalink_structure ) ) {
-		$permalink_display = __( 'Plain (default)', 'wp-agentic-admin' );
+		$permalink_display = __( 'Plain (default)', 'agentic-admin' );
 	} else {
 		$permalink_display = $permalink_structure;
 	}
 
 	return array(
 		'success'             => true,
-		'message'             => __( 'Rewrite rules flushed successfully. Permalinks have been regenerated.', 'wp-agentic-admin' ),
+		'message'             => __( 'Rewrite rules flushed successfully. Permalinks have been regenerated.', 'agentic-admin' ),
 		'permalink_structure' => $permalink_display,
 	);
 }

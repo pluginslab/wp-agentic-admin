@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_security_scan(): void {
-	wp_agentic_admin_register_ability(
+function agentic_admin_register_security_scan(): void {
+	agentic_admin_register_ability(
 		'wp-agentic-admin/security-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
-			'label'               => __( 'Security Scan', 'wp-agentic-admin' ),
-			'description'         => __( 'Run basic WordPress security checks.', 'wp-agentic-admin' ),
+			'label'               => __( 'Security Scan', 'agentic-admin' ),
+			'description'         => __( 'Run basic WordPress security checks.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -36,15 +36,15 @@ function wp_agentic_admin_register_security_scan(): void {
 				'properties' => array(
 					'checks'  => array(
 						'type'        => 'array',
-						'description' => __( 'List of security check results.', 'wp-agentic-admin' ),
+						'description' => __( 'List of security check results.', 'agentic-admin' ),
 					),
 					'summary' => array(
 						'type'        => 'object',
-						'description' => __( 'Count by severity.', 'wp-agentic-admin' ),
+						'description' => __( 'Count by severity.', 'agentic-admin' ),
 					),
 				),
 			),
-			'execute_callback'    => 'wp_agentic_admin_execute_security_scan',
+			'execute_callback'    => 'agentic_admin_execute_security_scan',
 			'permission_callback' => function () {
 				return current_user_can( 'manage_options' );
 			},
@@ -60,7 +60,7 @@ function wp_agentic_admin_register_security_scan(): void {
 		// JS configuration for chat interface.
 		array(
 			'keywords'       => array( 'security', 'secure', 'scan', 'vulnerability', 'hardening', 'permissions' ),
-			'initialMessage' => __( "I'll run a basic security scan...", 'wp-agentic-admin' ),
+			'initialMessage' => __( "I'll run a basic security scan...", 'agentic-admin' ),
 		)
 	);
 }
@@ -71,7 +71,7 @@ function wp_agentic_admin_register_security_scan(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_security_scan( array $input = array() ): array {
+function agentic_admin_execute_security_scan( array $input = array() ): array {
 	$checks = array();
 
 	// 1. Check WP_DEBUG in production.
@@ -146,7 +146,7 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 			: 'Uploads directory may allow directory listing.',
 	);
 
-	$vulnerabilities = wp_agentic_admin_scan_for_vulnerabilities();
+	$vulnerabilities = agentic_admin_scan_for_vulnerabilities();
 
 	$checks[] = array(
 		'check'    => 'Plugin vulnerabilities',
@@ -155,11 +155,11 @@ function wp_agentic_admin_execute_security_scan( array $input = array() ): array
 		'message'  => ! empty( $vulnerabilities['total_vulnerabilities'] )
 			? sprintf(
 				/* translators: 1: vulnerabilities count, 2: affected plugin count */
-				__( 'Detected %1$d known vulnerabilities across %2$d plugin(s).', 'wp-agentic-admin' ),
+				__( 'Detected %1$d known vulnerabilities across %2$d plugin(s).', 'agentic-admin' ),
 				(int) $vulnerabilities['total_vulnerabilities'],
 				(int) $vulnerabilities['plugins_with_issues']
 			)
-			: __( 'No known plugin vulnerabilities detected for scanned plugins.', 'wp-agentic-admin' ),
+			: __( 'No known plugin vulnerabilities detected for scanned plugins.', 'agentic-admin' ),
 	);
 
 	$summary = array(
