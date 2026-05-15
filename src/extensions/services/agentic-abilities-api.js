@@ -42,6 +42,10 @@ const log = createLogger( 'AgenticAbilitiesAPI' );
  * @param {string[]} [config.keywords]                   - Keywords that trigger this ability in workflow detection.
  * @param {string}   [config.initialMessage]             - Message shown while ability executes.
  * @param {Function} [config.summarize]                  - Function to generate human-readable summary from result (for users).
+ * @param {Function} [config.renderDisplay]              - Optional. Returns a structured payload `{ component, ...props }`
+ *                                                       that the chat renders via a dedicated React component instead of markdown.
+ *                                                       Only consulted when `preferSummarize` is also true.
+ *                                                       Currently supported component: `'file'` (see read-file ability).
  * @param {Function} [config.interpretResult]            - Function to generate plain-English interpretation from result (for LLM).
  *                                                       Receives (result, userMessage). Helps small models correctly understand
  *                                                       tool output, especially empty or negative results.

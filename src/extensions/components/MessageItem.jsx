@@ -8,6 +8,7 @@
 
 import { useState } from '@wordpress/element';
 import AbilityPicker from './AbilityPicker';
+import FileView from './FileView';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'MessageItem' );
@@ -23,6 +24,7 @@ const MessageType = {
 	ABILITY_REQUEST: 'ability_request',
 	ABILITY_RESULT: 'ability_result',
 	ERROR: 'error',
+	FILE_VIEW: 'file_view',
 };
 
 /**
@@ -765,6 +767,27 @@ const MessageItem = ( { message, onAction } ) => {
 							<pre>{ formatAbilityResult( meta?.result ) }</pre>
 						</div>
 					) }
+				</div>
+			</div>
+		);
+	}
+
+	// File view — structured file content (read-file and similar)
+	if ( type === MessageType.FILE_VIEW ) {
+		const file = message.meta?.file || message.file;
+		return (
+			<div className="agentic-message agentic-message--assistant">
+				<div className="agentic-timeline" aria-hidden="true">
+					<div className="agentic-timeline__line" />
+					<div className="agentic-timeline__dot" />
+				</div>
+				<div className="agentic-message__content">
+					<FileView file={ file } />
+					<div className="agentic-message__footer">
+						<div className="agentic-message__time">
+							{ formatTime( timestamp ) }
+						</div>
+					</div>
 				</div>
 			</div>
 		);

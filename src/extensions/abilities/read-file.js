@@ -225,6 +225,32 @@ export function registerReadFile() {
 		},
 
 		/**
+		 * Structured payload for the FileView component.
+		 *
+		 * Returned when the chat should render a dedicated <FileView> instead
+		 * of markdown (cleaner UX, avoids paragraph-only renderer collapsing
+		 * the file into a wall of <p> tags). Falls back to summarize() for
+		 * the error branch and for Copy All serialization.
+		 *
+		 * @param {Object} result - Result from PHP.
+		 * @return {Object|null} Structured payload or null when not applicable.
+		 */
+		renderDisplay: ( result ) => {
+			if ( ! result?.success ) {
+				return null;
+			}
+			return {
+				component: 'file',
+				filePath: result.file_path,
+				content: result.content,
+				language: detectLanguage( result.file_path || '' ),
+				totalLines: result.total_lines || 0,
+				linesReturned: result.lines_returned || 0,
+				wasRedacted: !! result.was_redacted,
+			};
+		},
+
+		/**
 		 * Plain-English interpretation for the LLM.
 		 *
 		 * @param {Object} result      - Result from PHP.

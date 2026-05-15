@@ -451,19 +451,48 @@ class ChatOrchestrator {
 
 		// For tools that prefer to display their own summary (e.g. read-file),
 		// use tool.summarize() directly instead of the LLM's final_answer.
+		// If the tool also provides renderDisplay(), push a structured message
+		// (e.g. file_view) and short-circuit — the dedicated component handles
+		// the UI, no streaming or assistant message needed.
 		let displayAnswer = result.finalAnswer;
+		let lastTool = null;
+		let lastObservation = null;
 		if ( result.toolsUsed.length === 1 ) {
 			const lastToolId = result.toolsUsed[ 0 ];
 			// Apply namespace fallback: LLM sometimes drops the "wp-agentic-admin/" prefix.
-			const lastTool =
+			lastTool =
 				toolRegistry.get( lastToolId ) ||
 				toolRegistry.get( `wp-agentic-admin/${ lastToolId }` );
-			const lastObservation = result.observations[ 0 ];
+			lastObservation = result.observations[ 0 ];
 			if ( lastTool?.preferSummarize && lastObservation?.result?.data ) {
 				displayAnswer = lastTool.summarize(
 					lastObservation.result.data,
 					userMessage
 				);
+			}
+		}
+
+		// Structured display path (e.g. FileView).
+		if (
+			lastTool?.preferSummarize &&
+			typeof lastTool.renderDisplay === 'function' &&
+			lastObservation?.result?.data
+		) {
+			const payload = lastTool.renderDisplay(
+				lastObservation.result.data,
+				userMessage
+			);
+			if ( payload?.component === 'file' ) {
+				this.callbacks.onStreamStart();
+				this.session.addFileViewMessage(
+					{ ...payload, fallbackMarkdown: displayAnswer },
+					this.getUsageStatsMeta()
+				);
+				this.callbacks.onStreamEnd( '' );
+				log.info(
+					`ReAct completed (file_view): ${ result.iterations } iterations, ${ result.toolsUsed.length } tools used`
+				);
+				return { success: result.success, result };
 			}
 		}
 
