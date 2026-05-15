@@ -538,8 +538,13 @@ const ChatContainer = ( {
 			} )
 			.join( '\n---\n\n' );
 
+		const v = window.wpAgenticAdmin || {};
+		const footer =
+			`\n---\nAgentic Admin v${ v.version || '?' } | ` +
+			`JS ${ v.jsVersion || '?' } | CSS ${ v.cssVersion || '?' }`;
+
 		try {
-			await navigator.clipboard.writeText( conversationText );
+			await navigator.clipboard.writeText( conversationText + footer );
 			setShowCopiedSnackbar( true );
 			log.info( 'Conversation copied to clipboard' );
 		} catch ( error ) {

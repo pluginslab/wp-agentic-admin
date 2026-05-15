@@ -149,6 +149,15 @@ class Admin_Page {
 		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
 		$enabled_abilities = array_keys( agentic_admin_resolve_enabled_abilities() );
 
+		// Asset versions exposed to JS so bug reports / copied transcripts can show
+		// which bundle the user was running (helps spot stale-cache reports).
+		$js_asset_file = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.asset.php';
+		$js_version    = file_exists( $js_asset_file )
+			? ( ( require $js_asset_file )['version'] ?? '' )
+			: '';
+		$css_file      = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
+		$css_version   = file_exists( $css_file ) ? (string) filemtime( $css_file ) : '';
+
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
@@ -156,6 +165,8 @@ class Admin_Page {
 			'pluginUrl'           => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL ),
 			'swUrl'               => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL . 'sw-loader.php' ),
 			'version'             => WP_AGENTIC_ADMIN_VERSION,
+			'jsVersion'           => $js_version,
+			'cssVersion'          => $css_version,
 			'hasPrettyPermalinks' => self::has_pretty_permalinks(),
 			'permalinksUrl'       => esc_url( admin_url( 'options-permalink.php' ) ),
 			'settings'            => array(
