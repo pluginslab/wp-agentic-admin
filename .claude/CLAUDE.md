@@ -78,3 +78,4 @@ Update ALL of these:
 - [Abilities Guide](docs/ABILITIES-GUIDE.md) — full registration API, parseIntent, shared helpers
 - [Workflows Guide](docs/WORKFLOWS-GUIDE.md) — workflow steps, includeIf, mapParams, summarize
 - [Testing Guide](tests/TESTING.md) — unit, ability, and E2E test details
+- [MCP Endpoint](docs/MCP-ENDPOINT.md) — built-in MCP server (v0.12.0+); read-only abilities surface to external clients via app-password auth, disabled by default. Abilities with `meta.annotations.readonly = true` show up in `tools/list` when the endpoint is enabled.

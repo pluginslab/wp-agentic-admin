@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 0.11.0
+Stable tag: 0.12.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,6 +37,13 @@ Agentic Admin for WordPress transforms your WordPress admin panel into an intell
 5. Start chatting!
 
 == Changelog ==
+
+= 0.12.0 =
+* New: MCP server endpoint at `/wp-json/wp-agentic-admin/v1/mcp`. External AI clients can call registered abilities via JSON-RPC 2.0 using a WordPress application password. Read-only in this release; write-capable abilities are filtered out.
+* New: MCP Endpoint settings panel in the Settings tab. Master toggle defaults OFF — privacy-first guarantee remains intact out of the box. Independent toggles for exposing this plugin's own abilities and selected third-party Abilities API entries.
+* New: third-party abilities are governed by an explicit allowlist UI grouped by source plugin. Only read-only abilities are selectable in this release.
+* No dependency on Automattic's wordpress-mcp plugin. The two coexist on different routes if both are installed.
+* See docs/MCP-ENDPOINT.md for the full curl walkthrough and security guidance.
 
 = 0.11.0 =
 * Renamed: Plugin is now "Agentic Admin for WordPress". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
