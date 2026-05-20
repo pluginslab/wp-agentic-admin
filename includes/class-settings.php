@@ -124,6 +124,35 @@ class Settings {
 					),
 				),
 			),
+			'mcp'      => array(
+				'label'  => __( 'MCP Endpoint', 'agentic-admin' ),
+				'fields' => array(
+					'agentic_admin_mcp_enabled'      => array(
+						'label'       => __( 'Enable MCP endpoint', 'agentic-admin' ),
+						'type'        => 'checkbox',
+						'default'     => 0,
+						'description' => __( 'Expose registered abilities to external AI clients via a read-only MCP server. Authentication uses WordPress application passwords. Disabled by default.', 'agentic-admin' ),
+					),
+					'agentic_admin_mcp_expose_own'   => array(
+						'label'       => __( "Expose Agentic Admin's own abilities", 'agentic-admin' ),
+						'type'        => 'checkbox',
+						'default'     => 1,
+						'description' => __( 'Include abilities registered by this plugin in the MCP tool list.', 'agentic-admin' ),
+					),
+					'agentic_admin_mcp_expose_third' => array(
+						'label'       => __( 'Expose abilities from other plugins', 'agentic-admin' ),
+						'type'        => 'checkbox',
+						'default'     => 0,
+						'description' => __( 'Allow third-party Abilities API entries to be exposed. Each must be explicitly allowed below.', 'agentic-admin' ),
+					),
+					'agentic_admin_mcp_allowlist'    => array(
+						'label'       => __( 'Allowed third-party abilities', 'agentic-admin' ),
+						'type'        => 'ability_list',
+						'default'     => array(),
+						'description' => __( 'Pick which third-party abilities are exposed. Read-only abilities only in this version.', 'agentic-admin' ),
+					),
+				),
+			),
 		);
 	}
 
@@ -172,6 +201,20 @@ class Settings {
 				break;
 			case 'select':
 				$cleaned = sanitize_text_field( (string) $value );
+				break;
+			case 'ability_list':
+				$cleaned = array();
+				if ( is_array( $value ) ) {
+					foreach ( $value as $entry ) {
+						if ( ! is_string( $entry ) ) {
+							continue;
+						}
+						if ( preg_match( '/^[a-z0-9-]+\/[a-z0-9-]+$/', $entry ) ) {
+							$cleaned[] = $entry;
+						}
+					}
+					$cleaned = array_values( array_unique( $cleaned ) );
+				}
 				break;
 			case 'text':
 			default:
