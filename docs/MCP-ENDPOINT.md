@@ -154,6 +154,21 @@ its endpoint.
 Write/destructive abilities are deliberately invisible to MCP in this
 release. Future versions may add a separately-gated write surface.
 
+### Who can see `tools/list`?
+
+Any authenticated user with an application password — including
+subscriber-level accounts — can call `tools/list` and see the names,
+descriptions, and input schemas of every currently-exposed ability.
+They **cannot** invoke abilities whose own `permission_callback`
+requires higher capabilities; those calls return `-32001 Permission
+denied`.
+
+This matches MCP convention (clients discover, server enforces) and
+mirrors how Automattic's `wordpress-mcp` and other MCP servers behave.
+If you don't want low-privilege users to see your tool catalog, don't
+issue them application passwords. The endpoint itself does not add a
+second capability gate on top of the per-ability checks.
+
 ---
 
 ## Troubleshooting

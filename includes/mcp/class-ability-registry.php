@@ -34,6 +34,19 @@ class Ability_Registry {
 	private Settings $settings;
 
 	/**
+	 * Memoized exposed-abilities map. Built lazily on first call to
+	 * get_exposed_abilities() within the lifetime of this Ability_Registry
+	 * instance. A single MCP request constructs one registry and calls
+	 * tools/list + tools/call against it, so we walk wp_get_abilities()
+	 * once per request even if the client lists + invokes multiple tools.
+	 *
+	 * Null means "not yet computed", not "computed-but-empty".
+	 *
+	 * @var array<string, WP_Ability>|null
+	 */
+	private ?array $exposed_cache = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Settings $settings Plugin settings instance.
@@ -60,8 +73,13 @@ class Ability_Registry {
 	 * @return array<string, WP_Ability>
 	 */
 	public function get_exposed_abilities(): array {
+		if ( null !== $this->exposed_cache ) {
+			return $this->exposed_cache;
+		}
+
 		if ( ! function_exists( 'wp_get_abilities' ) ) {
-			return array();
+			$this->exposed_cache = array();
+			return $this->exposed_cache;
 		}
 
 		$all          = wp_get_abilities();
@@ -87,7 +105,22 @@ class Ability_Registry {
 			}
 		}
 
-		return $exposed;
+		$this->exposed_cache = $exposed;
+		return $this->exposed_cache;
+	}
+
+	/**
+	 * Invalidate the memoized exposed-abilities map.
+	 *
+	 * Tests and long-lived processes (CLI workers, abilities-API hot-reload
+	 * scenarios) may need to force re-discovery. Production request flow
+	 * doesn't need to call this — a new Ability_Registry instance is built
+	 * per REST request.
+	 *
+	 * @return void
+	 */
+	public function flush_cache(): void {
+		$this->exposed_cache = null;
 	}
 
 	/**
