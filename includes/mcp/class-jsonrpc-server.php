@@ -92,37 +92,40 @@ class JsonRpc_Server {
 			return $this->error( $id, self::ERR_INVALID_REQUEST, 'Missing or invalid "method" field.' );
 		}
 
-		// Notifications (no id) — JSON-RPC requires no response.
+		// Notifications (no id) — JSON-RPC 2.0 forbids returning a response, including for
+		// methods like tools/call. We still execute the method (server-side side effects
+		// remain visible to a follow-up tools/list) but never emit an envelope.
 		$is_notification = ! array_key_exists( 'id', $payload );
 
 		try {
 			switch ( $method ) {
 				case 'initialize':
-					$result = $this->handle_initialize();
+					$envelope = $this->success( $id, $this->handle_initialize() );
 					break;
 				case 'notifications/initialized':
 					// Client telling us it's ready; no response expected.
 					return array();
 				case 'ping':
-					$result = new \stdClass();
+					$envelope = $this->success( $id, new \stdClass() );
 					break;
 				case 'tools/list':
-					$result = $this->handle_tools_list();
+					$envelope = $this->success( $id, $this->handle_tools_list() );
 					break;
 				case 'tools/call':
-					return $this->handle_tools_call( $id, $params );
+					$envelope = $this->handle_tools_call( $id, $params );
+					break;
 				default:
-					return $this->error( $id, self::ERR_METHOD_NOT_FOUND, sprintf( 'Method not found: %s', $method ) );
+					$envelope = $this->error( $id, self::ERR_METHOD_NOT_FOUND, sprintf( 'Method not found: %s', $method ) );
 			}
 		} catch ( Throwable $e ) {
-			return $this->error( $id, self::ERR_INTERNAL, 'Internal server error.' );
+			$envelope = $this->error( $id, self::ERR_INTERNAL, 'Internal server error.' );
 		}
 
 		if ( $is_notification ) {
 			return array();
 		}
 
-		return $this->success( $id, $result );
+		return $envelope;
 	}
 
 	/**
@@ -189,13 +192,17 @@ class JsonRpc_Server {
 		try {
 			$result = $ability->execute( $input );
 		} catch ( Throwable $e ) {
+			// Log the real exception for operators; surface only a generic envelope to the
+			// client. Echoing $ability->get_name() or $e->getMessage() risks reflecting
+			// admin-controlled or internal data into a response.
+			error_log( '[wp-agentic-admin/mcp] ability execute exception: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			return $this->success(
 				$id,
 				array(
 					'content' => array(
 						array(
 							'type' => 'text',
-							'text' => sprintf( 'Error executing %s.', $ability->get_name() ),
+							'text' => 'Tool execution failed.',
 						),
 					),
 					'isError' => true,
@@ -204,13 +211,21 @@ class JsonRpc_Server {
 		}
 
 		if ( $result instanceof WP_Error ) {
+			$raw = (string) $result->get_error_message();
+			// Strip control chars + truncate. Ability authors may put SQL fragments or
+			// path information into WP_Error messages; we keep enough to be useful but
+			// avoid forwarding a 10KB stack trace verbatim.
+			$clean = sanitize_text_field( $raw );
+			if ( strlen( $clean ) > 240 ) {
+				$clean = substr( $clean, 0, 240 ) . '…';
+			}
 			return $this->success(
 				$id,
 				array(
 					'content' => array(
 						array(
 							'type' => 'text',
-							'text' => sprintf( 'Error: %s', $result->get_error_message() ),
+							'text' => sprintf( 'Error: %s', $clean ),
 						),
 					),
 					'isError' => true,

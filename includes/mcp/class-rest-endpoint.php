@@ -93,6 +93,10 @@ class Rest_Endpoint {
 	 * @return WP_REST_Response
 	 */
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
+		// MCP responses are user-scoped tool lists and ability outputs — never safe to
+		// cache, even briefly. Belt-and-braces against misconfigured intermediaries.
+		nocache_headers();
+
 		$payload = $request->get_json_params();
 		if ( null === $payload ) {
 			$body = $request->get_body();

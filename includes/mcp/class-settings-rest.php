@@ -8,6 +8,14 @@
  *
  * Distinct from class-rest-endpoint.php, which handles MCP wire traffic.
  *
+ * CSRF note: WP REST automatically enforces a valid `X-WP-Nonce` header for
+ * cookie-authenticated requests via `rest_cookie_check_errors`. App-password
+ * (Basic-auth) requests bypass nonce by design — they're already proving
+ * possession of a long-lived credential bound to the user, not relying on
+ * the browser session. We deliberately do NOT add a second nonce check here;
+ * the React tab sends the nonce, WP enforces it, and CLI / scripted access
+ * via app passwords keeps working without ceremony.
+ *
  * @license GPL-2.0-or-later
  * @package WPAgenticAdmin
  * @since   0.12.0
