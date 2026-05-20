@@ -12,7 +12,7 @@
  * Plugin Name: Agentic Admin for WordPress
  * Plugin URI: https://pluginslab.com/agentic-admin
  * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming wp-admin into a natural language command center via the WordPress Abilities API.
- * Version: 0.11.0
+ * Version: 0.12.0
  * Author: Pluginslab
  * Author URI: https://pluginslab.com
  * License: GPL-2.0-or-later
@@ -78,6 +78,10 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-bar.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-ability-registry.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-jsonrpc-server.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-rest-endpoint.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-settings-rest.php';
 
 			// Initialize Utility Hooks (Cache Invalidation).
 			if ( class_exists( '\\WPAgenticAdmin\\Utils' ) ) {
@@ -107,6 +111,16 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			// Initialize LLM Proxy for external provider support.
 			if ( class_exists( '\\WPAgenticAdmin\\LLM_Proxy' ) ) {
 				\WPAgenticAdmin\LLM_Proxy::init();
+			}
+
+			// Initialize MCP REST endpoint (gated by settings inside the class).
+			if ( class_exists( '\\WPAgenticAdmin\\MCP\\Rest_Endpoint' ) ) {
+				\WPAgenticAdmin\MCP\Rest_Endpoint::init();
+			}
+
+			// Initialize MCP settings REST routes (admin-only).
+			if ( class_exists( '\\WPAgenticAdmin\\MCP\\Settings_Rest' ) ) {
+				\WPAgenticAdmin\MCP\Settings_Rest::init();
 			}
 		}
 
@@ -157,7 +171,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		 * @return void
 		 */
 		private function define_constants(): void {
-			define( 'WP_AGENTIC_ADMIN_VERSION', '0.11.0' );
+			define( 'WP_AGENTIC_ADMIN_VERSION', '0.12.0' );
 			define( 'WP_AGENTIC_ADMIN_FILE', __FILE__ );
 			define( 'WP_AGENTIC_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 			define( 'WP_AGENTIC_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -167,7 +181,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		 * Activation hook
 		 */
 		public static function activate(): void {
-			update_option( 'agentic_admin_version', '0.11.0' );
+			update_option( 'agentic_admin_version', '0.12.0' );
 			flush_rewrite_rules();
 		}
 
