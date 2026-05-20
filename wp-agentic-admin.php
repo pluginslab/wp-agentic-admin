@@ -81,6 +81,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-ability-registry.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-jsonrpc-server.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-rest-endpoint.php';
+			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/mcp/class-settings-rest.php';
 
 			// Initialize Utility Hooks (Cache Invalidation).
 			if ( class_exists( '\\WPAgenticAdmin\\Utils' ) ) {
@@ -115,6 +116,11 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			// Initialize MCP REST endpoint (gated by settings inside the class).
 			if ( class_exists( '\\WPAgenticAdmin\\MCP\\Rest_Endpoint' ) ) {
 				\WPAgenticAdmin\MCP\Rest_Endpoint::init();
+			}
+
+			// Initialize MCP settings REST routes (admin-only).
+			if ( class_exists( '\\WPAgenticAdmin\\MCP\\Settings_Rest' ) ) {
+				\WPAgenticAdmin\MCP\Settings_Rest::init();
 			}
 		}
 

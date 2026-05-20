@@ -12,6 +12,7 @@ import {
 	Notice,
 	ToggleControl,
 } from '@wordpress/components';
+import McpEndpointSection from './McpEndpointSection';
 import modelLoader, {
 	ModelLoader,
 	MODEL_CONTEXT_SIZES,
@@ -584,6 +585,8 @@ const SettingsTab = () => {
 					/>
 				</CardBody>
 			</Card>
+
+			<McpEndpointSection />
 		</div>
 	);
 };
