@@ -9,10 +9,15 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import {
 	Button,
+	Card,
+	CardBody,
 	DropdownMenu,
 	MenuGroup,
 	MenuItem,
+	ProgressBar,
 	Spinner,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { moreVertical } from '@wordpress/icons';
 import modelLoader, {
@@ -476,44 +481,35 @@ const ModelStatus = ( {
 		<div className="wp-agentic-admin-model-status">
 			{ /* Loading State - Full Progress UI */ }
 			{ isInLoadingState && (
-				<div className="wp-agentic-admin-loading-card">
-					<div className="wp-agentic-admin-loading-card__header">
-						<span className="wp-agentic-admin-loading-card__icon">
-							{ loadingStage.icon }
-						</span>
-						<div className="wp-agentic-admin-loading-card__title-wrap">
-							<h4 className="wp-agentic-admin-loading-card__title">
-								{ getLoadingTitle() }
-							</h4>
-							<span className="wp-agentic-admin-loading-card__subtitle">
-								{ loadingStage.title }
-							</span>
-						</div>
-						<span className="wp-agentic-admin-loading-card__percent">
-							{ displayProgress }%
-						</span>
-					</div>
-
-					<div
-						className="wp-agentic-admin-loading-card__progress"
-						role="progressbar"
-						aria-valuenow={ displayProgress }
-						aria-valuemin={ 0 }
-						aria-valuemax={ 100 }
-						aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
-					>
-						<div
-							className="wp-agentic-admin-loading-card__progress-bar"
-							style={ { width: `${ displayProgress }%` } }
-						/>
-					</div>
-
-					{ isFromCache && ! isInInitPhase && (
-						<p className="wp-agentic-admin-loading-card__cache-note">
-							Model files are cached locally. No download needed!
-						</p>
-					) }
-				</div>
+				<Card>
+					<CardBody>
+						<VStack spacing={ 3 }>
+							<HStack alignment="center" spacing={ 3 }>
+								<span
+									className="wp-agentic-admin-loading-icon"
+									aria-hidden="true"
+								>
+									{ loadingStage.icon }
+								</span>
+								<VStack spacing={ 0 }>
+									<strong>{ getLoadingTitle() }</strong>
+									<span>{ loadingStage.title }</span>
+								</VStack>
+								<span>{ displayProgress }%</span>
+							</HStack>
+							<ProgressBar
+								value={ displayProgress }
+								aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
+							/>
+							{ isFromCache && ! isInInitPhase && (
+								<p>
+									Model files are cached locally. No download
+									needed!
+								</p>
+							) }
+						</VStack>
+					</CardBody>
+				</Card>
 			) }
 
 			{ /* Not Loading State - Standard Status Bar */ }
