@@ -30,6 +30,7 @@ All of this happens **locally in your browser** - no data is sent to third-party
 - **Extensible**: Third-party plugins can register custom abilities
 - **Natural Language Interface**: Describe problems in plain English, get intelligent solutions
 - **ReAct Loop**: LLM decides which tools to use based on observations, adapting in real-time
+- **Optional MCP Endpoint** (v0.12.0+): External AI clients (Claude, ChatGPT, custom agents) can call registered abilities via a built-in MCP server, authenticated with WordPress application passwords. Disabled by default. Read-only in v0.12.0. See [docs/MCP-ENDPOINT.md](docs/MCP-ENDPOINT.md).
 
 ## Architecture
 
