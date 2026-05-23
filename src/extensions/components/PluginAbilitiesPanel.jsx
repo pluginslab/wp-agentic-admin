@@ -7,7 +7,16 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { ToggleControl, Spinner } from '@wordpress/components';
+import {
+	Button,
+	Card,
+	CardBody,
+	Notice,
+	Spinner,
+	ToggleControl,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
 import abilitiesApi from '../services/abilities-api';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 
@@ -236,40 +245,32 @@ const PluginAbilitiesPanel = () => {
 
 	if ( isLoading ) {
 		return (
-			<div className="wp-agentic-admin-plugin-panel wp-agentic-admin-plugin-panel--loading">
+			<VStack alignment="center" spacing={ 2 }>
 				<Spinner />
-				<p>Looking for plugin abilities...</p>
-			</div>
+				<p>Looking for plugin abilities…</p>
+			</VStack>
 		);
 	}
 
 	if ( error ) {
 		return (
-			<div className="wp-agentic-admin-plugin-panel wp-agentic-admin-plugin-panel--error">
-				<div className="notice notice-error">
-					<p>{ error }</p>
-				</div>
-				<button
-					type="button"
-					className="button"
-					onClick={ loadAbilities }
-				>
+			<VStack spacing={ 3 }>
+				<Notice status="error" isDismissible={ false }>
+					{ error }
+				</Notice>
+				<Button variant="secondary" onClick={ loadAbilities }>
 					Retry
-				</button>
-			</div>
+				</Button>
+			</VStack>
 		);
 	}
 
 	if ( abilities.length === 0 ) {
 		return (
-			<div className="wp-agentic-admin-plugin-panel wp-agentic-admin-plugin-panel--empty">
-				<div className="notice notice-info">
-					<p>
-						No plugin abilities found yet. Plugins that support the
-						WordPress Abilities API will appear here automatically.
-					</p>
-				</div>
-			</div>
+			<Notice status="info" isDismissible={ false }>
+				No plugin abilities found yet. Plugins that support the
+				WordPress Abilities API will appear here automatically.
+			</Notice>
 		);
 	}
 
@@ -281,16 +282,16 @@ const PluginAbilitiesPanel = () => {
 	).length;
 
 	return (
-		<div className="wp-agentic-admin-plugin-panel">
-			<div className="wp-agentic-admin-plugin-panel__header">
+		<VStack spacing={ 4 }>
+			<VStack spacing={ 1 }>
 				<h3>Plugin Abilities</h3>
-				<p className="description">
+				<p>
 					Other plugins on your site offer abilities the AI can use.
 					Enable the ones you need — but keep an eye on the budget
 					bar. The AI has limited memory, so you can&apos;t enable
 					everything at once.
 				</p>
-			</div>
+			</VStack>
 
 			<TokenBudgetBar
 				percentage={ budget.percentage }
@@ -302,33 +303,29 @@ const PluginAbilitiesPanel = () => {
 			/>
 
 			{ budget.percentage >= 90 && (
-				<div
-					className="notice notice-error"
-					style={ { margin: '12px 0' } }
-				>
-					<p>
-						The AI is running low on memory. Turn off some abilities
-						so it has room to think and respond.
-					</p>
-				</div>
+				<Notice status="error" isDismissible={ false }>
+					The AI is running low on memory. Turn off some abilities
+					so it has room to think and respond.
+				</Notice>
 			) }
 
-			<div className="wp-agentic-admin-plugin-panel__controls">
-				<ToggleControl
-					label={ `Enable all (${ enabledCount } of ${ abilities.length } active)` }
-					checked={ allEnabled }
-					onChange={ handleToggleAll }
-				/>
-				<button
-					type="button"
-					className="button button-link"
-					onClick={ loadAbilities }
-				>
-					Refresh
-				</button>
-			</div>
+			<Card>
+				<CardBody>
+					<HStack justify="space-between">
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label={ `Enable all (${ enabledCount } of ${ abilities.length } active)` }
+							checked={ allEnabled }
+							onChange={ handleToggleAll }
+						/>
+						<Button variant="link" onClick={ loadAbilities }>
+							Refresh
+						</Button>
+					</HStack>
+				</CardBody>
+			</Card>
 
-			<div className="wp-agentic-admin-plugin-panel__list">
+			<VStack spacing={ 2 }>
 				{ abilities.map( ( ability ) => {
 					const id = ability.name;
 					const enabled = pluginAbilitiesManager.isEnabled( id );
@@ -338,51 +335,50 @@ const PluginAbilitiesPanel = () => {
 					const namespace = id.split( '/' )[ 0 ];
 
 					return (
-						<div
-							key={ id }
-							className={ `wp-agentic-admin-plugin-panel__item ${
-								enabled
-									? 'wp-agentic-admin-plugin-panel__item--enabled'
-									: ''
-							}` }
-						>
-							<div className="wp-agentic-admin-plugin-panel__item-row">
-								<div className="wp-agentic-admin-plugin-panel__item-main">
-									<ToggleControl
-										label={
-											ability.description
-												? `${ ability.label || id } — ${
-														ability.description
-												  }`
-												: ability.label || id
-										}
-										checked={ enabled }
-										onChange={ () => handleToggle( id ) }
-									/>
-									<div className="wp-agentic-admin-plugin-panel__item-meta">
-										<code>{ id }</code>
-										<span className="wp-agentic-admin-plugin-panel__item-tokens">
-											~{ tokens } tokens
+						<Card key={ id } size="small">
+							<CardBody>
+								<HStack alignment="top" spacing={ 3 }>
+									<VStack spacing={ 2 }>
+										<ToggleControl
+											__nextHasNoMarginBottom
+											label={
+												ability.description
+													? `${ ability.label || id } — ${
+															ability.description
+													  }`
+													: ability.label || id
+											}
+											checked={ enabled }
+											onChange={ () => handleToggle( id ) }
+										/>
+										<HStack
+											justify="flex-start"
+											spacing={ 3 }
+										>
+											<code>{ id }</code>
+											<span>~{ tokens } tokens</span>
+										</HStack>
+									</VStack>
+									{ ability.icon ? (
+										<img
+											src={ ability.icon }
+											alt={ namespace }
+											className="wp-agentic-admin-plugin-panel-icon"
+										/>
+									) : (
+										<span className="wp-agentic-admin-plugin-panel-icon wp-agentic-admin-plugin-panel-icon--letter">
+											{ namespace
+												.charAt( 0 )
+												.toUpperCase() }
 										</span>
-									</div>
-								</div>
-								{ ability.icon ? (
-									<img
-										src={ ability.icon }
-										alt={ namespace }
-										className="wp-agentic-admin-plugin-panel__item-icon"
-									/>
-								) : (
-									<span className="wp-agentic-admin-plugin-panel__item-icon wp-agentic-admin-plugin-panel__item-icon--letter">
-										{ namespace.charAt( 0 ).toUpperCase() }
-									</span>
-								) }
-							</div>
-						</div>
+									) }
+								</HStack>
+							</CardBody>
+						</Card>
 					);
 				} ) }
-			</div>
-		</div>
+			</VStack>
+		</VStack>
 	);
 };
 
