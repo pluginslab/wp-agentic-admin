@@ -8,9 +8,12 @@ import {
 	Card,
 	CardBody,
 	CardHeader,
+	ProgressBar,
 	SelectControl,
 	Notice,
 	ToggleControl,
+	__experimentalVStack as VStack,
+	__experimentalHStack as HStack,
 } from '@wordpress/components';
 import modelLoader, {
 	ModelLoader,
@@ -89,6 +92,19 @@ function saveThinkingPrefs( prefs ) {
  * @param {number} timestamp Unix timestamp in milliseconds.
  * @return {string} Relative time (e.g. "2 hours ago").
  */
+/**
+ * Render a label/value pair as a HStack row. Used in place of the
+ * old hand-rolled .wp-agentic-admin-settings-tab__gpu-table.
+ */
+const InfoRow = ( { label, children } ) => (
+	<HStack justify="flex-start" spacing={ 4 }>
+		<span style={ { color: '#646970', minWidth: '160px' } }>
+			{ label }
+		</span>
+		<span>{ children }</span>
+	</HStack>
+);
+
 function timeAgo( timestamp ) {
 	const seconds = Math.floor( ( Date.now() - timestamp ) / 1000 );
 	if ( seconds < 60 ) {
@@ -236,76 +252,35 @@ const SettingsTab = () => {
 					</p>
 
 					{ kbStatus && ! kbBuilding && (
-						<table
-							className="wp-agentic-admin-settings-tab__gpu-table"
-							style={ { marginBottom: '16px' } }
-						>
-							<tbody>
-								<tr>
-									<td>
-										<strong>Last built</strong>
-									</td>
-									<td>{ timeAgo( kbStatus.lastIndexed ) }</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>Total chunks</strong>
-									</td>
-									<td>
-										{ kbStatus.totalChunks.toLocaleString() }
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>Code files</strong>
-									</td>
-									<td>{ kbStatus.codeFiles }</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>DB tables</strong>
-									</td>
-									<td>{ kbStatus.schemaTables }</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>API signatures</strong>
-									</td>
-									<td>{ kbStatus.apiChunks } chunks</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>Reference docs</strong>
-									</td>
-									<td>{ kbStatus.docsChunks } chunks</td>
-								</tr>
-							</tbody>
-						</table>
+						<VStack spacing={ 2 }>
+							<InfoRow label="Last built">
+								{ timeAgo( kbStatus.lastIndexed ) }
+							</InfoRow>
+							<InfoRow label="Total chunks">
+								{ kbStatus.totalChunks.toLocaleString() }
+							</InfoRow>
+							<InfoRow label="Code files">
+								{ kbStatus.codeFiles }
+							</InfoRow>
+							<InfoRow label="DB tables">
+								{ kbStatus.schemaTables }
+							</InfoRow>
+							<InfoRow label="API signatures">
+								{ kbStatus.apiChunks } chunks
+							</InfoRow>
+							<InfoRow label="Reference docs">
+								{ kbStatus.docsChunks } chunks
+							</InfoRow>
+						</VStack>
 					) }
 
 					{ kbBuilding && kbProgress && (
-						<div style={ { marginBottom: '16px' } }>
-							<p style={ { margin: '0 0 8px' } }>
+						<VStack spacing={ 2 }>
+							<p style={ { margin: 0 } }>
 								{ kbProgress.message }
 							</p>
-							<div
-								style={ {
-									background: '#e0e0e0',
-									borderRadius: '4px',
-									height: '8px',
-									overflow: 'hidden',
-								} }
-							>
-								<div
-									style={ {
-										background: '#007cba',
-										height: '100%',
-										width: `${ kbProgress.percent }%`,
-										transition: 'width 0.3s ease',
-									} }
-								/>
-							</div>
-						</div>
+							<ProgressBar value={ kbProgress.percent } />
+						</VStack>
 					) }
 
 					{ kbError && (
@@ -352,53 +327,28 @@ const SettingsTab = () => {
 					{ detecting ? (
 						<p>Detecting GPU capabilities...</p>
 					) : gpuInfo ? (
-						<table className="wp-agentic-admin-settings-tab__gpu-table">
-							<tbody>
-								<tr>
-									<td>
-										<strong>Device</strong>
-									</td>
-									<td>{ gpuInfo.device }</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>Vendor</strong>
-									</td>
-									<td>{ gpuInfo.vendor }</td>
-								</tr>
-								{ gpuInfo.architecture !== 'Unknown' && (
-									<tr>
-										<td>
-											<strong>Architecture</strong>
-										</td>
-										<td>{ gpuInfo.architecture }</td>
-									</tr>
-								) }
-								<tr>
-									<td>
-										<strong>Max Buffer Size</strong>
-									</td>
-									<td>
-										{ gpuInfo.maxBufferSize
-											? `${ (
-													gpuInfo.maxBufferSize /
-													1024 ** 3
-											  ).toFixed( 2 ) } GB`
-											: 'Unknown' }
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<strong>Estimated VRAM</strong>
-									</td>
-									<td>
-										{ estimatedVRAM > 0
-											? `~${ estimatedVRAM } GB`
-											: 'Unknown' }
-									</td>
-								</tr>
-							</tbody>
-						</table>
+						<VStack spacing={ 2 }>
+							<InfoRow label="Device">{ gpuInfo.device }</InfoRow>
+							<InfoRow label="Vendor">{ gpuInfo.vendor }</InfoRow>
+							{ gpuInfo.architecture !== 'Unknown' && (
+								<InfoRow label="Architecture">
+									{ gpuInfo.architecture }
+								</InfoRow>
+							) }
+							<InfoRow label="Max Buffer Size">
+								{ gpuInfo.maxBufferSize
+									? `${ (
+											gpuInfo.maxBufferSize /
+											1024 ** 3
+									  ).toFixed( 2 ) } GB`
+									: 'Unknown' }
+							</InfoRow>
+							<InfoRow label="Estimated VRAM">
+								{ estimatedVRAM > 0
+									? `~${ estimatedVRAM } GB`
+									: 'Unknown' }
+							</InfoRow>
+						</VStack>
 					) : (
 						<Notice status="warning" isDismissible={ false }>
 							Could not detect GPU. WebGPU may not be supported in
