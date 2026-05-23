@@ -2,22 +2,23 @@
  * AbilityBrowser Component
  *
  * Manual ability testing interface - browse and execute abilities directly.
- *
  */
 
 import { useState, useEffect } from '@wordpress/element';
-import { Spinner } from '@wordpress/components';
+import {
+	Button,
+	Card,
+	CardHeader,
+	CardBody,
+	CardFooter,
+	Notice,
+	Spinner,
+	TextareaControl,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
 import abilitiesApi from '../services/abilities-api';
 
-/**
- * AbilityCard component - displays a single ability
- *
- * @param {Object}   props             - Component props
- * @param {Object}   props.ability     - Ability object
- * @param {Function} props.onExecute   - Callback when execute is clicked
- * @param {boolean}  props.isExecuting - Whether this ability is currently executing
- * @return {JSX.Element} Rendered ability card
- */
 const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 	const [ inputJson, setInputJson ] = useState( '{}' );
 	const [ showInput, setShowInput ] = useState( false );
@@ -28,9 +29,6 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 		ability.input_schema?.properties &&
 		Object.keys( ability.input_schema.properties ).length > 0;
 
-	/**
-	 * Handle execute button click
-	 */
 	const handleExecute = () => {
 		setInputError( null );
 
@@ -44,7 +42,6 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 			}
 		}
 
-		// For destructive abilities, confirm first
 		if ( isDestructive ) {
 			// eslint-disable-next-line no-alert -- intentional confirmation for destructive abilities
 			const confirmed = window.confirm(
@@ -58,9 +55,6 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 		onExecute( ability, parsedInput );
 	};
 
-	/**
-	 * Render input schema as helpful hints
-	 */
 	const renderSchemaHints = () => {
 		if ( ! ability.input_schema?.properties ) {
 			return null;
@@ -68,118 +62,94 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 
 		const props = ability.input_schema.properties;
 		return (
-			<div className="wp-agentic-admin-ability-card__schema">
-				<small>Parameters:</small>
-				<ul>
-					{ Object.entries( props ).map( ( [ key, schema ] ) => (
-						<li key={ key }>
-							<code>{ key }</code>
-							{ schema.type && <span> ({ schema.type })</span> }
-							{ schema.default !== undefined && (
-								<span>
-									{ ' ' }
-									= { JSON.stringify( schema.default ) }
-								</span>
-							) }
-							{ schema.description && (
-								<span> - { schema.description }</span>
-							) }
-						</li>
-					) ) }
-				</ul>
-			</div>
+			<VStack spacing={ 1 } as="dl">
+				<dt>Parameters</dt>
+				{ Object.entries( props ).map( ( [ key, schema ] ) => (
+					<dd key={ key }>
+						<code>{ key }</code>
+						{ schema.type && ` (${ schema.type })` }
+						{ schema.default !== undefined &&
+							` = ${ JSON.stringify( schema.default ) }` }
+						{ schema.description && ` — ${ schema.description }` }
+					</dd>
+				) ) }
+			</VStack>
 		);
 	};
 
 	return (
-		<div
-			className={ `wp-agentic-admin-ability-card ${
-				isDestructive
-					? 'wp-agentic-admin-ability-card--destructive'
-					: ''
-			}` }
-		>
-			<div className="wp-agentic-admin-ability-card__header">
-				<h4>{ ability.label }</h4>
-				{ isDestructive && (
-					<span className="wp-agentic-admin-badge wp-agentic-admin-badge--warning">
-						Destructive
-					</span>
-				) }
-			</div>
-
-			<p className="wp-agentic-admin-ability-card__description">
-				{ ability.description }
-			</p>
-
-			<div className="wp-agentic-admin-ability-card__id">
-				<code>{ ability.name }</code>
-			</div>
-
-			{ hasInputSchema && (
-				<>
-					<button
-						type="button"
-						className="button button-link wp-agentic-admin-ability-card__toggle"
-						onClick={ () => setShowInput( ! showInput ) }
-						aria-expanded={ showInput }
-					>
-						{ showInput ? 'Hide parameters' : 'Show parameters' }
-					</button>
-
-					{ showInput && (
-						<div className="wp-agentic-admin-ability-card__input">
-							{ renderSchemaHints() }
-							<textarea
-								value={ inputJson }
-								onChange={ ( e ) =>
-									setInputJson( e.target.value )
-								}
-								placeholder='{"param": "value"}'
-								aria-label={ `JSON parameters for ${ ability.label }` }
-								rows="3"
-							/>
-							{ inputError && (
-								<div className="wp-agentic-admin-ability-card__error">
-									{ inputError }
-								</div>
-							) }
-						</div>
+		<Card isBorderless={ false } size="medium">
+			<CardHeader>
+				<HStack alignment="left" spacing={ 2 }>
+					<strong>{ ability.label }</strong>
+					{ isDestructive && (
+						<Notice
+							status="warning"
+							isDismissible={ false }
+							politeness="off"
+						>
+							Destructive
+						</Notice>
 					) }
-				</>
-			) }
+				</HStack>
+			</CardHeader>
+			<CardBody>
+				<VStack spacing={ 3 }>
+					<p>{ ability.description }</p>
+					<code>{ ability.name }</code>
 
-			<div className="wp-agentic-admin-ability-card__actions">
-				<button
-					type="button"
-					className={ `button ${
-						isDestructive ? 'button-link-delete' : 'button-primary'
-					}` }
+					{ hasInputSchema && (
+						<>
+							<Button
+								variant="link"
+								onClick={ () => setShowInput( ! showInput ) }
+								aria-expanded={ showInput }
+							>
+								{ showInput
+									? 'Hide parameters'
+									: 'Show parameters' }
+							</Button>
+
+							{ showInput && (
+								<VStack spacing={ 2 }>
+									{ renderSchemaHints() }
+									<TextareaControl
+										__nextHasNoMarginBottom
+										value={ inputJson }
+										onChange={ setInputJson }
+										placeholder='{"param": "value"}'
+										aria-label={ `JSON parameters for ${ ability.label }` }
+										rows={ 3 }
+									/>
+									{ inputError && (
+										<Notice
+											status="error"
+											isDismissible={ false }
+										>
+											{ inputError }
+										</Notice>
+									) }
+								</VStack>
+							) }
+						</>
+					) }
+				</VStack>
+			</CardBody>
+			<CardFooter>
+				<Button
+					variant="primary"
+					isDestructive={ isDestructive }
 					onClick={ handleExecute }
 					disabled={ isExecuting }
-					aria-busy={ isExecuting }
+					isBusy={ isExecuting }
 				>
-					{ isExecuting ? (
-						<>
-							<Spinner /> Executing...
-						</>
-					) : (
-						'Execute'
-					) }
-				</button>
-			</div>
-		</div>
+					{ isExecuting ? 'Executing…' : 'Execute' }
+				</Button>
+			</CardFooter>
+		</Card>
 	);
 };
 
-/**
- * ResultPanel component - displays execution results
- *
- * @param {Object}   props         - Component props
- * @param {Object}   props.result  - Execution result
- * @param {Function} props.onClear - Callback to clear results
- * @return {JSX.Element} Rendered result panel
- */
 const ResultPanel = ( { result, onClear } ) => {
 	if ( ! result ) {
 		return null;
@@ -188,44 +158,25 @@ const ResultPanel = ( { result, onClear } ) => {
 	const isError = result.error;
 
 	return (
-		<div
-			className={ `wp-agentic-admin-result-panel ${
-				isError
-					? 'wp-agentic-admin-result-panel--error'
-					: 'wp-agentic-admin-result-panel--success'
-			}` }
-			role="status"
-			aria-live="polite"
+		<Notice
+			status={ isError ? 'error' : 'success' }
+			onRemove={ onClear }
+			politeness="polite"
 		>
-			<div className="wp-agentic-admin-result-panel__header">
-				<h4>
-					<span
-						className={ `dashicons ${
-							isError ? 'dashicons-warning' : 'dashicons-yes-alt'
-						}` }
-					/>
-					{ isError ? 'Execution Failed' : 'Execution Successful' }
-				</h4>
-				<button
-					type="button"
-					className="button button-link"
-					onClick={ onClear }
-				>
-					Clear
-				</button>
-			</div>
-			<div className="wp-agentic-admin-result-panel__content">
-				<pre>{ JSON.stringify( result.data || result, null, 2 ) }</pre>
-			</div>
-		</div>
+			<VStack spacing={ 2 }>
+				<strong>
+					{ isError
+						? 'Execution failed'
+						: 'Execution successful' }
+				</strong>
+				<pre>
+					{ JSON.stringify( result.data || result, null, 2 ) }
+				</pre>
+			</VStack>
+		</Notice>
 	);
 };
 
-/**
- * AbilityBrowser component
- *
- * @return {JSX.Element} Rendered ability browser
- */
 const AbilityBrowser = () => {
 	const [ abilities, setAbilities ] = useState( [] );
 	const [ isLoading, setIsLoading ] = useState( true );
@@ -233,16 +184,10 @@ const AbilityBrowser = () => {
 	const [ executingAbility, setExecutingAbility ] = useState( null );
 	const [ lastResult, setLastResult ] = useState( null );
 
-	/**
-	 * Load abilities on mount
-	 */
 	useEffect( () => {
 		loadAbilities();
 	}, [] );
 
-	/**
-	 * Fetch abilities from the API
-	 */
 	const loadAbilities = async () => {
 		setIsLoading( true );
 		setError( null );
@@ -251,7 +196,6 @@ const AbilityBrowser = () => {
 			const data = await abilitiesApi.listAbilities();
 			const all = Array.isArray( data ) ? data : [];
 
-			// Show only our own abilities (wp-agentic-admin/* and core/*)
 			const filtered = all.filter(
 				( a ) =>
 					a.name?.startsWith( 'wp-agentic-admin/' ) ||
@@ -266,12 +210,6 @@ const AbilityBrowser = () => {
 		}
 	};
 
-	/**
-	 * Execute an ability
-	 *
-	 * @param {Object} ability - Ability to execute
-	 * @param {Object} input   - Input parameters
-	 */
 	const handleExecute = async ( ability, input ) => {
 		setExecutingAbility( ability.name );
 		setLastResult( null );
@@ -293,82 +231,63 @@ const AbilityBrowser = () => {
 		}
 	};
 
-	/**
-	 * Clear the result panel
-	 */
-	const handleClearResult = () => {
-		setLastResult( null );
-	};
-
-	// Loading state
 	if ( isLoading ) {
 		return (
-			<div className="wp-agentic-admin-ability-browser wp-agentic-admin-ability-browser--loading">
+			<VStack alignment="center" spacing={ 2 }>
 				<Spinner />
-				<p>Loading abilities...</p>
-			</div>
+				<p>Loading abilities…</p>
+			</VStack>
 		);
 	}
 
-	// Error state
 	if ( error ) {
 		return (
-			<div className="wp-agentic-admin-ability-browser wp-agentic-admin-ability-browser--error">
-				<div className="notice notice-error">
-					<p>{ error }</p>
-				</div>
-				<button
-					type="button"
-					className="button"
-					onClick={ loadAbilities }
-				>
+			<VStack spacing={ 3 }>
+				<Notice status="error" isDismissible={ false }>
+					{ error }
+				</Notice>
+				<Button variant="secondary" onClick={ loadAbilities }>
 					Retry
-				</button>
-			</div>
+				</Button>
+			</VStack>
 		);
 	}
 
-	// Empty state
 	if ( abilities.length === 0 ) {
 		return (
-			<div className="wp-agentic-admin-ability-browser wp-agentic-admin-ability-browser--empty">
-				<div className="notice notice-warning">
-					<p>
-						No abilities found. Make sure the Abilities API plugin
-						is active and abilities are registered.
-					</p>
-				</div>
-				<button
-					type="button"
-					className="button"
-					onClick={ loadAbilities }
-				>
+			<VStack spacing={ 3 }>
+				<Notice status="warning" isDismissible={ false }>
+					No abilities found. Make sure the Abilities API plugin
+					is active and abilities are registered.
+				</Notice>
+				<Button variant="secondary" onClick={ loadAbilities }>
 					Refresh
-				</button>
-			</div>
+				</Button>
+			</VStack>
 		);
 	}
 
 	return (
-		<div className="wp-agentic-admin-ability-browser">
-			<div className="wp-agentic-admin-ability-browser__header">
-				<h3>Available Abilities</h3>
-				<p className="description">
-					Test abilities manually by clicking Execute. Includes
-					WordPress core and Agentic Admin abilities.
-				</p>
-				<button
-					type="button"
-					className="button"
-					onClick={ loadAbilities }
-				>
+		<VStack spacing={ 4 }>
+			<HStack alignment="left" spacing={ 4 }>
+				<VStack spacing={ 1 }>
+					<h3>Available Abilities</h3>
+					<p>
+						Test abilities manually by clicking Execute. Includes
+						WordPress core and Agentic Admin abilities.
+					</p>
+				</VStack>
+				<Button variant="secondary" onClick={ loadAbilities }>
 					Refresh
-				</button>
-			</div>
+				</Button>
+			</HStack>
 
-			<ResultPanel result={ lastResult } onClear={ handleClearResult } />
+			<ResultPanel
+				result={ lastResult }
+				onClear={ () => setLastResult( null ) }
+			/>
 
-			<div className="wp-agentic-admin-ability-browser__grid">
+			<div className="wp-agentic-admin-ability-grid">
 				{ abilities.map( ( ability ) => (
 					<AbilityCard
 						key={ ability.name }
@@ -378,7 +297,7 @@ const AbilityBrowser = () => {
 					/>
 				) ) }
 			</div>
-		</div>
+		</VStack>
 	);
 };
 
