@@ -1086,62 +1086,26 @@
 // Four mutually-exclusive views: chat, abilities, plugin-abilities,
 // settings. The first three sit on the left; Settings is visually pushed
 // to the right via flex margin-left:auto but is the same kind of element.
-.wp-agentic-admin-tabs-wrapper {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	min-height: 0;
-}
-
+// TabPanel from @wordpress/components — only the flex-fill behavior the
+// chat view needs to occupy remaining vertical space. The tab strip itself,
+// active-state indicator, hover styling, and content padding all come from
+// the component's bundled stylesheet.
 .wp-agentic-admin-tabs {
 	display: flex;
-	align-items: stretch;
-	border-bottom: 1px solid #c3c4c7;
-	flex-shrink: 0;
-	background: #fff;
-}
-
-.wp-agentic-admin-tab,
-.wp-agentic-admin-settings-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 48px;
-	padding: 0 16px;
-	border: none;
-	border-radius: 0;
-	background: transparent;
-	color: #50575e;
-	font-weight: 500;
-	font-size: 13px;
-	cursor: pointer;
-
-	&:hover,
-	&:focus {
-		color: var(--wp-admin-theme-color, #2271b1);
-		background: #f0f0f1;
-	}
-
-	&.is-active {
-		color: var(--wp-admin-theme-color, #2271b1);
-		box-shadow: inset 0 -3px 0 0 var(--wp-admin-theme-color, #2271b1);
-	}
-}
-
-.wp-agentic-admin-settings-toggle {
-	margin-left: auto; // Push Settings to the right edge of the tab strip
-	gap: 6px;
-}
-
-.wp-agentic-admin-tab-content {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-top: none;
-	border-radius: 0 0 4px 4px;
-	flex: 1;
-	display: flex;
 	flex-direction: column;
+	flex: 1;
 	min-height: 0;
+
+	.components-tab-panel__tab-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		background: #fff;
+		border: 1px solid #c3c4c7;
+		border-top: none;
+		border-radius: 0 0 4px 4px;
+	}
 }
 
 // Chat Container wrapper

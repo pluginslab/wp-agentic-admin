@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Notice, Button } from '@wordpress/components';
+import { Notice, TabPanel } from '@wordpress/components';
 import { cog } from '@wordpress/icons';
 import ChatContainer from './components/ChatContainer';
 import AbilityBrowser from './components/AbilityBrowser';
@@ -21,10 +21,6 @@ const App = () => {
 	const [ modelReady, setModelReady ] = useState( false );
 	const [ webGPUError, setWebGPUError ] = useState( null );
 	const [ isExecuting, setIsExecuting ] = useState( false );
-	// Active view — 'chat' | 'abilities' | 'plugin-abilities' | 'settings'.
-	// Settings is just another tab (positioned visually on the right via CSS).
-	const [ activeView, setActiveView ] = useState( 'chat' );
-	// Track initialization phase: 'checking' during initial checks, 'loading' when auto-loading, null when done
 	const [ initPhase, setInitPhase ] = useState( 'checking' );
 	const [ initMessage, setInitMessage ] = useState(
 		'Checking WebGPU support...'
@@ -191,27 +187,16 @@ const App = () => {
 		);
 	}
 
-	/**
-	 * Tab panel configuration
-	 */
 	const tabs = [
-		{
-			name: 'chat',
-			title: 'Chat',
-		},
+		{ name: 'chat', title: 'Chat' },
 		{ name: 'abilities', title: 'Abilities' },
 		{ name: 'plugin-abilities', title: 'Plugin Abilities' },
+		{ name: 'settings', title: 'Settings', icon: cog },
 	];
 
-	/**
-	 * Render content for the active view.
-	 *
-	 * @return {JSX.Element} The rendered view.
-	 */
-	const renderActiveView = () => {
-		switch ( activeView ) {
+	const renderTab = ( tab ) => {
+		switch ( tab.name ) {
 			case 'chat':
-				// If WebGPU has a fatal error, show fallback
 				if ( webGPUError && ! modelReady ) {
 					return (
 						<WebGPUFallback
@@ -240,45 +225,13 @@ const App = () => {
 
 	return (
 		<div className="wp-agentic-admin-app">
-			<div className="wp-agentic-admin-main">
-				<div className="wp-agentic-admin-tabs-wrapper">
-					<div
-						className="wp-agentic-admin-tabs"
-						role="tablist"
-						aria-label="Agentic Admin views"
-					>
-						{ tabs.map( ( tab ) => (
-							<button
-								key={ tab.name }
-								type="button"
-								role="tab"
-								aria-selected={ activeView === tab.name }
-								className={ `wp-agentic-admin-tab${
-									activeView === tab.name ? ' is-active' : ''
-								}` }
-								onClick={ () => setActiveView( tab.name ) }
-							>
-								{ tab.title }
-							</button>
-						) ) }
-						<Button
-							icon={ cog }
-							role="tab"
-							aria-selected={ activeView === 'settings' }
-							className={ `wp-agentic-admin-settings-toggle${
-								activeView === 'settings' ? ' is-active' : ''
-							}` }
-							onClick={ () => setActiveView( 'settings' ) }
-							label="Settings"
-						>
-							Settings
-						</Button>
-					</div>
-					<div className="wp-agentic-admin-tab-content">
-						{ renderActiveView() }
-					</div>
-				</div>
-			</div>
+			<TabPanel
+				className="wp-agentic-admin-tabs"
+				tabs={ tabs }
+				initialTabName="chat"
+			>
+				{ renderTab }
+			</TabPanel>
 
 			<ModelStatus
 				onModelReady={ handleModelReady }
