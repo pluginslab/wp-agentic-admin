@@ -7,6 +7,9 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
+import { Button } from '@wordpress/components';
+import { close } from '@wordpress/icons';
+import { __ } from '@wordpress/i18n';
 import ChatContainer from './ChatContainer';
 import ModelStatus from './ModelStatus';
 import WebGPUFallback from './WebGPUFallback';
@@ -187,6 +190,17 @@ const AdminSidebar = () => {
 			<div className="wp-agentic-admin-sidebar__header">
 				<span className="dashicons dashicons-superhero-alt" />
 				<strong>AI Assistant</strong>
+				<Button
+					icon={ close }
+					label={ __( 'Close sidebar', 'agentic-admin' ) }
+					showTooltip
+					className="wp-agentic-admin-sidebar__close"
+					onClick={ () =>
+						window.dispatchEvent(
+							new CustomEvent( 'wp-agentic-admin/sidebar-close' )
+						)
+					}
+				/>
 			</div>
 
 			<ModelStatus

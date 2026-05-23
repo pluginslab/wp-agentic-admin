@@ -55,33 +55,37 @@ document.addEventListener( 'DOMContentLoaded', () => {
 		} );
 	}
 
+	const closeSidebar = ( returnFocus = true ) => {
+		container.classList.remove( 'is-open' );
+		if ( toggleBtn ) {
+			toggleBtn.classList.remove( 'is-active' );
+			const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
+			toggleLink.setAttribute( 'aria-expanded', 'false' );
+			if ( returnFocus ) {
+				toggleLink.focus();
+			}
+		}
+	};
+
 	// Close sidebar when clicking the overlay.
 	const overlay = document.getElementById(
 		'wp-agentic-admin-sidebar-overlay'
 	);
 	if ( overlay ) {
-		overlay.addEventListener( 'click', () => {
-			container.classList.remove( 'is-open' );
-			if ( toggleBtn ) {
-				toggleBtn.classList.remove( 'is-active' );
-				const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
-				toggleLink.setAttribute( 'aria-expanded', 'false' );
-			}
-		} );
+		overlay.addEventListener( 'click', () => closeSidebar( false ) );
 	}
 
 	// Close sidebar on Escape key and return focus to toggle button.
 	document.addEventListener( 'keydown', ( e ) => {
 		if ( e.key === 'Escape' && container.classList.contains( 'is-open' ) ) {
-			container.classList.remove( 'is-open' );
-			if ( toggleBtn ) {
-				toggleBtn.classList.remove( 'is-active' );
-				const toggleLink = toggleBtn.querySelector( 'a' ) || toggleBtn;
-				toggleLink.setAttribute( 'aria-expanded', 'false' );
-				toggleLink.focus();
-			}
+			closeSidebar();
 		}
 	} );
+
+	// Close sidebar from React (in-panel close button dispatches this).
+	window.addEventListener( 'wp-agentic-admin/sidebar-close', () =>
+		closeSidebar()
+	);
 
 	const root = createRoot( container );
 	root.render( <AdminSidebar /> );
