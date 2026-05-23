@@ -29,7 +29,13 @@ import {
 	useRef,
 	useState,
 } from '@wordpress/element';
-import { Button, Modal, Notice, Snackbar } from '@wordpress/components';
+import {
+	Button,
+	Modal,
+	Notice,
+	Snackbar,
+	__experimentalHStack as HStack,
+} from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import {
@@ -705,35 +711,37 @@ const ChatContainer = ( {
 
 	return (
 		<div className="wp-agentic-admin-chat-container">
-			<div className="wp-agentic-admin-chat-header">
-				<div className="wp-agentic-admin-chat-header__actions">
-					<Button
-						variant="secondary"
-						onClick={ copyAllConversation }
-						disabled={
-							messages.length === 0 ||
-							isLoading ||
-							isStreaming ||
-							isExecutingTool
-						}
-					>
-						Copy All
-					</Button>
-					<Button
-						variant="tertiary"
-						isDestructive
-						onClick={ clearHistory }
-						disabled={
-							messages.length <= 1 ||
-							isLoading ||
-							isStreaming ||
-							isExecutingTool
-						}
-					>
-						Clear Chat
-					</Button>
-				</div>
-			</div>
+			<HStack
+				justify="flex-end"
+				spacing={ 2 }
+				className="wp-agentic-admin-chat-header"
+			>
+				<Button
+					variant="secondary"
+					onClick={ copyAllConversation }
+					disabled={
+						messages.length === 0 ||
+						isLoading ||
+						isStreaming ||
+						isExecutingTool
+					}
+				>
+					Copy All
+				</Button>
+				<Button
+					variant="tertiary"
+					isDestructive
+					onClick={ clearHistory }
+					disabled={
+						messages.length <= 1 ||
+						isLoading ||
+						isStreaming ||
+						isExecutingTool
+					}
+				>
+					Clear Chat
+				</Button>
+			</HStack>
 
 			<MessageList
 				messages={ displayMessages }
@@ -818,14 +826,17 @@ const ChatContainer = ( {
 			/>
 
 			{ isStreaming && (
-				<div className="wp-agentic-admin-chat-actions">
+				<HStack
+					justify="center"
+					className="wp-agentic-admin-chat-actions"
+				>
 					<Button
 						variant="secondary"
 						onClick={ handleStopGeneration }
 					>
 						Stop Generation
 					</Button>
-				</div>
+				</HStack>
 			) }
 
 			{ /* Confirmation Modal for destructive actions and intent confirmation */ }

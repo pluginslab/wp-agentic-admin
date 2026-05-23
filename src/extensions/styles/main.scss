@@ -1359,26 +1359,20 @@
 }
 
 // Chat Header with actions
-.wp-agentic-admin-chat-header {
-	display: flex;
-	justify-content: flex-end;
+// Chat header + chat-actions chrome: just visual decoration on top
+// of the HStack from @wordpress/components (which handles layout).
+.wp-agentic-admin-chat-header,
+.wp-agentic-admin-chat-actions {
 	padding: 8px 16px;
-	border-bottom: 1px solid #c3c4c7;
 	background: #f6f7f7;
-
-	&__actions {
-		display: flex;
-		gap: 8px;
-	}
 }
 
-// Chat actions (stop generation, etc.)
+.wp-agentic-admin-chat-header {
+	border-bottom: 1px solid #c3c4c7;
+}
+
 .wp-agentic-admin-chat-actions {
-	display: flex;
-	justify-content: center;
-	padding: 8px;
 	border-top: 1px solid #c3c4c7;
-	background: #f6f7f7;
 }
 
 // Override WordPress default snackbar positioning with higher specificity
