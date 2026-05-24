@@ -28,6 +28,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Connectors {
 
 	/**
+	 * Maximum number of messages accepted per chat-completion request.
+	 *
+	 * Caps long histories before they're forwarded to a paid provider.
+	 */
+	private const MAX_MESSAGES = 50;
+
+	/**
+	 * Maximum total prompt characters accepted per chat-completion request.
+	 *
+	 * Rough guard against an admin (or a compromised admin) driving
+	 * unbounded paid-provider spend through this endpoint.
+	 */
+	private const MAX_TOTAL_CHARS = 100000;
+
+	/**
+	 * Maximum chat-completion requests per user per minute.
+	 */
+	private const RATE_LIMIT_PER_MINUTE = 30;
+
+	/**
 	 * Initialize hooks.
 	 */
 	public static function init(): void {
@@ -99,7 +119,7 @@ class Connectors {
 			return new \WP_REST_Response( $out, 200 );
 		}
 
-		$all = \wp_get_connectors();
+		$all         = \wp_get_connectors();
 		$ai_registry = null;
 		if ( class_exists( '\\WordPress\\AiClient\\AiClient' ) ) {
 			try {
@@ -162,9 +182,11 @@ class Connectors {
 	 * KNOWN LIMITATIONS (documented for honesty, will be addressed in follow-up):
 	 *  - Non-streaming only. AI Client doesn't expose a streaming API for
 	 *    text generation, so this returns the full assistant message at once.
-	 *  - Lossy prompt flattening: messages array is concatenated into a
-	 *    single string ("role: content") rather than passed structurally.
 	 *  - No tool/function calling support yet.
+	 *
+	 * Guards: enforces MAX_MESSAGES, MAX_TOTAL_CHARS, and a per-user
+	 * RATE_LIMIT_PER_MINUTE via a transient. These cap potential paid-
+	 * provider spend triggered through this endpoint.
 	 *
 	 * @param \WP_REST_Request $request REST request.
 	 * @return \WP_REST_Response|\WP_Error
@@ -190,6 +212,33 @@ class Connectors {
 			);
 		}
 
+		if ( count( $messages ) > self::MAX_MESSAGES ) {
+			return new \WP_Error(
+				'wpaa_too_many_messages',
+				sprintf( 'Too many messages: limit is %d per request.', self::MAX_MESSAGES ),
+				array( 'status' => 413 )
+			);
+		}
+
+		$total_chars = 0;
+		foreach ( $messages as $msg ) {
+			if ( is_array( $msg ) && isset( $msg['content'] ) ) {
+				$total_chars += strlen( (string) $msg['content'] );
+			}
+		}
+		if ( $total_chars > self::MAX_TOTAL_CHARS ) {
+			return new \WP_Error(
+				'wpaa_payload_too_large',
+				sprintf( 'Combined message content exceeds %d characters.', self::MAX_TOTAL_CHARS ),
+				array( 'status' => 413 )
+			);
+		}
+
+		$rate_limit_error = self::check_rate_limit();
+		if ( null !== $rate_limit_error ) {
+			return $rate_limit_error;
+		}
+
 		try {
 			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
 			if ( ! $registry->hasProvider( $connector_id ) ) {
@@ -207,9 +256,6 @@ class Connectors {
 				);
 			}
 
-			// Flatten messages → single prompt string (lossy).
-			$prompt = self::flatten_messages( $messages );
-
 			// Resolve a specific model if requested; fall back to AI Client
 			// auto-discovery if none provided or resolution fails.
 			$model = null;
@@ -222,9 +268,7 @@ class Connectors {
 				}
 			}
 
-			$result = null === $model
-				? \WordPress\AiClient\AiClient::generateTextResult( $prompt )
-				: \WordPress\AiClient\AiClient::generateTextResult( $prompt, $model );
+			$result = self::generate_with_structured_messages( $messages, $model );
 			$text   = method_exists( $result, 'toText' ) ? $result->toText() : (string) $result;
 
 			// Return an OpenAI-shaped non-streaming response so the existing
@@ -257,25 +301,151 @@ class Connectors {
 	}
 
 	/**
-	 * Flatten an OpenAI-style messages array into a single prompt string.
+	 * Generate a text result through the AI Client using structured
+	 * roles so the connector can preserve user / assistant turns and
+	 * pass any system instruction as a top-level model directive.
 	 *
-	 * Lossy: roles become "User:" / "Assistant:" / "System:" prefixes. The
-	 * structural metadata (tool calls, role identity for multi-turn) is
-	 * lost. Acceptable for a v0 connector POC; should be replaced with
-	 * PromptBuilder structural calls once the AI Client exposes them.
+	 * Falls back to a single concatenated prompt only if the AI Client
+	 * structural builder isn't available at runtime.
+	 *
+	 * @param array<int,array<string,mixed>> $messages OpenAI-style chat messages.
+	 * @param mixed|null                     $model    Optional resolved AI Client model.
+	 * @return mixed The generated AI Client text result.
+	 */
+	private static function generate_with_structured_messages( array $messages, $model ) {
+		$system_instructions = array();
+		$turns               = array();
+
+		foreach ( $messages as $msg ) {
+			if ( ! is_array( $msg ) || ! isset( $msg['content'] ) ) {
+				continue;
+			}
+			$role    = isset( $msg['role'] ) ? (string) $msg['role'] : 'user';
+			$content = (string) $msg['content'];
+
+			if ( 'system' === $role ) {
+				$system_instructions[] = $content;
+				continue;
+			}
+			$turns[] = array(
+				'role'    => $role,
+				'content' => $content,
+			);
+		}
+
+		$structural_supported = class_exists( '\\WordPress\\AiClient\\AiClient' )
+			&& class_exists( '\\WordPress\\AiClient\\Messages\\DTO\\Message' )
+			&& class_exists( '\\WordPress\\AiClient\\Messages\\DTO\\MessagePart' )
+			&& class_exists( '\\WordPress\\AiClient\\Messages\\Enums\\MessageRoleEnum' );
+
+		if ( ! $structural_supported || empty( $turns ) ) {
+			// Final fallback: lossy concatenation. Only reached when the
+			// AI Client builder classes are missing or the message list
+			// had no user/assistant turns at all.
+			$prompt = self::flatten_messages_lossy(
+				array_merge(
+					array_map(
+						static function ( $s ) {
+							return array(
+								'role'    => 'system',
+								'content' => $s,
+							);
+						},
+						$system_instructions
+					),
+					$turns
+				)
+			);
+			return null === $model
+				? \WordPress\AiClient\AiClient::generateTextResult( $prompt )
+				: \WordPress\AiClient\AiClient::generateTextResult( $prompt, $model );
+		}
+
+		$role_enum    = '\\WordPress\\AiClient\\Messages\\Enums\\MessageRoleEnum';
+		$messages_dto = array();
+		foreach ( $turns as $turn ) {
+			$enum_role      = 'assistant' === $turn['role']
+				? $role_enum::model()
+				: $role_enum::user();
+			$messages_dto[] = new \WordPress\AiClient\Messages\DTO\Message(
+				$enum_role,
+				array( new \WordPress\AiClient\Messages\DTO\MessagePart( $turn['content'] ) )
+			);
+		}
+
+		// Use the latest turn as the active prompt and pass the rest as history,
+		// matching PromptBuilder's expected shape.
+		$latest  = array_pop( $messages_dto );
+		$history = $messages_dto;
+
+		$builder = \WordPress\AiClient\AiClient::prompt();
+		foreach ( $latest->getParts() as $part ) {
+			$builder = $builder->withMessageParts( $part );
+		}
+		if ( ! empty( $history ) ) {
+			$builder = $builder->withHistory( ...$history );
+		}
+		if ( ! empty( $system_instructions ) ) {
+			$builder = $builder->usingSystemInstruction(
+				implode( "\n\n", $system_instructions )
+			);
+		}
+		if ( null !== $model ) {
+			$builder = $builder->usingModel( $model );
+		}
+
+		return $builder->generateTextResult();
+	}
+
+	/**
+	 * Concatenate messages into a single prompt as a last-resort fallback
+	 * when the structural Message DTOs are unavailable.
 	 *
 	 * @param array $messages OpenAI-style chat messages.
 	 * @return string
 	 */
-	private static function flatten_messages( array $messages ): string {
+	private static function flatten_messages_lossy( array $messages ): string {
 		$lines = array();
 		foreach ( $messages as $msg ) {
 			if ( ! is_array( $msg ) || ! isset( $msg['content'] ) ) {
 				continue;
 			}
-			$role  = isset( $msg['role'] ) ? ucfirst( (string) $msg['role'] ) : 'User';
+			$role    = isset( $msg['role'] ) ? ucfirst( (string) $msg['role'] ) : 'User';
 			$lines[] = $role . ': ' . (string) $msg['content'];
 		}
 		return implode( "\n\n", $lines );
+	}
+
+	/**
+	 * Per-user rate limit for chat completions.
+	 *
+	 * Caps at RATE_LIMIT_PER_MINUTE requests per user per rolling 60s
+	 * window via a transient counter. Returns a WP_Error 429 when the
+	 * cap is exceeded, null otherwise.
+	 *
+	 * @return \WP_Error|null
+	 */
+	private static function check_rate_limit(): ?\WP_Error {
+		$user_id = \get_current_user_id();
+		if ( ! $user_id ) {
+			return null;
+		}
+
+		$key   = 'wpaa_conn_rl_' . $user_id;
+		$count = (int) \get_transient( $key );
+
+		if ( $count >= self::RATE_LIMIT_PER_MINUTE ) {
+			return new \WP_Error(
+				'wpaa_rate_limited',
+				sprintf(
+					'Connector chat completions are rate-limited to %d requests per minute.',
+					self::RATE_LIMIT_PER_MINUTE
+				),
+				array( 'status' => 429 )
+			);
+		}
+
+		\set_transient( $key, $count + 1, MINUTE_IN_SECONDS );
+		return null;
 	}
 }
