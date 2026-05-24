@@ -38,16 +38,7 @@ const CONTEXT_OPTIONS = [
 	{ label: '32,768 tokens (maximum)', value: '32768' },
 ];
 
-const REMOTE_CONTEXT_OPTIONS = [
-	{ label: '8,192 tokens', value: '8192' },
-	{ label: '16,384 tokens', value: '16384' },
-	{ label: '32,768 tokens (default)', value: '32768' },
-	{ label: '65,536 tokens', value: '65536' },
-	{ label: '131,072 tokens (128K)', value: '131072' },
-];
-
 const STORAGE_KEY = 'agentic_admin_context_size';
-const REMOTE_CONTEXT_KEY = 'agentic_admin_remote_context_size';
 
 function getSavedContextSizes() {
 	try {
@@ -133,15 +124,6 @@ const SettingsTab = () => {
 	const [ thinkingPrefs, setThinkingPrefs ] = useState(
 		getSavedThinkingPrefs
 	);
-	const [ remoteContextSize, setRemoteContextSize ] = useState( () => {
-		try {
-			return localStorage.getItem( REMOTE_CONTEXT_KEY ) || '32768';
-		} catch {
-			return '32768';
-		}
-	} );
-	const [ remoteContextSaved, setRemoteContextSaved ] = useState( false );
-
 	// Knowledge Base — read from singleton so state survives tab switches.
 	const [ kbStatus, setKbStatus ] = useState( getKBStatus );
 	const [ kbBuilding, setKbBuilding ] = useState( kbIsBuilding );
@@ -454,63 +436,6 @@ const SettingsTab = () => {
 							);
 						} ) }
 					</div>
-				</CardBody>
-			</Card>
-
-			<Card>
-				<CardHeader>
-					<VStack spacing={ 1 }>
-						<h3 style={ { margin: 0 } }>
-							Remote Provider Context Window
-						</h3>
-						<p>
-							When using a remote LLM provider (Ollama, LM Studio,
-							OpenAI, etc.), this sets the context window size for
-							token tracking. Remote models typically support much
-							larger contexts than local WebLLM models.
-						</p>
-					</VStack>
-				</CardHeader>
-				<CardBody>
-					<VStack spacing={ 3 }>
-						<HStack
-							alignment="end"
-							spacing={ 2 }
-							justify="flex-start"
-						>
-							<SelectControl
-								__nextHasNoMarginBottom
-								label="Remote context window size"
-								value={ remoteContextSize }
-								options={ REMOTE_CONTEXT_OPTIONS }
-								onChange={ ( val ) => {
-									setRemoteContextSize( val );
-									setRemoteContextSaved( false );
-								} }
-							/>
-							<Button
-								variant="primary"
-								onClick={ () => {
-									localStorage.setItem(
-										REMOTE_CONTEXT_KEY,
-										remoteContextSize
-									);
-									setRemoteContextSaved( true );
-									setTimeout(
-										() => setRemoteContextSaved( false ),
-										3000
-									);
-								} }
-							>
-								Save
-							</Button>
-						</HStack>
-						{ remoteContextSaved && (
-							<Notice status="success" isDismissible={ false }>
-								Remote context window updated.
-							</Notice>
-						) }
-					</VStack>
 				</CardBody>
 			</Card>
 

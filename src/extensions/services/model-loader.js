@@ -10,9 +10,55 @@
  */
 
 import * as webllm from '@mlc-ai/web-llm';
+import { applyFilters } from '@wordpress/hooks';
 import { ExternalEngine } from './external-engine';
 import ConnectorEngine from './connector-engine';
 import { createLogger } from '../utils/logger';
+
+/**
+ * Best-effort lookup table of context windows for known remote / connector
+ * model IDs. Matched longest-prefix first so e.g. "gpt-4o-mini" picks up
+ * "gpt-4o" before "gpt-4".
+ *
+ * Extensible at runtime via the @wordpress/hooks filter
+ *   `wpAgenticAdmin.contextWindow`
+ * which receives ( size, modelId, providerMode ) and returns the size to
+ * use. Power users on uncommon models can override without touching the
+ * UI:
+ *
+ *   wp.hooks.addFilter(
+ *     'wpAgenticAdmin.contextWindow',
+ *     'my-plugin',
+ *     ( size, modelId ) => modelId === 'my-custom' ? 128000 : size
+ *   );
+ */
+const KNOWN_REMOTE_CONTEXT_SIZES = [
+	// Anthropic
+	[ 'claude-opus', 200000 ],
+	[ 'claude-sonnet', 200000 ],
+	[ 'claude-haiku', 200000 ],
+	[ 'claude-3', 200000 ],
+	// OpenAI
+	[ 'gpt-4o', 128000 ],
+	[ 'gpt-4-turbo', 128000 ],
+	[ 'gpt-4.1', 1000000 ],
+	[ 'gpt-5', 400000 ],
+	[ 'gpt-4', 8192 ],
+	[ 'gpt-3.5', 16385 ],
+	[ 'o1', 200000 ],
+	[ 'o3', 200000 ],
+	// Google Gemini
+	[ 'gemini-1.5', 1000000 ],
+	[ 'gemini-2', 1000000 ],
+	[ 'gemini-pro', 32768 ],
+	// Groq common
+	[ 'llama-3.3-70b', 128000 ],
+	[ 'llama-3.1-70b', 128000 ],
+	[ 'llama-3.1-8b', 128000 ],
+	[ 'mixtral-8x7b', 32768 ],
+];
+
+const REMOTE_CONTEXT_FALLBACK = 32768;
 
 const log = createLogger( 'ModelLoader' );
 
@@ -1067,19 +1113,25 @@ class ModelLoader {
 			return MODEL_CONTEXT_SIZES[ modelId ];
 		}
 
-		// For remote/unknown models, check the remote context setting
-		try {
-			const remote = localStorage.getItem(
-				'agentic_admin_remote_context_size'
-			);
-			if ( remote ) {
-				return parseInt( remote, 10 );
+		// For remote / connector models: longest-prefix match against the
+		// known-models table, then fall back to a conservative 32k.
+		// Filter `wpAgenticAdmin.contextWindow` lets power users override.
+		let resolved = REMOTE_CONTEXT_FALLBACK;
+		const lower = ( modelId || '' ).toLowerCase();
+		let bestMatch = '';
+		for ( const [ prefix, size ] of KNOWN_REMOTE_CONTEXT_SIZES ) {
+			if ( lower.includes( prefix ) && prefix.length > bestMatch.length ) {
+				bestMatch = prefix;
+				resolved = size;
 			}
-		} catch ( e ) {
-			// Ignore
 		}
 
-		return MODEL_CONTEXT_SIZES.default;
+		return applyFilters(
+			'wpAgenticAdmin.contextWindow',
+			resolved,
+			modelId,
+			'remote'
+		);
 	}
 
 	/**
