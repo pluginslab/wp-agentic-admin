@@ -265,7 +265,7 @@ const CollapsibleCard = ( {
 	const isOpen = forceExpanded || expanded;
 
 	return (
-		<Card size="small">
+		<Card size="small" className="wp-agentic-admin-collapsible">
 			<CardHeader>
 				<Button
 					onClick={ () => setExpanded( ! expanded ) }

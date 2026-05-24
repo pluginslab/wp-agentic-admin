@@ -80,6 +80,30 @@
 	.components-card__body p {
 		margin: 0;
 	}
+
+	// Vertical breathing room between consecutive messages.
+	> * {
+		margin-top: 8px;
+		margin-bottom: 8px;
+
+		&:first-child {
+			margin-top: 0;
+		}
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	// Collapsible Card (Thought process / Ability result) — drop the
+	// CardHeader border-bottom so the header reads as continuous with
+	// the body when expanded. Otherwise the divider competes with the
+	// rest of the message list.
+	.wp-agentic-admin-collapsible {
+		.components-card__header {
+			border-bottom: 0;
+		}
+	}
 }
 
 // Context Warning
@@ -1218,11 +1242,6 @@
 //   .wp-agentic-admin-msg--user  — primary-tinted right-aligned bubble
 //   .wp-agentic-admin-md-table   — bare markdown-table fallback styling
 .wp-agentic-admin-msg--user {
-	// Vertical breathing room between consecutive user bubbles and
-	// the bubble's neighbours above/below.
-	margin-top: 8px;
-	margin-bottom: 8px;
-
 	.components-card__body {
 		background: var(--wp-admin-theme-color, #2271b1);
 		color: #fff;
