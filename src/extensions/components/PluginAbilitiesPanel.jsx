@@ -21,118 +21,6 @@ import abilitiesApi from '../services/abilities-api';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 
 /**
- * TokenBudgetBar — animated bar showing context window usage.
- *
- * @param {Object} props               - Component props.
- * @param {number} props.percentage    - External abilities usage percentage (0-100).
- * @param {number} props.used          - Tokens used by external abilities.
- * @param {number} props.maxContext    - Max context window size.
- * @param {number} props.totalUsed     - Total tokens used across everything.
- * @param {number} props.builtInTokens - Tokens used by built-in tools.
- * @return {JSX.Element} Rendered budget bar.
- */
-const TokenBudgetBar = ( {
-	percentage,
-	used,
-	maxContext,
-	totalUsed,
-	builtInTokens,
-} ) => {
-	const getBarColor = ( pct ) => {
-		if ( pct >= 90 ) {
-			return '#d63638';
-		}
-		if ( pct >= 70 ) {
-			return '#dba617';
-		}
-		if ( pct >= 50 ) {
-			return '#e68a00';
-		}
-		return '#00a32a';
-	};
-
-	const getStatusLabel = ( pct ) => {
-		if ( pct >= 90 ) {
-			return 'Almost full';
-		}
-		if ( pct >= 70 ) {
-			return 'Getting full';
-		}
-		if ( pct >= 50 ) {
-			return 'Half used';
-		}
-		return 'Plenty of room';
-	};
-
-	const reserveTokens = totalUsed - builtInTokens - used;
-	const overallPct = Math.min(
-		Math.round( ( totalUsed / maxContext ) * 100 ),
-		100
-	);
-	const freePct = Math.max( 100 - overallPct, 0 );
-
-	const color = getBarColor( percentage );
-	const status = getStatusLabel( percentage );
-
-	return (
-		<div className="wp-agentic-admin-token-budget">
-			<div className="wp-agentic-admin-token-budget__header">
-				<span className="wp-agentic-admin-token-budget__label">
-					AI Memory Budget
-				</span>
-				<span
-					className="wp-agentic-admin-token-budget__status"
-					style={ { color } }
-				>
-					{ status } — { freePct }% free
-				</span>
-			</div>
-			<div className="wp-agentic-admin-token-budget__bar-container">
-				<div
-					className="wp-agentic-admin-token-budget__bar wp-agentic-admin-token-budget__bar--reserve"
-					style={ {
-						width: `${ Math.round(
-							( reserveTokens / maxContext ) * 100
-						) }%`,
-					} }
-					title={ `Conversation reserve: ~${ reserveTokens }` }
-				/>
-				<div
-					className="wp-agentic-admin-token-budget__bar wp-agentic-admin-token-budget__bar--base"
-					style={ {
-						width: `${ Math.round(
-							( builtInTokens / maxContext ) * 100
-						) }%`,
-					} }
-					title={ `Built-in tools: ~${ builtInTokens }` }
-				/>
-				{ used > 0 && (
-					<div
-						className="wp-agentic-admin-token-budget__bar wp-agentic-admin-token-budget__bar--external"
-						style={ {
-							width: `${ Math.round(
-								( used / maxContext ) * 100
-							) }%`,
-							backgroundColor: color,
-						} }
-						title={ `Plugin abilities: ~${ used }` }
-					/>
-				) }
-			</div>
-			<div className="wp-agentic-admin-token-budget__breakdown">
-				<span>
-					{ totalUsed.toLocaleString() } /{ ' ' }
-					{ maxContext.toLocaleString() } tokens used
-				</span>
-				<span style={ { color } }>
-					Plugins: ~{ used.toLocaleString() }
-				</span>
-			</div>
-		</div>
-	);
-};
-
-/**
  * PluginAbilitiesPanel component
  *
  * @return {JSX.Element} Rendered panel.
@@ -293,19 +181,11 @@ const PluginAbilitiesPanel = () => {
 				</p>
 			</VStack>
 
-			<TokenBudgetBar
-				percentage={ budget.percentage }
-				used={ budget.used }
-				total={ budget.total }
-				maxContext={ budget.maxContext }
-				totalUsed={ budget.totalUsed }
-				builtInTokens={ budget.builtInTokens }
-			/>
-
-			{ budget.percentage >= 90 && (
-				<Notice status="error" isDismissible={ false }>
-					The AI is running low on memory. Turn off some abilities
-					so it has room to think and respond.
+			{ budget.percentage > 25 && (
+				<Notice status="warning" isDismissible={ false }>
+					Enabling these plugin abilities is using a noticeable
+					share of the model&apos;s context window. Disable any
+					you don&apos;t need to keep room for the conversation.
 				</Notice>
 			) }
 
