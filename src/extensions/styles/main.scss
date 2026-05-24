@@ -417,6 +417,14 @@
 // @wordpress/components Button with isPressed / variant="primary" /
 // icon={...}. No bespoke styling needed.
 
+// Bundle DropdownMenu — count suffix (per-bundle ability count) must
+// not wrap onto a second line in the slim ~240px menu.
+.wp-agentic-admin-bundle-count {
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	color: $color-text-faint;
+}
+
 // Voice button (microphone) — speech-to-text input
 .wp-agentic-admin-voice-button {
 	display: flex;

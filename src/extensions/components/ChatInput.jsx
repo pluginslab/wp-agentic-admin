@@ -27,6 +27,7 @@ import {
 	info,
 	pencil,
 	search,
+	check,
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
@@ -146,41 +147,59 @@ const ChatInput = ( {
 	const renderBundleMenu = () => (
 		<>
 			<MenuGroup>
-				{ ABILITY_BUNDLES.map( ( bundle ) => (
-					<MenuItem
-						key={ bundle.id }
-						icon={ BUNDLE_ICONS[ bundle.icon ] || shield }
-						isSelected={ selectedBundleIds.includes( bundle.id ) }
-						role="menuitemcheckbox"
-						onClick={ () => toggleBundle( bundle.id ) }
-						suffix={
-							<span>{ bundle.abilities.length } tools</span>
-						}
-					>
-						{ bundle.label }
-					</MenuItem>
-				) ) }
-			</MenuGroup>
-			{ pluginBundles.length > 0 && (
-				<MenuGroup label="Plugin Abilities">
-					{ pluginBundles.map( ( bundle ) => (
+				{ ABILITY_BUNDLES.map( ( bundle ) => {
+					const selected = selectedBundleIds.includes( bundle.id );
+					return (
 						<MenuItem
 							key={ bundle.id }
-							icon={ bundle.icon ? undefined : plugins }
-							isSelected={ selectedBundleIds.includes(
-								bundle.id
-							) }
+							icon={
+								selected
+									? check
+									: BUNDLE_ICONS[ bundle.icon ] || shield
+							}
+							isSelected={ selected }
 							role="menuitemcheckbox"
 							onClick={ () => toggleBundle( bundle.id ) }
 							suffix={
-								<span>
-									{ bundle.pluginAbilityIds.length } tools
+								<span className="wp-agentic-admin-bundle-count">
+									{ bundle.abilities.length }
 								</span>
 							}
 						>
 							{ bundle.label }
 						</MenuItem>
-					) ) }
+					);
+				} ) }
+			</MenuGroup>
+			{ pluginBundles.length > 0 && (
+				<MenuGroup label="Plugin Abilities">
+					{ pluginBundles.map( ( bundle ) => {
+						const selected = selectedBundleIds.includes(
+							bundle.id
+						);
+						return (
+							<MenuItem
+								key={ bundle.id }
+								icon={
+									selected
+										? check
+										: bundle.icon
+										? undefined
+										: plugins
+								}
+								isSelected={ selected }
+								role="menuitemcheckbox"
+								onClick={ () => toggleBundle( bundle.id ) }
+								suffix={
+									<span className="wp-agentic-admin-bundle-count">
+										{ bundle.pluginAbilityIds.length }
+									</span>
+								}
+							>
+								{ bundle.label }
+							</MenuItem>
+						);
+					} ) }
 				</MenuGroup>
 			) }
 		</>
