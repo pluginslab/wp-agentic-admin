@@ -235,7 +235,6 @@ const ModelStatus = ( {
 		optionsUrl,
 		supported: connectorsSupported,
 		loading: connectorsLoading,
-		refresh: refreshConnectors,
 	} = useConnectors();
 	const [ selectedConnectorId, setSelectedConnectorId ] = useState( '' );
 	const connectedConnectors = connectors.filter( ( c ) => c.is_connected );
@@ -733,13 +732,6 @@ const ModelStatus = ( {
 													Configure connectors in
 													Settings → Connectors
 												</ExternalLink>
-												, then{ ' ' }
-												<Button
-													variant="link"
-													onClick={ refreshConnectors }
-												>
-													refresh this list
-												</Button>
 												.
 											</Notice>
 										) }
