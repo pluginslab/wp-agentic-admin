@@ -95,6 +95,10 @@ const ChatInput = ( {
 		const unionAbilities = selectedBundles
 			.flatMap( ( b ) => b.abilities || b.pluginAbilityIds || [] )
 			.filter( ( v, i, a ) => a.indexOf( v ) === i );
+		const pluginNamespaces = selectedBundles
+			.map( ( b ) => b.pluginNamespace )
+			.filter( Boolean )
+			.filter( ( v, i, a ) => a.indexOf( v ) === i );
 		const first = selectedBundles[ 0 ];
 
 		onSend( trimmedMessage, {
@@ -102,6 +106,7 @@ const ChatInput = ( {
 			bundleId: first?.id || null,
 			bundleIds: selectedBundleIds.length ? selectedBundleIds : null,
 			pluginNamespace: first?.pluginNamespace || null,
+			pluginNamespaces: pluginNamespaces.length ? pluginNamespaces : null,
 			webSearch: webSearchEnabled,
 			docSearch: docSearchEnabled,
 		} );
@@ -218,9 +223,7 @@ const ChatInput = ( {
 					}` }
 					showTooltip
 					isPressed={ webSearchEnabled }
-					onClick={ () =>
-						setWebSearchEnabled( ! webSearchEnabled )
-					}
+					onClick={ () => setWebSearchEnabled( ! webSearchEnabled ) }
 					disabled={ isDisabled }
 				/>
 				<Button
@@ -229,16 +232,12 @@ const ChatInput = ( {
 						! kbIndexReady
 							? 'Knowledge Base: not indexed (build in Settings)'
 							: `Knowledge Base: ${
-									docSearchEnabled
-										? 'active'
-										: 'inactive'
+									docSearchEnabled ? 'active' : 'inactive'
 							  }`
 					}
 					showTooltip
 					isPressed={ docSearchEnabled }
-					onClick={ () =>
-						setDocSearchEnabled( ! docSearchEnabled )
-					}
+					onClick={ () => setDocSearchEnabled( ! docSearchEnabled ) }
 					disabled={ isDisabled || ! kbIndexReady }
 				/>
 				<div style={ { flex: 1, minWidth: 0 } }>

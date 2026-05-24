@@ -434,9 +434,12 @@ const ChatContainer = ( {
 				return;
 			}
 
-			// Scope plugin abilities when a plugin bundle is active
-			if ( options.pluginNamespace ) {
-				pluginAbilitiesManager.scopeToPlugin( options.pluginNamespace );
+			// Scope plugin abilities when one or more plugin bundles are active
+			const namespacesToScope =
+				options.pluginNamespaces ||
+				( options.pluginNamespace ? [ options.pluginNamespace ] : [] );
+			if ( namespacesToScope.length ) {
+				pluginAbilitiesManager.scopeToPlugin( namespacesToScope );
 			}
 
 			// Process message through orchestrator
@@ -445,7 +448,7 @@ const ChatContainer = ( {
 			} catch ( error ) {
 				log.error( 'Error processing message:', error );
 			} finally {
-				if ( options.pluginNamespace ) {
+				if ( namespacesToScope.length ) {
 					pluginAbilitiesManager.clearPluginScope();
 				}
 			}
@@ -780,10 +783,7 @@ const ChatContainer = ( {
 				<Card size="small" role="status" aria-live="polite">
 					<CardBody>
 						<VStack spacing={ 2 }>
-							<HStack
-								justify="space-between"
-								spacing={ 2 }
-							>
+							<HStack justify="space-between" spacing={ 2 }>
 								<strong>
 									Step { workflowProgress.step } of{ ' ' }
 									{ workflowProgress.total }
