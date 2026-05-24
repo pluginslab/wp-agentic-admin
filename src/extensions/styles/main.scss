@@ -703,20 +703,26 @@
 // equivalent (auto-fit responsive grid; __experimentalGrid only supports
 // fixed column counts). Each tile is a Card with header/body/footer;
 // stretch the Card to the grid cell height and let the body grow so
-// the Execute Button always sits at the bottom edge.
+// the Execute Button (in CardFooter) always sits at the bottom edge.
+// !important is needed because @wordpress/components emotion classes
+// win the cascade tie against equal-specificity bundled rules.
 .wp-agentic-admin-ability-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 16px;
 
 	.components-card {
-		display: flex;
-		flex-direction: column;
+		display: flex !important;
+		flex-direction: column !important;
 		height: 100%;
 	}
 
 	.components-card__body {
-		flex: 1;
+		flex: 1 !important;
+	}
+
+	.components-card__footer {
+		margin-top: auto;
 	}
 }
 
