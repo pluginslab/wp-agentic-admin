@@ -705,11 +705,17 @@ const ModelStatus = ( {
 												/>
 												<Button
 													variant="primary"
-													onClick={ () => {
-														// eslint-disable-next-line no-alert -- Connector engine wiring is a follow-up; surface intent for now.
-														window.alert(
-															'Connector engine wiring is not yet implemented. The dropdown above lists connectors WP 7.0 reports as configured; the chat completion path through the AI Client server-side is the next step.'
-														);
+													onClick={ async () => {
+														try {
+															await modelLoader.loadConnector(
+																selectedConnectorId
+															);
+														} catch ( err ) {
+															log.error(
+																'Failed to use connector:',
+																err
+															);
+														}
 													} }
 													disabled={
 														! selectedConnectorId

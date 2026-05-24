@@ -11,6 +11,7 @@
 
 import * as webllm from '@mlc-ai/web-llm';
 import { ExternalEngine } from './external-engine';
+import ConnectorEngine from './connector-engine';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'ModelLoader' );
@@ -562,6 +563,56 @@ class ModelLoader {
 	}
 
 	/**
+	 * Load a model via a WP 7.0 AI Connector (Anthropic, Google, OpenAI,
+	 * or any registered ai_provider plugin). Routes chat completions
+	 * through the PHP AI Client server-side. Non-streaming for now —
+	 * see ConnectorEngine for caveats.
+	 *
+	 * @since 0.13.0
+	 * @param {string} connectorId - WP connector ID (e.g. "anthropic")
+	 * @return {Promise<boolean>} True if loaded.
+	 */
+	async loadConnector( connectorId ) {
+		if ( this.isLoading ) {
+			throw new Error( 'Model is already loading' );
+		}
+
+		this.isLoading = true;
+		this.providerMode = 'connector';
+		this.connectorId = connectorId;
+		this.modelId = connectorId;
+
+		try {
+			this.reportStatus(
+				'loading',
+				`Connecting to ${ connectorId } connector...`
+			);
+			this.reportProgress( 50, 'Connecting to connector...' );
+
+			this.engine = new ConnectorEngine( connectorId );
+
+			this.reportProgress( 100, 'Connector ready!' );
+			this.reportStatus( 'ready', `${ connectorId } connector ready` );
+			this.isReady = true;
+			this.isLoading = false;
+
+			log.info( 'Connector engine loaded:', connectorId );
+			return true;
+		} catch ( err ) {
+			this.isLoading = false;
+			this.isReady = false;
+			this.engine = null;
+			this.providerMode = 'local';
+			this.reportStatus(
+				'error',
+				`Failed to connect to connector: ${ err.message }`
+			);
+			log.error( 'Failed to load connector:', err );
+			throw err;
+		}
+	}
+
+	/**
 	 * Check if using an external provider
 	 *
 	 * @since 0.10.0
@@ -569,6 +620,16 @@ class ModelLoader {
 	 */
 	isExternalProvider() {
 		return this.providerMode === 'remote';
+	}
+
+	/**
+	 * Check if using a WP 7.0 Connector
+	 *
+	 * @since 0.13.0
+	 * @return {boolean} True if using connector provider
+	 */
+	isConnectorProvider() {
+		return this.providerMode === 'connector';
 	}
 
 	/**

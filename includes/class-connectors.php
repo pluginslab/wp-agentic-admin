@@ -47,6 +47,26 @@ class Connectors {
 				'permission_callback' => array( static::class, 'check_permission' ),
 			)
 		);
+
+		\register_rest_route(
+			'wp-agentic-admin/v1',
+			'/connectors/chat/completions',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( static::class, 'chat_completion' ),
+				'permission_callback' => array( static::class, 'check_permission' ),
+				'args'                => array(
+					'connector_id' => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+					'messages'     => array(
+						'required' => true,
+						'type'     => 'array',
+					),
+				),
+			)
+		);
 	}
 
 	/**
@@ -109,5 +129,114 @@ class Connectors {
 		}
 
 		return new \WP_REST_Response( $out, 200 );
+	}
+
+	/**
+	 * POST /v1/connectors/chat/completions — proxy a chat completion through
+	 * the AI Client to a configured connector's provider.
+	 *
+	 * KNOWN LIMITATIONS (documented for honesty, will be addressed in follow-up):
+	 *  - Non-streaming only. AI Client doesn't expose a streaming API for
+	 *    text generation, so this returns the full assistant message at once.
+	 *  - Lossy prompt flattening: messages array is concatenated into a
+	 *    single string ("role: content") rather than passed structurally.
+	 *  - No tool/function calling support yet.
+	 *
+	 * @param \WP_REST_Request $request REST request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public static function chat_completion( \WP_REST_Request $request ) {
+		if ( ! class_exists( '\\WordPress\\AiClient\\AiClient' ) ) {
+			return new \WP_Error(
+				'wpaa_no_ai_client',
+				'WP AI Client is not available (requires WordPress 7.0+).',
+				array( 'status' => 501 )
+			);
+		}
+
+		$connector_id = (string) $request->get_param( 'connector_id' );
+		$messages     = (array) $request->get_param( 'messages' );
+
+		if ( '' === $connector_id || empty( $messages ) ) {
+			return new \WP_Error(
+				'wpaa_bad_request',
+				'connector_id and messages are required.',
+				array( 'status' => 400 )
+			);
+		}
+
+		try {
+			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+			if ( ! $registry->hasProvider( $connector_id ) ) {
+				return new \WP_Error(
+					'wpaa_unknown_connector',
+					sprintf( 'Connector "%s" is not registered with the AI Client.', $connector_id ),
+					array( 'status' => 404 )
+				);
+			}
+			if ( ! $registry->isProviderConfigured( $connector_id ) ) {
+				return new \WP_Error(
+					'wpaa_unconfigured_connector',
+					sprintf( 'Connector "%s" is not configured (missing API key).', $connector_id ),
+					array( 'status' => 400 )
+				);
+			}
+
+			// Flatten messages → single prompt string (lossy).
+			$prompt = self::flatten_messages( $messages );
+
+			$result = \WordPress\AiClient\AiClient::generateTextResult( $prompt );
+			$text   = method_exists( $result, 'toText' ) ? $result->toText() : (string) $result;
+
+			// Return an OpenAI-shaped non-streaming response so the existing
+			// chat orchestrator code path can consume it without changes.
+			$response = array(
+				'id'      => 'chatcmpl-' . wp_generate_uuid4(),
+				'object'  => 'chat.completion',
+				'created' => time(),
+				'model'   => $connector_id,
+				'choices' => array(
+					array(
+						'index'         => 0,
+						'message'       => array(
+							'role'    => 'assistant',
+							'content' => $text,
+						),
+						'finish_reason' => 'stop',
+					),
+				),
+			);
+
+			return new \WP_REST_Response( $response, 200 );
+		} catch ( \Exception $e ) {
+			return new \WP_Error(
+				'wpaa_connector_error',
+				$e->getMessage(),
+				array( 'status' => 500 )
+			);
+		}
+	}
+
+	/**
+	 * Flatten an OpenAI-style messages array into a single prompt string.
+	 *
+	 * Lossy: roles become "User:" / "Assistant:" / "System:" prefixes. The
+	 * structural metadata (tool calls, role identity for multi-turn) is
+	 * lost. Acceptable for a v0 connector POC; should be replaced with
+	 * PromptBuilder structural calls once the AI Client exposes them.
+	 *
+	 * @param array $messages OpenAI-style chat messages.
+	 * @return string
+	 */
+	private static function flatten_messages( array $messages ): string {
+		$lines = array();
+		foreach ( $messages as $msg ) {
+			if ( ! is_array( $msg ) || ! isset( $msg['content'] ) ) {
+				continue;
+			}
+			$role  = isset( $msg['role'] ) ? ucfirst( (string) $msg['role'] ) : 'User';
+			$lines[] = $role . ': ' . (string) $msg['content'];
+		}
+		return implode( "\n\n", $lines );
 	}
 }
