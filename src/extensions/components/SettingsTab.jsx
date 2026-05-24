@@ -7,6 +7,7 @@ import {
 	Button,
 	Card,
 	CardBody,
+	CardFooter,
 	CardHeader,
 	ProgressBar,
 	SelectControl,
@@ -358,115 +359,135 @@ const SettingsTab = () => {
 				</CardBody>
 			</Card>
 
-			<h3>Context Window per Model</h3>
-			<p className="wp-agentic-admin-settings-tab__description">
-				The context window determines how much conversation history and
-				tool data the model can process. Larger windows use more GPU
-				memory for the KV cache. Choose based on your available VRAM.
-			</p>
+			<Card>
+				<CardHeader>
+					<VStack spacing={ 1 }>
+						<h3 style={ { margin: 0 } }>Context Window per Model</h3>
+						<p>
+							The context window determines how much conversation
+							history and tool data the model can process. Larger
+							windows use more GPU memory for the KV cache. Choose
+							based on your available VRAM.
+						</p>
+					</VStack>
+				</CardHeader>
+				<CardBody>
+					<div className="wp-agentic-admin-ability-grid">
+						{ models.map( ( model ) => {
+							const rec = recommendations[ model.id ];
+							const currentDefault =
+								MODEL_CONTEXT_SIZES[ model.id ] ||
+								MODEL_CONTEXT_SIZES.default;
+							const selectedValue =
+								selectedSizes[ model.id ] ||
+								String( currentDefault );
+							const isChanged =
+								parseInt( selectedValue, 10 ) !==
+								( savedSizes[ model.id ] || currentDefault );
 
-			{ models.map( ( model ) => {
-				const rec = recommendations[ model.id ];
-				const currentDefault =
-					MODEL_CONTEXT_SIZES[ model.id ] ||
-					MODEL_CONTEXT_SIZES.default;
-				const selectedValue =
-					selectedSizes[ model.id ] || String( currentDefault );
-				const isChanged =
-					parseInt( selectedValue, 10 ) !==
-					( savedSizes[ model.id ] || currentDefault );
-
-				return (
-					<Card
-						key={ model.id }
-						className="wp-agentic-admin-settings-tab__model-card"
-					>
-						<CardHeader>
-							<h4 style={ { margin: 0 } }>
-								{ model.name }
-								<span className="wp-agentic-admin-settings-tab__model-size">
-									{ model.size } download / { model.vram }{ ' ' }
-									VRAM
-								</span>
-							</h4>
-						</CardHeader>
-						<CardBody>
-							{ rec && (
-								<p className="wp-agentic-admin-settings-tab__reasoning">
-									{ rec.reasoning }
-								</p>
-							) }
-
-							<div className="wp-agentic-admin-settings-tab__controls">
-								<SelectControl
-									label="Context window size"
-									value={ selectedValue }
-									options={ CONTEXT_OPTIONS.map(
-										( opt ) => ( {
-											...opt,
-											label:
-												rec &&
-												String( rec.recommended ) ===
-													opt.value
-													? opt.label +
-													  ' - Recommended'
-													: opt.label,
-										} )
-									) }
-									onChange={ ( val ) =>
-										setSelectedSizes( ( prev ) => ( {
-											...prev,
-											[ model.id ]: val,
-										} ) )
-									}
-								/>
-								<div className="wp-agentic-admin-settings-tab__actions">
-									<Button
-										variant="primary"
-										onClick={ () => handleSave( model.id ) }
-										disabled={ ! isChanged }
-									>
-										Save
-									</Button>
-								</div>
-							</div>
-
-							{ savedNotice === model.id && (
-								<Notice
-									status="success"
-									isDismissible={ false }
-									style={ { marginTop: '12px' } }
+							return (
+								<Card
+									key={ model.id }
+									isBorderless={ false }
+									size="medium"
 								>
-									Context window updated. Changes take effect
-									on next model load.
-								</Notice>
-							) }
-						</CardBody>
-					</Card>
-				);
-			} ) }
-
-			<h3>Remote Provider Context Window</h3>
-			<p className="wp-agentic-admin-settings-tab__description">
-				When using a remote LLM provider (Ollama, LM Studio, OpenAI,
-				etc.), this sets the context window size for token tracking.
-				Remote models typically support much larger contexts than local
-				WebLLM models.
-			</p>
+									<CardHeader>
+										<VStack spacing={ 1 }>
+											<strong>{ model.name }</strong>
+											<span>
+												{ model.size } download /{ ' ' }
+												{ model.vram } VRAM
+											</span>
+										</VStack>
+									</CardHeader>
+									<CardBody>
+										<VStack spacing={ 3 }>
+											{ rec && <p>{ rec.reasoning }</p> }
+											<SelectControl
+												__nextHasNoMarginBottom
+												label="Context window size"
+												value={ selectedValue }
+												options={ CONTEXT_OPTIONS.map(
+													( opt ) => ( {
+														...opt,
+														label:
+															rec &&
+															String(
+																rec.recommended
+															) === opt.value
+																? opt.label +
+																  ' - Recommended'
+																: opt.label,
+													} )
+												) }
+												onChange={ ( val ) =>
+													setSelectedSizes(
+														( prev ) => ( {
+															...prev,
+															[ model.id ]: val,
+														} )
+													)
+												}
+											/>
+											{ savedNotice === model.id && (
+												<Notice
+													status="success"
+													isDismissible={ false }
+												>
+													Saved.
+												</Notice>
+											) }
+										</VStack>
+									</CardBody>
+									<CardFooter>
+										<Button
+											variant="primary"
+											onClick={ () =>
+												handleSave( model.id )
+											}
+											disabled={ ! isChanged }
+										>
+											Save
+										</Button>
+									</CardFooter>
+								</Card>
+							);
+						} ) }
+					</div>
+				</CardBody>
+			</Card>
 
 			<Card>
+				<CardHeader>
+					<VStack spacing={ 1 }>
+						<h3 style={ { margin: 0 } }>
+							Remote Provider Context Window
+						</h3>
+						<p>
+							When using a remote LLM provider (Ollama, LM Studio,
+							OpenAI, etc.), this sets the context window size for
+							token tracking. Remote models typically support much
+							larger contexts than local WebLLM models.
+						</p>
+					</VStack>
+				</CardHeader>
 				<CardBody>
-					<div className="wp-agentic-admin-settings-tab__controls">
-						<SelectControl
-							label="Remote context window size"
-							value={ remoteContextSize }
-							options={ REMOTE_CONTEXT_OPTIONS }
-							onChange={ ( val ) => {
-								setRemoteContextSize( val );
-								setRemoteContextSaved( false );
-							} }
-						/>
-						<div className="wp-agentic-admin-settings-tab__actions">
+					<VStack spacing={ 3 }>
+						<HStack
+							alignment="end"
+							spacing={ 2 }
+							justify="flex-start"
+						>
+							<SelectControl
+								__nextHasNoMarginBottom
+								label="Remote context window size"
+								value={ remoteContextSize }
+								options={ REMOTE_CONTEXT_OPTIONS }
+								onChange={ ( val ) => {
+									setRemoteContextSize( val );
+									setRemoteContextSaved( false );
+								} }
+							/>
 							<Button
 								variant="primary"
 								onClick={ () => {
@@ -483,28 +504,28 @@ const SettingsTab = () => {
 							>
 								Save
 							</Button>
-						</div>
-					</div>
-					{ remoteContextSaved && (
-						<Notice
-							status="success"
-							isDismissible={ false }
-							style={ { marginTop: '12px' } }
-						>
-							Remote context window updated.
-						</Notice>
-					) }
+						</HStack>
+						{ remoteContextSaved && (
+							<Notice status="success" isDismissible={ false }>
+								Remote context window updated.
+							</Notice>
+						) }
+					</VStack>
 				</CardBody>
 			</Card>
 
-			<h3>Thinking Mode</h3>
-			<p className="wp-agentic-admin-settings-tab__description">
-				Qwen 3 models use a thinking step ({ '<think>...</think>' })
-				before responding. Disabling thinking makes responses faster but
-				may reduce reasoning quality.
-			</p>
-
 			<Card>
+				<CardHeader>
+					<VStack spacing={ 1 }>
+						<h3 style={ { margin: 0 } }>Thinking Mode</h3>
+						<p>
+							Qwen 3 models use a thinking step
+							({ '<think>...</think>' }) before responding.
+							Disabling thinking makes responses faster but may
+							reduce reasoning quality.
+						</p>
+					</VStack>
+				</CardHeader>
 				<CardBody>
 					<ToggleControl
 						label="Disable thinking before tool selection"
