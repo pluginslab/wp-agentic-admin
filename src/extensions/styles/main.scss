@@ -726,6 +726,13 @@
 // 20px breathing room from the panel edges.
 .wp-agentic-admin-tab-padded {
 	padding: 20px;
+
+	// WP admin's default styles give h3 a sizeable top margin. Zero
+	// it inside our padded tab so section headings sit flush with the
+	// top padding instead of being pushed further down.
+	h3 {
+		margin-top: 0;
+	}
 }
 
 // Token Budget Bar
