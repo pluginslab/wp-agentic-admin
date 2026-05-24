@@ -10,6 +10,7 @@
  */
 
 import {
+	Button,
 	DropdownMenu,
 	MenuGroup,
 	MenuItem,
@@ -37,20 +38,27 @@ const ModelStatusPill = () => {
 		await modelLoader.unload();
 	};
 
-	// WP-native loading style: just a Spinner + percent.
+	// WP-native loading style: Spinner + percent + Cancel.
 	if ( isLoading ) {
 		return (
 			<HStack
 				alignment="center"
 				spacing={ 2 }
 				justify="flex-start"
-				className="wp-agentic-admin-status-pill"
+				className="wp-agentic-admin-status-pill wp-agentic-admin-status-pill--loading"
 			>
 				<Spinner />
 				<span className="screen-reader-text">
 					{ STATUS_LABEL[ status ] || status }
 				</span>
 				<span>{ Math.round( progress ) }%</span>
+				<Button
+					variant="link"
+					isDestructive
+					onClick={ handleUnload }
+				>
+					Cancel
+				</Button>
 			</HStack>
 		);
 	}

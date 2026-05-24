@@ -498,6 +498,17 @@
 }
 
 // Status Bar
+// Status pill (toolbar) — keep the Spinner vertically centred. WP's
+// Spinner ships with a default 5px margin that breaks alignment with
+// the icon Buttons next to it in the composer toolbar.
+.wp-agentic-admin-status-pill {
+	min-height: 36px; // match toolbar icon Button height
+
+	.components-spinner {
+		margin: 0;
+	}
+}
+
 // Status dot — colored indicator inside the model-status Card.
 // 10px circle; color reflects model state.
 .wp-agentic-admin-status-dot {
