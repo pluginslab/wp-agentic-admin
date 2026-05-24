@@ -333,6 +333,14 @@ class Connectors {
 			);
 		}
 
+		// History must start with a user turn (most providers — Anthropic
+		// in particular — reject leading assistant turns). Drop synthetic
+		// assistant-led messages like the welcome card until the first
+		// real user message.
+		while ( ! empty( $turns ) && 'user' !== $turns[0]['role'] ) {
+			array_shift( $turns );
+		}
+
 		$structural_supported = class_exists( '\\WordPress\\AiClient\\AiClient' )
 			&& class_exists( '\\WordPress\\AiClient\\Messages\\DTO\\Message' )
 			&& class_exists( '\\WordPress\\AiClient\\Messages\\DTO\\MessagePart' )
