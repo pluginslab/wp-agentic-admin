@@ -22,12 +22,25 @@ const log = createLogger( 'ConnectorEngine' );
 
 function getProxyConfig() {
 	const wpData = window.wpAgenticAdmin || {};
-	const restBase = ( wpData.restUrl || '/wp-json/wp-abilities/v1' ).replace(
-		/wp-abilities\/v1\/?$/,
-		''
-	);
+	// Prefer an explicit connectors REST URL when the server provides one.
+	// Otherwise derive from connectorsRestUrl namespace pieces, then fall
+	// back to deriving from restUrl by trimming any trailing /<ns>/v1 segment.
+	if ( wpData.connectorsRestUrl ) {
+		return {
+			proxyBase: wpData.connectorsRestUrl.replace( /\/$/, '' ),
+			nonce: wpData.nonce || '',
+		};
+	}
+
+	const root =
+		wpData.restRoot ||
+		( wpData.restUrl || '/wp-json/wp-abilities/v1' ).replace(
+			/\/?[^/]+\/v\d+\/?$/,
+			''
+		);
+	const base = root.endsWith( '/' ) ? root : `${ root }/`;
 	return {
-		proxyBase: `${ restBase }wp-agentic-admin/v1/connectors`,
+		proxyBase: `${ base }wp-agentic-admin/v1/connectors`,
 		nonce: wpData.nonce || '',
 	};
 }
@@ -36,6 +49,8 @@ function getProxyConfig() {
  * Wraps a non-streaming completion response as an async iterable of one
  * chunk, so callers that requested stream:true don't need a separate
  * code path.
+ *
+ * @param {Object} completion - OpenAI-shaped non-streaming chat completion.
  */
 async function* singleChunkIterable( completion ) {
 	const message = completion?.choices?.[ 0 ]?.message;
@@ -45,7 +60,8 @@ async function* singleChunkIterable( completion ) {
 			{
 				index: 0,
 				delta: { role: 'assistant', content },
-				finish_reason: completion?.choices?.[ 0 ]?.finish_reason || 'stop',
+				finish_reason:
+					completion?.choices?.[ 0 ]?.finish_reason || 'stop',
 			},
 		],
 	};
@@ -68,6 +84,16 @@ class ConnectorEngine {
 	}
 
 	async _createCompletion( params ) {
+		// Tool calling is not yet supported through the connector path.
+		// Surface a single warning per session so ReAct callers don't
+		// silently lose function-calling behaviour.
+		if ( params.tools && params.tools.length && ! this._warnedNoTools ) {
+			this._warnedNoTools = true;
+			log.warn(
+				`Connector engine received ${ params.tools.length } tool(s) but tool calling is not yet supported via WP AI Client connectors. Tools will be ignored for this and subsequent requests in this session. See issue tracker for status.`
+			);
+		}
+
 		const { proxyBase, nonce } = getProxyConfig();
 		const url = `${ proxyBase }/chat/completions`;
 
@@ -89,6 +115,7 @@ class ConnectorEngine {
 				'X-WP-Nonce': nonce,
 			},
 			body: JSON.stringify( body ),
+			signal: params.signal,
 		} );
 
 		if ( ! response.ok ) {
