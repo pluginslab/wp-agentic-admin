@@ -7,15 +7,47 @@
 import { useEffect, useState } from '@wordpress/element';
 import modelLoader from './model-loader';
 
-const readSnapshot = () => ( {
-	status: modelLoader.isModelReady() ? 'ready' : 'not-loaded',
-	message: modelLoader.isModelReady()
-		? 'AI model ready'
-		: 'AI model not loaded',
-	progress: modelLoader.isModelReady() ? 100 : 0,
-	loadedModelInfo: modelLoader.getLoadedModelInfo(),
-	isServiceWorkerMode: modelLoader.isUsingServiceWorker(),
-} );
+const readSnapshot = () => {
+	const ready = modelLoader.isModelReady();
+	// Pull in-flight state so a hook mounting mid-load (e.g. after a
+	// route change) shows the spinner and percent immediately instead
+	// of "Not loaded / 0%" until the next status change fires.
+	const loading = ! ready && Boolean( modelLoader.isLoading );
+	let status;
+	if ( ready ) {
+		status = 'ready';
+	} else if ( loading ) {
+		status = 'loading';
+	} else {
+		status = 'not-loaded';
+	}
+
+	let message;
+	if ( ready ) {
+		message = 'AI model ready';
+	} else if ( loading ) {
+		message = 'Loading AI model...';
+	} else {
+		message = 'AI model not loaded';
+	}
+
+	let progress;
+	if ( ready ) {
+		progress = 100;
+	} else if ( loading ) {
+		progress = Number( modelLoader.loadProgress ) || 0;
+	} else {
+		progress = 0;
+	}
+
+	return {
+		status,
+		message,
+		progress,
+		loadedModelInfo: modelLoader.getLoadedModelInfo(),
+		isServiceWorkerMode: modelLoader.isUsingServiceWorker(),
+	};
+};
 
 const useModelStatus = () => {
 	const [ snapshot, setSnapshot ] = useState( readSnapshot );

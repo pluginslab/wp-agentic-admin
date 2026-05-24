@@ -1113,16 +1113,50 @@ class ModelLoader {
 			return MODEL_CONTEXT_SIZES[ modelId ];
 		}
 
+		// Honour the legacy single-value remote override key that earlier
+		// versions of the settings UI wrote. It applies to every remote
+		// model when set. Log once so power users know to migrate to the
+		// `wpAgenticAdmin.contextWindow` filter.
+		let legacyRemoteOverride = null;
+		try {
+			const legacy = localStorage.getItem(
+				'agentic_admin_remote_context_size'
+			);
+			if ( legacy ) {
+				const parsedLegacy = parseInt( legacy, 10 );
+				if ( Number.isFinite( parsedLegacy ) && parsedLegacy > 0 ) {
+					legacyRemoteOverride = parsedLegacy;
+					if ( ! ModelLoader._warnedLegacyContextKey ) {
+						ModelLoader._warnedLegacyContextKey = true;
+						log.warn(
+							'agentic_admin_remote_context_size localStorage key is deprecated. Use the `wpAgenticAdmin.contextWindow` filter to override remote context windows.'
+						);
+					}
+				}
+			}
+		} catch ( e ) {
+			// Ignore storage errors.
+		}
+
 		// For remote / connector models: longest-prefix match against the
 		// known-models table, then fall back to a conservative 32k.
-		// Filter `wpAgenticAdmin.contextWindow` lets power users override.
-		let resolved = REMOTE_CONTEXT_FALLBACK;
-		const lower = ( modelId || '' ).toLowerCase();
-		let bestMatch = '';
-		for ( const [ prefix, size ] of KNOWN_REMOTE_CONTEXT_SIZES ) {
-			if ( lower.includes( prefix ) && prefix.length > bestMatch.length ) {
-				bestMatch = prefix;
-				resolved = size;
+		// We use startsWith (after stripping a leading provider prefix
+		// like "anthropic/") so ids like "gpt-4" don't false-match
+		// "gpt-4o" or vice versa.
+		let resolved = legacyRemoteOverride ?? REMOTE_CONTEXT_FALLBACK;
+		if ( legacyRemoteOverride === null ) {
+			const lower = ( modelId || '' ).toLowerCase();
+			const slashIdx = lower.indexOf( '/' );
+			const bare = slashIdx >= 0 ? lower.slice( slashIdx + 1 ) : lower;
+			let bestMatch = '';
+			for ( const [ prefix, size ] of KNOWN_REMOTE_CONTEXT_SIZES ) {
+				if (
+					bare.startsWith( prefix ) &&
+					prefix.length > bestMatch.length
+				) {
+					bestMatch = prefix;
+					resolved = size;
+				}
 			}
 		}
 
