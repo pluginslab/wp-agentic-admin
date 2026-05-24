@@ -9,6 +9,7 @@ import {
 	CardBody,
 	CardFooter,
 	CardHeader,
+	FlexBlock,
 	ProgressBar,
 	SelectControl,
 	Notice,
@@ -230,13 +231,16 @@ const SettingsTab = () => {
 							justify="space-between"
 							spacing={ 3 }
 						>
-							<p style={ { flex: 1 } }>
-								Build a local search index from your
-								site&apos;s code, database schema, WordPress
-								API signatures, and reference documentation.
-								The AI assistant automatically consults this
-								knowledge base when answering questions.
-							</p>
+							<FlexBlock>
+								<p style={ { margin: 0 } }>
+									Build a local search index from your
+									site&apos;s code, database schema,
+									WordPress API signatures, and reference
+									documentation. The AI assistant
+									automatically consults this knowledge
+									base when answering questions.
+								</p>
+							</FlexBlock>
 							<HStack spacing={ 2 } justify="flex-end">
 								<Button
 									variant="primary"
