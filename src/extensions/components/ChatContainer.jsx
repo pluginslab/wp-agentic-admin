@@ -31,10 +31,14 @@ import {
 } from '@wordpress/element';
 import {
 	Button,
+	Card,
+	CardBody,
 	Modal,
 	Notice,
+	ProgressBar,
 	Snackbar,
 	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
@@ -773,42 +777,26 @@ const ChatContainer = ( {
 
 			{ /* Workflow progress indicator */ }
 			{ isRunningWorkflow && workflowProgress && (
-				<div className="agentic-message agentic-message--workflow">
-					<div className="agentic-timeline">
-						<div className="agentic-timeline__line" />
-						<div className="agentic-timeline__dot agentic-timeline__dot--workflow" />
-					</div>
-					<div
-						className="agentic-workflow-progress"
-						role="status"
-						aria-live="polite"
-					>
-						<div className="agentic-workflow-progress__header">
-							<span className="agentic-workflow-progress__step">
-								Step { workflowProgress.step } of{ ' ' }
-								{ workflowProgress.total }
-							</span>
-							<span className="agentic-workflow-progress__label">
-								{ workflowProgress.label }
-							</span>
-						</div>
-						<div
-							className="agentic-workflow-progress__bar"
-							role="progressbar"
-							aria-valuenow={ workflowProgress.percentage }
-							aria-valuemin={ 0 }
-							aria-valuemax={ 100 }
-							aria-label={ `Workflow progress: ${ workflowProgress.percentage }%` }
-						>
-							<div
-								className="agentic-workflow-progress__fill"
-								style={ {
-									width: `${ workflowProgress.percentage }%`,
-								} }
+				<Card size="small" role="status" aria-live="polite">
+					<CardBody>
+						<VStack spacing={ 2 }>
+							<HStack
+								justify="space-between"
+								spacing={ 2 }
+							>
+								<strong>
+									Step { workflowProgress.step } of{ ' ' }
+									{ workflowProgress.total }
+								</strong>
+								<span>{ workflowProgress.label }</span>
+							</HStack>
+							<ProgressBar
+								value={ workflowProgress.percentage }
+								aria-label={ `Workflow progress: ${ workflowProgress.percentage }%` }
 							/>
-						</div>
-					</div>
-				</div>
+						</VStack>
+					</CardBody>
+				</Card>
 			) }
 
 			<ChatInput
