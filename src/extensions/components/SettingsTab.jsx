@@ -527,32 +527,36 @@ const SettingsTab = () => {
 					</VStack>
 				</CardHeader>
 				<CardBody>
-					<ToggleControl
-						label="Disable thinking before tool selection"
-						help="Skip the reasoning step when the model decides which tool to call. Faster but may pick the wrong tool for complex requests."
-						checked={ thinkingPrefs.disableThinkingBeforeTool }
-						onChange={ ( val ) => {
-							const updated = {
-								...thinkingPrefs,
-								disableThinkingBeforeTool: val,
-							};
-							setThinkingPrefs( updated );
-							saveThinkingPrefs( updated );
-						} }
-					/>
-					<ToggleControl
-						label="Disable thinking after tool results"
-						help="Skip the reasoning step when the model summarizes tool output. Faster responses after tool execution."
-						checked={ thinkingPrefs.disableThinkingAfterTool }
-						onChange={ ( val ) => {
-							const updated = {
-								...thinkingPrefs,
-								disableThinkingAfterTool: val,
-							};
-							setThinkingPrefs( updated );
-							saveThinkingPrefs( updated );
-						} }
-					/>
+					<VStack spacing={ 3 }>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label="Disable thinking before tool selection"
+							help="Skip the reasoning step when the model decides which tool to call. Faster but may pick the wrong tool for complex requests."
+							checked={ thinkingPrefs.disableThinkingBeforeTool }
+							onChange={ ( val ) => {
+								const updated = {
+									...thinkingPrefs,
+									disableThinkingBeforeTool: val,
+								};
+								setThinkingPrefs( updated );
+								saveThinkingPrefs( updated );
+							} }
+						/>
+						<ToggleControl
+							__nextHasNoMarginBottom
+							label="Disable thinking after tool results"
+							help="Skip the reasoning step when the model summarizes tool output. Faster responses after tool execution."
+							checked={ thinkingPrefs.disableThinkingAfterTool }
+							onChange={ ( val ) => {
+								const updated = {
+									...thinkingPrefs,
+									disableThinkingAfterTool: val,
+								};
+								setThinkingPrefs( updated );
+								saveThinkingPrefs( updated );
+							} }
+						/>
+					</VStack>
 				</CardBody>
 			</Card>
 		</div>
