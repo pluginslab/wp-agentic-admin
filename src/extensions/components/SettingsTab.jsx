@@ -224,81 +224,84 @@ const SettingsTab = () => {
 					<h3 style={ { margin: 0 } }>Knowledge Base</h3>
 				</CardHeader>
 				<CardBody>
-					<p
-						className="wp-agentic-admin-settings-tab__description"
-						style={ { marginTop: 0 } }
-					>
-						Build a local search index from your site&apos;s code,
-						database schema, WordPress API signatures, and reference
-						documentation. The AI assistant automatically consults
-						this knowledge base when answering questions.
-					</p>
-
-					{ kbStatus && ! kbBuilding && (
-						<VStack spacing={ 2 }>
-							<InfoRow label="Last built">
-								{ timeAgo( kbStatus.lastIndexed ) }
-							</InfoRow>
-							<InfoRow label="Total chunks">
-								{ kbStatus.totalChunks.toLocaleString() }
-							</InfoRow>
-							<InfoRow label="Code files">
-								{ kbStatus.codeFiles }
-							</InfoRow>
-							<InfoRow label="DB tables">
-								{ kbStatus.schemaTables }
-							</InfoRow>
-							<InfoRow label="API signatures">
-								{ kbStatus.apiChunks } chunks
-							</InfoRow>
-							<InfoRow label="Reference docs">
-								{ kbStatus.docsChunks } chunks
-							</InfoRow>
-						</VStack>
-					) }
-
-					{ kbBuilding && kbProgress && (
-						<VStack spacing={ 2 }>
-							<p style={ { margin: 0 } }>
-								{ kbProgress.message }
+					<VStack spacing={ 3 }>
+						<HStack
+							alignment="center"
+							justify="space-between"
+							spacing={ 3 }
+						>
+							<p style={ { flex: 1 } }>
+								Build a local search index from your
+								site&apos;s code, database schema, WordPress
+								API signatures, and reference documentation.
+								The AI assistant automatically consults this
+								knowledge base when answering questions.
 							</p>
-							<ProgressBar value={ kbProgress.percent } />
-						</VStack>
-					) }
+							<HStack spacing={ 2 } justify="flex-end">
+								<Button
+									variant="primary"
+									onClick={ handleBuildIndex }
+									disabled={ kbBuilding }
+									isBusy={ kbBuilding }
+								>
+									{ kbStatus
+										? 'Rebuild Index'
+										: 'Build Index' }
+								</Button>
+								{ kbStatus && ! kbBuilding && (
+									<Button
+										variant="tertiary"
+										isDestructive
+										onClick={ handleClearIndex }
+									>
+										Clear Index
+									</Button>
+								) }
+							</HStack>
+						</HStack>
 
-					{ kbError && (
-						<Notice
-							status="error"
-							isDismissible={ true }
-							onDismiss={ () => setKbError( null ) }
-							style={ { marginBottom: '12px' } }
-						>
-							{ kbError }
-						</Notice>
-					) }
-
-					<div
-						className="wp-agentic-admin-settings-tab__actions"
-						style={ { display: 'flex', gap: '8px' } }
-					>
-						<Button
-							variant="primary"
-							onClick={ handleBuildIndex }
-							disabled={ kbBuilding }
-							isBusy={ kbBuilding }
-						>
-							{ kbStatus ? 'Rebuild Index' : 'Build Index' }
-						</Button>
 						{ kbStatus && ! kbBuilding && (
-							<Button
-								variant="tertiary"
-								isDestructive
-								onClick={ handleClearIndex }
-							>
-								Clear Index
-							</Button>
+							<VStack spacing={ 2 }>
+								<InfoRow label="Last built">
+									{ timeAgo( kbStatus.lastIndexed ) }
+								</InfoRow>
+								<InfoRow label="Total chunks">
+									{ kbStatus.totalChunks.toLocaleString() }
+								</InfoRow>
+								<InfoRow label="Code files">
+									{ kbStatus.codeFiles }
+								</InfoRow>
+								<InfoRow label="DB tables">
+									{ kbStatus.schemaTables }
+								</InfoRow>
+								<InfoRow label="API signatures">
+									{ kbStatus.apiChunks } chunks
+								</InfoRow>
+								<InfoRow label="Reference docs">
+									{ kbStatus.docsChunks } chunks
+								</InfoRow>
+							</VStack>
 						) }
-					</div>
+
+						{ kbBuilding && kbProgress && (
+							<VStack spacing={ 2 }>
+								<p style={ { margin: 0 } }>
+									{ kbProgress.message }
+								</p>
+								<ProgressBar value={ kbProgress.percent } />
+							</VStack>
+						) }
+
+						{ kbError && (
+							<Notice
+								status="error"
+								isDismissible={ true }
+								onDismiss={ () => setKbError( null ) }
+							>
+								{ kbError }
+							</Notice>
+						) }
+					</VStack>
 				</CardBody>
 			</Card>
 
