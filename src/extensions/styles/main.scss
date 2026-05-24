@@ -425,6 +425,19 @@
 	color: $color-text-faint;
 }
 
+// Multi-select DropdownMenu: give selected rows a tinted accent
+// background so they're clearly distinguishable from the keyboard
+// focus outline that lands on the first item when the menu opens.
+// Targets aria-checked because we set role="menuitemcheckbox".
+.components-menu-item[aria-checked='true'] {
+	background: $color-info-bg;
+	color: $color-accent;
+
+	&:hover {
+		background: $color-info-bg;
+	}
+}
+
 // Voice button (microphone) — speech-to-text input
 .wp-agentic-admin-voice-button {
 	display: flex;
