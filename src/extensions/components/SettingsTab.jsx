@@ -10,6 +10,7 @@ import {
 	CardFooter,
 	CardHeader,
 	FlexBlock,
+	FlexItem,
 	ProgressBar,
 	SelectControl,
 	Notice,
@@ -241,27 +242,29 @@ const SettingsTab = () => {
 									base when answering questions.
 								</p>
 							</FlexBlock>
-							<HStack spacing={ 2 } justify="flex-end">
-								<Button
-									variant="primary"
-									onClick={ handleBuildIndex }
-									disabled={ kbBuilding }
-									isBusy={ kbBuilding }
-								>
-									{ kbStatus
-										? 'Rebuild Index'
-										: 'Build Index' }
-								</Button>
-								{ kbStatus && ! kbBuilding && (
+							<FlexItem>
+								<HStack spacing={ 2 } justify="flex-end">
 									<Button
-										variant="tertiary"
-										isDestructive
-										onClick={ handleClearIndex }
+										variant="primary"
+										onClick={ handleBuildIndex }
+										disabled={ kbBuilding }
+										isBusy={ kbBuilding }
 									>
-										Clear Index
+										{ kbStatus
+											? 'Rebuild Index'
+											: 'Build Index' }
 									</Button>
-								) }
-							</HStack>
+									{ kbStatus && ! kbBuilding && (
+										<Button
+											variant="tertiary"
+											isDestructive
+											onClick={ handleClearIndex }
+										>
+											Clear Index
+										</Button>
+									) }
+								</HStack>
+							</FlexItem>
 						</HStack>
 
 						{ kbStatus && ! kbBuilding && (
