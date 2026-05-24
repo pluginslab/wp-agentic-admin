@@ -176,78 +176,72 @@ const ChatInput = ( {
 				rows={ 3 }
 				disabled={ isDisabled }
 			/>
-			<HStack justify="space-between" spacing={ 2 }>
-				<HStack justify="flex-start" spacing={ 1 }>
-					<DropdownMenu
-						icon={ plus }
-						label="Select ability bundle"
-						popoverProps={ {
-							placement: 'top-start',
-							shift: true,
-						} }
-						toggleProps={ { disabled: isDisabled } }
-					>
-						{ renderBundleMenu }
-					</DropdownMenu>
-					<Button
-						icon={ globe }
-						label={ `Web Search: ${
-							webSearchEnabled ? 'active' : 'inactive'
-						}` }
-						showTooltip
-						isPressed={ webSearchEnabled }
-						onClick={ () =>
-							setWebSearchEnabled( ! webSearchEnabled )
-						}
-						disabled={ isDisabled }
-					/>
-					<Button
-						icon={ search }
-						label={
-							! kbIndexReady
-								? 'Knowledge Base: not indexed (build in Settings)'
-								: `Knowledge Base: ${
-										docSearchEnabled
-											? 'active'
-											: 'inactive'
-								  }`
-						}
-						showTooltip
-						isPressed={ docSearchEnabled }
-						onClick={ () =>
-							setDocSearchEnabled( ! docSearchEnabled )
-						}
-						disabled={ isDisabled || ! kbIndexReady }
-					/>
-					{ selectedBundle && (
-						<HStack
-							spacing={ 1 }
-							className="wp-agentic-admin-bundle-pill"
-						>
-							<span>{ selectedBundle.label }</span>
-							<Button
-								size="small"
-								icon={ closeSmall }
-								label={ `Remove ${ selectedBundle.label }` }
-								onClick={ () => setSelectedBundle( null ) }
-							/>
-						</HStack>
-					) }
-				</HStack>
-				<HStack
-					alignment="center"
-					spacing={ 2 }
-					justify="flex-end"
+			<HStack alignment="center" spacing={ 2 } justify="flex-start">
+				<DropdownMenu
+					icon={ plus }
+					label="Select ability bundle"
+					popoverProps={ {
+						placement: 'top-start',
+						shift: true,
+					} }
+					toggleProps={ { disabled: isDisabled } }
 				>
+					{ renderBundleMenu }
+				</DropdownMenu>
+				<Button
+					icon={ globe }
+					label={ `Web Search: ${
+						webSearchEnabled ? 'active' : 'inactive'
+					}` }
+					showTooltip
+					isPressed={ webSearchEnabled }
+					onClick={ () =>
+						setWebSearchEnabled( ! webSearchEnabled )
+					}
+					disabled={ isDisabled }
+				/>
+				<Button
+					icon={ search }
+					label={
+						! kbIndexReady
+							? 'Knowledge Base: not indexed (build in Settings)'
+							: `Knowledge Base: ${
+									docSearchEnabled
+										? 'active'
+										: 'inactive'
+							  }`
+					}
+					showTooltip
+					isPressed={ docSearchEnabled }
+					onClick={ () =>
+						setDocSearchEnabled( ! docSearchEnabled )
+					}
+					disabled={ isDisabled || ! kbIndexReady }
+				/>
+				{ selectedBundle && (
+					<HStack
+						spacing={ 1 }
+						className="wp-agentic-admin-bundle-pill"
+					>
+						<span>{ selectedBundle.label }</span>
+						<Button
+							size="small"
+							icon={ closeSmall }
+							label={ `Remove ${ selectedBundle.label }` }
+							onClick={ () => setSelectedBundle( null ) }
+						/>
+					</HStack>
+				) }
+				<div style={ { flex: 1, minWidth: 0 } }>
 					<ModelStatusPill />
-					<Button
-						icon={ send }
-						label="Send message"
-						variant="primary"
-						onClick={ handleSubmit }
-						disabled={ ! canSend }
-					/>
-				</HStack>
+				</div>
+				<Button
+					icon={ send }
+					label="Send message"
+					variant="primary"
+					onClick={ handleSubmit }
+					disabled={ ! canSend }
+				/>
 			</HStack>
 		</VStack>
 	);
