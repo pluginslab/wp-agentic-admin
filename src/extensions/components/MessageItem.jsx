@@ -288,7 +288,7 @@ const CollapsibleCard = ( {
 };
 
 const MessageItem = ( { message, onAction } ) => {
-	const { type, content, timestamp, prefillTps, decodeTps } = message;
+	const { type, content, timestamp } = message;
 	const [ copied, setCopied ] = useState( false );
 
 	const handleCopy = async () => {
@@ -444,13 +444,7 @@ const MessageItem = ( { message, onAction } ) => {
 							</VStack>
 						) }
 						<HStack justify="space-between" spacing={ 2 }>
-							<small>
-								{ formatTime( timestamp ) }
-								{ decodeTps &&
-									( prefillTps
-										? ` · PS ${ prefillTps } t/s · GS ${ decodeTps } t/s`
-										: ` · GS ${ decodeTps } t/s` ) }
-							</small>
+							<small>{ formatTime( timestamp ) }</small>
 							<Button
 								size="small"
 								variant="tertiary"
