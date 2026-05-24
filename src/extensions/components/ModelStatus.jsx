@@ -518,67 +518,58 @@ const ModelStatus = ( {
 									? 'Loading'
 									: 'Not loaded' }
 							</span>
-							<VStack spacing={ 1 }>
-								<strong>
-									{ status === 'ready' && loadedModelInfo
-										? `${ loadedModelInfo.name } ready`
-										: message }
-								</strong>
-								{ status === 'ready' && loadedModelInfo && (
-									<HStack
-										alignment="center"
-										spacing={ 2 }
-										justify="flex-start"
-									>
-										{ loadedModelInfo.mode ===
-											'external' && (
-											<span title="Connected to external API">
-												Remote
+							<strong>
+								{ status === 'ready' && loadedModelInfo
+									? `${ loadedModelInfo.name } ready`
+									: message }
+							</strong>
+							{ status === 'ready' && loadedModelInfo && (
+								<>
+									{ loadedModelInfo.mode === 'external' && (
+										<span title="Connected to external API">
+											Remote
+										</span>
+									) }
+									{ isServiceWorkerMode && (
+										<span title="Model persists across page navigations">
+											Persistent
+										</span>
+									) }
+									{ gpuInfo &&
+										gpuInfo.device !== 'Unknown' && (
+											<span>
+												{ gpuInfo.device }
+												{ gpuInfo.vendor !==
+													'Unknown' &&
+													` (${ gpuInfo.vendor })` }
 											</span>
 										) }
-										{ isServiceWorkerMode && (
-											<span title="Model persists across page navigations">
-												● Persistent
-											</span>
+									{ memoryStats?.available &&
+										memoryStats?.formatted && (
+											<span>{ memoryStats.formatted }</span>
 										) }
-										{ gpuInfo &&
-											gpuInfo.device !== 'Unknown' && (
-												<span>
-													{ gpuInfo.device }
-													{ gpuInfo.vendor !==
-														'Unknown' &&
-														` (${ gpuInfo.vendor })` }
-												</span>
-											) }
-										{ memoryStats?.available &&
-											memoryStats?.formatted && (
-												<span>
-													{ memoryStats.formatted }
-												</span>
-											) }
-										{ contextUsage && (
-											<HStack
-												alignment="center"
-												spacing={ 1 }
+									{ contextUsage && (
+										<>
+											<span>
+												Context{ ' ' }
+												{ contextUsage.used.toLocaleString() }
+												/
+												{ contextUsage.max.toLocaleString() }
+											</span>
+											<div
+												className="wp-agentic-admin-status-progress"
+												aria-label={ `Context usage: ${ contextUsage.percentage }%` }
 											>
-												<span>Context:</span>
 												<ProgressBar
 													value={
 														contextUsage.percentage
 													}
-													aria-label={ `Context usage: ${ contextUsage.percentage }%` }
 												/>
-												<span>
-													{ contextUsage.used.toLocaleString() }
-													/
-													{ contextUsage.max.toLocaleString() }{ ' ' }
-													({ contextUsage.percentage }%)
-												</span>
-											</HStack>
-										) }
-									</HStack>
-								) }
-							</VStack>
+											</div>
+										</>
+									) }
+								</>
+							) }
 
 							{ status === 'checking' && <Spinner /> }
 

@@ -27,7 +27,7 @@ import {
 	post,
 	info,
 	edit,
-	book,
+	search,
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
@@ -201,7 +201,7 @@ const ChatInput = ( {
 						disabled={ isDisabled }
 					/>
 					<Button
-						icon={ book }
+						icon={ search }
 						label={
 							! kbIndexReady
 								? 'Knowledge Base: not indexed (build in Settings)'

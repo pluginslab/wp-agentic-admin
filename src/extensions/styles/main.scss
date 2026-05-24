@@ -489,6 +489,14 @@
 	}
 }
 
+// Inline ProgressBar in the model-status row needs a constrained width —
+// ProgressBar defaults to filling its parent flex item, which makes it
+// expand the whole status bar. Cap it so it stays inline.
+.wp-agentic-admin-status-progress {
+	width: 80px;
+	flex-shrink: 0;
+}
+
 // Confirm Dialog
 .wp-agentic-admin-confirm {
 	position: fixed;
