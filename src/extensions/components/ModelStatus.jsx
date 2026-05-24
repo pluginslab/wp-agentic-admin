@@ -11,15 +11,18 @@ import {
 	Button,
 	Card,
 	CardBody,
+	ExternalLink,
 	Notice,
 	ProgressBar,
 	SelectControl,
+	Spinner,
 	TextControl,
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
+import useConnectors from '../services/use-connectors';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
@@ -225,6 +228,17 @@ const ModelStatus = ( {
 	);
 	const [ isFetchingModels, setIsFetchingModels ] = useState( false );
 	const [ fetchError, setFetchError ] = useState( '' );
+
+	// WP 7.0 AI Connectors (third provider option).
+	const {
+		connectors,
+		optionsUrl,
+		supported: connectorsSupported,
+		loading: connectorsLoading,
+		refresh: refreshConnectors,
+	} = useConnectors();
+	const [ selectedConnectorId, setSelectedConnectorId ] = useState( '' );
+	const connectedConnectors = connectors.filter( ( c ) => c.is_connected );
 
 	const availableModels = ModelLoader.getAvailableModels();
 
@@ -489,6 +503,12 @@ const ModelStatus = ( {
 									value="remote"
 									label="Remote (API)"
 								/>
+								{ connectorsSupported && (
+									<ToggleGroupControlOption
+										value="connector"
+										label="Connector (WP 7.0)"
+									/>
+								) }
 							</ToggleGroupControl>
 
 							{ providerMode === 'local' && (
@@ -648,6 +668,91 @@ const ModelStatus = ( {
 										the base URL and fetch available
 										models. API keys are stored in your
 										browser only.
+									</Notice>
+								</VStack>
+							) }
+
+							{ providerMode === 'connector' && (
+								<VStack spacing={ 3 }>
+									{ connectorsLoading && <Spinner /> }
+									{ ! connectorsLoading &&
+										connectedConnectors.length > 0 && (
+											<HStack
+												alignment="end"
+												spacing={ 2 }
+												justify="flex-start"
+											>
+												<SelectControl
+													__nextHasNoMarginBottom
+													label="Connector"
+													value={ selectedConnectorId }
+													options={ [
+														{
+															value: '',
+															label: 'Choose…',
+															disabled: true,
+														},
+														...connectedConnectors.map(
+															( c ) => ( {
+																value: c.id,
+																label: c.name,
+															} )
+														),
+													] }
+													onChange={ ( id ) =>
+														setSelectedConnectorId(
+															id
+														)
+													}
+												/>
+												<Button
+													variant="primary"
+													onClick={ () => {
+														// eslint-disable-next-line no-alert -- Connector engine wiring is a follow-up; surface intent for now.
+														window.alert(
+															'Connector engine wiring is not yet implemented. The dropdown above lists connectors WP 7.0 reports as configured; the chat completion path through the AI Client server-side is the next step.'
+														);
+													} }
+													disabled={
+														! selectedConnectorId
+													}
+												>
+													Use this connector
+												</Button>
+											</HStack>
+										) }
+									{ ! connectorsLoading &&
+										connectedConnectors.length === 0 && (
+											<Notice
+												status="info"
+												isDismissible={ false }
+											>
+												No AI Connectors are configured
+												yet.{ ' ' }
+												<ExternalLink href={ optionsUrl }>
+													Configure connectors in
+													Settings → Connectors
+												</ExternalLink>
+												, then{ ' ' }
+												<Button
+													variant="link"
+													onClick={ refreshConnectors }
+												>
+													refresh this list
+												</Button>
+												.
+											</Notice>
+										) }
+									<Notice
+										status="info"
+										isDismissible={ false }
+									>
+										WP 7.0 ships a built-in AI Connector
+										API. Any connector plugin you install
+										and authenticate appears here
+										automatically — Anthropic, Google,
+										OpenAI, and any third-party
+										ai_provider.
 									</Notice>
 								</VStack>
 							) }
