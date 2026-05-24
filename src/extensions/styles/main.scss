@@ -104,7 +104,31 @@
 			border-bottom: 0;
 		}
 	}
+
+	// Dark-themed <pre> blocks for ability-result JSON dumps, code
+	// payloads, etc. Matches the high-contrast look of a code editor
+	// against the otherwise light WP admin chrome.
+	pre {
+		margin: 0;
+		padding: 12px 14px;
+		background: #1d2327;
+		color: #e2e8f0;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+		font-size: 12.5px;
+		line-height: 1.55;
+		border-radius: 4px;
+		overflow-x: auto;
+		white-space: pre;
+
+		code {
+			background: transparent;
+			color: inherit;
+			padding: 0;
+			font: inherit;
+		}
+	}
 }
+
 
 // Context Warning
 .wp-agentic-admin-context-warning {
@@ -1392,10 +1416,26 @@
 // FileView body — scrollable monospace area inside the @wordpress
 // CardBody. Only the scroll + max-height + tab-size behavior remains;
 // fonts and colors come from the Card primitive.
+// Dark-themed scrollable monospace body inside the FileView Card —
+// same look as <pre> inside .wp-agentic-admin-messages.
 .wp-agentic-admin-file-view-body {
 	margin: 0;
 	overflow-x: auto;
 	max-height: 480px;
 	white-space: pre;
 	tab-size: 4;
+	background: #1d2327;
+	color: #e2e8f0;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 12.5px;
+	line-height: 1.55;
+	border-radius: 4px;
+	padding: 12px 14px;
+
+	code {
+		background: transparent;
+		color: inherit;
+		padding: 0;
+		font: inherit;
+	}
 }
