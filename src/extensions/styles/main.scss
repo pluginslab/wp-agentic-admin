@@ -717,6 +717,16 @@
 		height: 100%;
 	}
 
+	// Card wraps its children in an emotion-generated <div> (no public
+	// class) that is NOT a flex container by default. The CardBody
+	// flex:1 / CardFooter margin-top:auto rules below are no-ops
+	// unless we make this wrapper a vertical flex column.
+	.components-card > div {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
 	.components-card__body {
 		flex: 1 !important;
 	}
