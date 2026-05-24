@@ -552,15 +552,6 @@
 	}
 }
 
-// Bundle pill — label + dismiss
-// Bundle pill — wrapper around selected bundle label + dismiss
-// button. Only the accent color remains; layout comes from HStack
-// and the dismiss is a @wordpress/components Button.
-.wp-agentic-admin-bundle-pill {
-	font-size: 13px;
-	font-weight: 600;
-	color: $color-accent;
-}
 
 // Status Bar
 // Status pill (toolbar) — keep the Spinner vertically centred. WP's

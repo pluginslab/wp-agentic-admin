@@ -18,7 +18,6 @@ import {
 import {
 	plus,
 	send,
-	closeSmall,
 	shield,
 	globe,
 	plugins,
@@ -51,7 +50,9 @@ const ChatInput = ( {
 	defaultBundle = null,
 } ) => {
 	const [ message, setMessage ] = useState( '' );
-	const [ selectedBundle, setSelectedBundle ] = useState( null );
+	// Multi-select: an ordered list of bundle ids the user has toggled on
+	// via the "+" DropdownMenu. Clicking a row toggles its membership.
+	const [ selectedBundleIds, setSelectedBundleIds ] = useState( [] );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
 	const [ docSearchEnabled, setDocSearchEnabled ] = useState( false );
 	const [ kbIndexReady, setKbIndexReady ] = useState( false );
@@ -79,8 +80,8 @@ const ChatInput = ( {
 	}, [] );
 
 	useEffect( () => {
-		if ( defaultBundle && ! selectedBundle ) {
-			setSelectedBundle( defaultBundle );
+		if ( defaultBundle && selectedBundleIds.length === 0 ) {
+			setSelectedBundleIds( [ defaultBundle.id ] );
 		}
 	}, [ defaultBundle ] ); // eslint-disable-line react-hooks/exhaustive-deps -- only react to defaultBundle changes
 
@@ -90,16 +91,39 @@ const ChatInput = ( {
 		}
 	}, [ disabled ] );
 
+	const allBundles = [ ...ABILITY_BUNDLES, ...pluginBundles ];
+	const selectedBundles = selectedBundleIds
+		.map( ( id ) => allBundles.find( ( b ) => b.id === id ) )
+		.filter( Boolean );
+
+	const toggleBundle = ( bundleId ) => {
+		setSelectedBundleIds( ( prev ) =>
+			prev.includes( bundleId )
+				? prev.filter( ( id ) => id !== bundleId )
+				: [ ...prev, bundleId ]
+		);
+	};
+
 	const handleSubmit = () => {
 		const trimmedMessage = message.trim();
 		if ( ! trimmedMessage || disabled || isLoading ) {
 			return;
 		}
 
+		// Union the abilities + plugin-ability ids across every selected
+		// bundle, preserving the order the user selected them in. Single
+		// bundleId/pluginNamespace remain set for downstream code that
+		// still expects the old shape; they refer to the FIRST selection.
+		const unionAbilities = selectedBundles
+			.flatMap( ( b ) => b.abilities || b.pluginAbilityIds || [] )
+			.filter( ( v, i, a ) => a.indexOf( v ) === i );
+		const first = selectedBundles[ 0 ];
+
 		onSend( trimmedMessage, {
-			bundleToolIds: selectedBundle?.abilities || null,
-			bundleId: selectedBundle?.id || null,
-			pluginNamespace: selectedBundle?.pluginNamespace || null,
+			bundleToolIds: unionAbilities.length ? unionAbilities : null,
+			bundleId: first?.id || null,
+			bundleIds: selectedBundleIds.length ? selectedBundleIds : null,
+			pluginNamespace: first?.pluginNamespace || null,
 			webSearch: webSearchEnabled,
 			docSearch: docSearchEnabled,
 		} );
@@ -116,19 +140,22 @@ const ChatInput = ( {
 	const isDisabled = disabled || isLoading;
 	const canSend = message.trim().length > 0 && ! isDisabled;
 
-	const renderBundleMenu = ( { onClose } ) => (
+	// Multi-select menu: clicking a row toggles it. The menu stays open
+	// so the user can flip several at once. Selected rows show a check
+	// via MenuItem's isSelected prop.
+	const renderBundleMenu = () => (
 		<>
 			<MenuGroup>
 				{ ABILITY_BUNDLES.map( ( bundle ) => (
 					<MenuItem
 						key={ bundle.id }
 						icon={ BUNDLE_ICONS[ bundle.icon ] || shield }
-						isSelected={ selectedBundle?.id === bundle.id }
-						onClick={ () => {
-							setSelectedBundle( bundle );
-							onClose();
-						} }
-						suffix={ <span>{ bundle.abilities.length } tools</span> }
+						isSelected={ selectedBundleIds.includes( bundle.id ) }
+						role="menuitemcheckbox"
+						onClick={ () => toggleBundle( bundle.id ) }
+						suffix={
+							<span>{ bundle.abilities.length } tools</span>
+						}
 					>
 						{ bundle.label }
 					</MenuItem>
@@ -140,11 +167,11 @@ const ChatInput = ( {
 						<MenuItem
 							key={ bundle.id }
 							icon={ bundle.icon ? undefined : plugins }
-							isSelected={ selectedBundle?.id === bundle.id }
-							onClick={ () => {
-								setSelectedBundle( bundle );
-								onClose();
-							} }
+							isSelected={ selectedBundleIds.includes(
+								bundle.id
+							) }
+							role="menuitemcheckbox"
+							onClick={ () => toggleBundle( bundle.id ) }
 							suffix={
 								<span>
 									{ bundle.pluginAbilityIds.length } tools
@@ -218,20 +245,6 @@ const ChatInput = ( {
 					}
 					disabled={ isDisabled || ! kbIndexReady }
 				/>
-				{ selectedBundle && (
-					<HStack
-						spacing={ 1 }
-						className="wp-agentic-admin-bundle-pill"
-					>
-						<span>{ selectedBundle.label }</span>
-						<Button
-							size="small"
-							icon={ closeSmall }
-							label={ `Remove ${ selectedBundle.label }` }
-							onClick={ () => setSelectedBundle( null ) }
-						/>
-					</HStack>
-				) }
 				<div style={ { flex: 1, minWidth: 0 } }>
 					<ModelStatusPill />
 				</div>
