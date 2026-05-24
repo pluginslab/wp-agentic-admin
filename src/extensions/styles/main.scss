@@ -12,13 +12,23 @@
  */
 
 .wp-agentic-admin-app {
-	max-width: 900px;
 	margin: 20px 0;
 	display: flex;
 	flex-direction: column;
 	// Height: viewport minus WP admin chrome
 	// (admin bar 32px + header ~50px + margins 40px + model ~80px)
 	min-height: calc(100vh - 200px);
+}
+
+// Chat header HStack must constrain to its parent column (default WP
+// HStack sizes to content and overflows narrow parents — same issue
+// we hit in admin-sidebar.scss).
+.wp-agentic-admin-chat-header.components-h-stack,
+.wp-agentic-admin-chat-actions.components-h-stack {
+	max-width: 100%;
+	box-sizing: border-box;
+	flex-wrap: wrap;
+	row-gap: 4px;
 }
 
 .wp-agentic-admin-main {
