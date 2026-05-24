@@ -11,6 +11,8 @@
  * @package WPAgenticAdmin
  */
 
+@import './tokens';
+
 .wp-agentic-admin-app {
 	margin: 20px 0;
 	display: flex;
@@ -56,8 +58,8 @@
 
 // Chat Container
 .wp-agentic-admin-chat {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: $color-surface;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 	display: flex;
@@ -72,7 +74,7 @@
 	min-height: 200px;
 	overflow-y: auto;
 	padding: 20px;
-	background: #f6f7f7;
+	background: $color-surface-subtle;
 
 	// WP admin's global stylesheet sets margin-block: 1em on every <p>
 	// inside .wrap, which pushes the chat-bubble text away from the
@@ -111,8 +113,8 @@
 	pre {
 		margin: 0;
 		padding: 12px 14px;
-		background: #1d2327;
-		color: #e2e8f0;
+		background: $color-text;
+		color: $color-code-text;
 		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 		font-size: 12.5px;
 		line-height: 1.55;
@@ -165,8 +167,8 @@
 		margin-left: auto;
 
 		.wp-agentic-admin-message__content {
-			background: var(--wp-admin-theme-color, #2271b1);
-			color: #fff;
+			background: $color-accent;
+			color: $color-surface;
 			border-radius: 16px 16px 4px 16px;
 		}
 	}
@@ -175,8 +177,8 @@
 		margin-right: auto;
 
 		.wp-agentic-admin-message__content {
-			background: #fff;
-			border: 1px solid #c3c4c7;
+			background: $color-surface;
+			border: 1px solid $color-border;
 			border-radius: 16px 16px 16px 4px;
 		}
 	}
@@ -186,9 +188,9 @@
 		max-width: 100%;
 
 		.wp-agentic-admin-message__content {
-			background: #fff;
-			border: 1px solid #c3c4c7;
-			border-left: 4px solid var(--wp-admin-theme-color, #2271b1);
+			background: $color-surface;
+			border: 1px solid $color-border;
+			border-left: 4px solid $color-accent;
 			border-radius: 0 4px 4px 0;
 
 			ul {
@@ -213,8 +215,8 @@
 		}
 
 		pre {
-			background: #1d2327;
-			color: #fff;
+			background: $color-text;
+			color: $color-surface;
 			padding: 12px;
 			border-radius: 4px;
 			overflow-x: auto;
@@ -232,7 +234,7 @@
 
 	&__meta {
 		font-size: 11px;
-		color: #646970;
+		color: $color-text-faint;
 		margin-top: 4px;
 		padding: 0 16px;
 	}
@@ -240,8 +242,8 @@
 
 // Ability Execution Block
 .wp-agentic-admin-ability {
-	background: #f0f6fc;
-	border: 1px solid #c3c4c7;
+	background: $color-info-bg;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	margin: 8px 0;
 	padding: 12px;
@@ -252,7 +254,7 @@
 		gap: 8px;
 		margin-bottom: 8px;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 	}
 
 	&__icon {
@@ -261,8 +263,8 @@
 	}
 
 	&__result {
-		background: #fff;
-		border: 1px solid #c3c4c7;
+		background: $color-surface;
+		border: 1px solid $color-border;
 		border-radius: 4px;
 		padding: 8px;
 		font-size: 13px;
@@ -277,23 +279,23 @@
 	&--pending {
 
 		.wp-agentic-admin-ability__header {
-			color: #996800;
+			color: $color-warning-text;
 		}
 	}
 
 	&--success {
-		border-color: #00a32a;
+		border-color: $color-success;
 
 		.wp-agentic-admin-ability__header {
-			color: #00a32a;
+			color: $color-success;
 		}
 	}
 
 	&--error {
-		border-color: #d63638;
+		border-color: $color-error;
 
 		.wp-agentic-admin-ability__header {
-			color: #d63638;
+			color: $color-error;
 		}
 	}
 }
@@ -304,8 +306,8 @@
 // VStack/HStack and inputs come from @wordpress/components.
 .wp-agentic-admin-input-area {
 	padding: 15px;
-	border-top: 1px solid #c3c4c7;
-	background: #fff;
+	border-top: 1px solid $color-border;
+	background: $color-surface;
 }
 
 // Textarea container — needed to anchor the transcribing overlay
@@ -351,7 +353,7 @@
 		display: block;
 		width: 4px;
 		height: 6px;
-		background: var(--wp-admin-theme-color, #2271b1);
+		background: $color-accent;
 		border-radius: 2px;
 		animation: wp-agentic-wave-bar 1.1s ease-in-out infinite;
 
@@ -392,7 +394,7 @@
 
 .wp-agentic-admin-transcribing-label {
 	font-size: 12px;
-	color: #50575e;
+	color: $color-text-muted;
 	letter-spacing: 0.02em;
 }
 
@@ -411,7 +413,7 @@
 	height: 36px;
 	border: none;
 	background: none;
-	color: #50575e;
+	color: $color-text-muted;
 	cursor: pointer;
 	border-radius: 50%; // Circular like Gemini
 	padding: 0;
@@ -420,15 +422,15 @@
 		background 0.15s ease;
 
 	&:hover {
-		background: #f0f0f1;
-		color: #1d2327;
+		background: $color-surface-tinted;
+		color: $color-text;
 	}
 
 	// ── Recording state ──────────────────────────────────────────────
 	&--recording {
 		flex-direction: column;
 		gap: 2px;
-		color: #d63638;
+		color: $color-error;
 		background: #fce8e8;
 		animation: wp-agentic-voice-pulse 2s ease-in-out infinite;
 
@@ -439,14 +441,14 @@
 		}
 
 		&:hover {
-			background: #f5c0c1;
+			background: $color-error-border;
 			animation-play-state: paused;
 		}
 	}
 
 	// ── Warning state (≤ 10 s remaining) ─────────────────────────────
 	&--warning {
-		background: #f5c0c1;
+		background: $color-error-border;
 		animation-duration: 0.7s;
 
 		.wp-agentic-admin-voice-timer {
@@ -542,7 +544,7 @@
 .wp-agentic-admin-bundle-pill {
 	font-size: 13px;
 	font-weight: 600;
-	color: var(--wp-admin-theme-color, #2271b1);
+	color: $color-accent;
 }
 
 // Status Bar
@@ -564,20 +566,20 @@
 	height: 10px;
 	border-radius: 50%;
 	flex-shrink: 0;
-	background: #dba617;
+	background: $color-warning;
 
 	&--ready {
-		background: #00a32a;
+		background: $color-success;
 	}
 
 	&--loading,
 	&--checking {
-		background: var(--wp-admin-theme-color, #2271b1);
+		background: $color-accent;
 		animation: pulse 1.5s infinite;
 	}
 
 	&--error {
-		background: #d63638;
+		background: $color-error;
 	}
 }
 
@@ -603,7 +605,7 @@
 	z-index: 100000;
 
 	&__dialog {
-		background: #fff;
+		background: $color-surface;
 		border-radius: 4px;
 		box-shadow: 0 3px 20px rgba(0, 0, 0, 0.3);
 		max-width: 500px;
@@ -612,7 +614,7 @@
 
 	&__header {
 		padding: 15px 20px;
-		border-bottom: 1px solid #c3c4c7;
+		border-bottom: 1px solid $color-border;
 		font-weight: 600;
 	}
 
@@ -625,8 +627,8 @@
 		justify-content: flex-end;
 		gap: 10px;
 		padding: 15px 20px;
-		border-top: 1px solid #c3c4c7;
-		background: #f6f7f7;
+		border-top: 1px solid $color-border;
+		background: $color-surface-subtle;
 	}
 
 	&__warning {
@@ -634,13 +636,13 @@
 		align-items: flex-start;
 		gap: 10px;
 		padding: 10px;
-		background: #fcf0f1;
-		border: 1px solid #d63638;
+		background: $color-error-bg;
+		border: 1px solid $color-error;
 		border-radius: 4px;
 		margin-bottom: 15px;
 
 		.dashicons {
-			color: #d63638;
+			color: $color-error;
 		}
 	}
 }
@@ -665,7 +667,7 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-		background: #fff;
+		background: $color-surface;
 		// Match @wordpress/components Card: a 1px shadow-ring instead of
 		// a literal border, so the chat panel and the bottom provider /
 		// loading Card share the same edge aesthetic.
@@ -693,8 +695,8 @@
 
 // Token Budget Bar
 .wp-agentic-admin-token-budget {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: $color-surface;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	padding: 16px;
 	margin-bottom: 16px;
@@ -720,7 +722,7 @@
 
 	&__bar-container {
 		height: 12px;
-		background: #f0f0f1;
+		background: $color-surface-tinted;
 		border-radius: 6px;
 		overflow: hidden;
 		margin-bottom: 8px;
@@ -738,7 +740,7 @@
 		}
 
 		&--base {
-			background-color: var(--wp-admin-theme-color, #2271b1);
+			background-color: $color-accent;
 		}
 
 		&--external {
@@ -750,14 +752,14 @@
 		display: flex;
 		justify-content: space-between;
 		font-size: 12px;
-		color: #646970;
+		color: $color-text-faint;
 	}
 
 	&__breakdown {
 		display: flex;
 		justify-content: space-between;
 		font-size: 11px;
-		color: #646970;
+		color: $color-text-faint;
 		margin-top: 4px;
 	}
 
@@ -780,8 +782,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--wp-admin-theme-color, #2271b1);
-		color: #fff;
+		background: $color-accent;
+		color: $color-surface;
 		font-weight: 600;
 		font-size: 16px;
 	}
@@ -793,7 +795,7 @@
 	flex-wrap: wrap;
 	align-items: flex-start;
 	gap: 8px;
-	color: #d63638;
+	color: $color-error;
 
 	.dashicons {
 		flex-shrink: 0;
@@ -802,8 +804,8 @@
 	pre {
 		width: 100%;
 		margin-top: 8px;
-		background: #fcf0f1;
-		color: #d63638;
+		background: $color-error-bg;
+		color: $color-error;
 		padding: 8px;
 		border-radius: 4px;
 		font-size: 12px;
@@ -814,8 +816,8 @@
 .wp-agentic-admin-message--error {
 
 	.wp-agentic-admin-message__content {
-		background: #fcf0f1;
-		border: 1px solid #d63638;
+		background: $color-error-bg;
+		border: 1px solid $color-error;
 		border-radius: 4px;
 	}
 }
@@ -832,16 +834,16 @@
 .wp-agentic-admin-chat-header,
 .wp-agentic-admin-chat-actions {
 	padding: 8px 16px;
-	background: #f6f7f7;
+	background: $color-surface-subtle;
 }
 
 .wp-agentic-admin-chat-header {
-	border-top: 1px solid #c3c4c7;
-	border-bottom: 1px solid #c3c4c7;
+	border-top: 1px solid $color-border;
+	border-bottom: 1px solid $color-border;
 }
 
 .wp-agentic-admin-chat-actions {
-	border-top: 1px solid #c3c4c7;
+	border-top: 1px solid $color-border;
 }
 
 // Override WordPress default snackbar positioning with higher specificity
@@ -884,7 +886,7 @@
 			margin: 20px 0 12px;
 			font-size: 15px;
 			font-weight: 600;
-			color: #1d2327;
+			color: $color-text;
 		}
 
 		h5 {
@@ -899,7 +901,7 @@
 	&__links {
 		margin-top: 20px;
 		padding: 16px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 
 		ul {
@@ -925,8 +927,8 @@
 }
 
 .wp-agentic-admin-browser-card {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: $color-surface;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	padding: 16px;
 
@@ -941,7 +943,7 @@
 	}
 
 	code {
-		background: #f0f0f1;
+		background: $color-surface-tinted;
 		padding: 1px 4px;
 		border-radius: 2px;
 		font-size: 12px;
@@ -949,7 +951,7 @@
 
 	p {
 		margin: 0 0 8px;
-		color: #646970;
+		color: $color-text-faint;
 		font-size: 13px;
 	}
 }
@@ -963,7 +965,7 @@
 
 	.components-modal__header {
 		padding: 16px 24px;
-		border-bottom: 1px solid #c3c4c7;
+		border-bottom: 1px solid $color-border;
 	}
 
 	p {
@@ -978,7 +980,7 @@
 	.wp-agentic-admin-confirm-params {
 		margin: 16px 24px;
 		padding: 12px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 
 		strong {
@@ -988,8 +990,8 @@
 
 		pre {
 			margin: 0;
-			background: #1d2327;
-			color: #fff;
+			background: $color-text;
+			color: $color-surface;
 			padding: 12px;
 			border-radius: 4px;
 			font-size: 12px;
@@ -1002,35 +1004,35 @@
 		justify-content: flex-end;
 		gap: 8px;
 		padding: 16px 24px;
-		border-top: 1px solid #c3c4c7;
-		background: #f6f7f7;
+		border-top: 1px solid $color-border;
+		background: $color-surface-subtle;
 	}
 
 	// Intent Confirmation Styles (v1.3.0 - Fuzzy Matching)
 	.wp-agentic-admin-intent-question {
 		font-size: 14px;
-		color: #50575e;
+		color: $color-text-muted;
 		margin-bottom: 8px !important;
 	}
 
 	.wp-agentic-admin-intent-tool {
 		font-size: 18px;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 		margin-bottom: 16px !important;
 	}
 
 	.wp-agentic-admin-intent-details {
 		margin: 16px 24px;
 		padding: 12px 16px;
-		background: #f0f6fc;
-		border-left: 3px solid var(--wp-admin-theme-color, #2271b1);
+		background: $color-info-bg;
+		border-left: 3px solid $color-accent;
 		border-radius: 4px;
 	}
 
 	.wp-agentic-admin-intent-match-info {
 		font-size: 13px;
-		color: #1d2327;
+		color: $color-text;
 		font-weight: 600;
 		margin-bottom: 8px !important;
 		padding: 0 !important;
@@ -1047,12 +1049,12 @@
 			gap: 4px;
 			font-size: 13px;
 			line-height: 1.8;
-			color: #50575e;
+			color: $color-text-muted;
 
 			.typo {
 				font-family: monospace;
-				background: #fcf0f1;
-				color: #d63638;
+				background: $color-error-bg;
+				color: $color-error;
 				padding: 2px 6px;
 				border-radius: 3px;
 				font-weight: 600;
@@ -1060,8 +1062,8 @@
 
 			.corrected {
 				font-family: monospace;
-				background: #edfaef;
-				color: #00a32a;
+				background: $color-success-bg;
+				color: $color-success;
 				padding: 2px 6px;
 				border-radius: 3px;
 				font-weight: 600;
@@ -1097,28 +1099,28 @@
 		}
 
 		&.match-type-llm {
-			background: #f0f6fc;
+			background: $color-info-bg;
 			color: #1d4ed8;
-			border: 1px solid var(--wp-admin-theme-color, #2271b1);
+			border: 1px solid $color-accent;
 		}
 
 		&.match-type-exact {
-			background: #edfaef;
+			background: $color-success-bg;
 			color: #00752e;
-			border: 1px solid #00a32a;
+			border: 1px solid $color-success;
 		}
 	}
 
 	// Workflow Confirmation Styles
 	.wp-agentic-admin-confirm-description {
-		color: #646970;
+		color: $color-text-faint;
 		font-style: italic;
 	}
 
 	.wp-agentic-admin-confirm-steps {
 		margin: 16px 24px;
 		padding: 12px 16px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 		list-style: none;
 		counter-reset: step-counter;
@@ -1130,9 +1132,9 @@
 			align-items: center;
 			gap: 10px;
 			padding: 8px 12px;
-			background: #fff;
+			background: $color-surface;
 			border-radius: 4px;
-			border-left: 3px solid #c3c4c7;
+			border-left: 3px solid $color-border;
 			counter-increment: step-counter;
 
 			&::before {
@@ -1142,11 +1144,11 @@
 				justify-content: center;
 				width: 22px;
 				height: 22px;
-				background: #f0f0f1;
+				background: $color-surface-tinted;
 				border-radius: 50%;
 				font-size: 11px;
 				font-weight: 600;
-				color: #646970;
+				color: $color-text-faint;
 				flex-shrink: 0;
 			}
 
@@ -1156,38 +1158,38 @@
 
 			// Read operations - neutral/safe
 			&.step-read {
-				border-left-color: var(--wp-admin-theme-color, #2271b1);
+				border-left-color: $color-accent;
 
 				&::before {
-					background: #f0f6fc;
-					color: var(--wp-admin-theme-color, #2271b1);
+					background: $color-info-bg;
+					color: $color-accent;
 				}
 			}
 
 			// Write operations - caution
 			&.step-write {
-				border-left-color: #dba617;
+				border-left-color: $color-warning;
 
 				&::before {
-					background: #fcf9e8;
-					color: #996800;
+					background: $color-warning-bg;
+					color: $color-warning-text;
 				}
 			}
 
 			// Delete/destructive operations - danger
 			&.step-delete {
-				border-left-color: #d63638;
+				border-left-color: $color-error;
 
 				&::before {
-					background: #fcf0f1;
-					color: #d63638;
+					background: $color-error-bg;
+					color: $color-error;
 				}
 			}
 		}
 
 		.step-label {
 			flex: 1;
-			color: #1d2327;
+			color: $color-text;
 		}
 
 		.step-badge {
@@ -1203,20 +1205,20 @@
 
 			// Read badge - blue/info
 			&--read {
-				background: #f0f6fc;
-				color: var(--wp-admin-theme-color, #2271b1);
+				background: $color-info-bg;
+				color: $color-accent;
 			}
 
 			// Write badge - yellow/warning
 			&--write {
-				background: #fcf9e8;
-				color: #996800;
+				background: $color-warning-bg;
+				color: $color-warning-text;
 			}
 
 			// Delete badge - red/danger
 			&--delete {
-				background: #fcf0f1;
-				color: #d63638;
+				background: $color-error-bg;
+				color: $color-error;
 			}
 		}
 	}
@@ -1267,8 +1269,8 @@
 //   .wp-agentic-admin-md-table   — bare markdown-table fallback styling
 .wp-agentic-admin-msg--user {
 	.components-card__body {
-		background: var(--wp-admin-theme-color, #2271b1);
-		color: #fff;
+		background: $color-accent;
+		color: $color-surface;
 	}
 
 	p {
@@ -1295,7 +1297,7 @@
 	}
 
 	th {
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		font-weight: 600;
 	}
 }
@@ -1326,7 +1328,7 @@
 	button:focus-visible,
 	a:focus-visible,
 	select:focus-visible {
-		outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+		outline: 2px solid $color-accent;
 		outline-offset: 2px;
 	}
 
@@ -1362,12 +1364,12 @@
 		margin: 0 0 10px !important;
 		font-size: 18px !important;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 	}
 
 	&__intro {
 		margin: 0;
-		color: #50575e;
+		color: $color-text-muted;
 		line-height: 1.6;
 	}
 
@@ -1380,7 +1382,7 @@
 	}
 
 	&__description {
-		color: #646970;
+		color: $color-text-faint;
 		margin-bottom: 16px;
 	}
 
@@ -1391,13 +1393,13 @@
 	&__model-size {
 		font-weight: normal;
 		font-size: 13px;
-		color: #646970;
+		color: $color-text-faint;
 		margin-left: 8px;
 	}
 
 	&__reasoning {
 		font-size: 13px;
-		color: #646970;
+		color: $color-text-faint;
 		margin: 0 0 12px;
 	}
 
@@ -1424,8 +1426,8 @@
 	max-height: 480px;
 	white-space: pre;
 	tab-size: 4;
-	background: #1d2327;
-	color: #e2e8f0;
+	background: $color-text;
+	color: $color-code-text;
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	font-size: 12.5px;
 	line-height: 1.55;

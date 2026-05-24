@@ -1,0 +1,45 @@
+/**
+ * Plugin design tokens.
+ *
+ * WordPress core ships only a small set of public CSS custom properties
+ * for admin chrome (--wp-admin-theme-color + darker variants, the new
+ * --wp-components-color-gray-400). The grays / text / border / surface
+ * literals below are taken from WP's own (un-tokenised) admin
+ * stylesheets and centralised here so future palette changes are a
+ * single-file edit and call sites read semantically.
+ *
+ * Use the named vars below instead of raw hex literals in *.scss.
+ */
+
+// Accent — pulls from the user's admin color scheme.
+$color-accent: var(--wp-admin-theme-color, #2271b1);
+$color-accent-darker: var(--wp-admin-theme-color-darker-10, #135e96);
+
+// Text.
+$color-text: #1d2327; // body copy
+$color-text-muted: #50575e; // labels, captions
+$color-text-faint: #646970; // helper text
+
+// Surfaces.
+$color-surface: #fff; // panels, cards
+$color-surface-subtle: #f6f7f7; // toolbar/header chrome bg
+$color-surface-tinted: #f0f0f1; // hover states
+
+// Borders / dividers.
+$color-border: #c3c4c7; // primary 1px panel border
+$color-border-strong: #50575e; // form input borders (rarely used)
+
+// Status.
+$color-success: #00a32a;
+$color-success-bg: #edfaef;
+$color-warning: #dba617;
+$color-warning-text: #996800;
+$color-warning-bg: #fcf9e8;
+$color-error: #d63638;
+$color-error-bg: #fcf0f1;
+$color-error-border: #f5c0c1;
+$color-info-bg: #f0f6fc;
+
+// Code-block / dark <pre> editor theme.
+$color-code-bg: #1d2327;
+$color-code-text: #e2e8f0;

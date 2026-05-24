@@ -24,7 +24,7 @@ import {
 	cog,
 	check,
 	info,
-	warning,
+	caution,
 	cancelCircleFilled,
 	chevronDown,
 	chevronUp,
@@ -526,7 +526,7 @@ const MessageItem = ( { message, onAction } ) => {
 	if ( type === MessageType.ERROR ) {
 		return (
 			<Notice status="error" isDismissible={ false }>
-				<Icon icon={ warning } size={ 16 } />
+				<Icon icon={ caution } size={ 16 } />
 				<span> { content }</span>
 			</Notice>
 		);

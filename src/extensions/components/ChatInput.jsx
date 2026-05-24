@@ -26,7 +26,7 @@ import {
 	bug,
 	post,
 	info,
-	edit,
+	pencil,
 	search,
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
@@ -40,7 +40,7 @@ const BUNDLE_ICONS = {
 	bug,
 	post,
 	info,
-	edit,
+	edit: pencil,
 };
 
 const ChatInput = ( {
