@@ -11,7 +11,6 @@ import {
 	Button,
 	Card,
 	CardBody,
-	ExternalLink,
 	Notice,
 	ProgressBar,
 	SelectControl,
@@ -728,10 +727,10 @@ const ModelStatus = ( {
 											>
 												No AI Connectors are configured
 												yet.{ ' ' }
-												<ExternalLink href={ optionsUrl }>
+												<a href={ optionsUrl }>
 													Configure connectors in
 													Settings → Connectors
-												</ExternalLink>
+												</a>
 												.
 											</Notice>
 										) }
