@@ -100,10 +100,19 @@
 	// Collapsible Card (Thought process / Ability result) — drop the
 	// CardHeader border-bottom so the header reads as continuous with
 	// the body when expanded. Otherwise the divider competes with the
-	// rest of the message list.
+	// rest of the message list. Also force the toggle Button + its
+	// HStack to left-align — WP's Button centers content + uses
+	// width: max-content, which pushes "Thinking… ▼" toward the
+	// middle of the header instead of the left edge.
 	.wp-agentic-admin-collapsible {
 		.components-card__header {
 			border-bottom: 0;
+		}
+
+		.components-card__header > .components-button {
+			width: 100%;
+			justify-content: flex-start;
+			text-align: left;
 		}
 	}
 

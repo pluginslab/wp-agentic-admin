@@ -96,6 +96,38 @@ const App = () => {
 					return;
 				}
 
+				if ( savedProvider === 'connector' ) {
+					const connectorId = localStorage.getItem(
+						'agentic_admin_connector_id'
+					);
+					const connectorModel =
+						localStorage.getItem(
+							'agentic_admin_connector_model'
+						) || '';
+					if ( connectorId ) {
+						log.info(
+							'Connector provider saved, auto-connecting...'
+						);
+						setInitPhase( 'loading' );
+						setInitMessage( 'Connecting to connector...' );
+						setInitProgress( 35 );
+						try {
+							await modelLoader.loadConnector(
+								connectorId,
+								connectorModel
+							);
+							setModelReady( true );
+						} catch ( loadErr ) {
+							log.error(
+								'Auto-connect connector failed:',
+								loadErr
+							);
+						}
+					}
+					setInitPhase( null );
+					return;
+				}
+
 				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );

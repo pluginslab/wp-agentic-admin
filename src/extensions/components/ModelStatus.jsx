@@ -40,6 +40,8 @@ const STORAGE_KEYS = {
 	remoteUrl: 'agentic_admin_remote_url',
 	remoteModel: 'agentic_admin_remote_model',
 	remoteApiKey: 'agentic_admin_remote_api_key',
+	connectorId: 'agentic_admin_connector_id',
+	connectorModel: 'agentic_admin_connector_model',
 };
 
 /**
@@ -118,6 +120,18 @@ const saveProviderSettings = ( settings ) => {
 			localStorage.setItem(
 				STORAGE_KEYS.remoteApiKey,
 				settings.remoteApiKey
+			);
+		}
+		if ( settings.connectorId !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.connectorId,
+				settings.connectorId
+			);
+		}
+		if ( settings.connectorModel !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.connectorModel,
+				settings.connectorModel
 			);
 		}
 	} catch ( err ) {
@@ -745,6 +759,14 @@ const ModelStatus = ( {
 													variant="primary"
 													onClick={ async () => {
 														try {
+															saveProviderSettings(
+																{
+																	provider:
+																		'connector',
+																	connectorId: selectedConnectorId,
+																	connectorModel: selectedConnectorModelId,
+																}
+															);
 															await modelLoader.loadConnector(
 																selectedConnectorId,
 																selectedConnectorModelId
