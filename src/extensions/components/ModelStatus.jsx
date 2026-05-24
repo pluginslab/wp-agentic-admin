@@ -462,43 +462,10 @@ const ModelStatus = ( {
 
 	return (
 		<div className="wp-agentic-admin-model-status">
-			{ /* Loading State - Full Progress UI */ }
-			{ isInLoadingState && (
-				<Card>
-					<CardBody>
-						<VStack spacing={ 3 }>
-							<HStack alignment="center" spacing={ 3 }>
-								<span
-									className="wp-agentic-admin-loading-icon"
-									aria-hidden="true"
-								>
-									{ loadingStage.icon }
-								</span>
-								<VStack spacing={ 0 }>
-									<strong>{ getLoadingTitle() }</strong>
-									<span>{ loadingStage.title }</span>
-								</VStack>
-								<span>{ displayProgress }%</span>
-							</HStack>
-							<ProgressBar
-								value={ displayProgress }
-								aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
-							/>
-							{ isFromCache && ! isInInitPhase && (
-								<p>
-									Model files are cached locally. No download
-									needed!
-								</p>
-							) }
-						</VStack>
-					</CardBody>
-				</Card>
-			) }
-
-			{ /* Status pill (dot + model name + dropdown) now lives in
-			   the composer toolbar — see <ModelStatusPill> rendered
-			   inside ChatInput.jsx. This component only renders the
-			   loading card + provider config from here on. */ }
+			{ /* Loading state is shown inline in the composer toolbar as
+			   a Spinner + percent — see <ModelStatusPill> in ChatInput.
+			   This component only renders the provider config Card
+			   (when not-loaded or error) from here on. */ }
 
 			{ /* Provider selection and controls — shown when not loaded */ }
 			{ ( status === 'not-loaded' || status === 'error' ) && (

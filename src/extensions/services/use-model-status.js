@@ -12,6 +12,7 @@ const readSnapshot = () => ( {
 	message: modelLoader.isModelReady()
 		? 'AI model ready'
 		: 'AI model not loaded',
+	progress: modelLoader.isModelReady() ? 100 : 0,
 	loadedModelInfo: modelLoader.getLoadedModelInfo(),
 	isServiceWorkerMode: modelLoader.isUsingServiceWorker(),
 } );
@@ -20,7 +21,7 @@ const useModelStatus = () => {
 	const [ snapshot, setSnapshot ] = useState( readSnapshot );
 
 	useEffect( () => {
-		const unsub = modelLoader.onStatus( ( stat, msg ) => {
+		const unsubStatus = modelLoader.onStatus( ( stat, msg ) => {
 			setSnapshot( ( prev ) => ( {
 				...prev,
 				status: stat,
@@ -29,7 +30,13 @@ const useModelStatus = () => {
 				isServiceWorkerMode: modelLoader.isUsingServiceWorker(),
 			} ) );
 		} );
-		return unsub;
+		const unsubProgress = modelLoader.onProgress( ( prog ) => {
+			setSnapshot( ( prev ) => ( { ...prev, progress: prog } ) );
+		} );
+		return () => {
+			unsubStatus();
+			unsubProgress();
+		};
 	}, [] );
 
 	return snapshot;

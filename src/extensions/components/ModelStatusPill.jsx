@@ -29,17 +29,36 @@ const STATUS_LABEL = {
 };
 
 const ModelStatusPill = () => {
-	const { status, message, loadedModelInfo } = useModelStatus();
+	const { status, message, progress, loadedModelInfo } = useModelStatus();
 
 	const isLoading = status === 'loading' || status === 'checking';
-	const labelText =
-		status === 'ready' && loadedModelInfo
-			? `${ loadedModelInfo.name } ready`
-			: message;
 
 	const handleUnload = async () => {
 		await modelLoader.unload();
 	};
+
+	// WP-native loading style: just a Spinner + percent.
+	if ( isLoading ) {
+		return (
+			<HStack
+				alignment="center"
+				spacing={ 2 }
+				justify="flex-start"
+				className="wp-agentic-admin-status-pill"
+			>
+				<Spinner />
+				<span className="screen-reader-text">
+					{ STATUS_LABEL[ status ] || status }
+				</span>
+				<span>{ Math.round( progress ) }%</span>
+			</HStack>
+		);
+	}
+
+	const labelText =
+		status === 'ready' && loadedModelInfo
+			? `${ loadedModelInfo.name } ready`
+			: message;
 
 	return (
 		<HStack
@@ -48,14 +67,10 @@ const ModelStatusPill = () => {
 			justify="flex-start"
 			className="wp-agentic-admin-status-pill"
 		>
-			{ isLoading ? (
-				<Spinner />
-			) : (
-				<span
-					className={ `wp-agentic-admin-status-dot wp-agentic-admin-status-dot--${ status }` }
-					aria-hidden="true"
-				/>
-			) }
+			<span
+				className={ `wp-agentic-admin-status-dot wp-agentic-admin-status-dot--${ status }` }
+				aria-hidden="true"
+			/>
 			<span className="screen-reader-text">
 				{ STATUS_LABEL[ status ] || status }
 			</span>

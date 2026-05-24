@@ -799,30 +799,6 @@
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-// Model Status component
-// Loading-card icon — the emoji glyph that pulses during model
-// download. Card / progress bar / title come from
-// @wordpress/components.
-.wp-agentic-admin-loading-icon {
-	font-size: 28px;
-	line-height: 1;
-	animation: agentic-pulse 2s ease-in-out infinite;
-}
-
-@keyframes agentic-pulse {
-
-	0%,
-	100% {
-		transform: scale(1);
-		opacity: 1;
-	}
-
-	50% {
-		transform: scale(1.05);
-		opacity: 0.8;
-	}
-}
-
 // WebGPU Fallback
 .wp-agentic-admin-webgpu-fallback {
 	padding: 20px;
