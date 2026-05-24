@@ -727,11 +727,17 @@
 .wp-agentic-admin-tab-padded {
 	padding: 20px;
 
-	// WP admin's default styles give h3 a sizeable top margin. Zero
-	// it inside our padded tab so section headings sit flush with the
-	// top padding instead of being pushed further down.
-	h3 {
+	// WP admin's global styles give h3 a sizeable top margin and p a
+	// 1em block margin top + bottom. Both fight the VStack / HStack
+	// spacing props we use for layout, leaving giant gaps between a
+	// section heading and its intro paragraph (and between stacked
+	// paragraphs). Zero them inside the padded tab so vertical
+	// rhythm comes from VStack alone.
+	h3,
+	h4,
+	p {
 		margin-top: 0;
+		margin-bottom: 0;
 	}
 }
 
