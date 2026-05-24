@@ -236,7 +236,14 @@ const ModelStatus = ( {
 		loading: connectorsLoading,
 	} = useConnectors();
 	const [ selectedConnectorId, setSelectedConnectorId ] = useState( '' );
+	const [ selectedConnectorModelId, setSelectedConnectorModelId ] = useState(
+		''
+	);
 	const connectedConnectors = connectors.filter( ( c ) => c.is_connected );
+	const selectedConnector = connectedConnectors.find(
+		( c ) => c.id === selectedConnectorId
+	);
+	const connectorModels = selectedConnector?.models || [];
 
 	const availableModels = ModelLoader.getAvailableModels();
 
@@ -697,18 +704,50 @@ const ModelStatus = ( {
 															} )
 														),
 													] }
-													onChange={ ( id ) =>
+													onChange={ ( id ) => {
 														setSelectedConnectorId(
 															id
-														)
-													}
+														);
+														setSelectedConnectorModelId(
+															''
+														);
+													} }
 												/>
+												{ selectedConnectorId &&
+													connectorModels.length > 0 && (
+														<SelectControl
+															__nextHasNoMarginBottom
+															label="Model"
+															value={
+																selectedConnectorModelId
+															}
+															options={ [
+																{
+																	value: '',
+																	label: 'Choose a model…',
+																	disabled: true,
+																},
+																...connectorModels.map(
+																	( m ) => ( {
+																		value: m.id,
+																		label: m.name,
+																	} )
+																),
+															] }
+															onChange={ ( id ) =>
+																setSelectedConnectorModelId(
+																	id
+																)
+															}
+														/>
+													) }
 												<Button
 													variant="primary"
 													onClick={ async () => {
 														try {
 															await modelLoader.loadConnector(
-																selectedConnectorId
+																selectedConnectorId,
+																selectedConnectorModelId
 															);
 														} catch ( err ) {
 															log.error(
@@ -718,7 +757,10 @@ const ModelStatus = ( {
 														}
 													} }
 													disabled={
-														! selectedConnectorId
+														! selectedConnectorId ||
+														( connectorModels.length >
+															0 &&
+															! selectedConnectorModelId )
 													}
 												>
 													Use this connector

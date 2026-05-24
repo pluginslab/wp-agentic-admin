@@ -54,9 +54,11 @@ async function* singleChunkIterable( completion ) {
 class ConnectorEngine {
 	/**
 	 * @param {string} connectorId - WP connector ID (e.g. "anthropic")
+	 * @param {string} modelId     - Optional connector-specific model ID
 	 */
-	constructor( connectorId ) {
+	constructor( connectorId, modelId = '' ) {
 		this.connectorId = connectorId;
+		this.modelId = modelId;
 
 		this.chat = {
 			completions: {
@@ -71,6 +73,7 @@ class ConnectorEngine {
 
 		const body = {
 			connector_id: this.connectorId,
+			model_id: this.modelId,
 			messages: params.messages || [],
 		};
 

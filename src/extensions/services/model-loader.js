@@ -570,9 +570,10 @@ class ModelLoader {
 	 *
 	 * @since 0.13.0
 	 * @param {string} connectorId - WP connector ID (e.g. "anthropic")
+	 * @param {string} modelId     - Optional connector-specific model ID
 	 * @return {Promise<boolean>} True if loaded.
 	 */
-	async loadConnector( connectorId ) {
+	async loadConnector( connectorId, modelId = '' ) {
 		if ( this.isLoading ) {
 			throw new Error( 'Model is already loading' );
 		}
@@ -580,19 +581,19 @@ class ModelLoader {
 		this.isLoading = true;
 		this.providerMode = 'connector';
 		this.connectorId = connectorId;
-		this.modelId = connectorId;
+		this.modelId = modelId || connectorId;
 
 		try {
-			this.reportStatus(
-				'loading',
-				`Connecting to ${ connectorId } connector...`
-			);
+			const label = modelId
+				? `${ connectorId } / ${ modelId }`
+				: connectorId;
+			this.reportStatus( 'loading', `Connecting to ${ label }...` );
 			this.reportProgress( 50, 'Connecting to connector...' );
 
-			this.engine = new ConnectorEngine( connectorId );
+			this.engine = new ConnectorEngine( connectorId, modelId );
 
 			this.reportProgress( 100, 'Connector ready!' );
-			this.reportStatus( 'ready', `${ connectorId } connector ready` );
+			this.reportStatus( 'ready', `${ label } connector ready` );
 			this.isReady = true;
 			this.isLoading = false;
 

@@ -60,6 +60,11 @@ class Connectors {
 						'required' => true,
 						'type'     => 'string',
 					),
+					'model_id'     => array(
+						'required' => false,
+						'type'     => 'string',
+						'default'  => '',
+					),
 					'messages'     => array(
 						'required' => true,
 						'type'     => 'array',
@@ -119,12 +124,31 @@ class Connectors {
 				}
 			}
 
+			$models = array();
+			if ( $is_connected && null !== $ai_registry ) {
+				try {
+					$provider_class = $ai_registry->getProviderClassName( $id );
+					if ( $provider_class && method_exists( $provider_class, 'modelMetadataDirectory' ) ) {
+						$directory = $provider_class::modelMetadataDirectory();
+						foreach ( $directory->listModelMetadata() as $meta ) {
+							$models[] = array(
+								'id'   => $meta->getId(),
+								'name' => $meta->getName(),
+							);
+						}
+					}
+				} catch ( \Exception $e ) {
+					$models = array();
+				}
+			}
+
 			$out['connectors'][] = array(
 				'id'           => $id,
 				'name'         => $data['name'] ?? $id,
 				'description'  => $data['description'] ?? '',
 				'logo_url'     => $data['logo_url'] ?? null,
 				'is_connected' => $is_connected,
+				'models'       => $models,
 			);
 		}
 
@@ -155,6 +179,7 @@ class Connectors {
 		}
 
 		$connector_id = (string) $request->get_param( 'connector_id' );
+		$model_id     = (string) $request->get_param( 'model_id' );
 		$messages     = (array) $request->get_param( 'messages' );
 
 		if ( '' === $connector_id || empty( $messages ) ) {
@@ -185,7 +210,21 @@ class Connectors {
 			// Flatten messages → single prompt string (lossy).
 			$prompt = self::flatten_messages( $messages );
 
-			$result = \WordPress\AiClient\AiClient::generateTextResult( $prompt );
+			// Resolve a specific model if requested; fall back to AI Client
+			// auto-discovery if none provided or resolution fails.
+			$model = null;
+			if ( '' !== $model_id ) {
+				try {
+					$provider = $registry->getProviderModel( $connector_id, $model_id );
+					$model    = $provider;
+				} catch ( \Exception $e ) {
+					$model = null;
+				}
+			}
+
+			$result = null === $model
+				? \WordPress\AiClient\AiClient::generateTextResult( $prompt )
+				: \WordPress\AiClient\AiClient::generateTextResult( $prompt, $model );
 			$text   = method_exists( $result, 'toText' ) ? $result->toText() : (string) $result;
 
 			// Return an OpenAI-shaped non-streaming response so the existing
