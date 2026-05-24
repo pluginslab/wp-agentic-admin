@@ -607,9 +607,10 @@
 		flex-direction: column;
 		min-height: 0;
 		background: #fff;
-		border: 1px solid #c3c4c7;
-		border-top: none;
-		border-radius: 0 0 4px 4px;
+		// Match @wordpress/components Card: a 1px shadow-ring instead of
+		// a literal border, so the chat panel and the bottom provider /
+		// loading Card share the same edge aesthetic.
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
 	}
 }
 
