@@ -11,20 +11,15 @@ import {
 	Button,
 	Card,
 	CardBody,
-	DropdownMenu,
-	MenuGroup,
-	MenuItem,
 	Notice,
 	ProgressBar,
 	SelectControl,
-	Spinner,
 	TextControl,
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
-import { moreVertical } from '@wordpress/icons';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
@@ -250,11 +245,10 @@ const ModelStatus = ( {
 	 * Set up model loader callbacks
 	 */
 	useEffect( () => {
-		modelLoader.onProgress( ( prog, msg ) => {
+		const unsubProgress = modelLoader.onProgress( ( prog, msg ) => {
 			setProgress( prog );
 			setRawMessage( msg );
 			setMessage( msg );
-			// Detect cache vs download from WebLLM progress messages
 			if ( msg && msg.toLowerCase().includes( 'cache' ) ) {
 				setIsFromCache( true );
 			} else if (
@@ -266,7 +260,7 @@ const ModelStatus = ( {
 			}
 		} );
 
-		modelLoader.onStatus( ( stat, msg ) => {
+		const unsubStatus = modelLoader.onStatus( ( stat, msg ) => {
 			setStatus( stat );
 			setMessage( msg );
 			setRawMessage( msg );
@@ -280,7 +274,6 @@ const ModelStatus = ( {
 			}
 		} );
 
-		// Check if model is already loaded
 		let cancelled = false;
 		if ( modelLoader.isModelReady() ) {
 			setStatus( 'ready' );
@@ -296,6 +289,8 @@ const ModelStatus = ( {
 		}
 		return () => {
 			cancelled = true;
+			unsubProgress();
+			unsubStatus();
 		};
 	}, [ onModelReady, onModelError ] );
 
@@ -500,102 +495,10 @@ const ModelStatus = ( {
 				</Card>
 			) }
 
-			{ /* Not Loading State - Standard Status Bar */ }
-			{ ! isInLoadingState && (
-				<Card size="small" className="wp-agentic-admin-status">
-					<CardBody>
-						<HStack alignment="center" spacing={ 3 }>
-							<span
-								className={ `wp-agentic-admin-status-dot wp-agentic-admin-status-dot--${ status }` }
-								aria-hidden="true"
-							/>
-							<span className="screen-reader-text">
-								{ status === 'ready'
-									? 'Ready'
-									: status === 'error'
-									? 'Error'
-									: status === 'loading'
-									? 'Loading'
-									: 'Not loaded' }
-							</span>
-							<strong>
-								{ status === 'ready' && loadedModelInfo
-									? `${ loadedModelInfo.name } ready`
-									: message }
-							</strong>
-							{ status === 'ready' && loadedModelInfo && (
-								<>
-									{ loadedModelInfo.mode === 'external' && (
-										<span title="Connected to external API">
-											Remote
-										</span>
-									) }
-									{ isServiceWorkerMode && (
-										<span title="Model persists across page navigations">
-											Persistent
-										</span>
-									) }
-									{ gpuInfo &&
-										gpuInfo.device !== 'Unknown' && (
-											<span>
-												{ gpuInfo.device }
-												{ gpuInfo.vendor !==
-													'Unknown' &&
-													` (${ gpuInfo.vendor })` }
-											</span>
-										) }
-									{ memoryStats?.available &&
-										memoryStats?.formatted && (
-											<span>{ memoryStats.formatted }</span>
-										) }
-									{ contextUsage && (
-										<>
-											<span>
-												Context{ ' ' }
-												{ contextUsage.used.toLocaleString() }
-												/
-												{ contextUsage.max.toLocaleString() }
-											</span>
-											<div
-												className="wp-agentic-admin-status-progress"
-												aria-label={ `Context usage: ${ contextUsage.percentage }%` }
-											>
-												<ProgressBar
-													value={
-														contextUsage.percentage
-													}
-												/>
-											</div>
-										</>
-									) }
-								</>
-							) }
-
-							{ status === 'checking' && <Spinner /> }
-
-							{ status === 'ready' && (
-								<DropdownMenu
-									icon={ moreVertical }
-									label="Model options"
-								>
-									{ ( { onClose } ) => (
-										<MenuGroup>
-											<MenuItem
-												onClick={ () => {
-													handleUnloadModel();
-													onClose();
-												} }
-											>
-												Unload model
-											</MenuItem>
-										</MenuGroup>
-									) }
-								</DropdownMenu>
-							) }
-						</HStack>
-					</CardBody>
-				</Card>
-			) }
+			{ /* Status pill (dot + model name + dropdown) now lives in
+			   the composer toolbar — see <ModelStatusPill> rendered
+			   inside ChatInput.jsx. This component only renders the
+			   loading card + provider config from here on. */ }
 
 			{ /* Provider selection and controls — shown when not loaded */ }
 			{ ( status === 'not-loaded' || status === 'error' ) && (

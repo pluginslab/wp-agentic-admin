@@ -73,8 +73,8 @@ class ModelLoader {
 		this.isLoading = false;
 		this.isReady = false;
 		this.loadProgress = 0;
-		this.progressCallback = null;
-		this.statusCallback = null;
+		this.progressCallbacks = new Set();
+		this.statusCallbacks = new Set();
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
 		this.f16Supported = null; // null = not checked, true/false = result
@@ -389,16 +389,26 @@ class ModelLoader {
 	 * @param {Function} callback - Called with (progress, message)
 	 */
 	onProgress( callback ) {
-		this.progressCallback = callback;
+		if ( ! this.progressCallbacks ) {
+			this.progressCallbacks = new Set();
+		}
+		this.progressCallbacks.add( callback );
+		return () => this.progressCallbacks.delete( callback );
 	}
 
 	/**
-	 * Set status callback for status changes
+	 * Set status callback for status changes.
+	 * Multi-subscriber: returns an unsubscribe function.
 	 *
 	 * @param {Function} callback - Called with (status, message)
+	 * @return {Function} Unsubscribe.
 	 */
 	onStatus( callback ) {
-		this.statusCallback = callback;
+		if ( ! this.statusCallbacks ) {
+			this.statusCallbacks = new Set();
+		}
+		this.statusCallbacks.add( callback );
+		return () => this.statusCallbacks.delete( callback );
 	}
 
 	/**
@@ -409,8 +419,8 @@ class ModelLoader {
 	 */
 	reportProgress( progress, message ) {
 		this.loadProgress = progress;
-		if ( this.progressCallback ) {
-			this.progressCallback( progress, message );
+		if ( this.progressCallbacks ) {
+			this.progressCallbacks.forEach( ( cb ) => cb( progress, message ) );
 		}
 	}
 
@@ -421,8 +431,8 @@ class ModelLoader {
 	 * @param {string} message - Status message
 	 */
 	reportStatus( status, message ) {
-		if ( this.statusCallback ) {
-			this.statusCallback( status, message );
+		if ( this.statusCallbacks ) {
+			this.statusCallbacks.forEach( ( cb ) => cb( status, message ) );
 		}
 	}
 

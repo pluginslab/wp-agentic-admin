@@ -31,6 +31,7 @@ import {
 } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
+import ModelStatusPill from './ModelStatusPill';
 
 const BUNDLE_ICONS = {
 	shield,
@@ -233,13 +234,20 @@ const ChatInput = ( {
 						</HStack>
 					) }
 				</HStack>
-				<Button
-					icon={ send }
-					label="Send message"
-					variant="primary"
-					onClick={ handleSubmit }
-					disabled={ ! canSend }
-				/>
+				<HStack
+					alignment="center"
+					spacing={ 2 }
+					justify="flex-end"
+				>
+					<ModelStatusPill />
+					<Button
+						icon={ send }
+						label="Send message"
+						variant="primary"
+						onClick={ handleSubmit }
+						disabled={ ! canSend }
+					/>
+				</HStack>
 			</HStack>
 		</VStack>
 	);
