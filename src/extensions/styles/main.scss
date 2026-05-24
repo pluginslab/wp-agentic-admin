@@ -113,6 +113,12 @@
 			width: 100%;
 			justify-content: flex-start;
 			text-align: left;
+			// Drop the default Button left/right padding — the
+			// CardHeader already supplies horizontal padding, and the
+			// inner Button padding was indenting the content past
+			// where neighbouring card titles sit.
+			padding-left: 0;
+			padding-right: 0;
 		}
 	}
 
