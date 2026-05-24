@@ -20,6 +20,22 @@
 	min-height: calc(100vh - 200px);
 }
 
+// @wordpress/components Card / CardBody / CardHeader / CardFooter all
+// apply border-radius: 7px via emotion classes (.css-XXX:first-of-type,
+// :last-of-type) injected as inline <style> tags at runtime. Those win
+// the cascade tie at equal specificity, so !important is the only way
+// to flatten Cards plugin-wide.
+.wp-agentic-admin-app .components-card,
+.wp-agentic-admin-app .components-card__body,
+.wp-agentic-admin-app .components-card__header,
+.wp-agentic-admin-app .components-card__footer,
+#wp-agentic-admin-sidebar .components-card,
+#wp-agentic-admin-sidebar .components-card__body,
+#wp-agentic-admin-sidebar .components-card__header,
+#wp-agentic-admin-sidebar .components-card__footer {
+	border-radius: 0 !important;
+}
+
 // Chat header HStack must constrain to its parent column (default WP
 // HStack sizes to content and overflows narrow parents — same issue
 // we hit in admin-sidebar.scss).
