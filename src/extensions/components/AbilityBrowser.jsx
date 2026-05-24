@@ -80,7 +80,11 @@ const AbilityCard = ( { ability, onExecute, isExecuting } ) => {
 	return (
 		<Card isBorderless={ false } size="medium">
 			<CardHeader>
-				<HStack alignment="left" spacing={ 2 }>
+				<HStack
+					alignment="center"
+					justify="space-between"
+					spacing={ 2 }
+				>
 					<strong>{ ability.label }</strong>
 					{ isDestructive && (
 						<Notice

@@ -216,6 +216,9 @@ const PluginAbilitiesPanel = () => {
 
 					const namespace = id.split( '/' )[ 0 ];
 
+					const isDestructive =
+						ability.meta?.annotations?.destructive;
+
 					return (
 						<Card key={ id } isBorderless={ false } size="medium">
 							<CardHeader>
@@ -227,18 +230,22 @@ const PluginAbilitiesPanel = () => {
 									<strong>
 										{ ability.label || id }
 									</strong>
-									{ ability.icon ? (
-										<img
-											src={ ability.icon }
-											alt={ namespace }
-											className="wp-agentic-admin-plugin-panel-icon"
-										/>
+									{ isDestructive ? (
+										<Notice
+											status="warning"
+											isDismissible={ false }
+											politeness="off"
+										>
+											Destructive
+										</Notice>
 									) : (
-										<span className="wp-agentic-admin-plugin-panel-icon wp-agentic-admin-plugin-panel-icon--letter">
-											{ namespace
-												.charAt( 0 )
-												.toUpperCase() }
-										</span>
+										ability.icon && (
+											<img
+												src={ ability.icon }
+												alt={ namespace }
+												className="wp-agentic-admin-plugin-panel-icon"
+											/>
+										)
 									) }
 								</HStack>
 							</CardHeader>

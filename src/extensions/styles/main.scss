@@ -766,16 +766,6 @@
 	border-radius: 6px;
 	flex-shrink: 0;
 	object-fit: contain;
-
-	&--letter {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: $color-accent;
-		color: $color-surface;
-		font-weight: 600;
-		font-size: 16px;
-	}
 }
 
 // Error content in messages
