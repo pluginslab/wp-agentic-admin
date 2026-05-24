@@ -11,6 +11,8 @@ import {
 	Button,
 	Card,
 	CardBody,
+	CardFooter,
+	CardHeader,
 	Notice,
 	Spinner,
 	ToggleControl,
@@ -215,30 +217,16 @@ const PluginAbilitiesPanel = () => {
 					const namespace = id.split( '/' )[ 0 ];
 
 					return (
-						<Card key={ id } size="small">
-							<CardBody>
-								<HStack alignment="top" spacing={ 3 }>
-									<VStack spacing={ 2 }>
-										<ToggleControl
-											__nextHasNoMarginBottom
-											label={
-												ability.description
-													? `${ ability.label || id } — ${
-															ability.description
-													  }`
-													: ability.label || id
-											}
-											checked={ enabled }
-											onChange={ () => handleToggle( id ) }
-										/>
-										<HStack
-											justify="flex-start"
-											spacing={ 3 }
-										>
-											<code>{ id }</code>
-											<span>~{ tokens } tokens</span>
-										</HStack>
-									</VStack>
+						<Card key={ id } isBorderless={ false } size="medium">
+							<CardHeader>
+								<HStack
+									alignment="center"
+									justify="space-between"
+									spacing={ 2 }
+								>
+									<strong>
+										{ ability.label || id }
+									</strong>
 									{ ability.icon ? (
 										<img
 											src={ ability.icon }
@@ -253,7 +241,24 @@ const PluginAbilitiesPanel = () => {
 										</span>
 									) }
 								</HStack>
+							</CardHeader>
+							<CardBody>
+								<VStack spacing={ 3 }>
+									{ ability.description && (
+										<p>{ ability.description }</p>
+									) }
+									<code>{ id }</code>
+									<span>~{ tokens } tokens</span>
+								</VStack>
 							</CardBody>
+							<CardFooter>
+								<ToggleControl
+									__nextHasNoMarginBottom
+									label={ enabled ? 'Enabled' : 'Disabled' }
+									checked={ enabled }
+									onChange={ () => handleToggle( id ) }
+								/>
+							</CardFooter>
 						</Card>
 					);
 				} ) }
