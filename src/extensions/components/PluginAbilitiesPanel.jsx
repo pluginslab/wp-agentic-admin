@@ -282,7 +282,7 @@ const PluginAbilitiesPanel = () => {
 	).length;
 
 	return (
-		<VStack spacing={ 4 }>
+		<VStack spacing={ 4 } className="wp-agentic-admin-tab-padded">
 			<VStack spacing={ 1 }>
 				<h3>Plugin Abilities</h3>
 				<p>

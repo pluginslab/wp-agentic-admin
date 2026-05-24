@@ -268,7 +268,7 @@ const AbilityBrowser = () => {
 	}
 
 	return (
-		<VStack spacing={ 4 }>
+		<VStack spacing={ 4 } className="wp-agentic-admin-tab-padded">
 			<HStack alignment="left" spacing={ 4 }>
 				<VStack spacing={ 1 }>
 					<h3>Available Abilities</h3>

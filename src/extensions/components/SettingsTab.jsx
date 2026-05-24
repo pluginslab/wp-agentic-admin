@@ -227,7 +227,7 @@ const SettingsTab = () => {
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
 
 	return (
-		<div className="wp-agentic-admin-settings-tab">
+		<div className="wp-agentic-admin-settings-tab wp-agentic-admin-tab-padded">
 			<div className="wp-agentic-admin-settings-tab__header">
 				<h3 className="wp-agentic-admin-settings-tab__title">
 					Settings

@@ -701,11 +701,31 @@
 
 // Ability grid — only plugin-specific layout that has no @wordpress
 // equivalent (auto-fit responsive grid; __experimentalGrid only supports
-// fixed column counts).
+// fixed column counts). Each tile is a Card with header/body/footer;
+// stretch the Card to the grid cell height and let the body grow so
+// the Execute Button always sits at the bottom edge.
 .wp-agentic-admin-ability-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 16px;
+
+	.components-card {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.components-card__body {
+		flex: 1;
+	}
+}
+
+// Padding for non-Chat tab content. Chat tab supplies its own
+// edge-to-edge chrome (chat-header / messages / composer); the
+// other tabs (Abilities, Plugin Abilities, Settings) need a uniform
+// 20px breathing room from the panel edges.
+.wp-agentic-admin-tab-padded {
+	padding: 20px;
 }
 
 // Token Budget Bar
