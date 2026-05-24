@@ -57,6 +57,13 @@
 	overflow-y: auto;
 	padding: 20px;
 	background: #f6f7f7;
+
+	// WP admin's global stylesheet sets margin-block: 1em on every <p>
+	// inside .wrap, which pushes the chat-bubble text away from the
+	// timestamp + copy button below it. Reset inside our message Cards.
+	.components-card__body p {
+		margin: 0;
+	}
 }
 
 // Context Warning
