@@ -325,7 +325,7 @@ const PluginAbilitiesPanel = () => {
 				</CardBody>
 			</Card>
 
-			<VStack spacing={ 2 }>
+			<div className="wp-agentic-admin-ability-grid">
 				{ abilities.map( ( ability ) => {
 					const id = ability.name;
 					const enabled = pluginAbilitiesManager.isEnabled( id );
@@ -377,7 +377,7 @@ const PluginAbilitiesPanel = () => {
 						</Card>
 					);
 				} ) }
-			</VStack>
+			</div>
 		</VStack>
 	);
 };
