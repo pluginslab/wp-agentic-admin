@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from '@wordpress/element';
 import vectorStore from '../services/vector-store';
 import {
 	Button,
-	DropdownMenu,
+	Dropdown,
 	MenuGroup,
 	MenuItem,
 	TextareaControl,
@@ -223,17 +223,24 @@ const ChatInput = ( {
 				disabled={ isDisabled }
 			/>
 			<HStack alignment="center" spacing={ 2 } justify="flex-start">
-				<DropdownMenu
-					icon={ plus }
-					label="Select ability bundle"
+				<Dropdown
 					popoverProps={ {
 						placement: 'top-start',
 						shift: true,
 					} }
-					toggleProps={ { disabled: isDisabled } }
-				>
-					{ renderBundleMenu }
-				</DropdownMenu>
+					renderToggle={ ( { isOpen, onToggle } ) => (
+						<Button
+							icon={ plus }
+							label="Select ability bundle"
+							showTooltip
+							aria-expanded={ isOpen }
+							aria-haspopup="true"
+							disabled={ isDisabled }
+							onClick={ onToggle }
+						/>
+					) }
+					renderContent={ renderBundleMenu }
+				/>
 				<Button
 					icon={ globe }
 					label={ `Web Search: ${
