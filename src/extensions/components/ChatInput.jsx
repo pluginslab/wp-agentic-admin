@@ -196,11 +196,16 @@ const ChatInput = ( {
 					renderToggle={ ( { isOpen, onToggle } ) => (
 						<Button
 							icon={ plus }
-							label="Select ability bundle"
+							label={
+								selectedBundleIds.length > 0
+									? `Ability bundles (${ selectedBundleIds.length } selected)`
+									: 'Select ability bundle'
+							}
 							showTooltip
 							aria-expanded={ isOpen }
 							aria-haspopup="true"
 							disabled={ isDisabled }
+							isPressed={ selectedBundleIds.length > 0 }
 							onClick={ onToggle }
 						/>
 					) }
