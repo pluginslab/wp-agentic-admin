@@ -122,6 +122,17 @@
 		}
 	}
 
+	// Chat-bubble exception to the plugin-wide flatten-corners rule.
+	// 8px is the WP 7.0 container border-radius (used in core admin
+	// shells); it reads as a soft chat-message rounding without
+	// looking unfamiliar to a WP admin.
+	.components-card,
+	.components-card__body,
+	.components-card__header,
+	.components-card__footer {
+		border-radius: 8px !important;
+	}
+
 	// Dark-themed <pre> blocks for ability-result JSON dumps, code
 	// payloads, etc. Matches the high-contrast look of a code editor
 	// against the otherwise light WP admin chrome.
