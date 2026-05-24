@@ -425,16 +425,22 @@
 	color: $color-text-faint;
 }
 
-// Multi-select DropdownMenu: give selected rows a tinted accent
-// background so they're clearly distinguishable from the keyboard
-// focus outline that lands on the first item when the menu opens.
-// Targets aria-checked because we set role="menuitemcheckbox".
-.components-menu-item[aria-checked='true'] {
+// Multi-select Dropdown bundle menu: give selected rows a tinted
+// accent background + bold so they're unmistakable next to the
+// keyboard-focus outline. The actual element MenuItem emits with
+// the aria-checked attribute is the inner button, not the wrapper.
+.components-menu-item__button[aria-checked='true'] {
 	background: $color-info-bg;
 	color: $color-accent;
+	font-weight: 600;
 
-	&:hover {
+	&:hover,
+	&:focus {
 		background: $color-info-bg;
+	}
+
+	.wp-agentic-admin-bundle-count {
+		color: $color-accent;
 	}
 }
 

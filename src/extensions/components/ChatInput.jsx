@@ -15,33 +15,10 @@ import {
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import {
-	plus,
-	send,
-	shield,
-	globe,
-	plugins,
-	tool,
-	bug,
-	post,
-	info,
-	pencil,
-	search,
-	check,
-} from '@wordpress/icons';
+import { plus, send, globe, search } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 import ModelStatusPill from './ModelStatusPill';
-
-const BUNDLE_ICONS = {
-	shield,
-	plugins,
-	tool,
-	bug,
-	post,
-	info,
-	edit: pencil,
-};
 
 const ChatInput = ( {
 	onSend,
@@ -152,11 +129,6 @@ const ChatInput = ( {
 					return (
 						<MenuItem
 							key={ bundle.id }
-							icon={
-								selected
-									? check
-									: BUNDLE_ICONS[ bundle.icon ] || shield
-							}
 							isSelected={ selected }
 							role="menuitemcheckbox"
 							onClick={ () => toggleBundle( bundle.id ) }
@@ -180,13 +152,6 @@ const ChatInput = ( {
 						return (
 							<MenuItem
 								key={ bundle.id }
-								icon={
-									selected
-										? check
-										: bundle.icon
-										? undefined
-										: plugins
-								}
 								isSelected={ selected }
 								role="menuitemcheckbox"
 								onClick={ () => toggleBundle( bundle.id ) }
