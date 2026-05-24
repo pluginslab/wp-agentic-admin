@@ -271,7 +271,11 @@ const CollapsibleCard = ( {
 					onClick={ () => setExpanded( ! expanded ) }
 					aria-expanded={ isOpen }
 				>
-					<HStack alignment="center" spacing={ 2 }>
+					<HStack
+						alignment="center"
+						justify="flex-start"
+						spacing={ 2 }
+					>
 						{ icon && <Icon icon={ icon } size={ 16 } /> }
 						<strong>{ label }</strong>
 						{ suffix && <span>{ suffix }</span> }
