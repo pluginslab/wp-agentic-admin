@@ -169,13 +169,9 @@ const ResultPanel = ( { result, onClear } ) => {
 		>
 			<VStack spacing={ 2 }>
 				<strong>
-					{ isError
-						? 'Execution failed'
-						: 'Execution successful' }
+					{ isError ? 'Execution failed' : 'Execution successful' }
 				</strong>
-				<pre>
-					{ JSON.stringify( result.data || result, null, 2 ) }
-				</pre>
+				<pre>{ JSON.stringify( result.data || result, null, 2 ) }</pre>
 			</VStack>
 		</Notice>
 	);
@@ -261,8 +257,8 @@ const AbilityBrowser = () => {
 		return (
 			<VStack spacing={ 3 }>
 				<Notice status="warning" isDismissible={ false }>
-					No abilities found. Make sure the Abilities API plugin
-					is active and abilities are registered.
+					No abilities found. Make sure the Abilities API plugin is
+					active and abilities are registered.
 				</Notice>
 				<Button variant="secondary" onClick={ loadAbilities }>
 					Refresh
@@ -273,11 +269,7 @@ const AbilityBrowser = () => {
 
 	return (
 		<VStack spacing={ 4 } className="wp-agentic-admin-tab-padded">
-			<HStack
-				alignment="center"
-				justify="space-between"
-				spacing={ 4 }
-			>
+			<HStack alignment="center" justify="space-between" spacing={ 4 }>
 				<VStack spacing={ 1 } style={ { flex: 1 } }>
 					<h3>Available Abilities</h3>
 					<p>

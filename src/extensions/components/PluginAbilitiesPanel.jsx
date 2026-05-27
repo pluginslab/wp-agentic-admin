@@ -185,9 +185,9 @@ const PluginAbilitiesPanel = () => {
 
 			{ budget.percentage > 25 && (
 				<Notice status="warning" isDismissible={ false }>
-					Enabling these plugin abilities is using a noticeable
-					share of the model&apos;s context window. Disable any
-					you don&apos;t need to keep room for the conversation.
+					Enabling these plugin abilities is using a noticeable share
+					of the model&apos;s context window. Disable any you
+					don&apos;t need to keep room for the conversation.
 				</Notice>
 			) }
 
@@ -227,9 +227,7 @@ const PluginAbilitiesPanel = () => {
 									justify="space-between"
 									spacing={ 2 }
 								>
-									<strong>
-										{ ability.label || id }
-									</strong>
+									<strong>{ ability.label || id }</strong>
 									{ isDestructive ? (
 										<Notice
 											status="warning"

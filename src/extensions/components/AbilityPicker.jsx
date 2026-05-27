@@ -51,9 +51,7 @@ const AbilityPicker = ( { abilities, workflows, onExecute, isProcessing } ) => {
 		<li key={ tool.id }>
 			<VStack spacing={ 2 }>
 				<Button
-					variant={
-						expandedId === tool.id ? 'primary' : 'secondary'
-					}
+					variant={ expandedId === tool.id ? 'primary' : 'secondary' }
 					onClick={ () => handleClick( tool ) }
 					disabled={ isProcessing }
 				>

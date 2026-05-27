@@ -59,9 +59,7 @@ const FileView = ( { file } ) => {
 						</span>
 					) }
 					{ wasRedacted && (
-						<span
-							title="Sensitive values (credentials, keys, salts) were replaced server-side."
-						>
+						<span title="Sensitive values (credentials, keys, salts) were replaced server-side.">
 							redacted
 						</span>
 					) }
@@ -69,9 +67,7 @@ const FileView = ( { file } ) => {
 						size="small"
 						variant="secondary"
 						icon={ copied ? check : copySmall }
-						label={
-							copied ? 'Copied!' : 'Copy file content'
-						}
+						label={ copied ? 'Copied!' : 'Copy file content' }
 						showTooltip
 						onClick={ handleCopy }
 					/>

@@ -250,9 +250,8 @@ const ModelStatus = ( {
 		loading: connectorsLoading,
 	} = useConnectors();
 	const [ selectedConnectorId, setSelectedConnectorId ] = useState( '' );
-	const [ selectedConnectorModelId, setSelectedConnectorModelId ] = useState(
-		''
-	);
+	const [ selectedConnectorModelId, setSelectedConnectorModelId ] =
+		useState( '' );
 	const connectedConnectors = connectors.filter( ( c ) => c.is_connected );
 	const selectedConnector = connectedConnectors.find(
 		( c ) => c.id === selectedConnectorId
@@ -544,7 +543,9 @@ const ModelStatus = ( {
 											options={ availableModels.map(
 												( model ) => ( {
 													value: model.id,
-													label: `${ model.name } (${ model.size })${
+													label: `${ model.name } (${
+														model.size
+													})${
 														model.recommended
 															? ' - Recommended'
 															: ''
@@ -572,9 +573,9 @@ const ModelStatus = ( {
 										The AI model runs entirely in your
 										browser using WebGPU. The first load
 										will download model data (250MB-1GB
-										depending on model), which is cached
-										for future use. Using a Service Worker,
-										the model stays loaded as you navigate
+										depending on model), which is cached for
+										future use. Using a Service Worker, the
+										model stays loaded as you navigate
 										wp-admin — no reload needed! No data is
 										sent to external servers.
 									</Notice>
@@ -683,10 +684,9 @@ const ModelStatus = ( {
 									>
 										Connect to any OpenAI-compatible API
 										endpoint (Ollama, LM Studio, vLLM,
-										OpenAI, Groq, Together, etc.). Enter
-										the base URL and fetch available
-										models. API keys are stored in your
-										browser only.
+										OpenAI, Groq, Together, etc.). Enter the
+										base URL and fetch available models. API
+										keys are stored in your browser only.
 									</Notice>
 								</VStack>
 							) }
@@ -704,7 +704,9 @@ const ModelStatus = ( {
 												<SelectControl
 													__nextHasNoMarginBottom
 													label="Connector"
-													value={ selectedConnectorId }
+													value={
+														selectedConnectorId
+													}
 													options={ [
 														{
 															value: '',
@@ -728,7 +730,8 @@ const ModelStatus = ( {
 													} }
 												/>
 												{ selectedConnectorId &&
-													connectorModels.length > 0 && (
+													connectorModels.length >
+														0 && (
 														<SelectControl
 															__nextHasNoMarginBottom
 															label="Model"
@@ -763,8 +766,10 @@ const ModelStatus = ( {
 																{
 																	provider:
 																		'connector',
-																	connectorId: selectedConnectorId,
-																	connectorModel: selectedConnectorModelId,
+																	connectorId:
+																		selectedConnectorId,
+																	connectorModel:
+																		selectedConnectorModelId,
 																}
 															);
 															await modelLoader.loadConnector(
@@ -812,8 +817,7 @@ const ModelStatus = ( {
 										API. Any connector plugin you install
 										and authenticate appears here
 										automatically — Anthropic, Google,
-										OpenAI, and any third-party
-										ai_provider.
+										OpenAI, and any third-party ai_provider.
 									</Notice>
 								</VStack>
 							) }

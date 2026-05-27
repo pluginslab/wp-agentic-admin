@@ -52,11 +52,7 @@ const ModelStatusPill = () => {
 					{ STATUS_LABEL[ status ] || status }
 				</span>
 				<span>{ Math.round( progress ) }%</span>
-				<Button
-					variant="link"
-					isDestructive
-					onClick={ handleUnload }
-				>
+				<Button variant="link" isDestructive onClick={ handleUnload }>
 					Cancel
 				</Button>
 			</HStack>
@@ -84,10 +80,7 @@ const ModelStatusPill = () => {
 			</span>
 			<span>{ labelText }</span>
 			{ status === 'ready' && (
-				<DropdownMenu
-					icon={ moreVertical }
-					label="Model options"
-				>
+				<DropdownMenu icon={ moreVertical } label="Model options">
 					{ ( { onClose } ) => (
 						<MenuGroup>
 							<MenuItem

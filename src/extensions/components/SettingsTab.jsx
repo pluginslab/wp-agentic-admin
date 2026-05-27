@@ -89,12 +89,13 @@ function saveThinkingPrefs( prefs ) {
 /**
  * Render a label/value pair as a HStack row. Used in place of the
  * old hand-rolled .wp-agentic-admin-settings-tab__gpu-table.
+ * @param root0
+ * @param root0.label
+ * @param root0.children
  */
 const InfoRow = ( { label, children } ) => (
 	<HStack justify="flex-start" spacing={ 4 }>
-		<span style={ { color: '#646970', minWidth: '160px' } }>
-			{ label }
-		</span>
+		<span style={ { color: '#646970', minWidth: '160px' } }>{ label }</span>
 		<span>{ children }</span>
 	</HStack>
 );
@@ -235,11 +236,10 @@ const SettingsTab = () => {
 							<FlexBlock>
 								<p style={ { margin: 0 } }>
 									Build a local search index from your
-									site&apos;s code, database schema,
-									WordPress API signatures, and reference
-									documentation. The AI assistant
-									automatically consults this knowledge
-									base when answering questions.
+									site&apos;s code, database schema, WordPress
+									API signatures, and reference documentation.
+									The AI assistant automatically consults this
+									knowledge base when answering questions.
 								</p>
 							</FlexBlock>
 							<FlexItem>
@@ -354,7 +354,9 @@ const SettingsTab = () => {
 			<Card>
 				<CardHeader>
 					<VStack spacing={ 1 }>
-						<h3 style={ { margin: 0 } }>Context Window per Model</h3>
+						<h3 style={ { margin: 0 } }>
+							Context Window per Model
+						</h3>
 						<p>
 							The context window determines how much conversation
 							history and tool data the model can process. Larger
@@ -454,8 +456,8 @@ const SettingsTab = () => {
 					<VStack spacing={ 1 }>
 						<h3 style={ { margin: 0 } }>Thinking Mode</h3>
 						<p>
-							Qwen 3 models use a thinking step
-							({ '<think>...</think>' }) before responding.
+							Qwen 3 models use a thinking step (
+							{ '<think>...</think>' }) before responding.
 							Disabling thinking makes responses faster but may
 							reduce reasoning quality.
 						</p>

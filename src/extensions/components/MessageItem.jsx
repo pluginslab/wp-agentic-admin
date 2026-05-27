@@ -159,7 +159,10 @@ const parseTable = ( lines, keyIndex ) => {
 	);
 
 	return (
-		<table key={ `table-${ keyIndex }` } className="wp-agentic-admin-md-table">
+		<table
+			key={ `table-${ keyIndex }` }
+			className="wp-agentic-admin-md-table"
+		>
 			<thead>
 				<tr>
 					{ headerCells.map( ( cell, i ) => (
@@ -252,6 +255,13 @@ const getAbilityLabel = ( abilityId ) => {
 /**
  * A collapsible Card with a Button header. Used for tool calls,
  * tool results, and thinking blocks.
+ * @param root0
+ * @param root0.icon
+ * @param root0.label
+ * @param root0.suffix
+ * @param root0.defaultExpanded
+ * @param root0.forceExpanded
+ * @param root0.children
  */
 const CollapsibleCard = ( {
 	icon,
@@ -340,9 +350,7 @@ const MessageItem = ( { message, onAction } ) => {
 		return (
 			<CollapsibleCard
 				icon={ cog }
-				label={
-					thinkingIsStreaming ? 'Thinking…' : 'Thought process'
-				}
+				label={ thinkingIsStreaming ? 'Thinking…' : 'Thought process' }
 				forceExpanded={ thinkingIsStreaming }
 			>
 				<p>
@@ -387,9 +395,7 @@ const MessageItem = ( { message, onAction } ) => {
 			if ( line.startsWith( '**' ) && line.endsWith( '**' ) ) {
 				flushListItems();
 				elements.push(
-					<h3 key={ keyIndex++ }>
-						{ line.replace( /\*\*/g, '' ) }
-					</h3>
+					<h3 key={ keyIndex++ }>{ line.replace( /\*\*/g, '' ) }</h3>
 				);
 			} else if ( line.startsWith( '- ' ) ) {
 				listItems.push( line.substring( 2 ) );
@@ -438,9 +444,9 @@ const MessageItem = ( { message, onAction } ) => {
 							<VStack spacing={ 2 }>
 								{ messageActions.map( ( action ) => (
 									<ActionButton
-										key={ `${ action.action }-${ JSON.stringify(
-											action.args
-										) }` }
+										key={ `${
+											action.action
+										}-${ JSON.stringify( action.args ) }` }
 										action={ action }
 										onAction={ onAction }
 									/>
