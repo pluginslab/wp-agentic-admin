@@ -1,5 +1,5 @@
 /**
- * Agentic Admin for WordPress - Main Entry Point
+ * Agentic Admin - Main Entry Point
  *
  * @version 0.1.0
  */

@@ -29,7 +29,17 @@ import {
 	useRef,
 	useState,
 } from '@wordpress/element';
-import { Button, Modal, Notice, Snackbar } from '@wordpress/components';
+import {
+	Button,
+	Card,
+	CardBody,
+	Modal,
+	Notice,
+	ProgressBar,
+	Snackbar,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import {
@@ -424,9 +434,12 @@ const ChatContainer = ( {
 				return;
 			}
 
-			// Scope plugin abilities when a plugin bundle is active
-			if ( options.pluginNamespace ) {
-				pluginAbilitiesManager.scopeToPlugin( options.pluginNamespace );
+			// Scope plugin abilities when one or more plugin bundles are active
+			const namespacesToScope =
+				options.pluginNamespaces ||
+				( options.pluginNamespace ? [ options.pluginNamespace ] : [] );
+			if ( namespacesToScope.length ) {
+				pluginAbilitiesManager.scopeToPlugin( namespacesToScope );
 			}
 
 			// Process message through orchestrator
@@ -435,7 +448,7 @@ const ChatContainer = ( {
 			} catch ( error ) {
 				log.error( 'Error processing message:', error );
 			} finally {
-				if ( options.pluginNamespace ) {
+				if ( namespacesToScope.length ) {
 					pluginAbilitiesManager.clearPluginScope();
 				}
 			}
@@ -705,35 +718,37 @@ const ChatContainer = ( {
 
 	return (
 		<div className="wp-agentic-admin-chat-container">
-			<div className="wp-agentic-admin-chat-header">
-				<div className="wp-agentic-admin-chat-header__actions">
-					<Button
-						variant="secondary"
-						onClick={ copyAllConversation }
-						disabled={
-							messages.length === 0 ||
-							isLoading ||
-							isStreaming ||
-							isExecutingTool
-						}
-					>
-						Copy All
-					</Button>
-					<Button
-						variant="tertiary"
-						isDestructive
-						onClick={ clearHistory }
-						disabled={
-							messages.length <= 1 ||
-							isLoading ||
-							isStreaming ||
-							isExecutingTool
-						}
-					>
-						Clear Chat
-					</Button>
-				</div>
-			</div>
+			<HStack
+				justify="flex-end"
+				spacing={ 2 }
+				className="wp-agentic-admin-chat-header"
+			>
+				<Button
+					variant="secondary"
+					onClick={ copyAllConversation }
+					disabled={
+						messages.length === 0 ||
+						isLoading ||
+						isStreaming ||
+						isExecutingTool
+					}
+				>
+					Copy All
+				</Button>
+				<Button
+					variant="tertiary"
+					isDestructive
+					onClick={ clearHistory }
+					disabled={
+						messages.length <= 1 ||
+						isLoading ||
+						isStreaming ||
+						isExecutingTool
+					}
+				>
+					Clear Chat
+				</Button>
+			</HStack>
 
 			<MessageList
 				messages={ displayMessages }
@@ -765,42 +780,23 @@ const ChatContainer = ( {
 
 			{ /* Workflow progress indicator */ }
 			{ isRunningWorkflow && workflowProgress && (
-				<div className="agentic-message agentic-message--workflow">
-					<div className="agentic-timeline">
-						<div className="agentic-timeline__line" />
-						<div className="agentic-timeline__dot agentic-timeline__dot--workflow" />
-					</div>
-					<div
-						className="agentic-workflow-progress"
-						role="status"
-						aria-live="polite"
-					>
-						<div className="agentic-workflow-progress__header">
-							<span className="agentic-workflow-progress__step">
-								Step { workflowProgress.step } of{ ' ' }
-								{ workflowProgress.total }
-							</span>
-							<span className="agentic-workflow-progress__label">
-								{ workflowProgress.label }
-							</span>
-						</div>
-						<div
-							className="agentic-workflow-progress__bar"
-							role="progressbar"
-							aria-valuenow={ workflowProgress.percentage }
-							aria-valuemin={ 0 }
-							aria-valuemax={ 100 }
-							aria-label={ `Workflow progress: ${ workflowProgress.percentage }%` }
-						>
-							<div
-								className="agentic-workflow-progress__fill"
-								style={ {
-									width: `${ workflowProgress.percentage }%`,
-								} }
+				<Card size="small" role="status" aria-live="polite">
+					<CardBody>
+						<VStack spacing={ 2 }>
+							<HStack justify="space-between" spacing={ 2 }>
+								<strong>
+									Step { workflowProgress.step } of{ ' ' }
+									{ workflowProgress.total }
+								</strong>
+								<span>{ workflowProgress.label }</span>
+							</HStack>
+							<ProgressBar
+								value={ workflowProgress.percentage }
+								aria-label={ `Workflow progress: ${ workflowProgress.percentage }%` }
 							/>
-						</div>
-					</div>
-				</div>
+						</VStack>
+					</CardBody>
+				</Card>
 			) }
 
 			<ChatInput
@@ -818,14 +814,17 @@ const ChatContainer = ( {
 			/>
 
 			{ isStreaming && (
-				<div className="wp-agentic-admin-chat-actions">
+				<HStack
+					justify="center"
+					className="wp-agentic-admin-chat-actions"
+				>
 					<Button
 						variant="secondary"
 						onClick={ handleStopGeneration }
 					>
 						Stop Generation
 					</Button>
-				</div>
+				</HStack>
 			) }
 
 			{ /* Confirmation Modal for destructive actions and intent confirmation */ }

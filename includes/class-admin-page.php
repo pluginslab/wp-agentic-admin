@@ -55,8 +55,8 @@ class Admin_Page {
 	 */
 	public function add_admin_menu(): void {
 		add_menu_page(
-			__( 'Agentic Admin for WordPress', 'agentic-admin' ),
-			__( 'Agentic Admin for WordPress', 'agentic-admin' ),
+			__( 'Agentic Admin', 'agentic-admin' ),
+			__( 'Agentic Admin', 'agentic-admin' ),
 			'manage_options',
 			'agentic-admin',
 			array( $this, 'render_page' ),
@@ -160,6 +160,8 @@ class Admin_Page {
 
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
+			'restRoot'            => esc_url_raw( rest_url() ),
+			'connectorsRestUrl'   => esc_url_raw( rest_url( 'wp-agentic-admin/v1/connectors' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'userId'              => get_current_user_id(),
 			'pluginUrl'           => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL ),

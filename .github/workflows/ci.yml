@@ -64,3 +64,8 @@ jobs:
 
       - name: Run ${{ matrix.check_name }}
         run: ${{ matrix.command }}
+
+  # WordPress.org Plugin Check is run locally against an extracted dist zip
+  # in a Playground instance — see Section "Plugin Check" in CONTRIBUTING.md.
+  # Adding it to GHA requires wp-env bootstrap that's worth doing in a focused
+  # follow-up; tracked separately for v0.12.

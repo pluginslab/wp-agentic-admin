@@ -1,22 +1,41 @@
 /**
  * MessageItem Component
  *
- * Renders a single message in the chat interface with Perplexity-style UI.
- * Features vertical timeline, typography hierarchy, and collapsible tool results.
- *
+ * Renders a single message in the chat interface using @wordpress/components
+ * primitives. Each message type renders as a Card; tool/thinking/result
+ * cards collapse via a Button toggle. The original Perplexity-style vertical
+ * timeline has been retired in favor of a leading icon column inside each
+ * Card, which matches WP-native admin conventions.
  */
 
 import { useState } from '@wordpress/element';
+import {
+	Button,
+	Card,
+	CardBody,
+	CardHeader,
+	Icon,
+	Notice,
+	Spinner,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
+import {
+	cog,
+	check,
+	info,
+	caution,
+	cancelCircleFilled,
+	chevronDown,
+	chevronUp,
+	copySmall,
+} from '@wordpress/icons';
 import AbilityPicker from './AbilityPicker';
 import FileView from './FileView';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'MessageItem' );
 
-/**
- * Message type constants
- * Using string literals for compatibility with converted messages
- */
 const MessageType = {
 	USER: 'user',
 	ASSISTANT: 'assistant',
@@ -27,11 +46,6 @@ const MessageType = {
 	FILE_VIEW: 'file_view',
 };
 
-/**
- * Pairs of abilities that are mutual inverses. After a successful click,
- * the button flips to the inverse so its label reflects the new plugin
- * state without needing a fresh plugin-list call.
- */
 const INVERSE_ACTIONS = {
 	'wp-agentic-admin/plugin-activate': {
 		action: 'wp-agentic-admin/plugin-deactivate',
@@ -43,17 +57,6 @@ const INVERSE_ACTIONS = {
 	},
 };
 
-/**
- * A single action button inside an ability_result message. Tracks its
- * own loading state and, for known reversible pairs (plugin-activate ↔
- * plugin-deactivate), flips after a successful click so the label and
- * target action match the new state.
- *
- * @param {Object}   props          - Component props
- * @param {Object}   props.action   - Action descriptor from the ability result
- * @param {Function} props.onAction - Async (abilityId, args) → result
- * @return {JSX.Element} The rendered button row
- */
 const ActionButton = ( { action, onAction } ) => {
 	const [ override, setOverride ] = useState( null );
 	const [ loading, setLoading ] = useState( false );
@@ -75,28 +78,20 @@ const ActionButton = ( { action, onAction } ) => {
 	};
 
 	return (
-		<li className="agentic-action-list__item">
-			<span className="agentic-action-list__label">
-				{ current.label }
-			</span>
-			<button
-				className="agentic-action-list__button"
-				type="button"
+		<HStack justify="space-between" spacing={ 2 }>
+			<span>{ current.label }</span>
+			<Button
+				variant="secondary"
 				onClick={ handleClick }
 				disabled={ loading }
+				isBusy={ loading }
 			>
 				{ loading ? '…' : current.button_label }
-			</button>
-		</li>
+			</Button>
+		</HStack>
 	);
 };
 
-/**
- * Format timestamp for display
- *
- * @param {string} timestamp - ISO timestamp
- * @return {string} Formatted time
- */
 const formatTime = ( timestamp ) => {
 	const date = new Date( timestamp );
 	return date.toLocaleTimeString( [], {
@@ -105,19 +100,6 @@ const formatTime = ( timestamp ) => {
 	} );
 };
 
-/**
- * Split message content into text and fenced code block segments.
- *
- * @param {string} text - Full message content
- * @return {Array<{type:'text'|'code', content:string, lang?:string, partial?:boolean}>} Parsed blocks — partial is true for unclosed fences during streaming
- */
-/**
- * Parse simple markdown to React elements
- * Supports: **bold**, `code`, and line breaks
- *
- * @param {string} text - Text with markdown
- * @return {Array} Array of React elements
- */
 const parseMarkdown = ( text ) => {
 	if ( ! text ) {
 		return null;
@@ -127,9 +109,7 @@ const parseMarkdown = ( text ) => {
 	let remaining = text;
 	let keyIndex = 0;
 
-	// Process the text character by character looking for markdown patterns
 	while ( remaining.length > 0 ) {
-		// Check for bold **text**
 		const boldMatch = remaining.match( /^\*\*(.+?)\*\*/ );
 		if ( boldMatch ) {
 			parts.push(
@@ -141,7 +121,6 @@ const parseMarkdown = ( text ) => {
 			continue;
 		}
 
-		// Check for inline code `text`
 		const codeMatch = remaining.match( /^`(.+?)`/ );
 		if ( codeMatch ) {
 			parts.push( <code key={ keyIndex++ }>{ codeMatch[ 1 ] }</code> );
@@ -149,18 +128,14 @@ const parseMarkdown = ( text ) => {
 			continue;
 		}
 
-		// Find next special character or end of string
 		const nextSpecial = remaining.search( /\*\*|`/ );
 		if ( nextSpecial === -1 ) {
-			// No more markdown, add rest as text
 			parts.push( remaining );
 			break;
 		} else if ( nextSpecial === 0 ) {
-			// Special char at start but didn't match pattern, treat as text
 			parts.push( remaining[ 0 ] );
 			remaining = remaining.slice( 1 );
 		} else {
-			// Add text before special char
 			parts.push( remaining.slice( 0, nextSpecial ) );
 			remaining = remaining.slice( nextSpecial );
 		}
@@ -169,23 +144,8 @@ const parseMarkdown = ( text ) => {
 	return parts;
 };
 
-/**
- * Check if a line is a markdown table separator (e.g. |---|---|)
- *
- * @param {string} line - Line to check
- * @return {boolean} True if separator
- */
-const isTableSeparator = ( line ) => {
-	return /^\|[\s\-:|]+\|$/.test( line.trim() );
-};
+const isTableSeparator = ( line ) => /^\|[\s\-:|]+\|$/.test( line.trim() );
 
-/**
- * Parse a group of markdown table lines into a React table element
- *
- * @param {string[]} lines    - Table lines (header, separator, rows)
- * @param {number}   keyIndex - React key base index
- * @return {JSX.Element} Table element
- */
 const parseTable = ( lines, keyIndex ) => {
 	const parseRow = ( line ) =>
 		line
@@ -193,48 +153,39 @@ const parseTable = ( lines, keyIndex ) => {
 			.slice( 1, -1 )
 			.map( ( cell ) => cell.trim() );
 
-	// First line is header, second is separator, rest are body rows.
 	const headerCells = parseRow( lines[ 0 ] );
 	const bodyLines = lines.filter(
 		( line, i ) => i > 0 && ! isTableSeparator( line )
 	);
 
 	return (
-		<div key={ `table-${ keyIndex }` } className="agentic-table-wrap">
-			<table className="agentic-table">
-				<thead>
-					<tr>
-						{ headerCells.map( ( cell, i ) => (
-							<th key={ i }>{ parseMarkdown( cell ) }</th>
-						) ) }
-					</tr>
-				</thead>
-				<tbody>
-					{ bodyLines.map( ( line, rowIdx ) => {
-						const cells = parseRow( line );
-						return (
-							<tr key={ rowIdx }>
-								{ cells.map( ( cell, i ) => (
-									<td key={ i }>{ parseMarkdown( cell ) }</td>
-								) ) }
-							</tr>
-						);
-					} ) }
-				</tbody>
-			</table>
-		</div>
+		<table
+			key={ `table-${ keyIndex }` }
+			className="wp-agentic-admin-md-table"
+		>
+			<thead>
+				<tr>
+					{ headerCells.map( ( cell, i ) => (
+						<th key={ i }>{ parseMarkdown( cell ) }</th>
+					) ) }
+				</tr>
+			</thead>
+			<tbody>
+				{ bodyLines.map( ( line, rowIdx ) => {
+					const cells = parseRow( line );
+					return (
+						<tr key={ rowIdx }>
+							{ cells.map( ( cell, i ) => (
+								<td key={ i }>{ parseMarkdown( cell ) }</td>
+							) ) }
+						</tr>
+					);
+				} ) }
+			</tbody>
+		</table>
 	);
 };
 
-/**
- * Parse content into blocks (paragraphs and tables).
- *
- * Groups consecutive lines starting with | into table blocks.
- * Everything else becomes paragraph blocks.
- *
- * @param {string} content - Raw message content
- * @return {Array} Array of React elements
- */
 const parseContentBlocks = ( content ) => {
 	if ( ! content ) {
 		return null;
@@ -249,7 +200,6 @@ const parseContentBlocks = ( content ) => {
 		if ( tableBuffer.length >= 2 ) {
 			elements.push( parseTable( tableBuffer, keyIndex++ ) );
 		} else {
-			// Not enough lines for a table, render as paragraphs.
 			tableBuffer.forEach( ( line ) => {
 				elements.push(
 					<p key={ keyIndex++ }>{ parseMarkdown( line ) }</p>
@@ -261,25 +211,21 @@ const parseContentBlocks = ( content ) => {
 
 	for ( const line of lines ) {
 		const trimmed = line.trim();
-
 		if ( trimmed.startsWith( '|' ) && trimmed.endsWith( '|' ) ) {
 			tableBuffer.push( trimmed );
 		} else {
 			if ( tableBuffer.length > 0 ) {
 				flushTable();
 			}
-
 			if ( trimmed === '' ) {
 				continue;
 			}
-
 			elements.push(
 				<p key={ keyIndex++ }>{ parseMarkdown( trimmed ) }</p>
 			);
 		}
 	}
 
-	// Flush remaining table buffer.
 	if ( tableBuffer.length > 0 ) {
 		flushTable();
 	}
@@ -287,12 +233,6 @@ const parseContentBlocks = ( content ) => {
 	return elements;
 };
 
-/**
- * Render ability result as formatted output
- *
- * @param {Object} result - Ability execution result
- * @return {string} Formatted result
- */
 const formatAbilityResult = ( result ) => {
 	if ( typeof result === 'string' ) {
 		return result;
@@ -300,12 +240,6 @@ const formatAbilityResult = ( result ) => {
 	return JSON.stringify( result, null, 2 );
 };
 
-/**
- * Get a friendly label for ability IDs
- *
- * @param {string} abilityId - Full ability ID
- * @return {string} Friendly label
- */
 const getAbilityLabel = ( abilityId ) => {
 	const labels = {
 		'wp-agentic-admin/error-log-read': 'Reading error log',
@@ -319,28 +253,63 @@ const getAbilityLabel = ( abilityId ) => {
 };
 
 /**
- * MessageItem component
- *
- * @param {Object}   props          - Component props
- * @param {Object}   props.message  - Message object
- * @param {Function} props.onAction - Callback to execute an ability action
- * @return {JSX.Element} Rendered message
+ * A collapsible Card with a Button header. Used for tool calls,
+ * tool results, and thinking blocks.
+ * @param root0
+ * @param root0.icon
+ * @param root0.label
+ * @param root0.suffix
+ * @param root0.defaultExpanded
+ * @param root0.forceExpanded
+ * @param root0.children
  */
+const CollapsibleCard = ( {
+	icon,
+	label,
+	suffix,
+	defaultExpanded = false,
+	forceExpanded = false,
+	children,
+} ) => {
+	const [ expanded, setExpanded ] = useState( defaultExpanded );
+	const isOpen = forceExpanded || expanded;
+
+	return (
+		<Card size="small" className="wp-agentic-admin-collapsible">
+			<CardHeader>
+				<Button
+					onClick={ () => setExpanded( ! expanded ) }
+					aria-expanded={ isOpen }
+				>
+					<HStack
+						alignment="center"
+						justify="flex-start"
+						spacing={ 2 }
+					>
+						{ icon && <Icon icon={ icon } size={ 16 } /> }
+						<strong>{ label }</strong>
+						{ suffix && <span>{ suffix }</span> }
+						<Icon
+							icon={ isOpen ? chevronUp : chevronDown }
+							size={ 16 }
+						/>
+					</HStack>
+				</Button>
+			</CardHeader>
+			{ isOpen && <CardBody>{ children }</CardBody> }
+		</Card>
+	);
+};
+
 const MessageItem = ( { message, onAction } ) => {
-	const { type, content, timestamp, prefillTps, decodeTps } = message;
-	const [ isExpanded, setIsExpanded ] = useState( false );
+	const { type, content, timestamp } = message;
 	const [ copied, setCopied ] = useState( false );
 
-	/**
-	 * Copy message content to clipboard
-	 */
 	const handleCopy = async () => {
 		try {
-			// Strip markdown for cleaner copy
 			const plainText = content
-				.replace( /\*\*(.+?)\*\*/g, '$1' ) // Remove bold markers
-				.replace( /`(.+?)`/g, '$1' ); // Remove code markers
-
+				.replace( /\*\*(.+?)\*\*/g, '$1' )
+				.replace( /`(.+?)`/g, '$1' );
 			await navigator.clipboard.writeText( plainText );
 			setCopied( true );
 			setTimeout( () => setCopied( false ), 2000 );
@@ -349,7 +318,6 @@ const MessageItem = ( { message, onAction } ) => {
 		}
 	};
 
-	// Handle both legacy meta-wrapped format and new flattened format
 	const meta = message.meta || {
 		abilityId: message.abilityName,
 		result: message.result,
@@ -358,124 +326,53 @@ const MessageItem = ( { message, onAction } ) => {
 		params: message.input,
 	};
 
-	// User message - simple bubble on the right
+	// User message — right-aligned with a primary-tinted Card
 	if ( type === MessageType.USER ) {
 		return (
-			<div className="agentic-message agentic-message--user">
-				<div className="agentic-message__bubble">
-					<p>{ content }</p>
-				</div>
-				<div className="agentic-message__time">
-					{ formatTime( timestamp ) }
-				</div>
-			</div>
+			<HStack justify="flex-end">
+				<Card
+					size="small"
+					className="wp-agentic-admin-msg wp-agentic-admin-msg--user"
+				>
+					<CardBody>
+						<p>{ content }</p>
+						<small>{ formatTime( timestamp ) }</small>
+					</CardBody>
+				</Card>
+			</HStack>
 		);
 	}
 
-	// Thinking block — streams live, then collapses into peekable timeline entry
+	// Thinking block — collapsible, expanded while streaming
 	if ( type === 'thinking' ) {
 		const thinkingIsStreaming = message.isStreaming;
 
 		return (
-			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div
-						className={ `agentic-timeline__dot agentic-timeline__dot--${
-							thinkingIsStreaming ? 'thinking' : 'tool'
-						}` }
-					/>
-				</div>
-				<div
-					className={ `agentic-tool ${
-						thinkingIsStreaming ? '' : 'agentic-tool--thinking-done'
-					}` }
-				>
-					<button
-						className="agentic-tool__header agentic-tool__header--clickable"
-						onClick={ () => setIsExpanded( ! isExpanded ) }
-						type="button"
-						aria-expanded={ isExpanded }
-						aria-label={
-							thinkingIsStreaming
-								? 'Thinking in progress'
-								: 'Toggle thought process details'
-						}
-					>
-						<span className="agentic-tool__icon">
-							{ thinkingIsStreaming ? (
-								<span className="agentic-tool__spinner" />
-							) : (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									aria-hidden="true"
-								>
-									<circle cx="12" cy="12" r="10" />
-									<path d="M12 16v-4" />
-									<path d="M12 8h.01" />
-								</svg>
-							) }
-						</span>
-						<span className="agentic-tool__label">
-							{ thinkingIsStreaming
-								? 'Thinking...'
-								: 'Thought process' }
-						</span>
-						<span
-							className={ `agentic-tool__expand ${
-								isExpanded ? 'agentic-tool__expand--open' : ''
-							}` }
-						>
-							<svg
-								width="12"
-								height="12"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								aria-hidden="true"
-							>
-								<polyline points="6 9 12 15 18 9" />
-							</svg>
-						</span>
-					</button>
-					{ ( isExpanded || thinkingIsStreaming ) && (
-						<div className="agentic-tool__result agentic-tool__result--thinking">
-							<p className="agentic-thinking__text">
-								{ content }
-								{ thinkingIsStreaming && '▊' }
-							</p>
-						</div>
-					) }
-				</div>
-			</div>
+			<CollapsibleCard
+				icon={ cog }
+				label={ thinkingIsStreaming ? 'Thinking…' : 'Thought process' }
+				forceExpanded={ thinkingIsStreaming }
+			>
+				<p>
+					{ content }
+					{ thinkingIsStreaming && '▊' }
+				</p>
+			</CollapsibleCard>
 		);
 	}
 
-	// Loading indicator (inline in message flow)
+	// Loading indicator (inline)
 	if ( type === 'loading' ) {
 		return (
-			<div className="agentic-message agentic-message--loading">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot agentic-timeline__dot--loading" />
-				</div>
-				<div className="agentic-loading" role="status">
-					<div className="agentic-loading__spinner" />
-					<span className="agentic-loading__text">{ content }</span>
-				</div>
-			</div>
+			<HStack alignment="center" spacing={ 2 } role="status">
+				<Spinner />
+				<span>{ content }</span>
+			</HStack>
 		);
 	}
 
-	// System/welcome message
+	// System / welcome message — renders parsed markdown structure
 	if ( type === MessageType.SYSTEM ) {
-		// Parse content and group list items together
 		const lines = content.split( '\n' );
 		const elements = [];
 		let listItems = [];
@@ -505,8 +402,8 @@ const MessageItem = ( { message, onAction } ) => {
 			} else if ( line.startsWith( '*' ) && line.endsWith( '*' ) ) {
 				flushListItems();
 				elements.push(
-					<p key={ keyIndex++ } className="agentic-message__hint">
-						{ line.replace( /\*/g, '' ) }
+					<p key={ keyIndex++ }>
+						<em>{ line.replace( /\*/g, '' ) }</em>
 					</p>
 				);
 			} else if ( line.trim() !== '' ) {
@@ -515,48 +412,36 @@ const MessageItem = ( { message, onAction } ) => {
 			}
 		} );
 
-		// Flush any remaining list items
 		flushListItems();
 
 		return (
-			<div className="agentic-message agentic-message--system">
-				<div className="agentic-message__content">{ elements }</div>
-			</div>
+			<Card size="small">
+				<CardBody>{ elements }</CardBody>
+			</Card>
 		);
 	}
 
-	// Assistant message with timeline
+	// Assistant message — Card with text + optional action buttons + footer
 	if ( type === MessageType.ASSISTANT ) {
-		// Check if this message contains ability tags (tool call)
 		const hasAbilityCall = content.includes( '<ability' );
-
-		// Parse out the non-ability content for display
 		let displayContent = content;
 		if ( hasAbilityCall ) {
-			// Remove ability tags from display, we show them separately
 			displayContent = content
 				.replace( /<ability[^>]*>[\s\S]*?<\/ability>/g, '' )
 				.trim();
 		}
 
-		// Actions attached from a preceding tool result
 		const messageActions = message.actions;
 
 		return (
-			<div className="agentic-message agentic-message--assistant">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot" />
-				</div>
-				<div className="agentic-message__content">
-					{ displayContent && (
-						<div className="agentic-message__text">
-							{ parseContentBlocks( displayContent ) }
-						</div>
-					) }
-					{ messageActions?.length > 0 && onAction && (
-						<div className="agentic-message__actions">
-							<ol className="agentic-action-list">
+			<Card size="small">
+				<CardBody>
+					<VStack spacing={ 3 }>
+						{ displayContent && (
+							<div>{ parseContentBlocks( displayContent ) }</div>
+						) }
+						{ messageActions?.length > 0 && onAction && (
+							<VStack spacing={ 2 }>
 								{ messageActions.map( ( action ) => (
 									<ActionButton
 										key={ `${
@@ -566,116 +451,45 @@ const MessageItem = ( { message, onAction } ) => {
 										onAction={ onAction }
 									/>
 								) ) }
-							</ol>
-						</div>
-					) }
-					<div className="agentic-message__footer">
-						<div className="agentic-message__time">
-							{ formatTime( timestamp ) }
-							{ decodeTps && (
-								<span className="agentic-message__stats">
-									{ prefillTps
-										? `PS ${ prefillTps } t/s · GS ${ decodeTps } t/s`
-										: `GS ${ decodeTps } t/s` }
-								</span>
-							) }
-						</div>
-						<div className="agentic-message__actions">
-							<button
-								className={ `agentic-message__copy ${
-									copied
-										? 'agentic-message__copy--copied'
-										: ''
-								}` }
-								onClick={ handleCopy }
-								type="button"
-								title={
+							</VStack>
+						) }
+						<HStack justify="space-between" spacing={ 2 }>
+							<small>{ formatTime( timestamp ) }</small>
+							<Button
+								size="small"
+								variant="tertiary"
+								icon={ copied ? check : copySmall }
+								label={
 									copied ? 'Copied!' : 'Copy to clipboard'
 								}
-							>
-								{ copied ? (
-									<svg
-										width="14"
-										height="14"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<polyline points="20 6 9 17 4 12" />
-									</svg>
-								) : (
-									<svg
-										width="14"
-										height="14"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<rect
-											x="9"
-											y="9"
-											width="13"
-											height="13"
-											rx="2"
-											ry="2"
-										/>
-										<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-									</svg>
-								) }
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
+								showTooltip
+								onClick={ handleCopy }
+							/>
+						</HStack>
+					</VStack>
+				</CardBody>
+			</Card>
 		);
 	}
 
-	// Ability request - compact inline indicator
+	// Ability request — compact card with spinner while running
 	if ( type === MessageType.ABILITY_REQUEST ) {
 		return (
-			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot agentic-timeline__dot--tool" />
-				</div>
-				<div className="agentic-tool">
-					<div className="agentic-tool__header">
-						<span className="agentic-tool__icon">
-							<svg
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								aria-hidden="true"
-							>
-								<circle cx="12" cy="12" r="3" />
-								<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-							</svg>
-						</span>
-						<span className="agentic-tool__label">
-							{ getAbilityLabel( meta?.abilityId ) }
-						</span>
-						<span className="agentic-tool__status agentic-tool__status--pending">
-							<span className="agentic-tool__spinner" />
-						</span>
-						<span className="agentic-tool__id">
-							{ meta?.abilityId }
-						</span>
-					</div>
-				</div>
-			</div>
+			<Card size="small">
+				<CardBody>
+					<HStack alignment="center" spacing={ 2 }>
+						<Icon icon={ cog } size={ 16 } />
+						<strong>{ getAbilityLabel( meta?.abilityId ) }</strong>
+						<Spinner />
+						<small>{ meta?.abilityId }</small>
+					</HStack>
+				</CardBody>
+			</Card>
 		);
 	}
 
-	// Ability result - collapsible with success/info state
+	// Ability result — collapsible card with status icon + payload
 	if ( type === MessageType.ABILITY_RESULT ) {
-		// Two visual states:
-		//   'success' — tool ran and task succeeded (green, checkmark)
-		//   'info'    — tool ran but task goal not achieved (blue, eye)
 		const resultStatus =
 			meta?.success === false ||
 			( meta?.success === undefined &&
@@ -689,167 +503,58 @@ const MessageItem = ( { message, onAction } ) => {
 			error: 'Failed',
 		};
 
+		const statusIcon = {
+			success: check,
+			info,
+			error: cancelCircleFilled,
+		};
+
 		return (
-			<div className="agentic-message agentic-message--tool">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div
-						className={ `agentic-timeline__dot agentic-timeline__dot--${ resultStatus }` }
-					/>
-				</div>
-				<div
-					className={ `agentic-tool agentic-tool--${ resultStatus }` }
-				>
-					<button
-						className="agentic-tool__header agentic-tool__header--clickable"
-						onClick={ () => setIsExpanded( ! isExpanded ) }
-						type="button"
-						aria-expanded={ isExpanded }
-						aria-label={ `Toggle ${
-							resultStatus === 'success' ? 'completed' : 'failed'
-						} result details for ${ meta?.abilityId }` }
-					>
-						<span className="agentic-tool__icon">
-							{ resultStatus === 'success' && (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									aria-hidden="true"
-								>
-									<polyline points="20 6 9 17 4 12" />
-								</svg>
-							) }
-							{ resultStatus === 'info' && (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-								>
-									<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-									<circle cx="12" cy="12" r="3" />
-								</svg>
-							) }
-							{ resultStatus === 'error' && (
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									aria-hidden="true"
-								>
-									<circle cx="12" cy="12" r="10" />
-									<line x1="15" y1="9" x2="9" y2="15" />
-									<line x1="9" y1="9" x2="15" y2="15" />
-								</svg>
-							) }
-						</span>
-						<span className="agentic-tool__label">
-							{ statusLabel[ resultStatus ] }
-						</span>
-						<span className="agentic-tool__expand">
-							{ isExpanded ? 'Hide details' : 'Show details' }
-						</span>
-						<span className="agentic-tool__id">
-							{ meta?.abilityId }
-						</span>
-					</button>
-					{ isExpanded && (
-						<div className="agentic-tool__result">
-							<pre>{ formatAbilityResult( meta?.result ) }</pre>
-						</div>
-					) }
-				</div>
-			</div>
+			<CollapsibleCard
+				icon={ statusIcon[ resultStatus ] }
+				label={ statusLabel[ resultStatus ] }
+				suffix={ meta?.abilityId }
+			>
+				<pre>{ formatAbilityResult( meta?.result ) }</pre>
+			</CollapsibleCard>
 		);
 	}
 
-	// File view — structured file content (read-file and similar)
+	// File view — pass-through to FileView (which already uses Card)
 	if ( type === MessageType.FILE_VIEW ) {
 		const file = message.meta?.file || message.file;
-		return (
-			<div className="agentic-message agentic-message--assistant">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot" />
-				</div>
-				<div className="agentic-message__content">
-					<FileView file={ file } />
-					<div className="agentic-message__footer">
-						<div className="agentic-message__time">
-							{ formatTime( timestamp ) }
-						</div>
-					</div>
-				</div>
-			</div>
-		);
+		return <FileView file={ file } />;
 	}
 
-	// Error message
+	// Error message — Notice
 	if ( type === MessageType.ERROR ) {
 		return (
-			<div className="agentic-message agentic-message--error">
-				<div className="agentic-timeline" aria-hidden="true">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot agentic-timeline__dot--error" />
-				</div>
-				<div className="agentic-error" role="alert">
-					<span className="agentic-error__icon">
-						<svg
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							aria-hidden="true"
-						>
-							<circle cx="12" cy="12" r="10" />
-							<line x1="12" y1="8" x2="12" y2="12" />
-							<line x1="12" y1="16" x2="12.01" y2="16" />
-						</svg>
-					</span>
-					<span className="agentic-error__text">{ content }</span>
-				</div>
-			</div>
+			<Notice status="error" isDismissible={ false }>
+				<Icon icon={ caution } size={ 16 } />
+				<span> { content }</span>
+			</Notice>
 		);
 	}
 
-	// Ability picker — interactive numbered list of tools
+	// Ability picker — pass-through to AbilityPicker (already uses primitives)
 	if ( type === 'ability_picker' ) {
 		return (
-			<div className="agentic-message agentic-message--assistant">
-				<div className="agentic-timeline">
-					<div className="agentic-timeline__line" />
-					<div className="agentic-timeline__dot" />
-				</div>
-				<div className="agentic-message__content">
-					<AbilityPicker
-						abilities={ message.abilities || [] }
-						workflows={ message.workflows || [] }
-						onExecute={ message.onExecute }
-						isProcessing={ message.isProcessing }
-					/>
-				</div>
-			</div>
+			<AbilityPicker
+				abilities={ message.abilities || [] }
+				workflows={ message.workflows || [] }
+				onExecute={ message.onExecute }
+				isProcessing={ message.isProcessing }
+			/>
 		);
 	}
 
 	// Default fallback
 	return (
-		<div className="agentic-message">
-			<div className="agentic-message__content">
+		<Card size="small">
+			<CardBody>
 				<p>{ content }</p>
-			</div>
-		</div>
+			</CardBody>
+		</Card>
 	);
 };
 

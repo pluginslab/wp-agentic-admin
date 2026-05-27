@@ -10,8 +10,55 @@
  */
 
 import * as webllm from '@mlc-ai/web-llm';
+import { applyFilters } from '@wordpress/hooks';
 import { ExternalEngine } from './external-engine';
+import ConnectorEngine from './connector-engine';
 import { createLogger } from '../utils/logger';
+
+/**
+ * Best-effort lookup table of context windows for known remote / connector
+ * model IDs. Matched longest-prefix first so e.g. "gpt-4o-mini" picks up
+ * "gpt-4o" before "gpt-4".
+ *
+ * Extensible at runtime via the @wordpress/hooks filter
+ *   `wpAgenticAdmin.contextWindow`
+ * which receives ( size, modelId, providerMode ) and returns the size to
+ * use. Power users on uncommon models can override without touching the
+ * UI:
+ *
+ *   wp.hooks.addFilter(
+ *     'wpAgenticAdmin.contextWindow',
+ *     'my-plugin',
+ *     ( size, modelId ) => modelId === 'my-custom' ? 128000 : size
+ *   );
+ */
+const KNOWN_REMOTE_CONTEXT_SIZES = [
+	// Anthropic
+	[ 'claude-opus', 200000 ],
+	[ 'claude-sonnet', 200000 ],
+	[ 'claude-haiku', 200000 ],
+	[ 'claude-3', 200000 ],
+	// OpenAI
+	[ 'gpt-4o', 128000 ],
+	[ 'gpt-4-turbo', 128000 ],
+	[ 'gpt-4.1', 1000000 ],
+	[ 'gpt-5', 400000 ],
+	[ 'gpt-4', 8192 ],
+	[ 'gpt-3.5', 16385 ],
+	[ 'o1', 200000 ],
+	[ 'o3', 200000 ],
+	// Google Gemini
+	[ 'gemini-1.5', 1000000 ],
+	[ 'gemini-2', 1000000 ],
+	[ 'gemini-pro', 32768 ],
+	// Groq common
+	[ 'llama-3.3-70b', 128000 ],
+	[ 'llama-3.1-70b', 128000 ],
+	[ 'llama-3.1-8b', 128000 ],
+	[ 'mixtral-8x7b', 32768 ],
+];
+
+const REMOTE_CONTEXT_FALLBACK = 32768;
 
 const log = createLogger( 'ModelLoader' );
 
@@ -73,8 +120,8 @@ class ModelLoader {
 		this.isLoading = false;
 		this.isReady = false;
 		this.loadProgress = 0;
-		this.progressCallback = null;
-		this.statusCallback = null;
+		this.progressCallbacks = new Set();
+		this.statusCallbacks = new Set();
 		this.lastUsageStats = null;
 		this.gpuAdapterInfo = null;
 		this.f16Supported = null; // null = not checked, true/false = result
@@ -389,16 +436,26 @@ class ModelLoader {
 	 * @param {Function} callback - Called with (progress, message)
 	 */
 	onProgress( callback ) {
-		this.progressCallback = callback;
+		if ( ! this.progressCallbacks ) {
+			this.progressCallbacks = new Set();
+		}
+		this.progressCallbacks.add( callback );
+		return () => this.progressCallbacks.delete( callback );
 	}
 
 	/**
-	 * Set status callback for status changes
+	 * Set status callback for status changes.
+	 * Multi-subscriber: returns an unsubscribe function.
 	 *
 	 * @param {Function} callback - Called with (status, message)
+	 * @return {Function} Unsubscribe.
 	 */
 	onStatus( callback ) {
-		this.statusCallback = callback;
+		if ( ! this.statusCallbacks ) {
+			this.statusCallbacks = new Set();
+		}
+		this.statusCallbacks.add( callback );
+		return () => this.statusCallbacks.delete( callback );
 	}
 
 	/**
@@ -409,8 +466,8 @@ class ModelLoader {
 	 */
 	reportProgress( progress, message ) {
 		this.loadProgress = progress;
-		if ( this.progressCallback ) {
-			this.progressCallback( progress, message );
+		if ( this.progressCallbacks ) {
+			this.progressCallbacks.forEach( ( cb ) => cb( progress, message ) );
 		}
 	}
 
@@ -421,8 +478,8 @@ class ModelLoader {
 	 * @param {string} message - Status message
 	 */
 	reportStatus( status, message ) {
-		if ( this.statusCallback ) {
-			this.statusCallback( status, message );
+		if ( this.statusCallbacks ) {
+			this.statusCallbacks.forEach( ( cb ) => cb( status, message ) );
 		}
 	}
 
@@ -552,6 +609,57 @@ class ModelLoader {
 	}
 
 	/**
+	 * Load a model via a WP 7.0 AI Connector (Anthropic, Google, OpenAI,
+	 * or any registered ai_provider plugin). Routes chat completions
+	 * through the PHP AI Client server-side. Non-streaming for now —
+	 * see ConnectorEngine for caveats.
+	 *
+	 * @since 0.13.0
+	 * @param {string} connectorId - WP connector ID (e.g. "anthropic")
+	 * @param {string} modelId     - Optional connector-specific model ID
+	 * @return {Promise<boolean>} True if loaded.
+	 */
+	async loadConnector( connectorId, modelId = '' ) {
+		if ( this.isLoading ) {
+			throw new Error( 'Model is already loading' );
+		}
+
+		this.isLoading = true;
+		this.providerMode = 'connector';
+		this.connectorId = connectorId;
+		this.modelId = modelId || connectorId;
+
+		try {
+			const label = modelId
+				? `${ connectorId } / ${ modelId }`
+				: connectorId;
+			this.reportStatus( 'loading', `Connecting to ${ label }...` );
+			this.reportProgress( 50, 'Connecting to connector...' );
+
+			this.engine = new ConnectorEngine( connectorId, modelId );
+
+			this.reportProgress( 100, 'Connector ready!' );
+			this.reportStatus( 'ready', `${ label } connector ready` );
+			this.isReady = true;
+			this.isLoading = false;
+
+			log.info( 'Connector engine loaded:', connectorId );
+			return true;
+		} catch ( err ) {
+			this.isLoading = false;
+			this.isReady = false;
+			this.engine = null;
+			this.providerMode = 'local';
+			this.reportStatus(
+				'error',
+				`Failed to connect to connector: ${ err.message }`
+			);
+			log.error( 'Failed to load connector:', err );
+			throw err;
+		}
+	}
+
+	/**
 	 * Check if using an external provider
 	 *
 	 * @since 0.10.0
@@ -559,6 +667,16 @@ class ModelLoader {
 	 */
 	isExternalProvider() {
 		return this.providerMode === 'remote';
+	}
+
+	/**
+	 * Check if using a WP 7.0 Connector
+	 *
+	 * @since 0.13.0
+	 * @return {boolean} True if using connector provider
+	 */
+	isConnectorProvider() {
+		return this.providerMode === 'connector';
 	}
 
 	/**
@@ -995,19 +1113,59 @@ class ModelLoader {
 			return MODEL_CONTEXT_SIZES[ modelId ];
 		}
 
-		// For remote/unknown models, check the remote context setting
+		// Honour the legacy single-value remote override key that earlier
+		// versions of the settings UI wrote. It applies to every remote
+		// model when set. Log once so power users know to migrate to the
+		// `wpAgenticAdmin.contextWindow` filter.
+		let legacyRemoteOverride = null;
 		try {
-			const remote = localStorage.getItem(
+			const legacy = localStorage.getItem(
 				'agentic_admin_remote_context_size'
 			);
-			if ( remote ) {
-				return parseInt( remote, 10 );
+			if ( legacy ) {
+				const parsedLegacy = parseInt( legacy, 10 );
+				if ( Number.isFinite( parsedLegacy ) && parsedLegacy > 0 ) {
+					legacyRemoteOverride = parsedLegacy;
+					if ( ! ModelLoader._warnedLegacyContextKey ) {
+						ModelLoader._warnedLegacyContextKey = true;
+						log.warn(
+							'agentic_admin_remote_context_size localStorage key is deprecated. Use the `wpAgenticAdmin.contextWindow` filter to override remote context windows.'
+						);
+					}
+				}
 			}
 		} catch ( e ) {
-			// Ignore
+			// Ignore storage errors.
 		}
 
-		return MODEL_CONTEXT_SIZES.default;
+		// For remote / connector models: longest-prefix match against the
+		// known-models table, then fall back to a conservative 32k.
+		// We use startsWith (after stripping a leading provider prefix
+		// like "anthropic/") so ids like "gpt-4" don't false-match
+		// "gpt-4o" or vice versa.
+		let resolved = legacyRemoteOverride ?? REMOTE_CONTEXT_FALLBACK;
+		if ( legacyRemoteOverride === null ) {
+			const lower = ( modelId || '' ).toLowerCase();
+			const slashIdx = lower.indexOf( '/' );
+			const bare = slashIdx >= 0 ? lower.slice( slashIdx + 1 ) : lower;
+			let bestMatch = '';
+			for ( const [ prefix, size ] of KNOWN_REMOTE_CONTEXT_SIZES ) {
+				if (
+					bare.startsWith( prefix ) &&
+					prefix.length > bestMatch.length
+				) {
+					bestMatch = prefix;
+					resolved = size;
+				}
+			}
+		}
+
+		return applyFilters(
+			'wpAgenticAdmin.contextWindow',
+			resolved,
+			modelId,
+			'remote'
+		);
 	}
 
 	/**

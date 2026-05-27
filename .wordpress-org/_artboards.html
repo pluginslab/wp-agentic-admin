@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agentic Admin — WP.org Assets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Platypi:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+	:root {
+		/* Pluginslab brand tokens — verified from pluginslab.com */
+		--base:     #FFFFFF;
+		--cream:    #FBFAF3;
+		--contrast: #111111;
+		--muted:    #686868;     /* accent-4 */
+		--yellow:   #FFEE58;     /* accent-1 */
+		--pink:     #F6CFF4;     /* accent-2 */
+		--purple:   #503AA8;     /* accent-3 */
+	}
+	* { box-sizing: border-box; margin: 0; padding: 0; }
+	html, body {
+		background: #2a2a2a;
+		font-family: 'Inter', -apple-system, system-ui, sans-serif;
+		color: var(--contrast);
+		-webkit-font-smoothing: antialiased;
+		text-rendering: geometricPrecision;
+	}
+	body {
+		padding: 40px;
+		display: flex;
+		flex-direction: column;
+		gap: 40px;
+		align-items: flex-start;
+	}
+	.label {
+		color: #999;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		margin-bottom: 8px;
+		font-family: 'JetBrains Mono', monospace;
+	}
+	.artboard {
+		background: var(--cream);
+		position: relative;
+		overflow: hidden;
+		flex-shrink: 0;
+	}
+
+	/* ─────────── ICON ─────────── */
+	.icon { position: relative; }
+	.icon-mark {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: 'Platypi', 'Times New Roman', serif;
+		font-weight: 700;
+		color: var(--contrast);
+		letter-spacing: -0.04em;
+		line-height: 0.9;
+	}
+	.icon-accent {
+		position: absolute;
+		right: 0;
+		top: 0;
+		height: 100%;
+	}
+
+	/* icon-256 — accent reserved on the right, AA centered in the rest */
+	.icon-256 { width: 256px; height: 256px; border-radius: 56px; }
+	.icon-256 .icon-mark { font-size: 112px; padding-right: 26px; }
+	.icon-256 .icon-accent { width: 26px; background: var(--yellow); }
+
+	/* icon-128 */
+	.icon-128 { width: 128px; height: 128px; border-radius: 28px; }
+	.icon-128 .icon-mark { font-size: 56px; padding-right: 14px; }
+	.icon-128 .icon-accent { width: 14px; background: var(--yellow); }
+
+	/* ─────────── BANNER ─────────── */
+	.banner {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: stretch;
+	}
+	.banner-content {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: 8% 6%;
+		gap: 4%;
+	}
+	.banner-pill {
+		display: inline-flex;
+		align-self: flex-start;
+		align-items: center;
+		background: var(--purple);
+		color: var(--cream);
+		font-family: 'Inter', sans-serif;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		padding: 0.55em 1.1em;
+		border-radius: 999px;
+	}
+	.banner-title {
+		font-family: 'Platypi', 'Times New Roman', serif;
+		font-weight: 700;
+		letter-spacing: -0.025em;
+		color: var(--contrast);
+		line-height: 1.0;
+	}
+	.banner-tagline {
+		font-family: 'Inter', sans-serif;
+		font-weight: 500;
+		color: var(--contrast);
+		line-height: 1.25;
+	}
+	.banner-snippet {
+		font-family: 'JetBrains Mono', monospace;
+		background: var(--base);
+		border: 1px solid rgba(17,17,17,0.08);
+		border-radius: 0.6em;
+		padding: 0.8em 1.1em;
+		display: inline-flex;
+		flex-direction: column;
+		gap: 0.15em;
+		align-self: flex-start;
+		max-width: 90%;
+	}
+	.banner-snippet .row {
+		display: flex;
+		gap: 0.6em;
+		white-space: nowrap;
+	}
+	.banner-snippet .prompt { color: var(--purple); font-weight: 600; }
+	.banner-snippet .arrow  { color: var(--muted);  font-weight: 600; }
+	.banner-snippet .check  { color: var(--purple); font-weight: 700; }
+	.banner-snippet .body   { color: var(--contrast); }
+	.banner-snippet .muted-text  { color: var(--muted); }
+
+	.banner-accent {
+		background: var(--yellow);
+		position: relative;
+	}
+	.banner-accent::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, var(--yellow) 0%, var(--pink) 100%);
+		opacity: 0.6;
+	}
+
+	/* banner-1544 */
+	.banner-1544 { width: 1544px; height: 500px; font-size: 16px; }
+	.banner-1544 .banner-title { font-size: 168px; }
+	.banner-1544 .banner-tagline { font-size: 32px; }
+	.banner-1544 .banner-snippet { font-size: 22px; }
+	.banner-1544 .banner-pill { font-size: 15px; }
+	.banner-1544 .banner-accent { width: 140px; }
+
+	/* banner-772 */
+	.banner-772 { width: 772px; height: 250px; font-size: 8px; }
+	.banner-772 .banner-title { font-size: 84px; }
+	.banner-772 .banner-tagline { font-size: 16px; }
+	.banner-772 .banner-snippet { font-size: 11px; }
+	.banner-772 .banner-pill { font-size: 7.5px; }
+	.banner-772 .banner-accent { width: 70px; }
+</style>
+</head>
+<body>
+
+<div>
+	<div class="label">icon-256x256.png</div>
+	<div class="artboard icon icon-256" id="icon-256">
+		<div class="icon-mark">AA</div>
+		<div class="icon-accent"></div>
+	</div>
+</div>
+
+<div>
+	<div class="label">icon-128x128.png</div>
+	<div class="artboard icon icon-128" id="icon-128">
+		<div class="icon-mark">AA</div>
+		<div class="icon-accent"></div>
+	</div>
+</div>
+
+<div>
+	<div class="label">banner-772x250.png</div>
+	<div class="artboard banner banner-772" id="banner-772">
+		<div class="banner-content">
+			<span class="banner-pill">AI Connectors · WP 7.0 + Abilities API</span>
+			<div class="banner-title">Agentic Admin</div>
+		</div>
+		<div class="banner-accent"></div>
+	</div>
+</div>
+
+<div>
+	<div class="label">banner-1544x500.png</div>
+	<div class="artboard banner banner-1544" id="banner-1544">
+		<div class="banner-content">
+			<span class="banner-pill">AI Connectors · WP 7.0 + Abilities API</span>
+			<div class="banner-title">Agentic Admin</div>
+		</div>
+		<div class="banner-accent"></div>
+	</div>
+</div>
+
+</body>
+</html>
