@@ -1,6 +1,6 @@
 <?php
 /**
- * Agentic Admin for WordPress - Main Plugin File
+ * Agentic Admin - Main Plugin File
  *
  * @license GPL-2.0-or-later
  * @package WPAgenticAdmin
@@ -9,7 +9,7 @@
 
 // phpcs:ignore WordPress.Files.FileName.InvalidClassFileName -- This is the main plugin file, not a class file.
 /**
- * Plugin Name: Agentic Admin for WordPress
+ * Plugin Name: Agentic Admin
  * Plugin URI: https://pluginslab.com/agentic-admin
  * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming wp-admin into a natural language command center via the WordPress Abilities API.
  * Version: 0.11.0
@@ -20,7 +20,7 @@
  * Text Domain: agentic-admin
  * Requires at least: 6.9
  * Requires PHP: 8.2
- * Tested up to: 6.9
+ * Tested up to: 7.0
  *
  * @package WP_Agentic_Admin
  */
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 
 	/**
-	 * Main plugin class for Agentic Admin for WordPress.
+	 * Main plugin class for Agentic Admin.
 	 *
 	 * @since 0.1.0
 	 */
@@ -74,8 +74,6 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-editor-sidebar.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-bar.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
 			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-connectors.php';
@@ -91,14 +89,6 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 
 			if ( class_exists( '\\WPAgenticAdmin\\Admin_Page' ) ) {
 				\WPAgenticAdmin\Admin_Page::get_instance();
-			}
-
-			if ( class_exists( '\\WPAgenticAdmin\\Editor_Sidebar' ) ) {
-				\WPAgenticAdmin\Editor_Sidebar::get_instance();
-			}
-
-			if ( class_exists( '\\WPAgenticAdmin\\Admin_Bar' ) ) {
-				\WPAgenticAdmin\Admin_Bar::get_instance();
 			}
 
 			if ( class_exists( '\\WPAgenticAdmin\\Abilities' ) ) {
@@ -148,7 +138,7 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 					printf(
 					/* translators: %s: Plugin name */
 						esc_html__( '%s requires WordPress 6.9 or higher for the Abilities API.', 'agentic-admin' ),
-						'<strong>Agentic Admin for WordPress</strong>'
+						'<strong>Agentic Admin</strong>'
 					);
 					?>
 				</p>

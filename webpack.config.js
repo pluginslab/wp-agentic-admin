@@ -1,5 +1,5 @@
 /**
- * Custom Webpack Configuration for Agentic Admin for WordPress
+ * Custom Webpack Configuration for Agentic Admin
  *
  * Extends the default @wordpress/scripts config to add:
  * - Service Worker as a separate entry point (no chunking, self-contained)
@@ -23,14 +23,10 @@ module.exports = {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),
 
-		// Block editor sidebar plugin
-		editor: path.resolve( __dirname, 'src/extensions/editor.js' ),
-
-		// Admin-wide chat sidebar (all wp-admin pages)
-		'admin-sidebar': path.resolve(
-			__dirname,
-			'src/extensions/admin-sidebar.js'
-		),
+		// Gutenberg editor sidebar and admin-wide chat sidebar both disabled
+		// for v0.11 — UIs not finished, re-enable in v0.12 once polished.
+		// Sources preserved at src/extensions/editor.js and
+		// src/extensions/admin-sidebar.js.
 
 		// Service Worker - needs to be a self-contained bundle
 		sw: {
