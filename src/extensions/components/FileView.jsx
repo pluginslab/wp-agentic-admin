@@ -7,6 +7,14 @@
  */
 
 import { useState } from '@wordpress/element';
+import {
+	Button,
+	Card,
+	CardHeader,
+	CardBody,
+	__experimentalHStack as HStack,
+} from '@wordpress/components';
+import { copySmall, check } from '@wordpress/icons';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'FileView' );
@@ -41,39 +49,40 @@ const FileView = ( { file } ) => {
 	};
 
 	return (
-		<div className="agentic-file-view">
-			<div className="agentic-file-view__header">
-				<code className="agentic-file-view__path">{ filePath }</code>
-				{ showRange && (
-					<span className="agentic-file-view__meta">
-						{ linesReturned } / { totalLines } lines
-					</span>
-				) }
-				{ wasRedacted && (
-					<span
-						className="agentic-file-view__badge"
-						title="Sensitive values (credentials, keys, salts) were replaced server-side."
+		<Card size="small">
+			<CardHeader>
+				<HStack alignment="left" spacing={ 2 }>
+					<code>{ filePath }</code>
+					{ showRange && (
+						<span>
+							{ linesReturned } / { totalLines } lines
+						</span>
+					) }
+					{ wasRedacted && (
+						<span title="Sensitive values (credentials, keys, salts) were replaced server-side.">
+							redacted
+						</span>
+					) }
+					<Button
+						size="small"
+						variant="secondary"
+						icon={ copied ? check : copySmall }
+						label={ copied ? 'Copied!' : 'Copy file content' }
+						showTooltip
+						onClick={ handleCopy }
+					/>
+				</HStack>
+			</CardHeader>
+			<CardBody>
+				<pre className="wp-agentic-admin-file-view-body">
+					<code
+						className={ language ? `language-${ language }` : '' }
 					>
-						redacted
-					</span>
-				) }
-				<button
-					type="button"
-					className={ `agentic-file-view__copy${
-						copied ? ' agentic-file-view__copy--copied' : ''
-					}` }
-					onClick={ handleCopy }
-					title={ copied ? 'Copied!' : 'Copy file content' }
-				>
-					{ copied ? 'Copied' : 'Copy' }
-				</button>
-			</div>
-			<pre className="agentic-file-view__body">
-				<code className={ language ? `language-${ language }` : '' }>
-					{ content }
-				</code>
-			</pre>
-		</div>
+						{ content }
+					</code>
+				</pre>
+			</CardBody>
+		</Card>
 	);
 };
 

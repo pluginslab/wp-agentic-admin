@@ -2,52 +2,24 @@
  * ChatInput Component
  *
  * Text input area with bundle selection, plus icon, and send button.
- *
  */
 
 import { useState, useRef, useEffect } from '@wordpress/element';
 import vectorStore from '../services/vector-store';
-import { Dropdown, Icon } from '@wordpress/components';
 import {
-	plus,
-	send,
-	closeSmall,
-	shield,
-	globe,
-	plugins,
-	tool,
-	bug,
-	post,
-	info,
-	edit,
-} from '@wordpress/icons';
+	Button,
+	Dropdown,
+	MenuGroup,
+	MenuItem,
+	TextareaControl,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
+import { plus, send, globe, search } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
+import ModelStatusPill from './ModelStatusPill';
 
-/**
- * Map of bundle icon names to @wordpress/icons components.
- */
-const BUNDLE_ICONS = {
-	shield,
-	plugins,
-	tool,
-	bug,
-	post,
-	info,
-	edit,
-};
-
-/**
- * ChatInput component
- *
- * @param {Object}   props               - Component props
- * @param {Function} props.onSend        - Callback when message is sent
- * @param {boolean}  props.disabled      - Whether input is disabled
- * @param {string}   props.placeholder   - Placeholder text
- * @param {boolean}  props.isLoading     - Whether a request is in progress
- * @param {Object}   props.defaultBundle - Bundle to auto-select on mount
- * @return {JSX.Element} Rendered chat input
- */
 const ChatInput = ( {
 	onSend,
 	disabled = false,
@@ -56,14 +28,15 @@ const ChatInput = ( {
 	defaultBundle = null,
 } ) => {
 	const [ message, setMessage ] = useState( '' );
-	const [ selectedBundle, setSelectedBundle ] = useState( null );
+	// Multi-select: an ordered list of bundle ids the user has toggled on
+	// via the "+" DropdownMenu. Clicking a row toggles its membership.
+	const [ selectedBundleIds, setSelectedBundleIds ] = useState( [] );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
 	const [ docSearchEnabled, setDocSearchEnabled ] = useState( false );
 	const [ kbIndexReady, setKbIndexReady ] = useState( false );
 	const [ pluginBundles, setPluginBundles ] = useState( [] );
-	const textareaRef = useRef( null );
+	const textareaWrapperRef = useRef( null );
 
-	// Check if the knowledge base index is available.
 	useEffect( () => {
 		const checkIndex = async () => {
 			try {
@@ -76,7 +49,6 @@ const ChatInput = ( {
 		checkIndex();
 	}, [] );
 
-	// Subscribe to plugin abilities manager for dynamic bundles
 	useEffect( () => {
 		const refresh = () => {
 			setPluginBundles( pluginAbilitiesManager.getPluginBundles() );
@@ -85,283 +57,201 @@ const ChatInput = ( {
 		return pluginAbilitiesManager.subscribe( refresh );
 	}, [] );
 
-	// Auto-select default bundle (e.g. when editing a new blank page)
 	useEffect( () => {
-		if ( defaultBundle && ! selectedBundle ) {
-			setSelectedBundle( defaultBundle );
+		if ( defaultBundle && selectedBundleIds.length === 0 ) {
+			setSelectedBundleIds( [ defaultBundle.id ] );
 		}
 	}, [ defaultBundle ] ); // eslint-disable-line react-hooks/exhaustive-deps -- only react to defaultBundle changes
 
-	// Focus textarea on mount if not disabled
 	useEffect( () => {
-		if ( ! disabled && textareaRef.current ) {
-			textareaRef.current.focus();
+		if ( ! disabled && textareaWrapperRef.current ) {
+			textareaWrapperRef.current.querySelector( 'textarea' )?.focus();
 		}
 	}, [ disabled ] );
 
-	/**
-	 * Handle form submission
-	 *
-	 * @param {Event} e - Submit event
-	 */
-	const handleSubmit = ( e ) => {
-		if ( e ) {
-			e.preventDefault();
-		}
+	const allBundles = [ ...ABILITY_BUNDLES, ...pluginBundles ];
+	const selectedBundles = selectedBundleIds
+		.map( ( id ) => allBundles.find( ( b ) => b.id === id ) )
+		.filter( Boolean );
 
+	const toggleBundle = ( bundleId ) => {
+		setSelectedBundleIds( ( prev ) =>
+			prev.includes( bundleId )
+				? prev.filter( ( id ) => id !== bundleId )
+				: [ ...prev, bundleId ]
+		);
+	};
+
+	const handleSubmit = () => {
 		const trimmedMessage = message.trim();
 		if ( ! trimmedMessage || disabled || isLoading ) {
 			return;
 		}
 
+		// Union the abilities + plugin-ability ids across every selected
+		// bundle, preserving the order the user selected them in. Single
+		// bundleId/pluginNamespace remain set for downstream code that
+		// still expects the old shape; they refer to the FIRST selection.
+		const unionAbilities = selectedBundles
+			.flatMap( ( b ) => b.abilities || b.pluginAbilityIds || [] )
+			.filter( ( v, i, a ) => a.indexOf( v ) === i );
+		const pluginNamespaces = selectedBundles
+			.map( ( b ) => b.pluginNamespace )
+			.filter( Boolean )
+			.filter( ( v, i, a ) => a.indexOf( v ) === i );
+		const first = selectedBundles[ 0 ];
+
 		onSend( trimmedMessage, {
-			bundleToolIds: selectedBundle?.abilities || null,
-			bundleId: selectedBundle?.id || null,
-			pluginNamespace: selectedBundle?.pluginNamespace || null,
+			bundleToolIds: unionAbilities.length ? unionAbilities : null,
+			bundleId: first?.id || null,
+			bundleIds: selectedBundleIds.length ? selectedBundleIds : null,
+			pluginNamespace: first?.pluginNamespace || null,
+			pluginNamespaces: pluginNamespaces.length ? pluginNamespaces : null,
 			webSearch: webSearchEnabled,
 			docSearch: docSearchEnabled,
 		} );
 		setMessage( '' );
 	};
 
-	/**
-	 * Handle keydown: Enter sends.
-	 *
-	 * @param {KeyboardEvent} e - Keyboard event
-	 */
 	const handleKeyDown = ( e ) => {
 		if ( e.key === 'Enter' && ! e.shiftKey ) {
 			e.preventDefault();
-			handleSubmit( e );
+			handleSubmit();
 		}
-	};
-
-	/**
-	 * Handle textarea change
-	 *
-	 * @param {Event} e - Change event
-	 */
-	const handleChange = ( e ) => {
-		setMessage( e.target.value );
 	};
 
 	const isDisabled = disabled || isLoading;
 	const canSend = message.trim().length > 0 && ! isDisabled;
 
-	return (
-		<div className="wp-agentic-admin-input-area">
-			<div
-				className={ `wp-agentic-admin-input-wrapper${
-					isDisabled
-						? ' wp-agentic-admin-input-wrapper--disabled'
-						: ''
-				}` }
-			>
-				<div className="wp-agentic-admin-textarea-container">
-					<textarea
-						ref={ textareaRef }
-						className="wp-agentic-admin-input"
-						value={ message }
-						onChange={ handleChange }
-						onKeyDown={ handleKeyDown }
-						placeholder={ placeholder }
-						rows="3"
-						disabled={ isDisabled }
-					/>
-				</div>
-				<div className="wp-agentic-admin-input-toolbar">
-					<div className="wp-agentic-admin-input-toolbar__left">
-						<Dropdown
-							popoverProps={ {
-								placement: 'top-start',
-								shift: true,
-							} }
-							renderToggle={ ( { isOpen, onToggle } ) => (
-								<button
-									type="button"
-									className={ `wp-agentic-admin-bundle-trigger${
-										isOpen
-											? ' wp-agentic-admin-bundle-trigger--active'
-											: ''
-									}` }
-									onClick={ onToggle }
-									aria-expanded={ isOpen }
-									aria-label="Select ability bundle"
-									disabled={ isDisabled }
-								>
-									<Icon icon={ plus } size={ 24 } />
-								</button>
-							) }
-							renderContent={ ( { onClose } ) => (
-								<div className="wp-agentic-admin-bundle-menu">
-									{ ABILITY_BUNDLES.map( ( bundle ) => (
-										<button
-											type="button"
-											key={ bundle.id }
-											className={ `wp-agentic-admin-bundle-menu__item${
-												selectedBundle?.id === bundle.id
-													? ' wp-agentic-admin-bundle-menu__item--selected'
-													: ''
-											}` }
-											onClick={ () => {
-												setSelectedBundle( bundle );
-												onClose();
-											} }
-										>
-											<Icon
-												icon={
-													BUNDLE_ICONS[
-														bundle.icon
-													] || shield
-												}
-												size={ 18 }
-											/>
-											<span className="wp-agentic-admin-bundle-menu__label">
-												{ bundle.label }
-											</span>
-											<span className="wp-agentic-admin-bundle-menu__count">
-												{ bundle.abilities.length }{ ' ' }
-												tools
-											</span>
-										</button>
-									) ) }
-									{ pluginBundles.length > 0 && (
-										<>
-											<div className="wp-agentic-admin-bundle-menu__separator">
-												<span>Plugin Abilities</span>
-											</div>
-											{ pluginBundles.map( ( bundle ) => (
-												<button
-													type="button"
-													key={ bundle.id }
-													className={ `wp-agentic-admin-bundle-menu__item${
-														selectedBundle?.id ===
-														bundle.id
-															? ' wp-agentic-admin-bundle-menu__item--selected'
-															: ''
-													}` }
-													onClick={ () => {
-														setSelectedBundle(
-															bundle
-														);
-														onClose();
-													} }
-												>
-													{ bundle.icon ? (
-														<img
-															src={ bundle.icon }
-															alt={ bundle.label }
-															className="wp-agentic-admin-bundle-menu__plugin-icon"
-														/>
-													) : (
-														<Icon
-															icon={ plugins }
-															size={ 18 }
-														/>
-													) }
-													<span className="wp-agentic-admin-bundle-menu__label">
-														{ bundle.label }
-													</span>
-													<span className="wp-agentic-admin-bundle-menu__count">
-														{
-															bundle
-																.pluginAbilityIds
-																.length
-														}{ ' ' }
-														tools
-													</span>
-												</button>
-											) ) }
-										</>
-									) }
-								</div>
-							) }
-						/>
-						<button
-							type="button"
-							className={ `wp-agentic-admin-websearch-toggle${
-								webSearchEnabled
-									? ' wp-agentic-admin-websearch-toggle--active'
-									: ''
-							}` }
-							onClick={ () =>
-								setWebSearchEnabled( ! webSearchEnabled )
-							}
-							aria-label="Toggle web search"
-							aria-pressed={ webSearchEnabled }
-							disabled={ isDisabled }
-							data-tooltip={ `Web Search: ${
-								webSearchEnabled ? 'active' : 'inactive'
-							}` }
-						>
-							<Icon icon={ globe } size={ 24 } />
-						</button>
-						<button
-							type="button"
-							className={ `wp-agentic-admin-websearch-toggle${
-								docSearchEnabled
-									? ' wp-agentic-admin-websearch-toggle--active'
-									: ''
-							}` }
-							onClick={ () =>
-								setDocSearchEnabled( ! docSearchEnabled )
-							}
-							aria-label="Toggle knowledge base"
-							aria-pressed={ docSearchEnabled }
-							disabled={ isDisabled || ! kbIndexReady }
-							data-tooltip={
-								! kbIndexReady
-									? 'Knowledge Base: not indexed (build in Settings)'
-									: `Knowledge Base: ${
-											docSearchEnabled
-												? 'active'
-												: 'inactive'
-									  }`
-							}
-						>
-							<svg
-								width="24"
-								height="24"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								aria-hidden="true"
-							>
-								<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-								<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-							</svg>
-						</button>
-						{ selectedBundle && (
-							<span className="wp-agentic-admin-bundle-pill">
-								<span className="wp-agentic-admin-bundle-pill__label">
-									{ selectedBundle.label }
+	// Multi-select menu: clicking a row toggles it. The menu stays open
+	// so the user can flip several at once. Selected rows show a check
+	// via MenuItem's isSelected prop.
+	const renderBundleMenu = () => (
+		<>
+			<MenuGroup>
+				{ ABILITY_BUNDLES.map( ( bundle ) => {
+					const selected = selectedBundleIds.includes( bundle.id );
+					return (
+						<MenuItem
+							key={ bundle.id }
+							isSelected={ selected }
+							role="menuitemcheckbox"
+							onClick={ () => toggleBundle( bundle.id ) }
+							suffix={
+								<span className="wp-agentic-admin-bundle-count">
+									{ bundle.abilities.length }
 								</span>
-								<button
-									type="button"
-									className="wp-agentic-admin-bundle-pill__remove"
-									onClick={ () => setSelectedBundle( null ) }
-									aria-label={ `Remove ${ selectedBundle.label }` }
-								>
-									<Icon icon={ closeSmall } size={ 18 } />
-								</button>
-							</span>
-						) }
-					</div>
-					<div className="wp-agentic-admin-input-toolbar__right">
-						<button
-							type="button"
-							className="wp-agentic-admin-send-button"
-							onClick={ handleSubmit }
-							disabled={ ! canSend }
-							aria-label="Send message"
+							}
 						>
-							<Icon icon={ send } size={ 20 } />
-						</button>
-					</div>
+							{ bundle.label }
+						</MenuItem>
+					);
+				} ) }
+			</MenuGroup>
+			{ pluginBundles.length > 0 && (
+				<MenuGroup label="Plugin Abilities">
+					{ pluginBundles.map( ( bundle ) => {
+						const selected = selectedBundleIds.includes(
+							bundle.id
+						);
+						return (
+							<MenuItem
+								key={ bundle.id }
+								isSelected={ selected }
+								role="menuitemcheckbox"
+								onClick={ () => toggleBundle( bundle.id ) }
+								suffix={
+									<span className="wp-agentic-admin-bundle-count">
+										{ bundle.pluginAbilityIds.length }
+									</span>
+								}
+							>
+								{ bundle.label }
+							</MenuItem>
+						);
+					} ) }
+				</MenuGroup>
+			) }
+		</>
+	);
+
+	return (
+		<VStack
+			spacing={ 2 }
+			className="wp-agentic-admin-input-area"
+			ref={ textareaWrapperRef }
+		>
+			<TextareaControl
+				__nextHasNoMarginBottom
+				label="Message"
+				hideLabelFromVision
+				value={ message }
+				onChange={ setMessage }
+				onKeyDown={ handleKeyDown }
+				placeholder={ placeholder }
+				rows={ 3 }
+				disabled={ isDisabled }
+			/>
+			<HStack alignment="center" spacing={ 2 } justify="flex-start">
+				<Dropdown
+					popoverProps={ {
+						placement: 'top-start',
+						shift: true,
+					} }
+					renderToggle={ ( { isOpen, onToggle } ) => (
+						<Button
+							icon={ plus }
+							label={
+								selectedBundleIds.length > 0
+									? `Ability bundles (${ selectedBundleIds.length } selected)`
+									: 'Select ability bundle'
+							}
+							showTooltip
+							aria-expanded={ isOpen }
+							aria-haspopup="true"
+							disabled={ isDisabled }
+							isPressed={ selectedBundleIds.length > 0 }
+							onClick={ onToggle }
+						/>
+					) }
+					renderContent={ renderBundleMenu }
+				/>
+				<Button
+					icon={ globe }
+					label={ `Web Search: ${
+						webSearchEnabled ? 'active' : 'inactive'
+					}` }
+					showTooltip
+					isPressed={ webSearchEnabled }
+					onClick={ () => setWebSearchEnabled( ! webSearchEnabled ) }
+					disabled={ isDisabled }
+				/>
+				<Button
+					icon={ search }
+					label={
+						! kbIndexReady
+							? 'Knowledge Base: not indexed (build in Settings)'
+							: `Knowledge Base: ${
+									docSearchEnabled ? 'active' : 'inactive'
+							  }`
+					}
+					showTooltip
+					isPressed={ docSearchEnabled }
+					onClick={ () => setDocSearchEnabled( ! docSearchEnabled ) }
+					disabled={ isDisabled || ! kbIndexReady }
+				/>
+				<div style={ { flex: 1, minWidth: 0 } }>
+					<ModelStatusPill />
 				</div>
-			</div>
-		</div>
+				<Button
+					icon={ send }
+					label="Send message"
+					variant="primary"
+					onClick={ handleSubmit }
+					disabled={ ! canSend }
+				/>
+			</HStack>
+		</VStack>
 	);
 };
 

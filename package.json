@@ -25,6 +25,7 @@
     "export:feedback": "bash scripts/export-feedback.sh"
   },
   "devDependencies": {
+    "@wordpress/hooks": "^4.46.0",
     "@wordpress/scripts": "^31.0.0",
     "del-cli": "^5.1.0"
   },

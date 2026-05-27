@@ -7,6 +7,9 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
+import { Button } from '@wordpress/components';
+import { close } from '@wordpress/icons';
+import { __ } from '@wordpress/i18n';
 import ChatContainer from './ChatContainer';
 import ModelStatus from './ModelStatus';
 import WebGPUFallback from './WebGPUFallback';
@@ -138,6 +141,38 @@ const AdminSidebar = () => {
 					return;
 				}
 
+				if ( savedProvider === 'connector' ) {
+					const connectorId = localStorage.getItem(
+						'agentic_admin_connector_id'
+					);
+					const connectorModel =
+						localStorage.getItem(
+							'agentic_admin_connector_model'
+						) || '';
+					if ( connectorId ) {
+						log.info(
+							'Connector provider saved, auto-connecting...'
+						);
+						setInitPhase( 'loading' );
+						setInitMessage( 'Connecting to connector...' );
+						setInitProgress( 35 );
+						try {
+							await modelLoader.loadConnector(
+								connectorId,
+								connectorModel
+							);
+							setModelReady( true );
+						} catch ( loadErr ) {
+							log.error(
+								'Auto-connect connector failed:',
+								loadErr
+							);
+						}
+					}
+					setInitPhase( null );
+					return;
+				}
+
 				// Check if local model is cached
 				setInitMessage( 'Checking cache...' );
 				setInitProgress( 30 );
@@ -187,6 +222,17 @@ const AdminSidebar = () => {
 			<div className="wp-agentic-admin-sidebar__header">
 				<span className="dashicons dashicons-superhero-alt" />
 				<strong>AI Assistant</strong>
+				<Button
+					icon={ close }
+					label={ __( 'Close sidebar', 'agentic-admin' ) }
+					showTooltip
+					className="wp-agentic-admin-sidebar__close"
+					onClick={ () =>
+						window.dispatchEvent(
+							new CustomEvent( 'wp-agentic-admin/sidebar-close' )
+						)
+					}
+				/>
 			</div>
 
 			<ModelStatus

@@ -276,7 +276,8 @@ class ChatOrchestrator {
 					false,
 					options.bundleToolIds,
 					webSearchContext,
-					options.bundleId,
+					options.bundleIds ||
+						( options.bundleId ? [ options.bundleId ] : null ),
 					options.docSearch
 				);
 			}
@@ -391,7 +392,7 @@ class ChatOrchestrator {
 	 * @param {boolean}     disableThinking  - Whether to disable model thinking
 	 * @param {Array}       toolFilter       - Optional array of tool IDs to constrain the agent
 	 * @param {string|null} webSearchContext - Formatted search results from pre-step
-	 * @param {string|null} bundleId         - Active bundle identifier
+	 * @param {Array|null}  bundleIds        - Active bundle identifiers (multi-select)
 	 * @param {boolean}     docSearch        - Whether to augment prompt with KB vector search results
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
@@ -400,7 +401,7 @@ class ChatOrchestrator {
 		disableThinking = false,
 		toolFilter = null,
 		webSearchContext = null,
-		bundleId = null,
+		bundleIds = null,
 		docSearch = false
 	) {
 		if ( ! this.isLLMReady() ) {
@@ -522,7 +523,10 @@ class ChatOrchestrator {
 		const meta = this.getUsageStatsMeta();
 
 		// Auto-insert content into editor when content-create bundle is active
-		if ( bundleId === 'content-create' && displayAnswer?.length > 50 ) {
+		if (
+			bundleIds?.includes( 'content-create' ) &&
+			displayAnswer?.length > 50
+		) {
 			const contentTool = toolRegistry.get(
 				'wp-agentic-admin/content-generate'
 			);

@@ -25,9 +25,21 @@ module.exports = {
 		// Allow nested ternary in specific cases (model loader status messages)
 		'no-nested-ternary': 'warn',
 
-		// JSDoc: Make missing descriptions a warning instead of error
+		// We intentionally use HStack/VStack/etc. for now. Track v0.12 migration
+		// to stable APIs separately when @wordpress/components publishes them.
+		'@wordpress/no-unsafe-wp-apis': 'warn',
+
+		// Unused vars are noise, not bugs. Track + clean up in a dedicated pass.
+		'no-unused-vars': 'warn',
+
+		// JSDoc: missing descriptions/types are downgraded to warnings — the
+		// recommended preset is too aggressive for our hybrid JS+JSX codebase.
 		'jsdoc/require-returns-description': 'warn',
 		'jsdoc/require-param-description': 'warn',
+		'jsdoc/require-param-type': 'warn',
+		'jsdoc/require-returns-type': 'warn',
+		'jsdoc/require-param': 'warn',
+		'jsdoc/require-returns': 'warn',
 
 		// JSX type is valid in WordPress component returns
 		'jsdoc/no-undefined-types': [

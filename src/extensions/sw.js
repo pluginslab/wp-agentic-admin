@@ -1,5 +1,5 @@
 /**
- * Agentic Admin for WordPress - Service Worker
+ * Agentic Admin - Service Worker
  *
  * This Service Worker hosts the WebLLM engine, allowing the AI model to persist
  * across page navigations within wp-admin. The model stays loaded in GPU memory

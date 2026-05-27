@@ -1,8 +1,8 @@
-=== Agentic Admin for WordPress ===
+=== Agentic Admin ===
 Contributors: pluginslab
 Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 8.2
 Stable tag: 0.11.0
 License: GPL-2.0-or-later
@@ -12,7 +12,7 @@ A privacy-first AI Site Reliability Engineer running entirely in the browser via
 
 == Description ==
 
-Agentic Admin for WordPress transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
+Agentic Admin transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English.
 
 = Features =
 
@@ -36,10 +36,50 @@ Agentic Admin for WordPress transforms your WordPress admin panel into an intell
 4. Wait for the AI model to download (one-time, ~1.2GB for Qwen 3 1.7B or ~4.5GB for Qwen 2.5 7B)
 5. Start chatting!
 
+== Screenshots ==
+
+1. The Agentic Admin chat tab in wp-admin, mid-conversation. The model has just answered a question about installed plugins by calling the `plugin-list` tool locally — full ReAct trace (user question, thought process, tool call, answer) visible.
+2. First-run model download in progress. The Qwen 3 1.7B weights (~1.2 GB) are fetched from the MLC-AI / HuggingFace CDN — once per browser, cancellable, cached for subsequent sessions.
+3. The Abilities browser, listing every tool the assistant can call against the WordPress Abilities API on this site.
+4. Settings panel. Build the local knowledge base, see detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
+5. Multi-step workflow execution. "Do a performance check" is recognized as a 2-step workflow — the assistant runs `site-health` and `error-log-read` in sequence, then summarizes the environment (WP version, PHP, memory, debug mode, error log status) in one answer.
+6. WordPress 7.0 AI Connector integration. The Connector tab picks up any AI provider registered via WP 7.0's built-in Connector API — Anthropic, Google, OpenAI, or any third-party `ai_provider` plugin — and uses it as the model backend with zero extra setup.
+
+== External services ==
+
+This plugin runs AI locally in your browser by default. No prompts or admin data are sent to any server unless you explicitly enable the external LLM provider. The following external services are contacted under specific, disclosed conditions:
+
+**Model weights CDN (MLC-AI / HuggingFace)** — Always for the local engine.
+On first use the browser downloads the selected model (Qwen 3 1.7B by default, ~1.2 GB) from `https://huggingface.co/mlc-ai/` and `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. Only HTTP GET requests for static model files are made; no prompts, admin data, or telemetry are sent. Weights are cached in the browser; subsequent sessions are offline.
+HuggingFace terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
+
+**Transformers.js CDN (jsDelivr)** — Only when the local knowledge base is enabled in settings.
+The embedding model used to index documentation is loaded from `https://cdn.jsdelivr.net/npm/@xenova/transformers@3.8.1/`. Only the JS bundle and embedding model files are fetched; no prompts or admin data are sent.
+jsDelivr terms: https://www.jsdelivr.com/terms — Privacy: https://www.jsdelivr.com/privacy-policy-jsdelivr-net
+
+**External LLM provider (user-configured)** — Only when you switch the engine from "Local" to "Remote" in settings.
+When enabled, chat messages, tool descriptions, and tool results are sent through this plugin's REST proxy (`/wp-json/wp-agentic-admin/v1/llm-proxy/`) to the OpenAI-compatible endpoint URL you configure (e.g. Ollama, LM Studio, vLLM, OpenAI, Groq, Together). You choose the endpoint; the plugin does not preselect or default to any third-party provider. No data is sent until you save an endpoint and start a chat in Remote mode.
+
+**DuckDuckGo HTML search** — Only when the optional `web-search` ability is invoked by the assistant.
+The user's search query is sent to `https://html.duckduckgo.com/html/` over GET. No WordPress user data is sent.
+DuckDuckGo terms: https://duckduckgo.com/terms — Privacy: https://duckduckgo.com/privacy
+
+**NVD CVE database (NIST)** — Only when the optional `plugin-vulnerability-scan` ability is invoked.
+Installed plugin names and versions are sent to `https://services.nvd.nist.gov/rest/json/cves/2.0` to check for known CVEs.
+NVD terms: https://nvd.nist.gov/general/terms-of-use — Privacy: https://www.nist.gov/privacy-policy
+
+**MITRE CVE API** — Only when the optional `plugin-vulnerability-scan` ability follows up on a CVE identifier.
+The CVE ID (e.g. `CVE-2024-12345`) is sent to `https://cveawg.mitre.org/api/cve/` for details. No WordPress user data is sent.
+MITRE terms: https://www.cve.org/Legal/TermsOfUse — Privacy: https://www.cve.org/Legal/PrivacyPolicy
+
+**WordPress.org plugin checksums** — Only when the optional `verify-plugin-checksums` ability is invoked.
+Installed plugin slugs and versions are sent to `https://downloads.wordpress.org/plugin-checksums/` and `https://plugins.svn.wordpress.org/` to verify file integrity against the official WordPress.org distribution.
+WordPress.org policies: https://wordpress.org/about/privacy/
+
 == Changelog ==
 
 = 0.11.0 =
-* Renamed: Plugin is now "Agentic Admin for WordPress". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
+* Renamed: Plugin is now "Agentic Admin". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
 * Removed: feedback system, WebMCP bridge, voice input, and three low-value abilities (backup-check, opcode-cache-status, disk-usage). Code preserved in git history; voice + write-file + content-generate + plugin-ecosystem abilities parked for v1.x as opt-in via WP_AGENTIC_ADMIN_ENABLE_LABS constant.
 * Security: blocked sensitive-column reads (user_email, user_pass) in query-database to prevent reconnaissance attacks (#166). Hardened query length cap and read-only verb gate.
 * Security: escaped output in functions-abilities.php (#121). Added sw-loader.php access-control rationale (#123). Documented direct-DB-call rationale in db-optimize and database-check.

@@ -811,7 +811,7 @@ function evaluateTurn( turn, result ) {
 ( async () => {
 	console.log( '' );
 	console.log( '╔══════════════════════════════════════════════╗' );
-	console.log( '║   Agentic Admin for WordPress — E2E Test Runner        ║' );
+	console.log( '║   Agentic Admin — E2E Test Runner        ║' );
 	console.log( '║   Ollama + WP REST API (real tool calls)    ║' );
 	console.log( '╚══════════════════════════════════════════════╝' );
 	console.log( '' );

@@ -11,14 +11,42 @@
  * @package WPAgenticAdmin
  */
 
+@import './tokens';
+
 .wp-agentic-admin-app {
-	max-width: 900px;
 	margin: 20px 0;
 	display: flex;
 	flex-direction: column;
 	// Height: viewport minus WP admin chrome
 	// (admin bar 32px + header ~50px + margins 40px + model ~80px)
 	min-height: calc(100vh - 200px);
+}
+
+// @wordpress/components Card / CardBody / CardHeader / CardFooter all
+// apply border-radius: 7px via emotion classes (.css-XXX:first-of-type,
+// :last-of-type) injected as inline <style> tags at runtime. Those win
+// the cascade tie at equal specificity, so !important is the only way
+// to flatten Cards plugin-wide.
+.wp-agentic-admin-app .components-card,
+.wp-agentic-admin-app .components-card__body,
+.wp-agentic-admin-app .components-card__header,
+.wp-agentic-admin-app .components-card__footer,
+#wp-agentic-admin-sidebar .components-card,
+#wp-agentic-admin-sidebar .components-card__body,
+#wp-agentic-admin-sidebar .components-card__header,
+#wp-agentic-admin-sidebar .components-card__footer {
+	border-radius: 0 !important;
+}
+
+// Chat header HStack must constrain to its parent column (default WP
+// HStack sizes to content and overflows narrow parents — same issue
+// we hit in admin-sidebar.scss).
+.wp-agentic-admin-chat-header.components-h-stack,
+.wp-agentic-admin-chat-actions.components-h-stack {
+	max-width: 100%;
+	box-sizing: border-box;
+	flex-wrap: wrap;
+	row-gap: 4px;
 }
 
 .wp-agentic-admin-main {
@@ -30,8 +58,8 @@
 
 // Chat Container
 .wp-agentic-admin-chat {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: $color-surface;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 	display: flex;
@@ -46,8 +74,89 @@
 	min-height: 200px;
 	overflow-y: auto;
 	padding: 20px;
-	background: #f6f7f7;
+	background: $color-surface-subtle;
+
+	// WP admin's global stylesheet sets margin-block: 1em on every <p>
+	// inside .wrap, which pushes the chat-bubble text away from the
+	// timestamp + copy button below it. Reset inside our message Cards.
+	.components-card__body p {
+		margin: 0;
+	}
+
+	// Vertical breathing room between consecutive messages.
+	> * {
+		margin-top: 8px;
+		margin-bottom: 8px;
+
+		&:first-child {
+			margin-top: 0;
+		}
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	// Collapsible Card (Thought process / Ability result) — drop the
+	// CardHeader border-bottom so the header reads as continuous with
+	// the body when expanded. Otherwise the divider competes with the
+	// rest of the message list. Also force the toggle Button + its
+	// HStack to left-align — WP's Button centers content + uses
+	// width: max-content, which pushes "Thinking… ▼" toward the
+	// middle of the header instead of the left edge.
+	.wp-agentic-admin-collapsible {
+		.components-card__header {
+			border-bottom: 0;
+		}
+
+		.components-card__header > .components-button {
+			width: 100%;
+			justify-content: flex-start;
+			text-align: left;
+			// Drop the default Button left/right padding — the
+			// CardHeader already supplies horizontal padding, and the
+			// inner Button padding was indenting the content past
+			// where neighbouring card titles sit.
+			padding-left: 0;
+			padding-right: 0;
+		}
+	}
+
+	// Chat-bubble exception to the plugin-wide flatten-corners rule.
+	// 8px is the WP 7.0 container border-radius (used in core admin
+	// shells); it reads as a soft chat-message rounding without
+	// looking unfamiliar to a WP admin.
+	.components-card,
+	.components-card__body,
+	.components-card__header,
+	.components-card__footer {
+		border-radius: 8px !important;
+	}
+
+	// Dark-themed <pre> blocks for ability-result JSON dumps, code
+	// payloads, etc. Matches the high-contrast look of a code editor
+	// against the otherwise light WP admin chrome.
+	pre {
+		margin: 0;
+		padding: 12px 14px;
+		background: $color-text;
+		color: $color-code-text;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+		font-size: 12.5px;
+		line-height: 1.55;
+		border-radius: 4px;
+		overflow-x: auto;
+		white-space: pre;
+
+		code {
+			background: transparent;
+			color: inherit;
+			padding: 0;
+			font: inherit;
+		}
+	}
 }
+
 
 // Context Warning
 .wp-agentic-admin-context-warning {
@@ -84,8 +193,8 @@
 		margin-left: auto;
 
 		.wp-agentic-admin-message__content {
-			background: #2271b1;
-			color: #fff;
+			background: $color-accent;
+			color: $color-surface;
 			border-radius: 16px 16px 4px 16px;
 		}
 	}
@@ -94,8 +203,8 @@
 		margin-right: auto;
 
 		.wp-agentic-admin-message__content {
-			background: #fff;
-			border: 1px solid #c3c4c7;
+			background: $color-surface;
+			border: 1px solid $color-border;
 			border-radius: 16px 16px 16px 4px;
 		}
 	}
@@ -105,9 +214,9 @@
 		max-width: 100%;
 
 		.wp-agentic-admin-message__content {
-			background: #fff;
-			border: 1px solid #c3c4c7;
-			border-left: 4px solid #2271b1;
+			background: $color-surface;
+			border: 1px solid $color-border;
+			border-left: 4px solid $color-accent;
 			border-radius: 0 4px 4px 0;
 
 			ul {
@@ -132,8 +241,8 @@
 		}
 
 		pre {
-			background: #1d2327;
-			color: #fff;
+			background: $color-text;
+			color: $color-surface;
 			padding: 12px;
 			border-radius: 4px;
 			overflow-x: auto;
@@ -151,7 +260,7 @@
 
 	&__meta {
 		font-size: 11px;
-		color: #646970;
+		color: $color-text-faint;
 		margin-top: 4px;
 		padding: 0 16px;
 	}
@@ -159,8 +268,8 @@
 
 // Ability Execution Block
 .wp-agentic-admin-ability {
-	background: #f0f6fc;
-	border: 1px solid #c3c4c7;
+	background: $color-info-bg;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	margin: 8px 0;
 	padding: 12px;
@@ -171,7 +280,7 @@
 		gap: 8px;
 		margin-bottom: 8px;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 	}
 
 	&__icon {
@@ -180,8 +289,8 @@
 	}
 
 	&__result {
-		background: #fff;
-		border: 1px solid #c3c4c7;
+		background: $color-surface;
+		border: 1px solid $color-border;
 		border-radius: 4px;
 		padding: 8px;
 		font-size: 13px;
@@ -196,125 +305,39 @@
 	&--pending {
 
 		.wp-agentic-admin-ability__header {
-			color: #996800;
+			color: $color-warning-text;
 		}
 	}
 
 	&--success {
-		border-color: #00a32a;
+		border-color: $color-success;
 
 		.wp-agentic-admin-ability__header {
-			color: #00a32a;
+			color: $color-success;
 		}
 	}
 
 	&--error {
-		border-color: #d63638;
+		border-color: $color-error;
 
 		.wp-agentic-admin-ability__header {
-			color: #d63638;
+			color: $color-error;
 		}
 	}
 }
 
 // Input Area
+// Composer area — only the panel chrome (white background + top
+// border separating it from the message list). Layout comes from
+// VStack/HStack and inputs come from @wordpress/components.
 .wp-agentic-admin-input-area {
-	display: flex;
-	flex-direction: column;
 	padding: 15px;
-	border-top: 1px solid #c3c4c7;
-	background: #fff;
-}
-
-// Unified wrapper — single border around textarea + toolbar
-.wp-agentic-admin-input-wrapper {
-	border: 1px solid #c3c4c7;
-	border-radius: 8px;
-	background: #fff;
-	overflow: hidden;
-	transition: border-color 0.2s ease;
-
-	&:focus-within {
-		border-color: #2271b1;
-		box-shadow: 0 0 0 1px #2271b1;
-	}
-
-	&--disabled {
-		background: #f6f7f7;
-		opacity: 0.6;
-	}
-
-	// Recording state — pulsing glow signals the mic is active
-	&--recording {
-		border-color: rgba(214, 54, 56, 0.4);
-		background: rgba(214, 54, 56, 0.025);
-		animation: wp-agentic-input-recording-glow 1.8s ease-in-out infinite;
-
-		// Keep the red glow even when the textarea has focus
-		&:focus-within {
-			border-color: rgba(214, 54, 56, 0.5);
-			box-shadow: none; // animation handles the shadow
-		}
-	}
-
-	.wp-agentic-admin-input {
-		display: block;
-		width: 100%;
-		resize: none;
-		min-height: 60px;
-		max-height: 200px;
-		padding: 12px;
-		border: none;
-		border-radius: 0;
-		background: transparent;
-		font-size: 14px;
-		line-height: 1.5;
-		outline: none;
-		box-shadow: none;
-		-webkit-appearance: none;
-
-		&:focus {
-			box-shadow: none;
-			outline: 2px solid transparent; // Visible in Windows High Contrast Mode; wrapper :focus-within handles visual indicator
-		}
-
-		&:disabled {
-			cursor: not-allowed;
-		}
-
-		&::placeholder {
-			color: #a0a0a0;
-		}
-	}
-}
-
-.wp-agentic-admin-input-hint {
-	font-size: 12px;
-	color: #6e6e6e;
-	padding: 0 4px;
-	text-align: left;
-}
-
-// Input Toolbar (below textarea, inside unified wrapper)
-.wp-agentic-admin-input-toolbar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 4px 8px 8px;
-
-	&__left {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	&__right {
-		display: flex;
-		align-items: center;
-	}
+	border-top: 1px solid $color-border;
+	background: $color-surface;
 }
 
 // Textarea container — needed to anchor the transcribing overlay
+// (used by the parked VoiceButton component).
 .wp-agentic-admin-textarea-container {
 	position: relative;
 }
@@ -356,7 +379,7 @@
 		display: block;
 		width: 4px;
 		height: 6px;
-		background: #2271b1;
+		background: $color-accent;
 		border-radius: 2px;
 		animation: wp-agentic-wave-bar 1.1s ease-in-out infinite;
 
@@ -397,147 +420,38 @@
 
 .wp-agentic-admin-transcribing-label {
 	font-size: 12px;
-	color: #50575e;
+	color: $color-text-muted;
 	letter-spacing: 0.02em;
 }
 
-// Web search toggle
-.wp-agentic-admin-websearch-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border: none;
-	background: none;
-	color: #50575e;
-	cursor: pointer;
-	border-radius: 6px;
-	padding: 0;
-	margin-right: 4px;
-	position: relative;
-	transition: color 0.15s ease;
+// Composer toolbar buttons (web search, bundle picker, send) now use
+// @wordpress/components Button with isPressed / variant="primary" /
+// icon={...}. No bespoke styling needed.
 
-	// CSS tooltip — stays visible on hover regardless of clicks
-	&::before {
-		content: attr(data-tooltip);
-		position: absolute;
-		bottom: 100%;
-		left: 50%;
-		transform: translateX(-50%);
-		padding: 4px 8px;
-		background: #1d2327;
-		color: #fff;
-		font-size: 12px;
-		font-weight: 400;
-		white-space: nowrap;
-		border-radius: 4px;
-		pointer-events: none;
-		opacity: 0;
-		transition: opacity 0.1s ease;
-		margin-bottom: 6px;
-	}
-
-	&:hover::before {
-		opacity: 1;
-	}
-
-	&:hover {
-		background: #f0f0f1;
-		color: #2271b1;
-	}
-
-	&--active {
-		color: #2271b1;
-
-		svg {
-			fill: #2271b1;
-		}
-	}
-
-	&:disabled {
-		color: #a0a0a0;
-		cursor: not-allowed;
-
-		&:hover {
-			background: none;
-			color: #a0a0a0;
-		}
-
-		&:hover::before {
-			opacity: 0;
-		}
-	}
+// Bundle DropdownMenu — count suffix (per-bundle ability count) must
+// not wrap onto a second line in the slim ~240px menu.
+.wp-agentic-admin-bundle-count {
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	color: $color-text-faint;
 }
 
-// Bundle trigger button (plus icon)
-.wp-agentic-admin-bundle-trigger {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border: none;
-	background: none;
-	color: #50575e;
-	cursor: pointer;
-	border-radius: 6px;
-	padding: 0;
-	transition: color 0.15s ease, background 0.15s ease;
+// Multi-select Dropdown bundle menu: give selected rows a tinted
+// accent background + bold so they're unmistakable next to the
+// keyboard-focus outline. The actual element MenuItem emits with
+// the aria-checked attribute is the inner button, not the wrapper.
+.components-menu-item__button[aria-checked='true'] {
+	background: $color-info-bg;
+	color: $color-accent;
+	font-weight: 600;
 
-	&:hover {
-		background: #f0f0f1;
-		color: #2271b1;
+	&:hover,
+	&:focus {
+		background: $color-info-bg;
 	}
 
-	&--active {
-		background: #f0f0f1;
-		color: #2271b1;
-	}
-
-	&:disabled {
-		color: #a0a0a0;
-		cursor: not-allowed;
-
-		&:hover {
-			background: none;
-			color: #a0a0a0;
-		}
-	}
-}
-
-// Send button (arrow icon) — fades in when text is present
-.wp-agentic-admin-send-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 34px;
-	height: 34px;
-	border: none;
-	background: #2271b1;
-	color: #fff;
-	cursor: pointer;
-	border-radius: 6px;
-	padding: 0;
-	opacity: 1;
-	transform: scale(1);
-	transition:
-		background 0.15s ease,
-		opacity 0.2s ease,
-		transform 0.2s ease;
-
-	svg {
-		fill: #fff;
-	}
-
-	&:hover {
-		background: #135e96;
-	}
-
-	&:disabled {
-		opacity: 0;
-		transform: scale(0.8);
-		pointer-events: none;
+	.wp-agentic-admin-bundle-count {
+		color: $color-accent;
 	}
 }
 
@@ -552,7 +466,7 @@
 	height: 36px;
 	border: none;
 	background: none;
-	color: #50575e;
+	color: $color-text-muted;
 	cursor: pointer;
 	border-radius: 50%; // Circular like Gemini
 	padding: 0;
@@ -561,15 +475,15 @@
 		background 0.15s ease;
 
 	&:hover {
-		background: #f0f0f1;
-		color: #1d2327;
+		background: $color-surface-tinted;
+		color: $color-text;
 	}
 
 	// ── Recording state ──────────────────────────────────────────────
 	&--recording {
 		flex-direction: column;
 		gap: 2px;
-		color: #d63638;
+		color: $color-error;
 		background: #fce8e8;
 		animation: wp-agentic-voice-pulse 2s ease-in-out infinite;
 
@@ -580,14 +494,14 @@
 		}
 
 		&:hover {
-			background: #f5c0c1;
+			background: $color-error-border;
 			animation-play-state: paused;
 		}
 	}
 
 	// ── Warning state (≤ 10 s remaining) ─────────────────────────────
 	&--warning {
-		background: #f5c0c1;
+		background: $color-error-border;
 		animation-duration: 0.7s;
 
 		.wp-agentic-admin-voice-timer {
@@ -676,353 +590,49 @@
 	}
 }
 
-// Bundle pill — label + dismiss
-.wp-agentic-admin-bundle-pill {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	background: none;
-	border: none;
-	padding: 4px 0;
-	font-size: 13px;
-	color: #2271b1;
-	line-height: 1;
-
-	&__label {
-		white-space: nowrap;
-		font-weight: 600;
-	}
-
-	&__remove {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		border: none;
-		background: none;
-		color: #50575e;
-		cursor: pointer;
-		padding: 0;
-		border-radius: 50%;
-		transition: color 0.15s ease, background 0.15s ease;
-
-		&:hover {
-			background: #f0f0f1;
-			color: #d63638;
-		}
-	}
-}
-
-// Bundle dropdown menu
-.wp-agentic-admin-bundle-menu {
-	min-width: 200px;
-	padding: 4px 0;
-
-	&__item {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: 100%;
-		padding: 8px 12px;
-		border: none;
-		background: none;
-		cursor: pointer;
-		font-size: 13px;
-		color: #1d2327;
-		text-align: left;
-		transition: background 0.1s ease;
-
-		&:hover {
-			background: #f0f0f1;
-		}
-
-		&--selected {
-			background: #f0f6fc;
-		}
-
-		svg {
-			fill: #2271b1;
-			flex-shrink: 0;
-		}
-	}
-
-	&__label {
-		flex: 1;
-	}
-
-	&__count {
-		font-size: 11px;
-		color: #6e6e6e;
-	}
-
-	&__separator {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 12px 4px;
-		font-size: 11px;
-		font-weight: 600;
-		color: #6e6e6e;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-
-		&::after {
-			content: "";
-			flex: 1;
-			height: 1px;
-			background: #c3c4c7;
-		}
-	}
-
-	&__plugin-icon {
-		width: 18px;
-		height: 18px;
-		border-radius: 3px;
-		flex-shrink: 0;
-		object-fit: contain;
-	}
-}
 
 // Status Bar
-.wp-agentic-admin-status {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 10px;
-	padding: 10px 15px;
-	background: #f6f7f7;
-	border-top: 1px solid #c3c4c7;
-	font-size: 13px;
-
-	&__indicator {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		flex-shrink: 0;
-
-		&--pending {
-			background: #dba617;
-		}
-
-		&--loading {
-			background: #2271b1;
-			animation: pulse 1.5s infinite;
-		}
-
-		&--ready {
-			background: #00a32a;
-		}
-
-		&--error {
-			background: #d63638;
-		}
-	}
-
-	&__info {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		gap: 2px;
-	}
-
-	&__text {
-		color: #1d2327;
-		font-weight: 500;
-	}
-
-	&__model-details {
-		font-size: 11px;
-		color: #646970;
-		font-weight: 400;
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 2px;
-	}
-
-	&__mode-badge {
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 6px;
-		border-radius: 3px;
-		font-size: 10px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.3px;
-		margin-right: 6px;
-
-		&--persistent {
-			background: #e7f5e7;
-			color: #1e7e1e;
-			border: 1px solid #b8e6bf;
-
-			&::before {
-				content: "●";
-				margin-right: 4px;
-				font-size: 6px;
-				animation: pulse-green 2s ease-in-out infinite;
-			}
-		}
-	}
-
-	@keyframes pulse-green {
-
-		0%,
-		100% {
-			opacity: 1;
-		}
-
-		50% {
-			opacity: 0.4;
-		}
-	}
-
-	&__context {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-
-		.context__label {
-			color: #646970;
-		}
-
-		.context__bar {
-			width: 40px;
-			height: 6px;
-			background: #dcdcde;
-			border-radius: 3px;
-			overflow: hidden;
-		}
-
-		.context__fill {
-			display: block;
-			height: 100%;
-			background: #2271b1;
-			border-radius: 3px;
-			transition: width 0.3s ease;
-		}
-
-		.context__percent {
-			min-width: 28px;
-			text-align: right;
-		}
-
-		&.context--high {
-
-			.context__fill {
-				background: #dba617;
-			}
-
-			.context__percent {
-				color: #996800;
-			}
-		}
-
-		&.context--critical {
-
-			.context__fill {
-				background: #d63638;
-			}
-
-			.context__percent {
-				color: #d63638;
-				font-weight: 600;
-			}
-		}
-	}
-
-	.button {
-		margin-left: auto;
-	}
+// Status pill (toolbar) — keep the Spinner vertically centred. WP's
+// Spinner ships with a default 5px margin that breaks alignment with
+// the icon Buttons next to it in the composer toolbar.
+.wp-agentic-admin-status-pill {
+	min-height: 36px; // match toolbar icon Button height
 
 	.components-spinner {
 		margin: 0;
 	}
 }
 
-// Inline Progress Bar (in status bar)
-.wp-agentic-admin-progress {
-	width: 100%;
-	height: 8px;
-	background: #c3c4c7;
-	border-radius: 4px;
-	overflow: hidden;
-	order: 10; // Put it at the end/bottom
+// Status dot — colored indicator inside the model-status Card.
+// 10px circle; color reflects model state.
+.wp-agentic-admin-status-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: $color-warning;
 
-	&__bar {
-		height: 100%;
-		background: linear-gradient(90deg, #2271b1, #135e96);
-		transition: width 0.3s ease;
-		border-radius: 4px;
+	&--ready {
+		background: $color-success;
+	}
+
+	&--loading,
+	&--checking {
+		background: $color-accent;
+		animation: pulse 1.5s infinite;
+	}
+
+	&--error {
+		background: $color-error;
 	}
 }
 
-// Loading State
-.wp-agentic-admin-loading {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 40px;
-	color: #646970;
-
-	.spinner {
-		margin-bottom: 10px;
-	}
-}
-
-// Error State
-.wp-agentic-admin-error {
-	margin: 20px 0;
-}
-
-// Permalink Notice
-.wp-agentic-admin-permalink-notice {
-	margin-top: 20px;
-
-	.components-notice {
-		margin: 0;
-		padding: 16px;
-
-		p {
-			margin: 0 0 12px;
-
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
-
-		.button {
-			margin-top: 8px;
-		}
-	}
-}
-
-// Model Loading Progress
-.wp-agentic-admin-model-progress {
-	width: 100%;
-	margin: 10px 0;
-
-	&__bar {
-		height: 20px;
-		background: #f0f0f1;
-		border-radius: 10px;
-		overflow: hidden;
-	}
-
-	&__fill {
-		height: 100%;
-		background: linear-gradient(90deg, #2271b1, #135e96);
-		transition: width 0.3s ease;
-	}
-
-	&__text {
-		text-align: center;
-		font-size: 12px;
-		color: #646970;
-		margin-top: 5px;
-	}
+// Inline ProgressBar in the model-status row needs a constrained width —
+// ProgressBar defaults to filling its parent flex item, which makes it
+// expand the whole status bar. Cap it so it stays inline.
+.wp-agentic-admin-status-progress {
+	width: 80px;
+	flex-shrink: 0;
 }
 
 // Confirm Dialog
@@ -1039,7 +649,7 @@
 	z-index: 100000;
 
 	&__dialog {
-		background: #fff;
+		background: $color-surface;
 		border-radius: 4px;
 		box-shadow: 0 3px 20px rgba(0, 0, 0, 0.3);
 		max-width: 500px;
@@ -1048,7 +658,7 @@
 
 	&__header {
 		padding: 15px 20px;
-		border-bottom: 1px solid #c3c4c7;
+		border-bottom: 1px solid $color-border;
 		font-weight: 600;
 	}
 
@@ -1061,8 +671,8 @@
 		justify-content: flex-end;
 		gap: 10px;
 		padding: 15px 20px;
-		border-top: 1px solid #c3c4c7;
-		background: #f6f7f7;
+		border-top: 1px solid $color-border;
+		background: $color-surface-subtle;
 	}
 
 	&__warning {
@@ -1070,13 +680,13 @@
 		align-items: flex-start;
 		gap: 10px;
 		padding: 10px;
-		background: #fcf0f1;
-		border: 1px solid #d63638;
+		background: $color-error-bg;
+		border: 1px solid $color-error;
 		border-radius: 4px;
 		margin-bottom: 15px;
 
 		.dashicons {
-			color: #d63638;
+			color: $color-error;
 		}
 	}
 }
@@ -1086,62 +696,27 @@
 // Four mutually-exclusive views: chat, abilities, plugin-abilities,
 // settings. The first three sit on the left; Settings is visually pushed
 // to the right via flex margin-left:auto but is the same kind of element.
-.wp-agentic-admin-tabs-wrapper {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	min-height: 0;
-}
-
+// TabPanel from @wordpress/components — only the flex-fill behavior the
+// chat view needs to occupy remaining vertical space. The tab strip itself,
+// active-state indicator, hover styling, and content padding all come from
+// the component's bundled stylesheet.
 .wp-agentic-admin-tabs {
 	display: flex;
-	align-items: stretch;
-	border-bottom: 1px solid #c3c4c7;
-	flex-shrink: 0;
-	background: #fff;
-}
-
-.wp-agentic-admin-tab,
-.wp-agentic-admin-settings-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 48px;
-	padding: 0 16px;
-	border: none;
-	border-radius: 0;
-	background: transparent;
-	color: #50575e;
-	font-weight: 500;
-	font-size: 13px;
-	cursor: pointer;
-
-	&:hover,
-	&:focus {
-		color: #2271b1;
-		background: #f0f0f1;
-	}
-
-	&.is-active {
-		color: #2271b1;
-		box-shadow: inset 0 -3px 0 0 #2271b1;
-	}
-}
-
-.wp-agentic-admin-settings-toggle {
-	margin-left: auto; // Push Settings to the right edge of the tab strip
-	gap: 6px;
-}
-
-.wp-agentic-admin-tab-content {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-top: none;
-	border-radius: 0 0 4px 4px;
-	flex: 1;
-	display: flex;
 	flex-direction: column;
+	flex: 1;
 	min-height: 0;
+
+	.components-tab-panel__tab-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		background: $color-surface;
+		// Match @wordpress/components Card: a 1px shadow-ring instead of
+		// a literal border, so the chat panel and the bottom provider /
+		// loading Card share the same edge aesthetic.
+		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+	}
 }
 
 // Chat Container wrapper
@@ -1153,475 +728,73 @@
 	position: relative;
 }
 
-// Ability Browser
-.wp-agentic-admin-ability-browser {
+// Ability grid — only plugin-specific layout that has no @wordpress
+// equivalent (auto-fit responsive grid; __experimentalGrid only supports
+// fixed column counts). Each tile is a Card with header/body/footer;
+// stretch the Card to the grid cell height and let the body grow so
+// the Execute Button (in CardFooter) always sits at the bottom edge.
+// !important is needed because @wordpress/components emotion classes
+// win the cascade tie against equal-specificity bundled rules.
+.wp-agentic-admin-ability-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
+
+	.components-card {
+		display: flex !important;
+		flex-direction: column !important;
+		height: 100%;
+	}
+
+	// Card wraps its children in an emotion-generated <div> (no public
+	// class) that is NOT a flex container by default. The CardBody
+	// flex:1 / CardFooter margin-top:auto rules below are no-ops
+	// unless we make this wrapper a vertical flex column.
+	.components-card > div {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.components-card__body {
+		flex: 1 !important;
+	}
+
+	.components-card__footer {
+		margin-top: auto;
+	}
+}
+
+// Padding for non-Chat tab content. Chat tab supplies its own
+// edge-to-edge chrome (chat-header / messages / composer); the
+// other tabs (Abilities, Plugin Abilities, Settings) need a uniform
+// 20px breathing room from the panel edges.
+.wp-agentic-admin-tab-padded {
 	padding: 20px;
 
-	&--loading,
-	&--error,
-	&--empty {
-		text-align: center;
-		padding: 40px;
-	}
-
-	&__header {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 20px;
-
-		h3 {
-			margin: 0;
-			flex: 1;
-		}
-
-		.description {
-			width: 100%;
-			margin: 5px 0 0;
-			color: #646970;
-		}
-	}
-
-	&__tabs {
-		display: flex;
-		gap: 0;
-		margin-bottom: 16px;
-		border-bottom: 1px solid #c3c4c7;
-	}
-
-	&__tab {
-		padding: 8px 16px;
-		border: 1px solid transparent;
-		border-bottom: none;
-		background: none;
-		cursor: pointer;
-		font-size: 13px;
-		color: #646970;
-		margin-bottom: -1px;
-		border-radius: 4px 4px 0 0;
-
-		&:hover {
-			color: #2271b1;
-		}
-
-		&--active {
-			color: #1d2327;
-			font-weight: 600;
-			border-color: #c3c4c7;
-			background: #fff;
-		}
-	}
-
-	&__grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 16px;
-	}
-}
-
-
-// Ability Card
-.wp-agentic-admin-ability-card {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	padding: 16px;
-	transition: box-shadow 0.2s ease;
-
-	&:hover {
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-
-	&--destructive {
-		border-color: #d63638;
-		border-left-width: 4px;
-	}
-
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 8px;
-
-		h4 {
-			margin: 0;
-			font-size: 14px;
-			font-weight: 600;
-		}
-	}
-
-	&__description {
-		color: #646970;
-		font-size: 13px;
-		margin: 0 0 12px;
-	}
-
-	&__id {
-		margin-bottom: 12px;
-
-		code {
-			background: #f0f0f1;
-			padding: 2px 6px;
-			border-radius: 3px;
-			font-size: 11px;
-			color: #1d2327;
-		}
-	}
-
-	&__toggle {
-		padding: 0;
-		height: auto;
-		margin-bottom: 8px;
-	}
-
-	&__input {
-		margin-bottom: 12px;
-
-		textarea {
-			width: 100%;
-			font-family: monospace;
-			font-size: 12px;
-			padding: 8px;
-			border: 1px solid #8c8f94;
-			border-radius: 4px;
-			resize: vertical;
-
-			&:focus {
-				border-color: #2271b1;
-				box-shadow: 0 0 0 1px #2271b1;
-				outline: 2px solid transparent; // Visible in Windows High Contrast Mode
-			}
-		}
-	}
-
-	&__schema {
-		background: #f6f7f7;
-		padding: 8px 12px;
-		border-radius: 4px;
-		margin-bottom: 8px;
-		font-size: 12px;
-
-		small {
-			font-weight: 600;
-			display: block;
-			margin-bottom: 4px;
-		}
-
-		ul {
-			margin: 0;
-			padding-left: 16px;
-		}
-
-		li {
-			margin-bottom: 2px;
-		}
-
-		code {
-			background: #fff;
-			padding: 1px 4px;
-			border-radius: 2px;
-		}
-	}
-
-	&__error {
-		color: #d63638;
-		font-size: 12px;
-		margin-top: 4px;
-	}
-
-	&__actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 8px;
-
-		.components-spinner {
-			margin: 0 8px 0 0;
-		}
-	}
-}
-
-// Badge
-.wp-agentic-admin-badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 3px;
-	font-size: 11px;
-	font-weight: 500;
-	text-transform: uppercase;
-
-	&--warning {
-		background: #fcf0f1;
-		color: #d63638;
-	}
-
-	&--success {
-		background: #edfaef;
-		color: #00a32a;
-	}
-
-	&--info {
-		background: #f0f6fc;
-		color: #2271b1;
-	}
-}
-
-// Result Panel
-.wp-agentic-admin-result-panel {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	margin-bottom: 20px;
-	overflow: hidden;
-
-	&--success {
-		border-color: #00a32a;
-	}
-
-	&--error {
-		border-color: #d63638;
-	}
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 12px 16px;
-		background: #f6f7f7;
-		border-bottom: 1px solid #c3c4c7;
-
-		h4 {
-			margin: 0;
-			font-size: 14px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.dashicons {
-			font-size: 18px;
-			width: 18px;
-			height: 18px;
-		}
-
-		.dashicons-yes-alt {
-			color: #00a32a;
-		}
-
-		.dashicons-warning {
-			color: #d63638;
-		}
-	}
-
-	&__content {
-		padding: 16px;
-		max-height: 300px;
-		overflow: auto;
-
-		pre {
-			margin: 0;
-			white-space: pre-wrap;
-			word-break: break-word;
-			font-size: 12px;
-			background: #1d2327;
-			color: #fff;
-			padding: 12px;
-			border-radius: 4px;
-		}
-	}
-}
-
-// Token Budget Bar
-.wp-agentic-admin-token-budget {
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-	padding: 16px;
-	margin-bottom: 16px;
-
-	&__header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 8px;
-	}
-
-	&__label {
-		font-weight: 600;
-		font-size: 13px;
-	}
-
-	&__status {
-		font-weight: 600;
-		font-size: 12px;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	&__bar-container {
-		height: 12px;
-		background: #f0f0f1;
-		border-radius: 6px;
-		overflow: hidden;
-		margin-bottom: 8px;
-		display: flex;
-	}
-
-	&__bar {
-		height: 100%;
-		transition: width 0.4s ease, background-color 0.4s ease;
-		min-width: 0;
-
-		&--reserve {
-			background-color: #a7aaad;
-			border-radius: 6px 0 0 6px;
-		}
-
-		&--base {
-			background-color: #2271b1;
-		}
-
-		&--external {
-			border-radius: 0 6px 6px 0;
-		}
-	}
-
-	&__info {
-		display: flex;
-		justify-content: space-between;
-		font-size: 12px;
-		color: #646970;
-	}
-
-	&__breakdown {
-		display: flex;
-		justify-content: space-between;
-		font-size: 11px;
-		color: #646970;
-		margin-top: 4px;
-	}
-
-	&__context {
-		font-style: italic;
+	// WP admin's global styles give h3 a sizeable top margin and p a
+	// 1em block margin top + bottom. Both fight the VStack / HStack
+	// spacing props we use for layout, leaving giant gaps between a
+	// section heading and its intro paragraph (and between stacked
+	// paragraphs). Zero them inside the padded tab so vertical
+	// rhythm comes from VStack alone.
+	h3,
+	h4,
+	p {
+		margin-top: 0;
+		margin-bottom: 0;
 	}
 }
 
 // Plugin Abilities Panel
-.wp-agentic-admin-plugin-panel {
-	padding: 20px;
-
-	&--loading,
-	&--error,
-	&--empty {
-		text-align: center;
-		padding: 40px;
-	}
-
-	&__header {
-		margin-bottom: 16px;
-
-		h3 {
-			margin: 0 0 4px;
-		}
-
-		.description {
-			margin: 0;
-			color: #646970;
-		}
-	}
-
-	&__controls {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 12px 16px;
-		background: #f6f7f7;
-		border: 1px solid #c3c4c7;
-		border-radius: 4px;
-		margin-bottom: 12px;
-
-		.components-toggle-control {
-			margin-bottom: 0;
-		}
-	}
-
-	&__list {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	&__item {
-		background: #fff;
-		border: 1px solid #c3c4c7;
-		border-radius: 4px;
-		padding: 12px 16px;
-		transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-		&--enabled {
-			border-color: #2271b1;
-			border-left-width: 3px;
-		}
-
-		&:hover {
-			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-		}
-
-		.components-toggle-control {
-			margin-bottom: 0;
-		}
-	}
-
-	&__item-row {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	&__item-icon {
-		width: 36px;
-		height: 36px;
-		border-radius: 6px;
-		flex-shrink: 0;
-		margin-top: 2px;
-		object-fit: contain;
-
-		&--letter {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: #2271b1;
-			color: #fff;
-			font-weight: 600;
-			font-size: 16px;
-		}
-	}
-
-	&__item-main {
-		flex: 1;
-		min-width: 0;
-	}
-
-	&__item-meta {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-top: 8px;
-
-		code {
-			background: #f0f0f1;
-			padding: 2px 6px;
-			border-radius: 3px;
-			font-size: 11px;
-		}
-	}
-
-	&__item-tokens {
-		font-size: 11px;
-		color: #646970;
-		white-space: nowrap;
-	}
-
+// Plugin Abilities — only the per-ability icon needs custom layout.
+// Cards / toggles / spacing all come from @wordpress/components.
+.wp-agentic-admin-plugin-panel-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
+	flex-shrink: 0;
+	object-fit: contain;
 }
 
 // Error content in messages
@@ -1630,7 +803,7 @@
 	flex-wrap: wrap;
 	align-items: flex-start;
 	gap: 8px;
-	color: #d63638;
+	color: $color-error;
 
 	.dashicons {
 		flex-shrink: 0;
@@ -1639,8 +812,8 @@
 	pre {
 		width: 100%;
 		margin-top: 8px;
-		background: #fcf0f1;
-		color: #d63638;
+		background: $color-error-bg;
+		color: $color-error;
 		padding: 8px;
 		border-radius: 4px;
 		font-size: 12px;
@@ -1651,8 +824,8 @@
 .wp-agentic-admin-message--error {
 
 	.wp-agentic-admin-message__content {
-		background: #fcf0f1;
-		border: 1px solid #d63638;
+		background: $color-error-bg;
+		border: 1px solid $color-error;
 		border-radius: 4px;
 	}
 }
@@ -1664,26 +837,21 @@
 }
 
 // Chat Header with actions
-.wp-agentic-admin-chat-header {
-	display: flex;
-	justify-content: flex-end;
+// Chat header + chat-actions chrome: just visual decoration on top
+// of the HStack from @wordpress/components (which handles layout).
+.wp-agentic-admin-chat-header,
+.wp-agentic-admin-chat-actions {
 	padding: 8px 16px;
-	border-bottom: 1px solid #c3c4c7;
-	background: #f6f7f7;
-
-	&__actions {
-		display: flex;
-		gap: 8px;
-	}
+	background: $color-surface-subtle;
 }
 
-// Chat actions (stop generation, etc.)
+.wp-agentic-admin-chat-header {
+	border-top: 1px solid $color-border;
+	border-bottom: 1px solid $color-border;
+}
+
 .wp-agentic-admin-chat-actions {
-	display: flex;
-	justify-content: center;
-	padding: 8px;
-	border-top: 1px solid #c3c4c7;
-	background: #f6f7f7;
+	border-top: 1px solid $color-border;
 }
 
 // Override WordPress default snackbar positioning with higher specificity
@@ -1698,349 +866,6 @@
 
 .wp-agentic-admin-app .components-snackbar {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-}
-
-// Model Status component
-.wp-agentic-admin-model-status {
-	margin-top: 16px;
-	padding: 16px;
-	background: #f6f7f7;
-	border: 1px solid #c3c4c7;
-	border-radius: 4px;
-
-	.wp-agentic-admin-status {
-		border: none;
-		padding: 0;
-		background: transparent;
-	}
-
-	.wp-agentic-admin-status__controls {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-left: auto;
-	}
-
-	.wp-agentic-admin-status__kebab-menu {
-		margin-left: auto;
-		flex-shrink: 0;
-
-		.components-button {
-			color: #646970;
-			min-width: 36px;
-			height: 36px;
-			padding: 0;
-
-			&:hover {
-				color: #1d2327;
-			}
-
-			&:focus-visible {
-				box-shadow: none;
-				outline: 2px solid #2271b1;
-				outline-offset: 2px;
-			}
-		}
-	}
-
-	.wp-agentic-admin-model-select {
-		padding: 4px 8px;
-		border: 1px solid #8c8f94;
-		border-radius: 4px;
-		font-size: 13px;
-		max-width: 250px;
-
-		&:disabled {
-			background: #f0f0f1;
-			cursor: not-allowed;
-		}
-	}
-
-	.wp-agentic-admin-progress {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-
-		&__text {
-			font-size: 12px;
-			color: #646970;
-			white-space: nowrap;
-		}
-	}
-}
-
-.wp-agentic-admin-model-info {
-	margin: 12px 0 0;
-	padding: 12px;
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-left: 4px solid #2271b1;
-	border-radius: 0 4px 4px 0;
-	font-size: 13px;
-	color: #646970;
-
-	&--cache {
-		background: #f0f6fc;
-		border-left-color: #00a32a;
-		color: #1d2327;
-	}
-}
-
-.wp-agentic-admin-performance-tip {
-	margin: 12px 0 0;
-	padding: 12px;
-	background: #fff8e1;
-	border: 1px solid #ffe082;
-	border-left: 4px solid #ffb300;
-	border-radius: 4px;
-	font-size: 13px;
-	color: #5d4037;
-	display: flex;
-	gap: 10px;
-	align-items: flex-start;
-
-	&__icon {
-		font-size: 16px;
-		flex-shrink: 0;
-		line-height: 1.4;
-	}
-
-	&__content {
-		flex: 1;
-
-		strong {
-			display: block;
-			margin-bottom: 4px;
-			color: #1d2327;
-		}
-
-		code {
-			background: rgba(0, 0, 0, 0.05);
-			padding: 0 4px;
-			border-radius: 2px;
-			font-family: monospace;
-		}
-	}
-}
-
-// Provider selection (Local / Remote toggle)
-.wp-agentic-admin-provider {
-	margin-top: 12px;
-
-	&__toggle {
-		display: flex;
-		border: 1px solid #c3c4c7;
-		border-radius: 4px;
-		overflow: hidden;
-		margin-bottom: 12px;
-	}
-
-	&__tab {
-		flex: 1;
-		padding: 8px 12px;
-		border: none;
-		background: #fff;
-		color: #50575e;
-		font-size: 13px;
-		cursor: pointer;
-		transition: background 0.15s, color 0.15s;
-
-		&:first-child {
-			border-right: 1px solid #c3c4c7;
-		}
-
-		&:hover {
-			background: #f0f0f1;
-		}
-
-		&.is-active {
-			background: #2271b1;
-			color: #fff;
-			font-weight: 500;
-		}
-	}
-
-	&__field {
-		margin-bottom: 10px;
-
-		label {
-			display: block;
-			font-size: 12px;
-			font-weight: 500;
-			color: #1d2327;
-			margin-bottom: 4px;
-		}
-	}
-
-	&__optional {
-		font-weight: 400;
-		color: #646970;
-	}
-
-	&__url-row {
-		display: flex;
-		gap: 8px;
-	}
-
-	&__input {
-		flex: 1;
-		padding: 6px 8px;
-		border: 1px solid #8c8f94;
-		border-radius: 4px;
-		font-size: 13px;
-		width: 100%;
-		box-sizing: border-box;
-
-		&:focus {
-			border-color: #2271b1;
-			box-shadow: 0 0 0 1px #2271b1;
-			outline: 2px solid transparent; // Visible in Windows High Contrast Mode
-		}
-	}
-
-	&__fetch-btn {
-		white-space: nowrap;
-	}
-
-	&__error {
-		margin: 4px 0 8px;
-		padding: 8px 12px;
-		background: #fcf0f1;
-		border: 1px solid #d63638;
-		border-radius: 4px;
-		font-size: 13px;
-		color: #d63638;
-	}
-}
-
-.wp-agentic-admin-status__mode-badge--external {
-	background: #dba617;
-	color: #fff;
-	padding: 1px 6px;
-	border-radius: 3px;
-	font-size: 11px;
-	font-weight: 500;
-	margin-right: 6px;
-}
-
-// Loading Card - Enhanced progress UI
-.wp-agentic-admin-loading-card {
-	background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-	border: 1px solid #c3c4c7;
-	border-radius: 8px;
-	padding: 20px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		margin-bottom: 16px;
-	}
-
-	&__icon {
-		font-size: 28px;
-		line-height: 1;
-		animation: agentic-pulse 2s ease-in-out infinite;
-	}
-
-	&__title-wrap {
-		flex: 1;
-	}
-
-	&__title {
-		margin: 0 0 2px !important;
-		font-size: 16px !important;
-		font-weight: 600;
-		color: #1d2327;
-	}
-
-	&__subtitle {
-		font-size: 13px;
-		color: #2271b1;
-		font-weight: 500;
-	}
-
-	&__percent {
-		font-size: 24px;
-		font-weight: 700;
-		color: #2271b1;
-		font-variant-numeric: tabular-nums;
-	}
-
-	&__progress {
-		height: 8px;
-		background: #e2e4e7;
-		border-radius: 4px;
-		overflow: hidden;
-		margin-bottom: 12px;
-	}
-
-	&__progress-bar {
-		height: 100%;
-		background: linear-gradient(90deg, #2271b1, #135e96);
-		border-radius: 4px;
-		transition: width 0.3s ease;
-		position: relative;
-
-		&::after {
-			content: "";
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
-			animation: agentic-shimmer 1.5s infinite;
-		}
-	}
-
-	&__description {
-		margin: 0 0 8px !important;
-		font-size: 13px;
-		color: #50575e;
-		line-height: 1.5;
-	}
-
-	&__cache-note {
-		margin: 0 !important;
-		font-size: 12px;
-		color: #00a32a;
-		font-weight: 500;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-
-		&::before {
-			content: "✓";
-			font-weight: 700;
-		}
-	}
-}
-
-@keyframes agentic-pulse {
-
-	0%,
-	100% {
-		transform: scale(1);
-		opacity: 1;
-	}
-
-	50% {
-		transform: scale(1.05);
-		opacity: 0.8;
-	}
-}
-
-@keyframes agentic-shimmer {
-
-	0% {
-		transform: translateX(-100%);
-	}
-
-	100% {
-		transform: translateX(100%);
-	}
 }
 
 // WebGPU Fallback
@@ -2069,7 +894,7 @@
 			margin: 20px 0 12px;
 			font-size: 15px;
 			font-weight: 600;
-			color: #1d2327;
+			color: $color-text;
 		}
 
 		h5 {
@@ -2084,7 +909,7 @@
 	&__links {
 		margin-top: 20px;
 		padding: 16px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 
 		ul {
@@ -2110,8 +935,8 @@
 }
 
 .wp-agentic-admin-browser-card {
-	background: #fff;
-	border: 1px solid #c3c4c7;
+	background: $color-surface;
+	border: 1px solid $color-border;
 	border-radius: 4px;
 	padding: 16px;
 
@@ -2126,7 +951,7 @@
 	}
 
 	code {
-		background: #f0f0f1;
+		background: $color-surface-tinted;
 		padding: 1px 4px;
 		border-radius: 2px;
 		font-size: 12px;
@@ -2134,7 +959,7 @@
 
 	p {
 		margin: 0 0 8px;
-		color: #646970;
+		color: $color-text-faint;
 		font-size: 13px;
 	}
 }
@@ -2148,7 +973,7 @@
 
 	.components-modal__header {
 		padding: 16px 24px;
-		border-bottom: 1px solid #c3c4c7;
+		border-bottom: 1px solid $color-border;
 	}
 
 	p {
@@ -2163,7 +988,7 @@
 	.wp-agentic-admin-confirm-params {
 		margin: 16px 24px;
 		padding: 12px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 
 		strong {
@@ -2173,8 +998,8 @@
 
 		pre {
 			margin: 0;
-			background: #1d2327;
-			color: #fff;
+			background: $color-text;
+			color: $color-surface;
 			padding: 12px;
 			border-radius: 4px;
 			font-size: 12px;
@@ -2187,35 +1012,35 @@
 		justify-content: flex-end;
 		gap: 8px;
 		padding: 16px 24px;
-		border-top: 1px solid #c3c4c7;
-		background: #f6f7f7;
+		border-top: 1px solid $color-border;
+		background: $color-surface-subtle;
 	}
 
 	// Intent Confirmation Styles (v1.3.0 - Fuzzy Matching)
 	.wp-agentic-admin-intent-question {
 		font-size: 14px;
-		color: #50575e;
+		color: $color-text-muted;
 		margin-bottom: 8px !important;
 	}
 
 	.wp-agentic-admin-intent-tool {
 		font-size: 18px;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 		margin-bottom: 16px !important;
 	}
 
 	.wp-agentic-admin-intent-details {
 		margin: 16px 24px;
 		padding: 12px 16px;
-		background: #f0f6fc;
-		border-left: 3px solid #2271b1;
+		background: $color-info-bg;
+		border-left: 3px solid $color-accent;
 		border-radius: 4px;
 	}
 
 	.wp-agentic-admin-intent-match-info {
 		font-size: 13px;
-		color: #1d2327;
+		color: $color-text;
 		font-weight: 600;
 		margin-bottom: 8px !important;
 		padding: 0 !important;
@@ -2232,12 +1057,12 @@
 			gap: 4px;
 			font-size: 13px;
 			line-height: 1.8;
-			color: #50575e;
+			color: $color-text-muted;
 
 			.typo {
 				font-family: monospace;
-				background: #fcf0f1;
-				color: #d63638;
+				background: $color-error-bg;
+				color: $color-error;
 				padding: 2px 6px;
 				border-radius: 3px;
 				font-weight: 600;
@@ -2245,8 +1070,8 @@
 
 			.corrected {
 				font-family: monospace;
-				background: #edfaef;
-				color: #00a32a;
+				background: $color-success-bg;
+				color: $color-success;
 				padding: 2px 6px;
 				border-radius: 3px;
 				font-weight: 600;
@@ -2282,28 +1107,28 @@
 		}
 
 		&.match-type-llm {
-			background: #f0f6fc;
+			background: $color-info-bg;
 			color: #1d4ed8;
-			border: 1px solid #2271b1;
+			border: 1px solid $color-accent;
 		}
 
 		&.match-type-exact {
-			background: #edfaef;
+			background: $color-success-bg;
 			color: #00752e;
-			border: 1px solid #00a32a;
+			border: 1px solid $color-success;
 		}
 	}
 
 	// Workflow Confirmation Styles
 	.wp-agentic-admin-confirm-description {
-		color: #646970;
+		color: $color-text-faint;
 		font-style: italic;
 	}
 
 	.wp-agentic-admin-confirm-steps {
 		margin: 16px 24px;
 		padding: 12px 16px;
-		background: #f6f7f7;
+		background: $color-surface-subtle;
 		border-radius: 4px;
 		list-style: none;
 		counter-reset: step-counter;
@@ -2315,9 +1140,9 @@
 			align-items: center;
 			gap: 10px;
 			padding: 8px 12px;
-			background: #fff;
+			background: $color-surface;
 			border-radius: 4px;
-			border-left: 3px solid #c3c4c7;
+			border-left: 3px solid $color-border;
 			counter-increment: step-counter;
 
 			&::before {
@@ -2327,11 +1152,11 @@
 				justify-content: center;
 				width: 22px;
 				height: 22px;
-				background: #f0f0f1;
+				background: $color-surface-tinted;
 				border-radius: 50%;
 				font-size: 11px;
 				font-weight: 600;
-				color: #646970;
+				color: $color-text-faint;
 				flex-shrink: 0;
 			}
 
@@ -2341,38 +1166,38 @@
 
 			// Read operations - neutral/safe
 			&.step-read {
-				border-left-color: #2271b1;
+				border-left-color: $color-accent;
 
 				&::before {
-					background: #f0f6fc;
-					color: #2271b1;
+					background: $color-info-bg;
+					color: $color-accent;
 				}
 			}
 
 			// Write operations - caution
 			&.step-write {
-				border-left-color: #dba617;
+				border-left-color: $color-warning;
 
 				&::before {
-					background: #fcf9e8;
-					color: #996800;
+					background: $color-warning-bg;
+					color: $color-warning-text;
 				}
 			}
 
 			// Delete/destructive operations - danger
 			&.step-delete {
-				border-left-color: #d63638;
+				border-left-color: $color-error;
 
 				&::before {
-					background: #fcf0f1;
-					color: #d63638;
+					background: $color-error-bg;
+					color: $color-error;
 				}
 			}
 		}
 
 		.step-label {
 			flex: 1;
-			color: #1d2327;
+			color: $color-text;
 		}
 
 		.step-badge {
@@ -2388,20 +1213,20 @@
 
 			// Read badge - blue/info
 			&--read {
-				background: #f0f6fc;
-				color: #2271b1;
+				background: $color-info-bg;
+				color: $color-accent;
 			}
 
 			// Write badge - yellow/warning
 			&--write {
-				background: #fcf9e8;
-				color: #996800;
+				background: $color-warning-bg;
+				color: $color-warning-text;
 			}
 
 			// Delete badge - red/danger
 			&--delete {
-				background: #fcf0f1;
-				color: #d63638;
+				background: $color-error-bg;
+				color: $color-error;
 			}
 		}
 	}
@@ -2439,851 +1264,70 @@
 }
 
 // =============================================================================
-// Perplexity-Style Chat UI
+// Chat UI
 // =============================================================================
-
-// Scope everything under the messages container for proper specificity
-.wp-agentic-admin-messages {
-	// Base message container
-	.agentic-message {
-		display: flex !important;
-		margin-bottom: 16px !important;
-		position: relative;
-		max-width: 100%;
-
-		// User message - right aligned bubble
-		&--user {
-			flex-direction: column !important;
-			align-items: flex-end !important;
-			padding-left: 60px;
-			margin-left: auto;
-
-			.agentic-message__bubble {
-				background: #2271b1 !important;
-				color: #fff !important;
-				padding: 12px 18px !important;
-				border-radius: 20px 20px 4px 20px !important;
-				max-width: 85%;
-				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-
-				p {
-					margin: 0 !important;
-					line-height: 1.5;
-					font-size: 14px;
-				}
-			}
-
-			.agentic-message__time {
-				font-size: 11px;
-				color: #8c8f94;
-				margin-top: 6px;
-				margin-right: 4px;
-			}
-		}
-
-		// Assistant message - with timeline
-		&--assistant {
-			flex-direction: row !important;
-			align-items: flex-start !important;
-			gap: 12px;
-
-			.agentic-message__content {
-				flex: 1;
-				background: #fff;
-				border-radius: 8px;
-				padding: 12px 16px;
-				border: 1px solid #e2e4e7;
-			}
-
-			.agentic-message__text {
-
-				p {
-					margin: 0 0 10px !important;
-					line-height: 1.6;
-					color: #1d2327;
-					font-size: 14px;
-
-					&:last-child {
-						margin-bottom: 0 !important;
-					}
-
-					code {
-						font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-						font-size: 0.875em;
-						background: rgba(0, 0, 0, 0.06);
-						border: 1px solid rgba(0, 0, 0, 0.08);
-						border-radius: 3px;
-						padding: 1px 5px;
-						color: inherit;
-					}
-				}
-
-				.agentic-table-wrap {
-					overflow-x: auto;
-					margin: 8px 0 12px;
-				}
-
-				.agentic-table {
-					width: 100%;
-					border-collapse: collapse;
-					font-size: 13px;
-					line-height: 1.4;
-
-					th,
-					td {
-						padding: 6px 10px;
-						border: 1px solid #e2e4e7;
-						text-align: left;
-						vertical-align: top;
-					}
-
-					th {
-						background: #f6f7f7;
-						font-weight: 600;
-						color: #1d2327;
-						white-space: nowrap;
-					}
-
-					td {
-						color: #2c3338;
-					}
-
-					tbody tr:hover {
-						background: #f9f9f9;
-					}
-
-					code {
-						font-size: 12px;
-						padding: 1px 4px;
-						background: #f0f0f1;
-						border-radius: 3px;
-					}
-				}
-			}
-
-			.agentic-message__footer {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				margin-top: 10px;
-				border-top: 1px solid #f0f0f1;
-				padding-top: 8px;
-			}
-
-			.agentic-message__time {
-				font-size: 11px;
-				color: #8c8f94;
-			}
-
-			.agentic-message__stats {
-				margin-left: 8px;
-				color: #a7aaad;
-				font-variant-numeric: tabular-nums;
-
-				&::before {
-					content: "·";
-					margin-right: 8px;
-				}
-			}
-
-			.agentic-message__actions {
-				display: flex;
-				align-items: center;
-				gap: 2px;
-			}
-
-			.agentic-message__copy {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 28px;
-				height: 28px;
-				padding: 0;
-				border: none;
-				background: transparent;
-				color: #8c8f94;
-				border-radius: 4px;
-				cursor: pointer;
-				transition: all 0.15s ease;
-
-				&:hover {
-					background: #f0f0f1;
-					color: #1d2327;
-				}
-
-				&--copied {
-					color: #00a32a;
-
-					&:hover {
-						color: #00a32a;
-					}
-				}
-			}
-		}
-
-		// System message - welcome/intro
-		&--system {
-			flex-direction: column !important;
-			padding: 20px !important;
-			background: #fff !important;
-			border: 1px solid #c3c4c7 !important;
-			border-left: 4px solid #2271b1 !important;
-			border-radius: 0 8px 8px 0 !important;
-			margin-bottom: 24px !important;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-
-			.agentic-message__content {
-
-				h3 {
-					margin: 0 0 12px !important;
-					font-size: 18px !important;
-					font-weight: 600;
-					color: #1d2327;
-				}
-
-				p {
-					margin: 0 0 8px !important;
-					color: #50575e;
-					line-height: 1.6;
-					font-size: 14px;
-
-					&:last-child {
-						margin-bottom: 0 !important;
-					}
-				}
-
-				li {
-					margin-bottom: 8px;
-					color: #50575e;
-					font-size: 14px;
-					line-height: 1.5;
-
-					&::marker {
-						color: #2271b1;
-					}
-				}
-
-				ul {
-					margin: 12px 0 12px 24px !important;
-					padding: 0;
-					list-style-type: disc;
-				}
-			}
-
-			.agentic-message__hint {
-				font-size: 13px;
-				color: #8c8f94;
-				font-style: italic;
-				margin-top: 8px;
-			}
-		}
-
-		// Tool message - compact with timeline
-		&--tool {
-			flex-direction: row !important;
-			align-items: flex-start !important;
-			gap: 12px;
-		}
-
-		// Loading indicator - same alignment as tool messages
-		&--loading {
-			flex-direction: row !important;
-			align-items: flex-start !important;
-			gap: 12px;
-			padding: 0 !important;
-		}
-
-		// Error message
-		&--error {
-			flex-direction: row !important;
-			align-items: flex-start !important;
-			gap: 12px;
-		}
+// The legacy "Perplexity-style" custom chat bubbles, timeline, tool cards,
+// action list, workflow progress, agentic-pulse/spin/shimmer animations,
+// and code-block syntax have all been retired in favor of Card / CardBody /
+// CardHeader / Notice / ProgressBar / Spinner / Button primitives from
+// @wordpress/components. See src/extensions/components/MessageItem.jsx.
+//
+// Two tiny custom classes remain (declared below):
+//   .wp-agentic-admin-msg--user  — primary-tinted right-aligned bubble
+//   .wp-agentic-admin-md-table   — bare markdown-table fallback styling
+.wp-agentic-admin-msg--user {
+	.components-card__body {
+		background: $color-accent;
+		color: $color-surface;
 	}
 
-	// Timeline elements
-	.agentic-timeline {
-		display: flex !important;
-		flex-direction: column;
-		align-items: center;
-		width: 28px;
-		flex-shrink: 0;
-		position: relative;
-		padding-top: 8px;
-
-		&__line {
-			position: absolute;
-			top: 24px;
-			bottom: -24px;
-			width: 2px;
-			background: linear-gradient(to bottom, #d0d5dd, #e8ebee);
-		}
-
-		&__dot {
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			background: #c3c4c7;
-			border: 3px solid #f6f7f7;
-			position: relative;
-			z-index: 1;
-			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
-
-			&--tool {
-				background: #2271b1;
-			}
-
-			&--success {
-				background: #00a32a;
-			}
-
-			&--info {
-				background: #2271b1;
-			}
-
-			&--error {
-				background: #d63638;
-			}
-
-			&--thinking {
-				background: #9b59b6;
-				animation: agentic-pulse 1.5s ease-in-out infinite;
-			}
-		}
+	p {
+		margin: 0 0 6px;
 	}
 
-	@keyframes agentic-pulse {
-
-		0%,
-		100% {
-			opacity: 1;
-		}
-
-		50% {
-			opacity: 0.4;
-		}
-	}
-
-	// Tool execution blocks
-	.agentic-tool {
-		flex: 1;
-		background: #f8f9fa;
-		border: 1px solid #e2e4e7;
-		border-radius: 8px;
-		overflow: hidden;
-
-		&--success {
-			border-color: #b8e6bf;
-			background: #f7fcf8;
-		}
-
-		&--info {
-			border-color: #b8d4e6;
-			background: #f0f6fc;
-		}
-
-		&--error {
-			border-color: #f5c6c7;
-			background: #fef7f7;
-		}
-
-		&__header {
-			display: flex !important;
-			align-items: center;
-			gap: 10px;
-			padding: 10px 14px;
-			font-size: 13px;
-			color: #50575e;
-			background: transparent;
-			border: none;
-			width: 100%;
-			text-align: left;
-			cursor: default;
-
-			&--clickable {
-				cursor: pointer;
-				transition: background 0.15s ease;
-
-				&:hover {
-					background: rgba(0, 0, 0, 0.04);
-				}
-			}
-		}
-
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #646970;
-
-			.agentic-tool--success & {
-				color: #00a32a;
-			}
-
-			.agentic-tool--info & {
-				color: #2271b1;
-			}
-
-			.agentic-tool--error & {
-				color: #d63638;
-			}
-		}
-
-		&__label {
-			flex: 1;
-			font-weight: 500;
-			font-size: 13px;
-		}
-
-		&__status {
-			display: flex;
-			align-items: center;
-
-			&--pending {
-				color: #996800;
-			}
-		}
-
-		&__spinner {
-			width: 16px;
-			height: 16px;
-			border: 2px solid #e2e4e7;
-			border-top-color: #2271b1;
-			border-radius: 50%;
-			animation: agentic-spin 0.8s linear infinite;
-		}
-
-		&__expand {
-			font-size: 12px;
-			color: #2271b1;
-			margin-left: 8px;
-
-			&:hover {
-				text-decoration: underline;
-			}
-		}
-
-		&__id {
-			margin-left: auto;
-			font-size: 11px;
-			color: #a7aaad;
-			font-family: monospace;
-			font-weight: 400;
-		}
-
-		&__result {
-			padding: 12px;
-			border-top: 1px solid #e2e4e7;
-			background: #fff;
-
-			pre {
-				margin: 0 !important;
-				padding: 12px !important;
-				background: #1d2327 !important;
-				color: #e2e4e7 !important;
-				border-radius: 6px;
-				font-size: 12px;
-				line-height: 1.5;
-				overflow-x: auto;
-				white-space: pre-wrap;
-				word-break: break-word;
-			}
-
-			&--thinking {
-				border-top-color: #e8daef;
-				background: #faf5ff;
-
-				.agentic-thinking__text {
-					margin: 0;
-					font-size: 12px;
-					line-height: 1.6;
-					color: #6c6c6c;
-					font-style: italic;
-					white-space: pre-wrap;
-					word-break: break-word;
-				}
-			}
-		}
-
-		&--thinking-done {
-			border-color: #d5c6e0;
-			background: #faf5ff;
-		}
-	}
-
-	// Error message styling
-	.agentic-error {
-		display: flex !important;
-		align-items: flex-start;
-		gap: 12px;
-		flex: 1;
-		padding: 14px 18px;
-		background: #fcf0f1;
-		border: 1px solid #f5c6c7;
-		border-radius: 8px;
-		color: #8a1c1f;
-
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #d63638;
-			flex-shrink: 0;
-		}
-
-		&__text {
-			flex: 1;
-			font-size: 13px;
-			line-height: 1.5;
-		}
-	}
-
-	// Hide timeline line for last message in group
-	.agentic-message:last-child {
-
-		.agentic-timeline__line {
-			display: none;
-		}
+	small {
+		opacity: 0.85;
 	}
 }
 
-// Spinner animation for tool execution
-@keyframes agentic-spin {
-
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-// Loading indicator while ability executes
-.agentic-message--loading {
-	display: flex;
-	gap: 12px;
-
-	.agentic-timeline {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 24px;
-		flex-shrink: 0;
-
-		&__line {
-			width: 2px;
-			flex: 1;
-			background: linear-gradient(to bottom, #2271b1, transparent);
-			min-height: 20px;
-		}
-
-		&__dot--loading {
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			background: #2271b1;
-			animation: agentic-pulse 1.5s ease-in-out infinite;
-		}
-	}
-}
-
-.agentic-loading {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 12px 16px;
-	background: #f0f6fc;
-	border: 1px solid #c5d9ed;
-	border-radius: 8px;
-	flex: 1;
-
-	&__spinner {
-		width: 18px;
-		height: 18px;
-		border: 2px solid #c5d9ed;
-		border-top-color: #2271b1;
-		border-radius: 50%;
-		animation: agentic-spin 0.8s linear infinite;
-	}
-
-	&__text {
-		font-size: 13px;
-		color: #2271b1;
-		font-weight: 500;
-	}
-}
-
-@keyframes agentic-pulse {
-
-	0%,
-	100% {
-		transform: scale(1);
-		opacity: 1;
-	}
-
-	50% {
-		transform: scale(1.2);
-		opacity: 0.7;
-	}
-}
-
-// =============================================================================
-// Ability Picker (interactive tool buttons)
-// =============================================================================
-
-.agentic-ability-picker {
-	padding: 4px 0;
-
-	&__section-label {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		color: #646970;
-		margin: 12px 0 8px;
-
-		&:first-child {
-			margin-top: 0;
-		}
-	}
-
-	&__list {
-		margin: 0;
-		padding: 0 0 0 24px;
-		list-style-type: decimal;
-		counter-reset: none;
-	}
-
-	&__item {
-		margin-bottom: 4px;
-		font-size: 13px;
-		color: #646970;
-
-		&::marker {
-			color: #8c8f94;
-			font-weight: 500;
-		}
-	}
-
-	&__button {
-		background: none;
-		border: none;
-		padding: 4px 8px;
-		font-size: 13px;
-		font-weight: 500;
-		color: #2271b1;
-		cursor: pointer;
-		border-radius: 4px;
-		transition: background 0.15s ease, color 0.15s ease;
-		text-align: left;
-
-		&:hover {
-			background: #f0f6fc;
-			color: #135e96;
-		}
-
-		&:active {
-			background: #e2e4e7;
-		}
-
-		&:disabled {
-			color: #a7aaad;
-			cursor: not-allowed;
-
-			&:hover {
-				background: none;
-			}
-		}
-	}
-
-	&__input-row {
-		display: flex;
-		gap: 6px;
-		margin: 4px 0 2px 8px;
-	}
-
-	&__args-input {
-		flex: 1;
-		padding: 4px 8px;
-		font-size: 13px;
-		border: 1px solid #8c8f94;
-		border-radius: 4px;
-		min-width: 0;
-
-		&:focus {
-			border-color: #2271b1;
-			box-shadow: 0 0 0 1px #2271b1;
-			outline: none;
-		}
-
-		&:disabled {
-			background: #f6f7f7;
-			cursor: not-allowed;
-		}
-	}
-
-	&__run-button {
-		padding: 4px 12px;
-		font-size: 13px;
-		font-weight: 500;
-		color: #fff;
-		background: #2271b1;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		white-space: nowrap;
-
-		&:hover {
-			background: #135e96;
-		}
-
-		&:disabled {
-			background: #a7aaad;
-			cursor: not-allowed;
-		}
-	}
-
-	&__empty {
-		margin: 0;
-		font-size: 13px;
-		color: #646970;
-		font-style: italic;
-	}
-}
-
-// =============================================================================
-// Action List (generic interactive buttons from ability results)
-// =============================================================================
-
-.agentic-action-list {
-	margin: 0;
-	padding: 0;
-	list-style: none;
+.wp-agentic-admin-md-table {
 	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+	margin: 8px 0;
 
-	&__item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		padding: 6px 0;
-		font-size: 13px;
-		border-bottom: 1px solid #f0f0f1;
-
-		&:last-child {
-			border-bottom: none;
-		}
+	th,
+	td {
+		padding: 6px 10px;
+		border: 1px solid #e2e4e7;
+		text-align: left;
+		vertical-align: top;
 	}
 
-	&__label {
-		flex: 1;
-		font-weight: 500;
-		color: #1d2327;
-	}
-
-	&__button {
-		padding: 3px 10px;
-		font-size: 12px;
-		font-weight: 500;
-		border-radius: 4px;
-		border: 1px solid #2271b1;
-		background: transparent;
-		color: #2271b1;
-		cursor: pointer;
-		transition: background 0.15s ease, color 0.15s ease;
-		white-space: nowrap;
-
-		&:hover {
-			background: #2271b1;
-			color: #fff;
-		}
-	}
-}
-
-// =============================================================================
-// Workflow Progress UI
-// =============================================================================
-
-.agentic-message--workflow {
-	display: flex;
-	gap: 16px;
-	padding: 16px 20px;
-
-	.agentic-timeline {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 24px;
-		flex-shrink: 0;
-
-		&__line {
-			width: 2px;
-			flex: 1;
-			background: linear-gradient(to bottom, #00a32a, transparent);
-			min-height: 20px;
-		}
-
-		&__dot--workflow {
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-			background: #00a32a;
-			animation: agentic-pulse 1.5s ease-in-out infinite;
-		}
-	}
-}
-
-.agentic-workflow-progress {
-	flex: 1;
-	padding: 14px 18px;
-	background: #f7fcf8;
-	border: 1px solid #b8e6bf;
-	border-radius: 8px;
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 10px;
-	}
-
-	&__step {
-		font-size: 12px;
+	th {
+		background: $color-surface-subtle;
 		font-weight: 600;
-		color: #00a32a;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	&__label {
-		font-size: 13px;
-		color: #1d2327;
-		font-weight: 500;
-	}
-
-	&__bar {
-		height: 6px;
-		background: #d8f3dc;
-		border-radius: 3px;
-		overflow: hidden;
-	}
-
-	&__fill {
-		height: 100%;
-		background: linear-gradient(90deg, #00a32a, #059033);
-		border-radius: 3px;
-		transition: width 0.3s ease;
-		position: relative;
-
-		&::after {
-			content: "";
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
-			animation: agentic-shimmer 1.5s infinite;
-		}
 	}
 }
+
+
+
+
+
+
+// AbilityPicker — only the numbered-list marker styling. Everything else
+// (buttons, inputs, spacing) comes from @wordpress/components.
+.wp-agentic-admin-ability-picker-list {
+	margin: 0;
+	padding: 0 0 0 24px;
+	list-style-type: decimal;
+
+	li {
+		margin-bottom: 8px;
+	}
+}
+
+
 
 // Global focus-visible styles for interactive elements
 .wp-agentic-admin-app,
@@ -3292,20 +1336,10 @@
 	button:focus-visible,
 	a:focus-visible,
 	select:focus-visible {
-		outline: 2px solid #2271b1;
+		outline: 2px solid $color-accent;
 		outline-offset: 2px;
 	}
 
-	.agentic-tool__header--clickable:focus-visible {
-		outline: 2px solid #2271b1;
-		outline-offset: 1px;
-		background: rgba(0, 0, 0, 0.04);
-	}
-
-	.agentic-message__copy:focus-visible {
-		outline: 2px solid #2271b1;
-		outline-offset: 1px;
-	}
 }
 
 // Respect user motion preferences (WCAG 2.3.3)
@@ -3324,84 +1358,6 @@
 	}
 }
 
-// Code block rendering (fenced ``` blocks from read-file and similar)
-.agentic-code-block {
-	margin: 10px 0;
-	border-radius: 6px;
-	overflow: hidden;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	font-size: 12px;
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 6px 12px;
-		background: #1a1a2e;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	}
-
-	&__lang {
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.4);
-		text-transform: lowercase;
-		letter-spacing: 0.03em;
-	}
-
-	&__copy {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 3px;
-		background: transparent;
-		border: none;
-		border-radius: 3px;
-		color: rgba(255, 255, 255, 0.35);
-		cursor: pointer;
-		transition: color 0.15s ease, background 0.15s ease;
-		line-height: 1;
-
-		&:hover {
-			color: rgba(255, 255, 255, 0.7);
-			background: rgba(255, 255, 255, 0.08);
-		}
-
-		&--copied {
-			color: #4ade80;
-
-			&:hover {
-				color: #4ade80;
-				background: rgba(74, 222, 128, 0.08);
-			}
-		}
-	}
-
-	&__body {
-		margin: 0;
-		padding: 12px 14px;
-		background: #12121f;
-		overflow-x: auto;
-		white-space: pre;
-		color: #e2e8f0;
-		line-height: 1.6;
-		border-radius: 0;
-
-		code {
-			font-family: inherit;
-			font-size: inherit;
-			background: none;
-			padding: 0;
-			color: inherit;
-		}
-	}
-}
-
-.agentic-code-block__copy-label {
-	font-size: 10px;
-	margin-left: 4px;
-	color: inherit;
-}
 
 /* Settings Tab */
 .wp-agentic-admin-settings-tab {
@@ -3416,12 +1372,12 @@
 		margin: 0 0 10px !important;
 		font-size: 18px !important;
 		font-weight: 600;
-		color: #1d2327;
+		color: $color-text;
 	}
 
 	&__intro {
 		margin: 0;
-		color: #50575e;
+		color: $color-text-muted;
 		line-height: 1.6;
 	}
 
@@ -3434,23 +1390,8 @@
 	}
 
 	&__description {
-		color: #646970;
+		color: $color-text-faint;
 		margin-bottom: 16px;
-	}
-
-	&__gpu-table {
-		width: 100%;
-		border-collapse: collapse;
-
-		td {
-			padding: 6px 12px 6px 0;
-			border-bottom: 1px solid #f0f0f0;
-		}
-
-		td:first-child {
-			width: 160px;
-			color: #646970;
-		}
 	}
 
 	&__model-card {
@@ -3460,39 +1401,13 @@
 	&__model-size {
 		font-weight: normal;
 		font-size: 13px;
-		color: #646970;
+		color: $color-text-faint;
 		margin-left: 8px;
-	}
-
-	&__recommendation {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 8px;
-		padding: 8px 12px;
-		background: #f0f6fc;
-		border-radius: 4px;
-	}
-
-	&__tier-badge {
-		display: inline-block;
-		padding: 2px 8px;
-		border-radius: 3px;
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		color: #fff;
-		letter-spacing: 0.5px;
-	}
-
-	&__rec-text {
-		flex: 1;
-		font-size: 13px;
 	}
 
 	&__reasoning {
 		font-size: 13px;
-		color: #646970;
+		color: $color-text-faint;
 		margin: 0 0 12px;
 	}
 
@@ -3508,92 +1423,29 @@
 }
 
 // Structured file view (read-file ability)
-.agentic-file-view {
-	border: 1px solid #e2e4e7;
-	border-radius: 6px;
-	background: #fff;
-	overflow: hidden;
+// FileView body — scrollable monospace area inside the @wordpress
+// CardBody. Only the scroll + max-height + tab-size behavior remains;
+// fonts and colors come from the Card primitive.
+// Dark-themed scrollable monospace body inside the FileView Card —
+// same look as <pre> inside .wp-agentic-admin-messages.
+.wp-agentic-admin-file-view-body {
 	margin: 0;
+	overflow-x: auto;
+	max-height: 480px;
+	white-space: pre;
+	tab-size: 4;
+	background: $color-text;
+	color: $color-code-text;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 12.5px;
+	line-height: 1.55;
+	border-radius: 4px;
+	padding: 12px 14px;
 
-	&__header {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 10px;
-		background: #f6f7f7;
-		border-bottom: 1px solid #e2e4e7;
-		flex-wrap: wrap;
-	}
-
-	&__path {
-		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-		font-size: 12px;
-		color: #1d2327;
-		background: rgba(0, 0, 0, 0.06);
-		border: 1px solid rgba(0, 0, 0, 0.08);
-		border-radius: 3px;
-		padding: 2px 6px;
-		word-break: break-all;
-	}
-
-	&__meta {
-		font-size: 12px;
-		color: #646970;
-	}
-
-	&__badge {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: #8a4b00;
-		background: #fcf0d4;
-		border: 1px solid #f0c674;
-		border-radius: 3px;
-		padding: 1px 6px;
-		cursor: help;
-	}
-
-	&__copy {
-		margin-left: auto;
-		font-size: 12px;
-		padding: 3px 10px;
-		border: 1px solid #c3c4c7;
-		background: #fff;
-		border-radius: 3px;
-		cursor: pointer;
-		color: #1d2327;
-
-		&:hover {
-			background: #f0f0f1;
-		}
-
-		&--copied {
-			color: #007017;
-			border-color: #00a32a;
-		}
-	}
-
-	&__body {
-		margin: 0;
-		padding: 12px 14px;
-		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-		font-size: 12.5px;
-		line-height: 1.55;
-		color: #1d2327;
-		background: #fff;
-		overflow-x: auto;
-		max-height: 480px;
-		white-space: pre;
-		tab-size: 4;
-
-		code {
-			background: transparent;
-			border: none;
-			padding: 0;
-			font: inherit;
-			color: inherit;
-			white-space: pre;
-		}
+	code {
+		background: transparent;
+		color: inherit;
+		padding: 0;
+		font: inherit;
 	}
 }

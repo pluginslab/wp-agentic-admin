@@ -9,12 +9,19 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import {
 	Button,
-	DropdownMenu,
-	MenuGroup,
-	MenuItem,
+	Card,
+	CardBody,
+	Notice,
+	ProgressBar,
+	SelectControl,
 	Spinner,
+	TextControl,
+	__experimentalHStack as HStack,
+	__experimentalVStack as VStack,
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
-import { moreVertical } from '@wordpress/icons';
+import useConnectors from '../services/use-connectors';
 import modelLoader, {
 	ModelLoader,
 	DEFAULT_MODEL,
@@ -33,6 +40,8 @@ const STORAGE_KEYS = {
 	remoteUrl: 'agentic_admin_remote_url',
 	remoteModel: 'agentic_admin_remote_model',
 	remoteApiKey: 'agentic_admin_remote_api_key',
+	connectorId: 'agentic_admin_connector_id',
+	connectorModel: 'agentic_admin_connector_model',
 };
 
 /**
@@ -111,6 +120,18 @@ const saveProviderSettings = ( settings ) => {
 			localStorage.setItem(
 				STORAGE_KEYS.remoteApiKey,
 				settings.remoteApiKey
+			);
+		}
+		if ( settings.connectorId !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.connectorId,
+				settings.connectorId
+			);
+		}
+		if ( settings.connectorModel !== undefined ) {
+			localStorage.setItem(
+				STORAGE_KEYS.connectorModel,
+				settings.connectorModel
 			);
 		}
 	} catch ( err ) {
@@ -221,6 +242,22 @@ const ModelStatus = ( {
 	const [ isFetchingModels, setIsFetchingModels ] = useState( false );
 	const [ fetchError, setFetchError ] = useState( '' );
 
+	// WP 7.0 AI Connectors (third provider option).
+	const {
+		connectors,
+		optionsUrl,
+		supported: connectorsSupported,
+		loading: connectorsLoading,
+	} = useConnectors();
+	const [ selectedConnectorId, setSelectedConnectorId ] = useState( '' );
+	const [ selectedConnectorModelId, setSelectedConnectorModelId ] =
+		useState( '' );
+	const connectedConnectors = connectors.filter( ( c ) => c.is_connected );
+	const selectedConnector = connectedConnectors.find(
+		( c ) => c.id === selectedConnectorId
+	);
+	const connectorModels = selectedConnector?.models || [];
+
 	const availableModels = ModelLoader.getAvailableModels();
 
 	// Track if we're in a loading state (init phase, loading, or checking)
@@ -240,11 +277,10 @@ const ModelStatus = ( {
 	 * Set up model loader callbacks
 	 */
 	useEffect( () => {
-		modelLoader.onProgress( ( prog, msg ) => {
+		const unsubProgress = modelLoader.onProgress( ( prog, msg ) => {
 			setProgress( prog );
 			setRawMessage( msg );
 			setMessage( msg );
-			// Detect cache vs download from WebLLM progress messages
 			if ( msg && msg.toLowerCase().includes( 'cache' ) ) {
 				setIsFromCache( true );
 			} else if (
@@ -256,7 +292,7 @@ const ModelStatus = ( {
 			}
 		} );
 
-		modelLoader.onStatus( ( stat, msg ) => {
+		const unsubStatus = modelLoader.onStatus( ( stat, msg ) => {
 			setStatus( stat );
 			setMessage( msg );
 			setRawMessage( msg );
@@ -270,7 +306,6 @@ const ModelStatus = ( {
 			}
 		} );
 
-		// Check if model is already loaded
 		let cancelled = false;
 		if ( modelLoader.isModelReady() ) {
 			setStatus( 'ready' );
@@ -286,6 +321,8 @@ const ModelStatus = ( {
 		}
 		return () => {
 			cancelled = true;
+			unsubProgress();
+			unsubStatus();
 		};
 	}, [ onModelReady, onModelError ] );
 
@@ -431,23 +468,6 @@ const ModelStatus = ( {
 		saveProviderSettings( { provider: mode } );
 	}, [] );
 
-	/**
-	 * Get CSS class for status indicator
-	 */
-	const getStatusClass = () => {
-		switch ( status ) {
-			case 'ready':
-				return 'wp-agentic-admin-status__indicator--ready';
-			case 'loading':
-			case 'checking':
-				return 'wp-agentic-admin-status__indicator--loading';
-			case 'error':
-				return 'wp-agentic-admin-status__indicator--error';
-			default:
-				return 'wp-agentic-admin-status__indicator--pending';
-		}
-	};
-
 	// Get current loading stage info - use init values during init phase, otherwise use model loader values
 	const isInInitPhase = initPhase === 'checking';
 	const displayProgress = isInInitPhase ? initProgress : progress;
@@ -474,378 +494,336 @@ const ModelStatus = ( {
 
 	return (
 		<div className="wp-agentic-admin-model-status">
-			{ /* Loading State - Full Progress UI */ }
-			{ isInLoadingState && (
-				<div className="wp-agentic-admin-loading-card">
-					<div className="wp-agentic-admin-loading-card__header">
-						<span className="wp-agentic-admin-loading-card__icon">
-							{ loadingStage.icon }
-						</span>
-						<div className="wp-agentic-admin-loading-card__title-wrap">
-							<h4 className="wp-agentic-admin-loading-card__title">
-								{ getLoadingTitle() }
-							</h4>
-							<span className="wp-agentic-admin-loading-card__subtitle">
-								{ loadingStage.title }
-							</span>
-						</div>
-						<span className="wp-agentic-admin-loading-card__percent">
-							{ displayProgress }%
-						</span>
-					</div>
-
-					<div
-						className="wp-agentic-admin-loading-card__progress"
-						role="progressbar"
-						aria-valuenow={ displayProgress }
-						aria-valuemin={ 0 }
-						aria-valuemax={ 100 }
-						aria-label={ `${ getLoadingTitle() }: ${ displayProgress }%` }
-					>
-						<div
-							className="wp-agentic-admin-loading-card__progress-bar"
-							style={ { width: `${ displayProgress }%` } }
-						/>
-					</div>
-
-					{ isFromCache && ! isInInitPhase && (
-						<p className="wp-agentic-admin-loading-card__cache-note">
-							Model files are cached locally. No download needed!
-						</p>
-					) }
-				</div>
-			) }
-
-			{ /* Not Loading State - Standard Status Bar */ }
-			{ ! isInLoadingState && (
-				<div className="wp-agentic-admin-status">
-					<span
-						className={ `wp-agentic-admin-status__indicator ${ getStatusClass() }` }
-						aria-hidden="true"
-					/>
-					<span className="screen-reader-text">
-						{ status === 'ready'
-							? 'Ready'
-							: status === 'error'
-							? 'Error'
-							: status === 'loading'
-							? 'Loading'
-							: 'Not loaded' }
-					</span>
-					<div className="wp-agentic-admin-status__info">
-						<span className="wp-agentic-admin-status__text">
-							{ status === 'ready' && loadedModelInfo
-								? `${ loadedModelInfo.name } ready`
-								: message }
-						</span>
-						{ status === 'ready' && loadedModelInfo && (
-							<span className="wp-agentic-admin-status__model-details">
-								{ loadedModelInfo.mode === 'external' && (
-									<span
-										className="wp-agentic-admin-status__mode-badge wp-agentic-admin-status__mode-badge--external"
-										title="Connected to external API"
-									>
-										Remote
-									</span>
-								) }
-								{ isServiceWorkerMode && (
-									<span
-										className="wp-agentic-admin-status__mode-badge wp-agentic-admin-status__mode-badge--persistent"
-										title="Model persists across page navigations"
-									>
-										Persistent
-									</span>
-								) }
-								{ gpuInfo && gpuInfo.device !== 'Unknown' && (
-									<span className="wp-agentic-admin-status__gpu-info">
-										{ gpuInfo.device }
-										{ gpuInfo.vendor !== 'Unknown' &&
-											` (${ gpuInfo.vendor })` }
-										{ ' · ' }
-									</span>
-								) }
-								{ memoryStats?.available &&
-									memoryStats?.formatted && (
-										<>
-											{ ' · ' }
-											{ memoryStats.formatted }
-										</>
-									) }
-								{ contextUsage && (
-									<span
-										className={ `wp-agentic-admin-status__context ${
-											/* eslint-disable-next-line no-nested-ternary -- clear context status class selection */
-											contextUsage.isCritical
-												? 'context--critical'
-												: contextUsage.isHigh
-												? 'context--high'
-												: ''
-										}` }
-									>
-										{ ' · ' }
-										<span className="context__label">
-											Context:
-										</span>
-										<span
-											className="context__bar"
-											role="progressbar"
-											aria-valuenow={
-												contextUsage.percentage
-											}
-											aria-valuemin={ 0 }
-											aria-valuemax={ 100 }
-											aria-label={ `Context usage: ${ contextUsage.percentage }%` }
-										>
-											<span
-												className="context__fill"
-												style={ {
-													width: `${ contextUsage.percentage }%`,
-												} }
-											/>
-										</span>
-										<span className="context__percent">
-											{ contextUsage.used.toLocaleString() }
-											/
-											{ contextUsage.max.toLocaleString() }{ ' ' }
-											({ contextUsage.percentage }%)
-										</span>
-									</span>
-								) }
-							</span>
-						) }
-					</div>
-
-					{ status === 'checking' && <Spinner /> }
-
-					{ status === 'ready' && (
-						<DropdownMenu
-							icon={ moreVertical }
-							label="Model options"
-							className="wp-agentic-admin-status__kebab-menu"
-						>
-							{ ( { onClose } ) => (
-								<MenuGroup>
-									<MenuItem
-										onClick={ () => {
-											handleUnloadModel();
-											onClose();
-										} }
-									>
-										Unload model
-									</MenuItem>
-								</MenuGroup>
-							) }
-						</DropdownMenu>
-					) }
-				</div>
-			) }
+			{ /* Loading state is shown inline in the composer toolbar as
+			   a Spinner + percent — see <ModelStatusPill> in ChatInput.
+			   This component only renders the provider config Card
+			   (when not-loaded or error) from here on. */ }
 
 			{ /* Provider selection and controls — shown when not loaded */ }
 			{ ( status === 'not-loaded' || status === 'error' ) && (
-				<div className="wp-agentic-admin-provider">
-					{ /* Provider toggle */ }
-					<div
-						className="wp-agentic-admin-provider__toggle"
-						role="tablist"
-						aria-label="Provider selection"
-					>
-						<button
-							type="button"
-							role="tab"
-							aria-selected={ providerMode === 'local' }
-							className={ `wp-agentic-admin-provider__tab ${
-								providerMode === 'local' ? 'is-active' : ''
-							}` }
-							onClick={ () => handleProviderChange( 'local' ) }
-						>
-							Local (WebLLM)
-						</button>
-						<button
-							type="button"
-							role="tab"
-							aria-selected={ providerMode === 'remote' }
-							className={ `wp-agentic-admin-provider__tab ${
-								providerMode === 'remote' ? 'is-active' : ''
-							}` }
-							onClick={ () => handleProviderChange( 'remote' ) }
-						>
-							Remote (API)
-						</button>
-					</div>
-
-					{ /* Local provider controls */ }
-					{ providerMode === 'local' && (
-						<div className="wp-agentic-admin-provider__local">
-							<div className="wp-agentic-admin-status__controls">
-								<select
-									className="wp-agentic-admin-model-select"
-									value={ selectedModel }
-									aria-label="Select AI model"
-									onChange={ ( e ) => {
-										const modelId = e.target.value;
-										setSelectedModel( modelId );
-										saveModel( modelId );
-									} }
-								>
-									{ availableModels.map( ( model ) => (
-										<option
-											key={ model.id }
-											value={ model.id }
-										>
-											{ model.name } ({ model.size })
-											{ model.recommended
-												? ' - Recommended'
-												: '' }
-										</option>
-									) ) }
-								</select>
-								<Button
-									variant="primary"
-									onClick={ handleLoadModel }
-									className="wp-agentic-admin-load-model"
-								>
-									{ status === 'error'
-										? 'Retry'
-										: 'Load Model' }
-								</Button>
-							</div>
-							<p className="wp-agentic-admin-model-info">
-								The AI model runs entirely in your browser using
-								WebGPU. The first load will download model data
-								(250MB-1GB depending on model), which is cached
-								for future use. Using a Service Worker, the
-								model stays loaded as you navigate wp-admin - no
-								reload needed! No data is sent to external
-								servers.
-							</p>
-							<div className="wp-agentic-admin-performance-tip">
-								<span className="wp-agentic-admin-performance-tip__icon">
-									💡
-								</span>
-								<div className="wp-agentic-admin-performance-tip__content">
-									<strong>Performance Tip</strong>
-									LLM thinking can be slow on integrated GPUs.
-									For better performance in Chrome, visit{ ' ' }
-									<code>
-										chrome://flags/#force-high-performance-gpu
-									</code>{ ' ' }
-									and enable &quot;Force high performance
-									GPU&quot;.
-								</div>
-							</div>
-						</div>
-					) }
-
-					{ /* Remote provider controls */ }
-					{ providerMode === 'remote' && (
-						<div className="wp-agentic-admin-provider__remote">
-							<div className="wp-agentic-admin-provider__field">
-								<label htmlFor="wp-agentic-remote-url">
-									Endpoint URL
-								</label>
-								<div className="wp-agentic-admin-provider__url-row">
-									<input
-										id="wp-agentic-remote-url"
-										type="url"
-										className="wp-agentic-admin-provider__input"
-										value={ remoteUrl }
-										onChange={ ( e ) =>
-											setRemoteUrl( e.target.value )
-										}
-										placeholder="http://localhost:11434"
-									/>
-									<Button
-										variant="secondary"
-										onClick={ handleFetchModels }
-										disabled={
-											isFetchingModels || ! remoteUrl
-										}
-										className="wp-agentic-admin-provider__fetch-btn"
-									>
-										{ isFetchingModels
-											? 'Fetching...'
-											: 'Fetch Models' }
-									</Button>
-								</div>
-							</div>
-
-							<div className="wp-agentic-admin-provider__field">
-								<label htmlFor="wp-agentic-remote-key">
-									API Key{ ' ' }
-									<span className="wp-agentic-admin-provider__optional">
-										(optional)
-									</span>
-								</label>
-								<input
-									id="wp-agentic-remote-key"
-									type="password"
-									className="wp-agentic-admin-provider__input"
-									value={ remoteApiKey }
-									onChange={ ( e ) =>
-										setRemoteApiKey( e.target.value )
-									}
-									placeholder="sk-... (for OpenAI, Groq, etc.)"
+				<Card>
+					<CardBody>
+						<VStack spacing={ 3 }>
+							<ToggleGroupControl
+								__nextHasNoMarginBottom
+								__next40pxDefaultSize
+								label="Provider"
+								hideLabelFromVision
+								value={ providerMode }
+								onChange={ handleProviderChange }
+								isBlock
+							>
+								<ToggleGroupControlOption
+									value="local"
+									label="Local (WebLLM)"
 								/>
-							</div>
+								<ToggleGroupControlOption
+									value="remote"
+									label="Remote (API)"
+								/>
+								{ connectorsSupported && (
+									<ToggleGroupControlOption
+										value="connector"
+										label="Connector (WP 7.0)"
+									/>
+								) }
+							</ToggleGroupControl>
 
-							{ fetchError && (
-								<p className="wp-agentic-admin-provider__error">
-									{ fetchError }
-								</p>
-							) }
-
-							{ remoteModels.length > 0 && (
-								<div className="wp-agentic-admin-provider__field">
-									<label htmlFor="wp-agentic-remote-model">
-										Model
-									</label>
-									<div className="wp-agentic-admin-status__controls">
-										<select
-											id="wp-agentic-remote-model"
-											className="wp-agentic-admin-model-select"
-											value={ selectedRemoteModel }
-											onChange={ ( e ) => {
-												setSelectedRemoteModel(
-													e.target.value
-												);
-												saveProviderSettings( {
-													remoteModel: e.target.value,
-												} );
+							{ providerMode === 'local' && (
+								<VStack spacing={ 3 }>
+									<HStack
+										alignment="end"
+										spacing={ 2 }
+										justify="flex-start"
+									>
+										<SelectControl
+											__nextHasNoMarginBottom
+											label="AI model"
+											value={ selectedModel }
+											options={ availableModels.map(
+												( model ) => ( {
+													value: model.id,
+													label: `${ model.name } (${
+														model.size
+													})${
+														model.recommended
+															? ' - Recommended'
+															: ''
+													}`,
+												} )
+											) }
+											onChange={ ( modelId ) => {
+												setSelectedModel( modelId );
+												saveModel( modelId );
 											} }
-										>
-											{ remoteModels.map( ( model ) => (
-												<option
-													key={ model.id }
-													value={ model.id }
-												>
-													{ model.name }
-												</option>
-											) ) }
-										</select>
+										/>
 										<Button
 											variant="primary"
-											onClick={ handleConnectRemote }
-											disabled={ ! isRemoteReady }
-											className="wp-agentic-admin-load-model"
+											onClick={ handleLoadModel }
 										>
 											{ status === 'error'
 												? 'Retry'
-												: 'Connect' }
+												: 'Load Model' }
 										</Button>
-									</div>
-								</div>
+									</HStack>
+									<Notice
+										status="info"
+										isDismissible={ false }
+									>
+										The AI model runs entirely in your
+										browser using WebGPU. The first load
+										will download model data (250MB-1GB
+										depending on model), which is cached for
+										future use. Using a Service Worker, the
+										model stays loaded as you navigate
+										wp-admin — no reload needed! No data is
+										sent to external servers.
+									</Notice>
+									<Notice
+										status="warning"
+										isDismissible={ false }
+									>
+										<strong>Performance Tip:</strong> LLM
+										thinking can be slow on integrated GPUs.
+										For better performance in Chrome, visit{ ' ' }
+										<code>
+											chrome://flags/#force-high-performance-gpu
+										</code>{ ' ' }
+										and enable &quot;Force high performance
+										GPU&quot;.
+									</Notice>
+								</VStack>
 							) }
 
-							<p className="wp-agentic-admin-model-info">
-								Connect to any OpenAI-compatible API endpoint
-								(Ollama, LM Studio, vLLM, OpenAI, Groq,
-								Together, etc.). Enter the base URL and fetch
-								available models. API keys are stored in your
-								browser only.
-							</p>
-						</div>
-					) }
-				</div>
+							{ providerMode === 'remote' && (
+								<VStack spacing={ 3 }>
+									<HStack
+										alignment="end"
+										spacing={ 2 }
+										justify="flex-start"
+									>
+										<TextControl
+											__nextHasNoMarginBottom
+											type="url"
+											label="Endpoint URL"
+											value={ remoteUrl }
+											onChange={ setRemoteUrl }
+											placeholder="http://localhost:11434"
+										/>
+										<Button
+											variant="secondary"
+											onClick={ handleFetchModels }
+											disabled={
+												isFetchingModels || ! remoteUrl
+											}
+										>
+											{ isFetchingModels
+												? 'Fetching…'
+												: 'Fetch Models' }
+										</Button>
+									</HStack>
+
+									<TextControl
+										__nextHasNoMarginBottom
+										type="password"
+										label="API Key (optional)"
+										value={ remoteApiKey }
+										onChange={ setRemoteApiKey }
+										placeholder="sk-… (for OpenAI, Groq, etc.)"
+									/>
+
+									{ fetchError && (
+										<Notice
+											status="error"
+											isDismissible={ false }
+										>
+											{ fetchError }
+										</Notice>
+									) }
+
+									{ remoteModels.length > 0 && (
+										<HStack
+											alignment="end"
+											spacing={ 2 }
+											justify="flex-start"
+										>
+											<SelectControl
+												__nextHasNoMarginBottom
+												label="Model"
+												value={ selectedRemoteModel }
+												options={ remoteModels.map(
+													( model ) => ( {
+														value: model.id,
+														label: model.name,
+													} )
+												) }
+												onChange={ ( id ) => {
+													setSelectedRemoteModel(
+														id
+													);
+													saveProviderSettings( {
+														remoteModel: id,
+													} );
+												} }
+											/>
+											<Button
+												variant="primary"
+												onClick={ handleConnectRemote }
+												disabled={ ! isRemoteReady }
+											>
+												{ status === 'error'
+													? 'Retry'
+													: 'Connect' }
+											</Button>
+										</HStack>
+									) }
+
+									<Notice
+										status="info"
+										isDismissible={ false }
+									>
+										Connect to any OpenAI-compatible API
+										endpoint (Ollama, LM Studio, vLLM,
+										OpenAI, Groq, Together, etc.). Enter the
+										base URL and fetch available models. API
+										keys are stored in your browser only.
+									</Notice>
+								</VStack>
+							) }
+
+							{ providerMode === 'connector' && (
+								<VStack spacing={ 3 }>
+									{ connectorsLoading && <Spinner /> }
+									{ ! connectorsLoading &&
+										connectedConnectors.length > 0 && (
+											<HStack
+												alignment="end"
+												spacing={ 2 }
+												justify="flex-start"
+											>
+												<SelectControl
+													__nextHasNoMarginBottom
+													label="Connector"
+													value={
+														selectedConnectorId
+													}
+													options={ [
+														{
+															value: '',
+															label: 'Choose…',
+															disabled: true,
+														},
+														...connectedConnectors.map(
+															( c ) => ( {
+																value: c.id,
+																label: c.name,
+															} )
+														),
+													] }
+													onChange={ ( id ) => {
+														setSelectedConnectorId(
+															id
+														);
+														setSelectedConnectorModelId(
+															''
+														);
+													} }
+												/>
+												{ selectedConnectorId &&
+													connectorModels.length >
+														0 && (
+														<SelectControl
+															__nextHasNoMarginBottom
+															label="Model"
+															value={
+																selectedConnectorModelId
+															}
+															options={ [
+																{
+																	value: '',
+																	label: 'Choose a model…',
+																	disabled: true,
+																},
+																...connectorModels.map(
+																	( m ) => ( {
+																		value: m.id,
+																		label: m.name,
+																	} )
+																),
+															] }
+															onChange={ ( id ) =>
+																setSelectedConnectorModelId(
+																	id
+																)
+															}
+														/>
+													) }
+												<Button
+													variant="primary"
+													onClick={ async () => {
+														try {
+															saveProviderSettings(
+																{
+																	provider:
+																		'connector',
+																	connectorId:
+																		selectedConnectorId,
+																	connectorModel:
+																		selectedConnectorModelId,
+																}
+															);
+															await modelLoader.loadConnector(
+																selectedConnectorId,
+																selectedConnectorModelId
+															);
+														} catch ( err ) {
+															log.error(
+																'Failed to use connector:',
+																err
+															);
+														}
+													} }
+													disabled={
+														! selectedConnectorId ||
+														( connectorModels.length >
+															0 &&
+															! selectedConnectorModelId )
+													}
+												>
+													Use this connector
+												</Button>
+											</HStack>
+										) }
+									{ ! connectorsLoading &&
+										connectedConnectors.length === 0 && (
+											<Notice
+												status="info"
+												isDismissible={ false }
+											>
+												No AI Connectors are configured
+												yet.{ ' ' }
+												<a href={ optionsUrl }>
+													Configure connectors in
+													Settings → Connectors
+												</a>
+												.
+											</Notice>
+										) }
+									<Notice
+										status="info"
+										isDismissible={ false }
+									>
+										WP 7.0 ships a built-in AI Connector
+										API. Any connector plugin you install
+										and authenticate appears here
+										automatically — Anthropic, Google,
+										OpenAI, and any third-party ai_provider.
+									</Notice>
+								</VStack>
+							) }
+						</VStack>
+					</CardBody>
+				</Card>
 			) }
 		</div>
 	);

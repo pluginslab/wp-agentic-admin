@@ -428,14 +428,17 @@ class PluginAbilitiesManager {
 	}
 
 	/**
-	 * Temporarily scope the run-plugin-ability description to a single plugin.
+	 * Temporarily scope the run-plugin-ability description to one or more plugins.
 	 *
 	 * Call this before sending a message with a plugin bundle active,
 	 * then call clearPluginScope() after the message completes.
 	 *
-	 * @param {string} namespace - Plugin namespace to scope to.
+	 * Accepts either a single namespace string or an array of namespaces;
+	 * abilities from every passed namespace are merged into the description.
+	 *
+	 * @param {string|string[]} namespaces - Plugin namespace(s) to scope to.
 	 */
-	scopeToPlugin( namespace ) {
+	scopeToPlugin( namespaces ) {
 		const runTool = toolRegistry.get(
 			'wp-agentic-admin/run-plugin-ability'
 		);
@@ -443,14 +446,19 @@ class PluginAbilitiesManager {
 			return;
 		}
 
-		// Save original description for restoration.
+		const list = Array.isArray( namespaces ) ? namespaces : [ namespaces ];
+		if ( ! list.length ) {
+			return;
+		}
+
+		// Save original description for restoration on first scope call.
 		if ( ! this._savedDescription ) {
 			this._savedDescription = runTool.description;
 		}
 
 		const lines = [];
 		for ( const id of this.enabledIds ) {
-			if ( ! id.startsWith( namespace + '/' ) ) {
+			if ( ! list.some( ( ns ) => id.startsWith( ns + '/' ) ) ) {
 				continue;
 			}
 			const ability = this.discoveredAbilities.find(
