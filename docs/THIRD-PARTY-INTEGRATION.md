@@ -10,11 +10,11 @@ WP-Agentic-Admin provides a public API that allows any WordPress plugin to regis
 
 ### PHP: Register the Backend
 
-Hook into `wp_agentic_admin_register_abilities` to register your ability:
+Hook into `agentic_admin_register_abilities` to register your ability:
 
 ```php
-add_action( 'wp_agentic_admin_register_abilities', function() {
-    wp_agentic_admin_register_ability(
+add_action( 'agentic_admin_register_abilities', function() {
+    agentic_admin_register_ability(
         'my-plugin/my-ability',
         array(
             'label'            => __( 'My Ability', 'my-plugin' ),
@@ -62,18 +62,18 @@ function my_plugin_execute_ability( array $input = array() ): array {
 
 ### JavaScript: Register the Frontend
 
-Enqueue your script with `wp-agentic-admin` as a dependency:
+Enqueue your script with `agentic-admin` as a dependency:
 
 ```php
 add_action( 'admin_enqueue_scripts', function( $hook ) {
-    if ( 'toplevel_page_wp-agentic-admin' !== $hook ) {
+    if ( 'toplevel_page_agentic-admin' !== $hook ) {
         return;
     }
     
     wp_enqueue_script(
         'my-plugin-agentic-abilities',
         plugins_url( 'assets/js/agentic-abilities.js', __FILE__ ),
-        array( 'wp-agentic-admin' ),
+        array( 'agentic-admin' ),
         '1.0.0',
         true
     );
@@ -119,7 +119,7 @@ Then register your ability in JavaScript:
 
 ### PHP API
 
-#### `wp_agentic_admin_register_ability( $id, $php_config, $js_config )`
+#### `agentic_admin_register_ability( $id, $php_config, $js_config )`
 
 Registers an ability with both the WordPress Abilities API and the Agentic Admin chat system.
 
@@ -164,44 +164,44 @@ array(
 )
 ```
 
-> **Auto-forwarded PHP values:** The `wp_agentic_admin_get_abilities_js_config()` function automatically forwards the PHP config's `label` and `description` values to the JavaScript frontend as `phpLabel` and `description` keys respectively. This means you do not need to duplicate label/description information in your JS config -- simply set them in the PHP config and they will be available on the JS side automatically.
+> **Auto-forwarded PHP values:** The `agentic_admin_get_abilities_js_config()` function automatically forwards the PHP config's `label` and `description` values to the JavaScript frontend as `phpLabel` and `description` keys respectively. This means you do not need to duplicate label/description information in your JS config -- simply set them in the PHP config and they will be available on the JS side automatically.
 
-#### `wp_agentic_admin_unregister_ability( string $id ): bool`
+#### `agentic_admin_unregister_ability( string $id ): bool`
 
 Removes a previously registered ability. Returns `true` if the ability was found and removed, `false` if it did not exist.
 
 ```php
-$removed = wp_agentic_admin_unregister_ability( 'my-plugin/my-ability' );
+$removed = agentic_admin_unregister_ability( 'my-plugin/my-ability' );
 ```
 
-#### `wp_agentic_admin_get_abilities(): array`
+#### `agentic_admin_get_abilities(): array`
 
 Returns all registered abilities as an associative array keyed by ability ID. Each entry contains `id`, `php` (PHP config), and `js` (JS config) keys.
 
 ```php
-$all_abilities = wp_agentic_admin_get_abilities();
+$all_abilities = agentic_admin_get_abilities();
 foreach ( $all_abilities as $id => $ability ) {
     echo $ability['php']['label'];
 }
 ```
 
-#### `wp_agentic_admin_get_ability( string $id ): ?array`
+#### `agentic_admin_get_ability( string $id ): ?array`
 
 Returns the configuration for a specific ability, or `null` if not found.
 
 ```php
-$ability = wp_agentic_admin_get_ability( 'my-plugin/my-ability' );
+$ability = agentic_admin_get_ability( 'my-plugin/my-ability' );
 if ( $ability ) {
     echo $ability['php']['label'];
 }
 ```
 
-#### `wp_agentic_admin_ability_exists( string $id ): bool`
+#### `agentic_admin_ability_exists( string $id ): bool`
 
 Checks if an ability with the given ID is registered.
 
 ```php
-if ( wp_agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
+if ( agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
     // Ability is registered
 }
 ```
@@ -499,12 +499,12 @@ Available context variables are auto-extracted from previous step results:
 
 ## Filters
 
-### `wp_agentic_admin_supported_post_types`
+### `agentic_admin_supported_post_types`
 
 This filter (defined in `class-utils.php`) allows third-party plugins to modify the list of post types that support the block editor. The value is an array of arrays, each with `value` (post type slug) and `label` (human-readable name) keys.
 
 ```php
-add_filter( 'wp_agentic_admin_supported_post_types', function( $post_types ) {
+add_filter( 'agentic_admin_supported_post_types', function( $post_types ) {
     // Add a custom post type
     $post_types[] = array(
         'value' => 'my_custom_type',
@@ -700,12 +700,12 @@ Here's a complete example of a third-party plugin adding an ability:
  */
 
 // Register the ability
-add_action( 'wp_agentic_admin_register_abilities', function() {
-    if ( ! function_exists( 'wp_agentic_admin_register_ability' ) ) {
+add_action( 'agentic_admin_register_abilities', function() {
+    if ( ! function_exists( 'agentic_admin_register_ability' ) ) {
         return;
     }
     
-    wp_agentic_admin_register_ability(
+    agentic_admin_register_ability(
         'my-plugin/count-posts',
         array(
             'label'            => __( 'Count Posts', 'my-plugin' ),
@@ -760,14 +760,14 @@ function my_plugin_count_posts( array $input = array() ): array {
 
 // Enqueue JS
 add_action( 'admin_enqueue_scripts', function( $hook ) {
-    if ( 'toplevel_page_wp-agentic-admin' !== $hook ) {
+    if ( 'toplevel_page_agentic-admin' !== $hook ) {
         return;
     }
     
     wp_enqueue_script(
         'my-plugin-agentic',
         plugins_url( 'agentic.js', __FILE__ ),
-        array( 'wp-agentic-admin' ),
+        array( 'agentic-admin' ),
         '1.0.0',
         true
     );
@@ -830,4 +830,4 @@ Use the Abilities tab in Agentic Admin to test your ability's REST endpoint dire
 1. **"input is not of type object"** - Add `'default' => array()` to your input_schema
 2. **Ability not triggering** - Check keywords match user input
 3. **Permission denied** - Verify permission_callback returns true for current user
-4. **Script not loading** - Ensure dependency on `wp-agentic-admin`
+4. **Script not loading** - Ensure dependency on `agentic-admin`

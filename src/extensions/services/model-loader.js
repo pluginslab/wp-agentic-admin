@@ -21,13 +21,13 @@ import { createLogger } from '../utils/logger';
  * "gpt-4o" before "gpt-4".
  *
  * Extensible at runtime via the @wordpress/hooks filter
- *   `wpAgenticAdmin.contextWindow`
+ *   `agenticAdmin.contextWindow`
  * which receives ( size, modelId, providerMode ) and returns the size to
  * use. Power users on uncommon models can override without touching the
  * UI:
  *
  *   wp.hooks.addFilter(
- *     'wpAgenticAdmin.contextWindow',
+ *     'agenticAdmin.contextWindow',
  *     'my-plugin',
  *     ( size, modelId ) => modelId === 'my-custom' ? 128000 : size
  *   );
@@ -327,17 +327,17 @@ class ModelLoader {
 	 */
 	getServiceWorkerUrl() {
 		// Use PHP loader that adds Service-Worker-Allowed header
-		// wpAgenticAdmin is set by PHP wp_localize_script
+		// agenticAdmin is set by PHP wp_localize_script
 		if (
-			typeof window.wpAgenticAdmin !== 'undefined' &&
-			window.wpAgenticAdmin.pluginUrl
+			typeof window.agenticAdmin !== 'undefined' &&
+			window.agenticAdmin.pluginUrl
 		) {
-			return `${ window.wpAgenticAdmin.pluginUrl }sw-loader.php`;
+			return `${ window.agenticAdmin.pluginUrl }sw-loader.php`;
 		}
 
 		// Fallback: relative path to PHP loader
-		log.warn( 'wpAgenticAdmin.pluginUrl not found, using relative path' );
-		return '/wp-content/plugins/wp-agentic-admin/sw-loader.php';
+		log.warn( 'agenticAdmin.pluginUrl not found, using relative path' );
+		return '/wp-content/plugins/agentic-admin/sw-loader.php';
 	}
 
 	/**
@@ -1116,7 +1116,7 @@ class ModelLoader {
 		// Honour the legacy single-value remote override key that earlier
 		// versions of the settings UI wrote. It applies to every remote
 		// model when set. Log once so power users know to migrate to the
-		// `wpAgenticAdmin.contextWindow` filter.
+		// `agenticAdmin.contextWindow` filter.
 		let legacyRemoteOverride = null;
 		try {
 			const legacy = localStorage.getItem(
@@ -1129,7 +1129,7 @@ class ModelLoader {
 					if ( ! ModelLoader._warnedLegacyContextKey ) {
 						ModelLoader._warnedLegacyContextKey = true;
 						log.warn(
-							'agentic_admin_remote_context_size localStorage key is deprecated. Use the `wpAgenticAdmin.contextWindow` filter to override remote context windows.'
+							'agentic_admin_remote_context_size localStorage key is deprecated. Use the `agenticAdmin.contextWindow` filter to override remote context windows.'
 						);
 					}
 				}
@@ -1161,7 +1161,7 @@ class ModelLoader {
 		}
 
 		return applyFilters(
-			'wpAgenticAdmin.contextWindow',
+			'agenticAdmin.contextWindow',
 			resolved,
 			modelId,
 			'remote'

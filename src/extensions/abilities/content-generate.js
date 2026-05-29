@@ -302,7 +302,7 @@ function contentToBlocks( content, title ) {
  * Register the content-generate ability with the chat system.
  */
 export function registerContentGenerate() {
-	registerAbility( 'wp-agentic-admin/content-generate', {
+	registerAbility( 'agentic-admin/content-generate', {
 		label: 'Generate page content',
 		description:
 			'Write new content for an empty page. Args: topic (what to write about). Optional: content (pre-written text to insert directly — use when you already have content e.g. from search results), title (heading for the page).',

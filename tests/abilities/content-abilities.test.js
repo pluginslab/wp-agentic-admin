@@ -17,11 +17,11 @@ module.exports = {
 	tests: [
 		{
 			input: 'generate content about dog training',
-			expectTool: 'wp-agentic-admin/content-generate',
+			expectTool: 'agentic-admin/content-generate',
 		},
 		{
 			input: 'fill this page with content about cooking tips',
-			expectTool: 'wp-agentic-admin/content-generate',
+			expectTool: 'agentic-admin/content-generate',
 		},
 	],
 };

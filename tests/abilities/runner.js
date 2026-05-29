@@ -193,7 +193,7 @@ RULES:
 EXAMPLE:
 
 User: "list plugins"
-{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
+{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}
 
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
@@ -355,10 +355,10 @@ function evaluateTest( test, action ) {
 		action && action.action === 'tool_call' ? action.tool : null;
 
 	// Mirror the browser's namespace fallback: if the LLM drops the prefix
-	// (e.g. "rewrite-flush" instead of "wp-agentic-admin/rewrite-flush"),
+	// (e.g. "rewrite-flush" instead of "agentic-admin/rewrite-flush"),
 	// try the default namespace before declaring a mismatch.
 	if ( toolCalled && ! toolCalled.includes( '/' ) ) {
-		toolCalled = `wp-agentic-admin/${ toolCalled }`;
+		toolCalled = `agentic-admin/${ toolCalled }`;
 	}
 
 	if ( test.expectTool === null ) {

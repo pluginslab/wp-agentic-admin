@@ -15,7 +15,7 @@ import {
  * Register the error-log-search ability with the chat system.
  */
 export function registerErrorLogSearch() {
-	registerAbility( 'wp-agentic-admin/error-log-search', {
+	registerAbility( 'agentic-admin/error-log-search', {
 		label: 'Search and filter error log',
 		description:
 			'Search debug.log by keyword or severity level (fatal, warning, notice, deprecated). Use when users want to filter or search error logs.',
@@ -130,7 +130,7 @@ export function registerErrorLogSearch() {
 			if ( level ) {
 				input.level = level;
 			}
-			return executeAbility( 'wp-agentic-admin/error-log-search', input );
+			return executeAbility( 'agentic-admin/error-log-search', input );
 		},
 
 		requiresConfirmation: false,

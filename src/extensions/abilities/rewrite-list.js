@@ -16,7 +16,7 @@ import {
  * Register the rewrite-list ability with the chat system.
  */
 export function registerRewriteList() {
-	registerAbility( 'wp-agentic-admin/rewrite-list', {
+	registerAbility( 'agentic-admin/rewrite-list', {
 		label: 'List rewrite rules',
 		description:
 			'List all WordPress rewrite rules (URL routing patterns). Returns rule count, permalink structure, and each rule pattern.',
@@ -93,7 +93,7 @@ export function registerRewriteList() {
 		 * @return {Promise<Object>} The result from PHP.
 		 */
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/rewrite-list', {} );
+			return executeAbility( 'agentic-admin/rewrite-list', {} );
 		},
 
 		// Reading rules is safe - no confirmation needed.

@@ -6,7 +6,7 @@
  * Returns a compact summary to avoid polluting the LLM context window.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_discover_plugin_abilities(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/discover-plugin-abilities',
+		'agentic-admin/discover-plugin-abilities',
 		array(
 			'label'               => __( 'Discover Plugin Abilities', 'agentic-admin' ),
 			'description'         => __( 'Discover abilities registered by other plugins on this WordPress site.', 'agentic-admin' ),
@@ -79,7 +79,7 @@ function agentic_admin_register_discover_plugin_abilities(): void {
  * Execute the discover-plugin-abilities ability.
  *
  * Queries the WP Abilities API registry to find abilities registered
- * by other plugins (excluding our own wp-agentic-admin/* abilities).
+ * by other plugins (excluding our own agentic-admin/* abilities).
  *
  * @param array $input Input parameters.
  * @return array Discovered abilities in compact format.
@@ -166,7 +166,7 @@ function agentic_admin_execute_discover_plugin_abilities( $input = array() ): ar
 	$search        = isset( $input['search'] ) ? strtolower( $input['search'] ) : '';
 
 	// Our own namespaces to exclude — we already have these as native tools.
-	$own_namespaces = array( 'wp-agentic-admin/', 'core/' );
+	$own_namespaces = array( 'agentic-admin/', 'core/' );
 
 	$external = array();
 

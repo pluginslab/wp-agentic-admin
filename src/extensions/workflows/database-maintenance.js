@@ -26,7 +26,7 @@ import { registerWorkflow } from '../services/agentic-abilities-api';
  * Register the "Database Maintenance" workflow.
  */
 export function registerDatabaseMaintenanceWorkflow() {
-	registerWorkflow( 'wp-agentic-admin/database-maintenance', {
+	registerWorkflow( 'agentic-admin/database-maintenance', {
 		label: 'Database Maintenance',
 		description: 'Optimizes the database and clears related caches.',
 		keywords: [
@@ -40,11 +40,11 @@ export function registerDatabaseMaintenanceWorkflow() {
 		],
 		steps: [
 			{
-				abilityId: 'wp-agentic-admin/db-optimize',
+				abilityId: 'agentic-admin/db-optimize',
 				label: 'Optimize database tables',
 			},
 			{
-				abilityId: 'wp-agentic-admin/cache-flush',
+				abilityId: 'agentic-admin/cache-flush',
 				label: 'Clear caches after optimization',
 			},
 		],
@@ -63,10 +63,10 @@ export function registerDatabaseMaintenanceWorkflow() {
 		 */
 		summarize: ( results ) => {
 			const dbResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/db-optimize'
+				( r ) => r.abilityId === 'agentic-admin/db-optimize'
 			);
 			const cacheResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/cache-flush'
+				( r ) => r.abilityId === 'agentic-admin/cache-flush'
 			);
 
 			let summary = 'Database maintenance complete.\n\n';

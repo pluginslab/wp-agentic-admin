@@ -114,7 +114,7 @@ const ChatContainer = ( {
 
 		// Create and initialize session
 		const session = new ChatSession( {
-			storageKey: 'wp-agentic-admin-chat-session',
+			storageKey: 'agentic-admin-chat-session',
 			onChange: ( msgs ) => {
 				// Convert session messages to display format
 				setMessages( convertMessagesToDisplay( msgs ) );
@@ -580,7 +580,7 @@ const ChatContainer = ( {
 			} )
 			.join( '\n---\n\n' );
 
-		const v = window.wpAgenticAdmin || {};
+		const v = window.agenticAdmin || {};
 		const footer =
 			`\n---\nAgentic Admin v${ v.version || '?' } | ` +
 			`JS ${ v.jsVersion || '?' } | CSS ${ v.cssVersion || '?' }`;
@@ -717,11 +717,11 @@ const ChatContainer = ( {
 	] );
 
 	return (
-		<div className="wp-agentic-admin-chat-container">
+		<div className="agentic-admin-chat-container">
 			<HStack
 				justify="flex-end"
 				spacing={ 2 }
-				className="wp-agentic-admin-chat-header"
+				className="agentic-admin-chat-header"
 			>
 				<Button
 					variant="secondary"
@@ -757,7 +757,7 @@ const ChatContainer = ( {
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (
-				<div className="wp-agentic-admin-context-warning">
+				<div className="agentic-admin-context-warning">
 					<Notice
 						status={ contextUsage.isCritical ? 'error' : 'warning' }
 						isDismissible={ false }
@@ -770,7 +770,7 @@ const ChatContainer = ( {
 						<Button
 							variant="link"
 							onClick={ clearHistory }
-							className="wp-agentic-admin-context-warning__clear"
+							className="agentic-admin-context-warning__clear"
 						>
 							Clear Chat
 						</Button>
@@ -814,10 +814,7 @@ const ChatContainer = ( {
 			/>
 
 			{ isStreaming && (
-				<HStack
-					justify="center"
-					className="wp-agentic-admin-chat-actions"
-				>
+				<HStack justify="center" className="agentic-admin-chat-actions">
 					<Button
 						variant="secondary"
 						onClick={ handleStopGeneration }
@@ -839,12 +836,12 @@ const ChatContainer = ( {
 							: 'Confirm Action'
 					}
 					onRequestClose={ handleCancel }
-					className="wp-agentic-admin-confirm-modal"
+					className="agentic-admin-confirm-modal"
 				>
 					{ /* eslint-disable-next-line no-nested-ternary -- clear conditional rendering based on confirmation type */ }
 					{ pendingConfirmation.isIntentConfirmation ? (
 						/* Intent Confirmation UI */
-						<p className="wp-agentic-admin-intent-question">
+						<p className="agentic-admin-intent-question">
 							Did you mean:{ ' ' }
 							<strong>{ pendingConfirmation.label }</strong>?
 						</p>
@@ -860,7 +857,7 @@ const ChatContainer = ( {
 									}
 								</strong>
 							</p>
-							<p className="wp-agentic-admin-confirm-description">
+							<p className="agentic-admin-confirm-description">
 								{
 									pendingConfirmation.workflowDetails
 										.description
@@ -874,7 +871,7 @@ const ChatContainer = ( {
 								}{ ' ' }
 								steps:
 							</p>
-							<ol className="wp-agentic-admin-confirm-steps">
+							<ol className="agentic-admin-confirm-steps">
 								{ pendingConfirmation.workflowDetails.steps?.map(
 									( step, i ) => (
 										<li
@@ -950,7 +947,7 @@ const ChatContainer = ( {
 							<p>{ pendingConfirmation.message }</p>
 						</>
 					) }
-					<div className="wp-agentic-admin-confirm-actions">
+					<div className="agentic-admin-confirm-actions">
 						<Button variant="tertiary" onClick={ handleCancel }>
 							{ pendingConfirmation.isIntentConfirmation
 								? 'No'

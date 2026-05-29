@@ -90,7 +90,7 @@ describe( 'ReactAgent', () => {
 		mockToolRegistry = {
 			getAll: jest.fn().mockReturnValue( [
 				{
-					id: 'wp-agentic-admin/plugin-list',
+					id: 'agentic-admin/plugin-list',
 					label: 'List Plugins',
 					description: 'List all installed plugins',
 					execute: jest.fn().mockResolvedValue( {
@@ -99,7 +99,7 @@ describe( 'ReactAgent', () => {
 					} ),
 				},
 				{
-					id: 'wp-agentic-admin/site-health',
+					id: 'agentic-admin/site-health',
 					label: 'Site Health',
 					description: 'Check site health',
 					execute: jest.fn().mockResolvedValue( {
@@ -134,7 +134,7 @@ describe( 'ReactAgent', () => {
 		it( 'should handle clean JSON output', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
 				'{"action": "final_answer", "content": "You have 1 plugin installed."}'
 			);
 
@@ -144,7 +144,7 @@ describe( 'ReactAgent', () => {
 			expect( result.finalAnswer ).toContain( 'You have 1 plugin' );
 			expect( result.iterations ).toBe( 2 );
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/plugin-list',
 			] );
 		} );
 
@@ -152,7 +152,7 @@ describe( 'ReactAgent', () => {
 			// Model outputs JSON with unescaped newline
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {"reason": "List\nplugins"}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {"reason": "List\nplugins"}}',
 				'{"action": "final_answer", "content": "Done"}'
 			);
 
@@ -164,7 +164,7 @@ describe( 'ReactAgent', () => {
 		it( 'should fix single quotes in JSON', async () => {
 			mockStreamOnce(
 				mockEngine,
-				"{'action': 'tool_call', 'tool': 'wp-agentic-admin/plugin-list', 'args': {}}",
+				"{'action': 'tool_call', 'tool': 'agentic-admin/plugin-list', 'args': {}}",
 				"{'action': 'final_answer', 'content': 'Done'}"
 			);
 
@@ -176,7 +176,7 @@ describe( 'ReactAgent', () => {
 		it( 'should fix missing quotes after property names', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args:{}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args:{}}',
 				'{"action": "final_answer", "content": "Done"}'
 			);
 
@@ -189,7 +189,7 @@ describe( 'ReactAgent', () => {
 			// Model tries to output TWO actions at once
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}{"action": "final_answer", "content": "Done"}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}{"action": "final_answer", "content": "Done"}',
 				'{"action": "final_answer", "content": "Done"}'
 			);
 
@@ -198,7 +198,7 @@ describe( 'ReactAgent', () => {
 			expect( result.success ).toBe( true );
 			// Should only process the first tool call
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/plugin-list',
 			] );
 		} );
 	} );
@@ -207,7 +207,7 @@ describe( 'ReactAgent', () => {
 		it( 'should execute single tool call', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
 				'{"action": "final_answer", "content": "You have 1 plugin installed."}'
 			);
 
@@ -215,10 +215,10 @@ describe( 'ReactAgent', () => {
 
 			expect( result.success ).toBe( true );
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/plugin-list',
 			] );
 			expect( mockCallbacks.onToolStart ).toHaveBeenCalledWith(
-				'wp-agentic-admin/plugin-list'
+				'agentic-admin/plugin-list'
 			);
 			expect( mockCallbacks.onToolEnd ).toHaveBeenCalled();
 		} );
@@ -226,8 +226,8 @@ describe( 'ReactAgent', () => {
 		it( 'should chain multiple tools', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/site-health", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
 				'{"action": "final_answer", "content": "Site is healthy and you have 1 plugin."}'
 			);
 
@@ -235,8 +235,8 @@ describe( 'ReactAgent', () => {
 
 			expect( result.success ).toBe( true );
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/site-health',
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/site-health',
+				'agentic-admin/plugin-list',
 			] );
 			expect( result.iterations ).toBe( 3 );
 		} );
@@ -246,8 +246,8 @@ describe( 'ReactAgent', () => {
 		it( 'should stop when same tool is called twice in a row', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}'
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}'
 			);
 
 			const result = await reactAgent.execute( 'list plugins', [] );
@@ -255,7 +255,7 @@ describe( 'ReactAgent', () => {
 			// Should stop and provide summary
 			expect( result.success ).toBe( true );
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/plugin-list',
 			] );
 			expect( result.error ).toBe(
 				'Repeated tool call detected (handled gracefully)'
@@ -272,8 +272,8 @@ describe( 'ReactAgent', () => {
 				callCount++;
 				const tool =
 					callCount % 2 === 0
-						? 'wp-agentic-admin/plugin-list'
-						: 'wp-agentic-admin/site-health';
+						? 'agentic-admin/plugin-list'
+						: 'agentic-admin/site-health';
 				return Promise.resolve(
 					mockStream(
 						`{"action": "tool_call", "tool": "${ tool }", "args": {}}`
@@ -294,7 +294,7 @@ describe( 'ReactAgent', () => {
 		it( 'should handle tool execution errors', async () => {
 			// Make tool throw an error
 			const errorTool = {
-				id: 'wp-agentic-admin/broken-tool',
+				id: 'agentic-admin/broken-tool',
 				execute: jest
 					.fn()
 					.mockRejectedValue( new Error( 'Tool failed' ) ),
@@ -303,7 +303,7 @@ describe( 'ReactAgent', () => {
 
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/broken-tool", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/broken-tool", "args": {}}',
 				'{"action": "final_answer", "content": "Tool failed, but I handled it."}'
 			);
 
@@ -321,7 +321,7 @@ describe( 'ReactAgent', () => {
 
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/nonexistent", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/nonexistent", "args": {}}',
 				'{"action": "final_answer", "content": "Tool not found."}'
 			);
 
@@ -329,7 +329,7 @@ describe( 'ReactAgent', () => {
 
 			expect( result.success ).toBe( true );
 			expect( result.observations[ 0 ].result.error ).toBe(
-				'Tool "wp-agentic-admin/nonexistent" not found'
+				'Tool "agentic-admin/nonexistent" not found'
 			);
 		} );
 
@@ -353,7 +353,7 @@ describe( 'ReactAgent', () => {
 			);
 
 			await reactAgent.execute( 'hi', [], {
-				toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+				toolFilter: [ 'agentic-admin/plugin-list' ],
 				webSearchContext: 'some context',
 				docSearch: true,
 			} );
@@ -371,7 +371,7 @@ describe( 'ReactAgent', () => {
 
 			await expect(
 				reactAgent.execute( 'hi', [], {
-					toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+					toolFilter: [ 'agentic-admin/plugin-list' ],
 					webSearchContext: 'some context',
 					docSearch: true,
 				} )
@@ -386,7 +386,7 @@ describe( 'ReactAgent', () => {
 			mockModelLoader.getEngine.mockReturnValue( null );
 
 			const result = await reactAgent.execute( 'hi', [], {
-				toolFilter: [ 'wp-agentic-admin/plugin-list' ],
+				toolFilter: [ 'agentic-admin/plugin-list' ],
 				webSearchContext: 'some context',
 				docSearch: true,
 			} );
@@ -403,7 +403,7 @@ describe( 'ReactAgent', () => {
 		it( 'should request confirmation for tools that require it', async () => {
 			// Add a tool that requires confirmation
 			const confirmTool = {
-				id: 'wp-agentic-admin/plugin-deactivate',
+				id: 'agentic-admin/plugin-deactivate',
 				label: 'Deactivate Plugin',
 				requiresConfirmation: true,
 				execute: jest.fn().mockResolvedValue( { success: true } ),
@@ -412,7 +412,7 @@ describe( 'ReactAgent', () => {
 
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {"plugin": "test"}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-deactivate", "args": {"plugin": "test"}}',
 				'{"action": "final_answer", "content": "Plugin deactivated."}'
 			);
 
@@ -429,7 +429,7 @@ describe( 'ReactAgent', () => {
 			mockCallbacks.onConfirmationRequired.mockResolvedValue( false );
 
 			const confirmTool = {
-				id: 'wp-agentic-admin/plugin-deactivate',
+				id: 'agentic-admin/plugin-deactivate',
 				requiresConfirmation: true,
 				execute: jest.fn(),
 			};
@@ -437,7 +437,7 @@ describe( 'ReactAgent', () => {
 
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-deactivate", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-deactivate", "args": {}}',
 				'{"action": "final_answer", "content": "Action cancelled."}'
 			);
 
@@ -472,7 +472,7 @@ describe( 'ReactAgent', () => {
 		it( 'should handle "list plugins" correctly', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
 				'{"action": "final_answer", "content": "You have 1 plugin installed: Test Plugin (active)."}'
 			);
 
@@ -480,23 +480,21 @@ describe( 'ReactAgent', () => {
 
 			expect( result.success ).toBe( true );
 			expect( result.toolsUsed ).toEqual( [
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/plugin-list',
 			] );
 		} );
 
 		it( 'should handle "my site is slow" with multi-tool chain', async () => {
 			mockStreamOnce(
 				mockEngine,
-				'{"action": "tool_call", "tool": "wp-agentic-admin/site-health", "args": {}}',
+				'{"action": "tool_call", "tool": "agentic-admin/site-health", "args": {}}',
 				'{"action": "final_answer", "content": "Your site is running WordPress 6.9 on PHP 8.3.29."}'
 			);
 
 			const result = await reactAgent.execute( 'my site is slow', [] );
 
 			expect( result.success ).toBe( true );
-			expect( result.toolsUsed ).toContain(
-				'wp-agentic-admin/site-health'
-			);
+			expect( result.toolsUsed ).toContain( 'agentic-admin/site-health' );
 		} );
 	} );
 } );

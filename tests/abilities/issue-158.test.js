@@ -25,7 +25,7 @@ module.exports = {
 			turns: [
 				{
 					input: 'Give me a list of installed plugins',
-					expectTool: 'wp-agentic-admin/plugin-list',
+					expectTool: 'agentic-admin/plugin-list',
 				},
 				{
 					input: 'Show me a list of installed plugins',
@@ -45,11 +45,11 @@ module.exports = {
 			turns: [
 				{
 					input: 'list plugins',
-					expectTool: 'wp-agentic-admin/plugin-list',
+					expectTool: 'agentic-admin/plugin-list',
 				},
 				{
 					input: 'check site health',
-					expectTool: 'wp-agentic-admin/site-health',
+					expectTool: 'agentic-admin/site-health',
 				},
 				{
 					input: 'list plugins again',
@@ -65,19 +65,19 @@ module.exports = {
 			turns: [
 				{
 					input: 'show me the error log',
-					expectTool: 'wp-agentic-admin/error-log-read',
+					expectTool: 'agentic-admin/error-log-read',
 				},
 				{
 					input: 'list all plugins',
-					expectTool: 'wp-agentic-admin/plugin-list',
+					expectTool: 'agentic-admin/plugin-list',
 				},
 				{
 					input: 'check my site health',
-					expectTool: 'wp-agentic-admin/site-health',
+					expectTool: 'agentic-admin/site-health',
 				},
 				{
 					input: 'list all installed themes',
-					expectTool: 'wp-agentic-admin/theme-list',
+					expectTool: 'agentic-admin/theme-list',
 				},
 			],
 		},

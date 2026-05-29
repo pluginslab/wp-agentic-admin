@@ -9,22 +9,20 @@ import App from './App';
 import './styles/main.scss';
 import { createLogger } from './utils/logger';
 
-const log = createLogger( 'WPAgenticAdmin' );
+const log = createLogger( 'AgenticAdmin' );
 
 document.addEventListener( 'DOMContentLoaded', () => {
 	log.info(
-		`Version ${
-			window.wpAgenticAdmin?.version || 'unknown'
-		} initializing...`
+		`Version ${ window.agenticAdmin?.version || 'unknown' } initializing...`
 	);
-	const container = document.getElementById( 'wp-agentic-admin-root' );
+	const container = document.getElementById( 'agentic-admin-root' );
 
 	if ( ! container ) {
 		return;
 	}
 
 	// Check if settings are available
-	if ( typeof window.wpAgenticAdmin === 'undefined' ) {
+	if ( typeof window.agenticAdmin === 'undefined' ) {
 		log.error( 'Settings not found' );
 		return;
 	}

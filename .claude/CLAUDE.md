@@ -38,7 +38,7 @@ npm run lint:js                  # JS lint
 Every ability needs BOTH PHP (backend) and JS (chat interface):
 
 1. **PHP**: `includes/abilities/{kebab-case}.php` — use `register_agentic_ability()`. Must include `permission_callback` and `input_schema` with top-level `default` for optional-input abilities (GET requests fail without it). Return `{ success: bool, message: string, ... }`.
-2. **JS**: `src/extensions/abilities/{kebab-case}.js` — use `registerAbility( 'wp-agentic-admin/{id}', { label, description, keywords, execute, summarize, interpretResult, ... } )`. Keep `label` and `description` as **string literals** (test loader extracts via regex).
+2. **JS**: `src/extensions/abilities/{kebab-case}.js` — use `registerAbility( 'agentic-admin/{id}', { label, description, keywords, execute, summarize, interpretResult, ... } )`. Keep `label` and `description` as **string literals** (test loader extracts via regex).
 3. **Register**: import and call in `src/extensions/abilities/index.js`
 4. **Tests**: ability auto-appears. Add test cases to `tests/abilities/core-abilities.test.js`
 
@@ -51,7 +51,7 @@ See [Abilities Guide](docs/ABILITIES-GUIDE.md) for `parseIntent()`, confirmation
 ## Version Bumping
 
 Update ALL of these:
-1. `wp-agentic-admin.php` — header `Version:`, `WP_AGENTIC_ADMIN_VERSION` constant, `activate()` hook
+1. `agentic-admin.php` — header `Version:`, `AGENTIC_ADMIN_VERSION` constant, `activate()` hook
 2. `package.json` — `version` field
 3. `readme.txt` — `Stable tag:` + changelog entry
 4. `npm install --package-lock-only` to sync `package-lock.json`

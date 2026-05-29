@@ -34,7 +34,7 @@ import {
  * Register the verify-core-checksums ability with the chat system.
  */
 export function registerVerifyCoreChecksums() {
-	registerAbility( 'wp-agentic-admin/verify-core-checksums', {
+	registerAbility( 'agentic-admin/verify-core-checksums', {
 		label: 'Verify core file checksums',
 		description:
 			'Verify WordPress core file integrity by comparing checksums against the official WordPress.org API. Detects modified, missing, and extra files in core directories.',
@@ -184,7 +184,7 @@ export function registerVerifyCoreChecksums() {
 			}
 
 			return executeAbility(
-				'wp-agentic-admin/verify-core-checksums',
+				'agentic-admin/verify-core-checksums',
 				input
 			);
 		},

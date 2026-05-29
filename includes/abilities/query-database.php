@@ -5,7 +5,7 @@
  * Executes read-only SQL queries for site inspection.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_query_database(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/query-database',
+		'agentic-admin/query-database',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Query Database', 'agentic-admin' ),

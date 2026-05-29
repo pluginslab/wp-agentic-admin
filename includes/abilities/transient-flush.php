@@ -6,7 +6,7 @@
  * Similar to WP-CLI: wp transient delete --all / --expired
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since 0.1.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_transient_flush(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/transient-flush',
+		'agentic-admin/transient-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Flush Transients', 'agentic-admin' ),

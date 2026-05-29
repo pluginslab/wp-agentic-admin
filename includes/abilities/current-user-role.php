@@ -5,7 +5,7 @@
  * Returns the current logged-in user's role and account info.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_current_user_role(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/current-user-role',
+		'agentic-admin/current-user-role',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Get Current User Role', 'agentic-admin' ),

@@ -15,7 +15,7 @@ import {
  * Register the write-file ability with the chat system.
  */
 export function registerWriteFile() {
-	registerAbility( 'wp-agentic-admin/write-file', {
+	registerAbility( 'agentic-admin/write-file', {
 		label: 'Write or edit a WordPress file with backup',
 		description:
 			'Write or edit WordPress files with automatic backup. Use when users ask to add code, edit a file, enable debug, or change config. Args: file_path, content, mode (append/prepend/replace). Default mode is append for adding code.',
@@ -94,7 +94,7 @@ export function registerWriteFile() {
 				mode = params.mode;
 			}
 
-			return executeAbility( 'wp-agentic-admin/write-file', {
+			return executeAbility( 'agentic-admin/write-file', {
 				file_path: params.file_path,
 				content: params.content,
 				mode,

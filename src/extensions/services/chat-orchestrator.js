@@ -340,7 +340,7 @@ class ChatOrchestrator {
 	 * @return {string|null} Formatted search results string, or null on failure.
 	 */
 	async performWebSearchPreStep( userMessage ) {
-		const toolId = 'wp-agentic-admin/web-search';
+		const toolId = 'agentic-admin/web-search';
 		log.info( 'Web search pre-step for:', userMessage );
 
 		this.callbacks.onToolStart( toolId );
@@ -469,10 +469,10 @@ class ChatOrchestrator {
 		let lastObservation = null;
 		if ( result.toolsUsed.length === 1 ) {
 			const lastToolId = result.toolsUsed[ 0 ];
-			// Apply namespace fallback: LLM sometimes drops the "wp-agentic-admin/" prefix.
+			// Apply namespace fallback: LLM sometimes drops the "agentic-admin/" prefix.
 			lastTool =
 				toolRegistry.get( lastToolId ) ||
-				toolRegistry.get( `wp-agentic-admin/${ lastToolId }` );
+				toolRegistry.get( `agentic-admin/${ lastToolId }` );
 			lastObservation = result.observations[ 0 ];
 			if ( lastTool?.preferSummarize && lastObservation?.result?.data ) {
 				displayAnswer = lastTool.summarize(
@@ -528,7 +528,7 @@ class ChatOrchestrator {
 			displayAnswer?.length > 50
 		) {
 			const contentTool = toolRegistry.get(
-				'wp-agentic-admin/content-generate'
+				'agentic-admin/content-generate'
 			);
 			let autoInserted = false;
 
@@ -551,7 +551,7 @@ class ChatOrchestrator {
 					{
 						label: 'Add generated content to this page',
 						button_label: 'Insert into editor',
-						action: 'wp-agentic-admin/content-generate',
+						action: 'agentic-admin/content-generate',
 						args: { content: displayAnswer },
 					},
 				];

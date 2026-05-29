@@ -15,7 +15,7 @@ import {
  * Register the query-database ability with the chat system.
  */
 export function registerQueryDatabase() {
-	registerAbility( 'wp-agentic-admin/query-database', {
+	registerAbility( 'agentic-admin/query-database', {
 		label: 'Run a read-only SQL query',
 		description:
 			'Run a read-only SQL query (SELECT/SHOW/DESCRIBE) on the WordPress database. Use {prefix} for the table prefix. Args: query (the SQL string). Use when users ask about database content, row counts, or table data.',
@@ -77,7 +77,7 @@ export function registerQueryDatabase() {
 			if ( ! params.query ) {
 				return { success: false, message: 'No SQL query provided.' };
 			}
-			return executeAbility( 'wp-agentic-admin/query-database', {
+			return executeAbility( 'agentic-admin/query-database', {
 				query: params.query,
 			} );
 		},

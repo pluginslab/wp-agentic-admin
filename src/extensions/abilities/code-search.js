@@ -19,7 +19,7 @@ const log = createLogger( 'CodeSearch' );
  * Register the code-search ability with the chat system.
  */
 export function registerCodeSearch() {
-	registerAbility( 'wp-agentic-admin/code-search', {
+	registerAbility( 'agentic-admin/code-search', {
 		label: 'Search knowledge base',
 		description:
 			'Search the knowledge base for code, database schema, WordPress API docs, or reference information. Use when users ask to find, search, or look up anything about the site or WordPress.',

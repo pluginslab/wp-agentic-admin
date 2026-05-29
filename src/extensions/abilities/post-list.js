@@ -15,7 +15,7 @@ import {
  * Register the post-list ability with the chat system.
  */
 export function registerPostList() {
-	registerAbility( 'wp-agentic-admin/post-list', {
+	registerAbility( 'agentic-admin/post-list', {
 		label: 'List recent WordPress posts',
 		description:
 			'List recent WordPress posts with title, status, author, and date. Supports filtering by status and post type. Use for questions about posts or content.',
@@ -93,7 +93,7 @@ export function registerPostList() {
 			if ( params.post_type ) {
 				input.post_type = params.post_type;
 			}
-			return executeAbility( 'wp-agentic-admin/post-list', input );
+			return executeAbility( 'agentic-admin/post-list', input );
 		},
 
 		requiresConfirmation: false,

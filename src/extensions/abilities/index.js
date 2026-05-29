@@ -5,9 +5,9 @@
  *
  * The PHP side (includes/abilities-manifest.php) is authoritative for
  * which PHP-backed abilities are enabled. PHP exposes the resolved list
- * as window.wpAgenticAdmin.enabledAbilities. JS-only abilities (defined
+ * as window.agenticAdmin.enabledAbilities. JS-only abilities (defined
  * in manifest.js as JS_ONLY_ABILITIES) are merged in on top. Labs-only
- * JS abilities are gated by window.wpAgenticAdmin.enableLabs.
+ * JS abilities are gated by window.agenticAdmin.enableLabs.
  *
  * Test/dev fallback (no localized data): register everything in REGISTRARS
  * minus LABS unless enableLabs is set.
@@ -28,7 +28,7 @@ const log = createLogger( 'Abilities' );
  * @return {Set<string>} Slugs whose REGISTRARS entry should be invoked.
  */
 export function resolveEnabledSlugs() {
-	const settings = window.wpAgenticAdmin ?? {};
+	const settings = window.agenticAdmin ?? {};
 	const enableLabs = settings.enableLabs === true;
 
 	if ( Array.isArray( settings.enabledAbilities ) ) {

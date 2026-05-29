@@ -242,7 +242,7 @@ Action: search-tools("cron management")
 A special ability that searches the full tool index:
 
 ```javascript
-registerAbility('wp-agentic-admin/search-tools', {
+registerAbility('agentic-admin/search-tools', {
     label: 'Search for additional tools by description',
     
     execute: async ({ query }) => {
@@ -268,7 +268,7 @@ registerAbility('wp-agentic-admin/search-tools', {
 {
     "matches": [
         {
-            "id": "wp-agentic-admin/cron-list",
+            "id": "agentic-admin/cron-list",
             "label": "List scheduled cron events",
             "description": "Get all WordPress cron events with schedules"
         }
@@ -302,7 +302,7 @@ The LLM discovers tools **on-demand** based on observations, not upfront. This i
 Each ability already has a `keywords` array:
 
 ```javascript
-registerAbility('wp-agentic-admin/plugin-list', {
+registerAbility('agentic-admin/plugin-list', {
     keywords: ['plugin', 'list', 'installed', 'active'],
     // ...
 });
@@ -339,7 +339,7 @@ Third-party abilities automatically work:
 
 ```php
 // Third-party plugin
-wp_agentic_admin_register_ability(
+agentic_admin_register_ability(
     'my-plugin/backup-restore',
     array(
         'description' => 'Restore site from backup file',
@@ -459,7 +459,7 @@ test('should select site-health for "my site is slow"', () => {
     const message = "my site is slow";
     const topTools = selectTopTools(message, abilities, 5);
     
-    expect(topTools[0].id).toBe('wp-agentic-admin/site-health');
+    expect(topTools[0].id).toBe('agentic-admin/site-health');
 });
 
 test('should fall back to all tools when no match', () => {
@@ -589,7 +589,7 @@ test( 'selects plugin-list for "show me my plugins"', () => {
 // Test ambiguous messages (user doesn't use exact keywords)
 test( 'selects site-health for "everything feels sluggish"', () => {
     const result = router.selectTools( 'everything feels sluggish' );
-    expect( result.map( t => t.id ) ).toContain( 'wp-agentic-admin/site-health' );
+    expect( result.map( t => t.id ) ).toContain( 'agentic-admin/site-health' );
 } );
 
 // Test zero-match fallback

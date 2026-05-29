@@ -10,7 +10,7 @@ allowed-tools: "Bash(npm *), Bash(git *), Bash(gh *), Read, Edit"
 ## Steps
 
 1. **Version bump** — update ALL of these to `$ARGUMENTS`:
-   - `wp-agentic-admin.php`: plugin header `Version:`, `WP_AGENTIC_ADMIN_VERSION` constant, `activate()` hook
+   - `agentic-admin.php`: plugin header `Version:`, `AGENTIC_ADMIN_VERSION` constant, `activate()` hook
    - `package.json`: `version` field
    - `readme.txt`: `Stable tag:` field
    - Run `npm install --package-lock-only` to sync `package-lock.json`

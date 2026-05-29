@@ -45,7 +45,7 @@ import {
  * Register the revision-cleanup ability with the chat system.
  */
 export function registerRevisionCleanup() {
-	registerAbility( 'wp-agentic-admin/revision-cleanup', {
+	registerAbility( 'agentic-admin/revision-cleanup', {
 		label: 'Clean up revisions',
 		description:
 			'Delete old post revisions to free database space. Dry-runs first showing revision count and space savings, then requires confirmation.',
@@ -139,7 +139,7 @@ export function registerRevisionCleanup() {
 			const dryRun =
 				params.dry_run !== undefined ? params.dry_run : false;
 
-			return executeAbility( 'wp-agentic-admin/revision-cleanup', {
+			return executeAbility( 'agentic-admin/revision-cleanup', {
 				keep_last: keepLast,
 				dry_run: dryRun,
 			} );

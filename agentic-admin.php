@@ -3,18 +3,18 @@
  * Agentic Admin - Main Plugin File
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.1.0
  */
 
 // phpcs:ignore WordPress.Files.FileName.InvalidClassFileName -- This is the main plugin file, not a class file.
 /**
  * Plugin Name: Agentic Admin
- * Plugin URI: https://pluginslab.com/agentic-admin
+ * Plugin URI: https://github.com/pluginslab/wp-agentic-admin
  * Description: A privacy-first AI Site Reliability Engineer running entirely in the browser. Uses WebAssembly and WebGPU to execute Small Language Models locally, transforming wp-admin into a natural language command center via the WordPress Abilities API.
  * Version: 0.11.0
- * Author: Pluginslab
- * Author URI: https://pluginslab.com
+ * Author: Marcel Schmitz
+ * Author URI: https://profiles.wordpress.org/schmitzoide/
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: agentic-admin
@@ -22,21 +22,21 @@
  * Requires PHP: 8.2
  * Tested up to: 7.0
  *
- * @package WP_Agentic_Admin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'WPAgenticAdmin' ) ) {
+if ( ! class_exists( 'AgenticAdmin' ) ) {
 
 	/**
 	 * Main plugin class for Agentic Admin.
 	 *
 	 * @since 0.1.0
 	 */
-	final class WPAgenticAdmin {
+	final class AgenticAdmin {
 
 		/**
 		 * Constructor - sets up the plugin initialization.
@@ -69,40 +69,40 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 			// call is needed here.
 
 			// Load functions first (provides agentic_admin_register_ability API).
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/functions-abilities.php';
 
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
-			require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-connectors.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-connectors.php';
 
 			// Initialize Utility Hooks (Cache Invalidation).
-			if ( class_exists( '\\WPAgenticAdmin\\Utils' ) ) {
-				\WPAgenticAdmin\Utils::init_hooks();
+			if ( class_exists( '\\AgenticAdmin\\Utils' ) ) {
+				\AgenticAdmin\Utils::init_hooks();
 			}
 
-			if ( class_exists( '\\WPAgenticAdmin\\Settings' ) ) {
-				\WPAgenticAdmin\Settings::get_instance();
+			if ( class_exists( '\\AgenticAdmin\\Settings' ) ) {
+				\AgenticAdmin\Settings::get_instance();
 			}
 
-			if ( class_exists( '\\WPAgenticAdmin\\Admin_Page' ) ) {
-				\WPAgenticAdmin\Admin_Page::get_instance();
+			if ( class_exists( '\\AgenticAdmin\\Admin_Page' ) ) {
+				\AgenticAdmin\Admin_Page::get_instance();
 			}
 
-			if ( class_exists( '\\WPAgenticAdmin\\Abilities' ) ) {
-				\WPAgenticAdmin\Abilities::get_instance();
+			if ( class_exists( '\\AgenticAdmin\\Abilities' ) ) {
+				\AgenticAdmin\Abilities::get_instance();
 			}
 
 			// Initialize LLM Proxy for external provider support.
-			if ( class_exists( '\\WPAgenticAdmin\\LLM_Proxy' ) ) {
-				\WPAgenticAdmin\LLM_Proxy::init();
+			if ( class_exists( '\\AgenticAdmin\\LLM_Proxy' ) ) {
+				\AgenticAdmin\LLM_Proxy::init();
 			}
 
 			// Initialize Connectors REST endpoint (WP 7.0+).
-			if ( class_exists( '\\WPAgenticAdmin\\Connectors' ) ) {
-				\WPAgenticAdmin\Connectors::init();
+			if ( class_exists( '\\AgenticAdmin\\Connectors' ) ) {
+				\AgenticAdmin\Connectors::init();
 			}
 		}
 
@@ -153,10 +153,10 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		 * @return void
 		 */
 		private function define_constants(): void {
-			define( 'WP_AGENTIC_ADMIN_VERSION', '0.11.0' );
-			define( 'WP_AGENTIC_ADMIN_FILE', __FILE__ );
-			define( 'WP_AGENTIC_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-			define( 'WP_AGENTIC_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+			define( 'AGENTIC_ADMIN_VERSION', '0.11.0' );
+			define( 'AGENTIC_ADMIN_FILE', __FILE__ );
+			define( 'AGENTIC_ADMIN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+			define( 'AGENTIC_ADMIN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		}
 
 		/**
@@ -176,8 +176,8 @@ if ( ! class_exists( 'WPAgenticAdmin' ) ) {
 		}
 	}
 
-	register_activation_hook( __FILE__, array( 'WPAgenticAdmin', 'activate' ) );
-	register_deactivation_hook( __FILE__, array( 'WPAgenticAdmin', 'deactivate' ) );
+	register_activation_hook( __FILE__, array( 'AgenticAdmin', 'activate' ) );
+	register_deactivation_hook( __FILE__, array( 'AgenticAdmin', 'deactivate' ) );
 
-	new WPAgenticAdmin();
+	new AgenticAdmin();
 }

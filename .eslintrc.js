@@ -16,7 +16,7 @@ module.exports = {
 		jest: true, // For test files (describe, it, expect, etc.)
 	},
 	globals: {
-		wpAgenticAdmin: 'readonly',
+		agenticAdmin: 'readonly',
 	},
 	rules: {
 		// Allow console statements (useful for debugging AI agent behavior)

@@ -7,7 +7,7 @@
  * not function bodies, to keep chunk count manageable.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_wp_api_extract(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/wp-api-extract',
+		'agentic-admin/wp-api-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Extract WP API Signatures', 'agentic-admin' ),

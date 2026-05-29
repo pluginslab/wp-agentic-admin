@@ -5,7 +5,7 @@
  * Edits WordPress files with backup and confirmation.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_write_file(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/write-file',
+		'agentic-admin/write-file',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Write File', 'agentic-admin' ),

@@ -7,14 +7,14 @@
  * render the dropdown of "connected" AI provider plugins.
  *
  * Endpoint:
- *   GET /wp-agentic-admin/v1/connectors
+ *   GET /agentic-admin/v1/connectors
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.13.0
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,7 +59,7 @@ class Connectors {
 	 */
 	public static function register_routes(): void {
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/connectors',
 			array(
 				'methods'             => 'GET',
@@ -69,7 +69,7 @@ class Connectors {
 		);
 
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/connectors/chat/completions',
 			array(
 				'methods'             => 'POST',

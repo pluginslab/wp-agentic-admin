@@ -14,7 +14,7 @@
  * direct access is the supported invocation path.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.4.1
  */
 

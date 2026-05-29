@@ -30,7 +30,7 @@ const log = createLogger( 'AgenticAbilitiesAPI' );
  * Register a agentic ability with the chat system.
  *
  * This function allows third-party plugins to register their own abilities.
- * It can be called after the wp-agentic-admin scripts are loaded.
+ * It can be called after the agentic-admin scripts are loaded.
  *
  * @param {string}   id                                  - Unique ability identifier (e.g., 'my-plugin/my-ability').
  *                                                       Must match the ID used in agentic_admin_register_ability() in PHP.
@@ -140,7 +140,7 @@ async function executeAbility( id, params = {} ) {
 /**
  * Build a tool configuration from ability config.
  *
- * Merges PHP-provided config (from wpAgenticAdmin.abilities) with JS-specific handlers.
+ * Merges PHP-provided config (from agenticAdmin.abilities) with JS-specific handlers.
  *
  * @param {string} id       - Ability identifier.
  * @param {Object} jsConfig - JS-specific configuration.
@@ -148,7 +148,7 @@ async function executeAbility( id, params = {} ) {
  */
 function buildToolConfig( id, jsConfig ) {
 	// Get PHP-provided config if available
-	const phpConfig = window.wpAgenticAdmin?.abilities?.[ id ] || {};
+	const phpConfig = window.agenticAdmin?.abilities?.[ id ] || {};
 
 	// Merge configs: JS overrides PHP
 	const merged = {
@@ -216,15 +216,15 @@ function buildToolConfig( id, jsConfig ) {
  *     keywords: ['full cleanup', 'site cleanup', 'maintenance'],
  *     steps: [
  *         {
- *             abilityId: 'wp-agentic-admin/cache-flush',
+ *             abilityId: 'agentic-admin/cache-flush',
  *             label: 'Clear all caches',
  *         },
  *         {
- *             abilityId: 'wp-agentic-admin/db-optimize',
+ *             abilityId: 'agentic-admin/db-optimize',
  *             label: 'Optimize database',
  *         },
  *         {
- *             abilityId: 'wp-agentic-admin/site-health',
+ *             abilityId: 'agentic-admin/site-health',
  *             label: 'Check site health',
  *         },
  *     ],

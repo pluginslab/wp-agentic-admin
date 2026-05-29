@@ -16,7 +16,7 @@ This guide covers everything from the basics of language models to advanced opti
 
 ## Implementation in Agentic Admin for WordPress
 
-6. [Models in Agentic Admin for WordPress](06-models-in-wp-agentic-admin.md)
+6. [Models in Agentic Admin for WordPress](06-models-in-agentic-admin.md)
 7. [Service Worker Persistence](07-service-worker-persistence.md)
 8. [The ReAct Pattern](08-react-pattern.md)
 9. [Tools & Abilities](09-tools-and-abilities.md)

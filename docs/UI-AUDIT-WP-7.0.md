@@ -1,6 +1,6 @@
 # UI Audit — WordPress 7.0
 
-**Issue:** [#220 — Wider UI review to match WordPress 7.0 admin styling](https://github.com/pluginslab/wp-agentic-admin/issues/220)
+**Issue:** [#220 — Wider UI review to match WordPress 7.0 admin styling](https://github.com/pluginslab/agentic-admin/issues/220)
 **Target milestone:** v0.13 — WordPress.org Submission (with v0.14 spillover)
 **Date:** 2026-05-23
 **Plugin version at audit:** 0.12.0
@@ -96,7 +96,7 @@ Screenshots in `docs/audit-assets/wp-7.0-before/`.
 
 | # | Finding | Priority | Recommended fix |
 |---|---|---|---|
-| 1.1 | Hand-rolled tab strip ("Chat / Abilities / Plugin Abilities" + "Settings" gear button) using `wp-agentic-admin-tab` class | P1 | Use `@wordpress/components` `TabPanel` or `Tabs` (32.0.0). Keeps keyboard nav + a11y for free. |
+| 1.1 | Hand-rolled tab strip ("Chat / Abilities / Plugin Abilities" + "Settings" gear button) using `agentic-admin-tab` class | P1 | Use `@wordpress/components` `TabPanel` or `Tabs` (32.0.0). Keeps keyboard nav + a11y for free. |
 | 1.2 | "Copy All" + "Clear Chat" buttons at top of chat panel are hand-rolled | P2 | Use `Button` `variant="tertiary"` for "Copy All", `variant="secondary"` for "Clear Chat" (`isDestructive` if confirming). |
 | 1.3 | Greeting bubble has an inline timestamp + copy button — custom card | P2 | Acceptable as a custom chat-bubble design (this is the product's identity). No fix. |
 

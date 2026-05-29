@@ -5,7 +5,7 @@
  * Filters debug.log by keyword and severity.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_error_log_search(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/error-log-search',
+		'agentic-admin/error-log-search',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Search Error Log', 'agentic-admin' ),
@@ -101,7 +101,7 @@ function agentic_admin_execute_error_log_search( array $input = array() ): array
 	$level     = isset( $input['level'] ) ? sanitize_text_field( $input['level'] ) : '';
 	$max_lines = isset( $input['lines'] ) ? min( absint( $input['lines'] ), 500 ) : 100;
 
-	$log_file = \WPAgenticAdmin\Utils::get_debug_log_path();
+	$log_file = \AgenticAdmin\Utils::get_debug_log_path();
 
 	if ( ! file_exists( $log_file ) || ! is_readable( $log_file ) ) {
 		return array(

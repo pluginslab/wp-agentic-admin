@@ -16,7 +16,7 @@ Read these for the full patterns:
 ## Steps
 
 1. **PHP backend** — create `includes/abilities/$ARGUMENTS.php`:
-   - Use `register_agentic_ability( 'wp-agentic-admin/$ARGUMENTS', $php_config, $js_config )`
+   - Use `register_agentic_ability( 'agentic-admin/$ARGUMENTS', $php_config, $js_config )`
    - Include `permission_callback` with appropriate `current_user_can()` check
    - Include `input_schema` with top-level `default` field
    - Include `output_schema`
@@ -24,7 +24,7 @@ Read these for the full patterns:
    - Implement `execute_callback` returning `{ success: bool, message: string, ... }`
 
 2. **JS chat interface** — create `src/extensions/abilities/$ARGUMENTS.js`:
-   - Use `registerAbility( 'wp-agentic-admin/$ARGUMENTS', { ... } )`
+   - Use `registerAbility( 'agentic-admin/$ARGUMENTS', { ... } )`
    - Include: `label` (string literal), `description` (string literal), `keywords` (array), `initialMessage`, `summarize()`, `interpretResult()`, `execute()`
    - Set `requiresConfirmation` based on whether the ability is destructive
 

@@ -23,9 +23,9 @@ export const suite = {
 				responseNotEmpty: true,
 				conditionalAssertions: [
 					{
-						ifTool: 'wp-agentic-admin/site-health',
+						ifTool: 'agentic-admin/site-health',
 						ifContains: 'database',
-						thenExpectTool: 'wp-agentic-admin/db-optimize',
+						thenExpectTool: 'agentic-admin/db-optimize',
 					},
 				],
 			},

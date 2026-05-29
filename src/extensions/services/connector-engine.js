@@ -1,7 +1,7 @@
 /**
  * Connector Engine — WP 7.0 AI Client connector wrapper (via WP REST proxy).
  *
- * Posts chat completions to /wp-agentic-admin/v1/connectors/chat/completions,
+ * Posts chat completions to /agentic-admin/v1/connectors/chat/completions,
  * which forwards them through the WP AI Client to a configured connector's
  * provider (Anthropic, Google, OpenAI, or any third-party ai_provider).
  *
@@ -21,7 +21,7 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'ConnectorEngine' );
 
 function getProxyConfig() {
-	const wpData = window.wpAgenticAdmin || {};
+	const wpData = window.agenticAdmin || {};
 	// Prefer an explicit connectors REST URL when the server provides one.
 	// Otherwise derive from connectorsRestUrl namespace pieces, then fall
 	// back to deriving from restUrl by trimming any trailing /<ns>/v1 segment.
@@ -40,7 +40,7 @@ function getProxyConfig() {
 		);
 	const base = root.endsWith( '/' ) ? root : `${ root }/`;
 	return {
-		proxyBase: `${ base }wp-agentic-admin/v1/connectors`,
+		proxyBase: `${ base }agentic-admin/v1/connectors`,
 		nonce: wpData.nonce || '',
 	};
 }

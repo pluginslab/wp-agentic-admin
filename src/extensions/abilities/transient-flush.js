@@ -43,7 +43,7 @@ import {
  * Register the transient-flush ability with the chat system.
  */
 export function registerTransientFlush() {
-	registerAbility( 'wp-agentic-admin/transient-flush', {
+	registerAbility( 'agentic-admin/transient-flush', {
 		label: 'Flush transients',
 		description:
 			'Delete expired transients from the WordPress database. Transients are temporary cached data used by plugins and themes. Returns the number of transients deleted.',
@@ -113,7 +113,7 @@ export function registerTransientFlush() {
 		execute: async ( params ) => {
 			// Default to expired only unless user explicitly requests all.
 			const expiredOnly = params.expired_only !== false;
-			return executeAbility( 'wp-agentic-admin/transient-flush', {
+			return executeAbility( 'agentic-admin/transient-flush', {
 				expired_only: expiredOnly,
 			} );
 		},

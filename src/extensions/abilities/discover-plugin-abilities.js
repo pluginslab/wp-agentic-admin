@@ -23,7 +23,7 @@ import pluginAbilitiesManager from '../services/plugin-abilities-manager';
  * Register the discover-plugin-abilities ability with the chat system.
  */
 export function registerDiscoverPluginAbilities() {
-	registerAbility( 'wp-agentic-admin/discover-plugin-abilities', {
+	registerAbility( 'agentic-admin/discover-plugin-abilities', {
 		label: 'Discover plugin abilities',
 		description:
 			'Discover abilities registered by other plugins. Returns ability IDs, descriptions, and parameter schemas. Use this first to find what plugin tools are available, then use run-plugin-ability to call them.',
@@ -89,7 +89,7 @@ export function registerDiscoverPluginAbilities() {
 			}
 
 			let text =
-				'IMPORTANT: Now call wp-agentic-admin/run-plugin-ability to execute one of these abilities. ';
+				'IMPORTANT: Now call agentic-admin/run-plugin-ability to execute one of these abilities. ';
 			text += `Available (${ enabled.length }): `;
 			text += enabled
 				.map( ( a ) => {
@@ -121,7 +121,7 @@ export function registerDiscoverPluginAbilities() {
 				input.search = params.search;
 			}
 			const result = await executeAbility(
-				'wp-agentic-admin/discover-plugin-abilities',
+				'agentic-admin/discover-plugin-abilities',
 				input
 			);
 

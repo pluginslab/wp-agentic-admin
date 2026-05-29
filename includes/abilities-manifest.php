@@ -12,7 +12,7 @@
  *
  * Re-enable parked abilities globally:
  *
- *     define( 'WP_AGENTIC_ADMIN_ENABLE_LABS', true );
+ *     define( 'AGENTIC_ADMIN_ENABLE_LABS', true );
  *
  * Or selectively via filter:
  *
@@ -22,7 +22,7 @@
  *     });
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -102,7 +102,7 @@ function agentic_admin_local_only_abilities(): array {
 }
 
 /**
- * Labs (parked) abilities — opt-in via WP_AGENTIC_ADMIN_ENABLE_LABS
+ * Labs (parked) abilities — opt-in via AGENTIC_ADMIN_ENABLE_LABS
  * or the agentic_admin_enabled_abilities filter. Preserved for
  * v1.x add-on releases. Off by default.
  *
@@ -121,7 +121,7 @@ function agentic_admin_labs_abilities(): array {
  * Resolve the final list of enabled abilities.
  *
  * Core and local-only abilities always register. Labs only register when
- * the WP_AGENTIC_ADMIN_ENABLE_LABS constant is defined and truthy, or
+ * the AGENTIC_ADMIN_ENABLE_LABS constant is defined and truthy, or
  * when an entry is added back via the agentic_admin_enabled_abilities
  * filter.
  *
@@ -133,7 +133,7 @@ function agentic_admin_resolve_enabled_abilities(): array {
 		agentic_admin_local_only_abilities()
 	);
 
-	if ( defined( 'WP_AGENTIC_ADMIN_ENABLE_LABS' ) && WP_AGENTIC_ADMIN_ENABLE_LABS ) {
+	if ( defined( 'AGENTIC_ADMIN_ENABLE_LABS' ) && AGENTIC_ADMIN_ENABLE_LABS ) {
 		$enabled = array_merge( $enabled, agentic_admin_labs_abilities() );
 	}
 
@@ -141,7 +141,7 @@ function agentic_admin_resolve_enabled_abilities(): array {
 	 * Filter the final list of abilities to register.
 	 *
 	 * Use this to selectively re-enable a labs ability without flipping
-	 * the global WP_AGENTIC_ADMIN_ENABLE_LABS constant:
+	 * the global AGENTIC_ADMIN_ENABLE_LABS constant:
 	 *
 	 *     add_filter( 'agentic_admin_enabled_abilities', function ( $abilities ) {
 	 *         $abilities['write-file'] = 'agentic_admin_register_write_file';
@@ -158,8 +158,8 @@ function agentic_admin_resolve_enabled_abilities(): array {
 /**
  * Whether labs (parked) abilities are enabled this request.
  *
- * @return bool True when WP_AGENTIC_ADMIN_ENABLE_LABS is defined and truthy.
+ * @return bool True when AGENTIC_ADMIN_ENABLE_LABS is defined and truthy.
  */
 function agentic_admin_labs_enabled(): bool {
-	return defined( 'WP_AGENTIC_ADMIN_ENABLE_LABS' ) && WP_AGENTIC_ADMIN_ENABLE_LABS;
+	return defined( 'AGENTIC_ADMIN_ENABLE_LABS' ) && AGENTIC_ADMIN_ENABLE_LABS;
 }

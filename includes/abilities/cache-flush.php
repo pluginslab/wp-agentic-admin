@@ -5,7 +5,7 @@
  * Flushes the WordPress object cache.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_cache_flush(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/cache-flush',
+		'agentic-admin/cache-flush',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Flush Cache', 'agentic-admin' ),

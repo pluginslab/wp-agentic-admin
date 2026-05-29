@@ -9,7 +9,7 @@ Welcome, hackathon contributor! This is a quick-start guide to get you up and ru
 1. **Fork & clone** the repo
 2. `npm install`
 3. `npm run start` (watch mode) or `npx wp-scripts build`
-4. Copy/symlink the plugin into `wp-content/plugins/wp-agentic-admin/`
+4. Copy/symlink the plugin into `wp-content/plugins/agentic-admin/`
 5. Activate in WordPress admin
 
 ### Requirements

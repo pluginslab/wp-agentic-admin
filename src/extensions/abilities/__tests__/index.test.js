@@ -26,12 +26,12 @@ import { LABS_ABILITIES, JS_ONLY_ABILITIES } from '../manifest';
 
 describe( 'resolveEnabledSlugs', () => {
 	afterEach( () => {
-		delete window.wpAgenticAdmin;
+		delete window.agenticAdmin;
 	} );
 
 	describe( 'with PHP-authoritative enabledAbilities', () => {
 		it( 'returns the PHP list plus non-labs JS-only abilities when labs off', () => {
-			window.wpAgenticAdmin = {
+			window.agenticAdmin = {
 				enabledAbilities: [ 'site-health', 'cache-flush' ],
 				enableLabs: false,
 			};
@@ -51,7 +51,7 @@ describe( 'resolveEnabledSlugs', () => {
 		} );
 
 		it( 'adds JS-only labs when enableLabs is true', () => {
-			window.wpAgenticAdmin = {
+			window.agenticAdmin = {
 				enabledAbilities: [ 'site-health' ],
 				enableLabs: true,
 			};
@@ -62,7 +62,7 @@ describe( 'resolveEnabledSlugs', () => {
 		} );
 
 		it( 'respects an empty PHP list (only JS-only abilities register)', () => {
-			window.wpAgenticAdmin = {
+			window.agenticAdmin = {
 				enabledAbilities: [],
 				enableLabs: false,
 			};
@@ -80,7 +80,7 @@ describe( 'resolveEnabledSlugs', () => {
 
 	describe( 'fallback (no PHP-localized data)', () => {
 		it( 'registers all REGISTRARS minus LABS by default', () => {
-			// window.wpAgenticAdmin is unset.
+			// window.agenticAdmin is unset.
 			const enabled = resolveEnabledSlugs();
 
 			expect( enabled.has( 'site-health' ) ).toBe( true );
@@ -92,7 +92,7 @@ describe( 'resolveEnabledSlugs', () => {
 		} );
 
 		it( 'includes LABS when enableLabs is true', () => {
-			window.wpAgenticAdmin = { enableLabs: true };
+			window.agenticAdmin = { enableLabs: true };
 
 			const enabled = resolveEnabledSlugs();
 

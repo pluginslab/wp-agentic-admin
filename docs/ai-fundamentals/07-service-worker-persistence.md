@@ -391,7 +391,7 @@ Add to plugin settings (future enhancement):
 
 ```javascript
 // Force page mode (no Service Worker)
-wpAgenticAdmin.config.serviceWorkerEnabled = false;
+agenticAdmin.config.serviceWorkerEnabled = false;
 ```
 
 This loads the model in page context instead of Service Worker, unloading on navigation.

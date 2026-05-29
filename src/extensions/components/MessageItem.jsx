@@ -47,12 +47,12 @@ const MessageType = {
 };
 
 const INVERSE_ACTIONS = {
-	'wp-agentic-admin/plugin-activate': {
-		action: 'wp-agentic-admin/plugin-deactivate',
+	'agentic-admin/plugin-activate': {
+		action: 'agentic-admin/plugin-deactivate',
 		button_label: 'Deactivate',
 	},
-	'wp-agentic-admin/plugin-deactivate': {
-		action: 'wp-agentic-admin/plugin-activate',
+	'agentic-admin/plugin-deactivate': {
+		action: 'agentic-admin/plugin-activate',
 		button_label: 'Activate',
 	},
 };
@@ -159,10 +159,7 @@ const parseTable = ( lines, keyIndex ) => {
 	);
 
 	return (
-		<table
-			key={ `table-${ keyIndex }` }
-			className="wp-agentic-admin-md-table"
-		>
+		<table key={ `table-${ keyIndex }` } className="agentic-admin-md-table">
 			<thead>
 				<tr>
 					{ headerCells.map( ( cell, i ) => (
@@ -242,12 +239,12 @@ const formatAbilityResult = ( result ) => {
 
 const getAbilityLabel = ( abilityId ) => {
 	const labels = {
-		'wp-agentic-admin/error-log-read': 'Reading error log',
-		'wp-agentic-admin/site-health': 'Checking site health',
-		'wp-agentic-admin/plugin-list': 'Listing plugins',
-		'wp-agentic-admin/cache-flush': 'Flushing cache',
-		'wp-agentic-admin/db-optimize': 'Optimizing database',
-		'wp-agentic-admin/plugin-deactivate': 'Deactivating plugin',
+		'agentic-admin/error-log-read': 'Reading error log',
+		'agentic-admin/site-health': 'Checking site health',
+		'agentic-admin/plugin-list': 'Listing plugins',
+		'agentic-admin/cache-flush': 'Flushing cache',
+		'agentic-admin/db-optimize': 'Optimizing database',
+		'agentic-admin/plugin-deactivate': 'Deactivating plugin',
 	};
 	return labels[ abilityId ] || abilityId;
 };
@@ -275,7 +272,7 @@ const CollapsibleCard = ( {
 	const isOpen = forceExpanded || expanded;
 
 	return (
-		<Card size="small" className="wp-agentic-admin-collapsible">
+		<Card size="small" className="agentic-admin-collapsible">
 			<CardHeader>
 				<Button
 					onClick={ () => setExpanded( ! expanded ) }
@@ -332,7 +329,7 @@ const MessageItem = ( { message, onAction } ) => {
 			<HStack justify="flex-end">
 				<Card
 					size="small"
-					className="wp-agentic-admin-msg wp-agentic-admin-msg--user"
+					className="agentic-admin-msg agentic-admin-msg--user"
 				>
 					<CardBody>
 						<p>{ content }</p>

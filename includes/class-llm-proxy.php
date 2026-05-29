@@ -6,15 +6,15 @@
  * avoiding CORS issues. All requests require a valid WP REST nonce.
  *
  * Endpoints:
- *   GET  /wp-agentic-admin/v1/llm-proxy/models?endpoint_url=...
- *   POST /wp-agentic-admin/v1/llm-proxy/chat/completions
+ *   GET  /agentic-admin/v1/llm-proxy/models?endpoint_url=...
+ *   POST /agentic-admin/v1/llm-proxy/chat/completions
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.10.0
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -39,7 +39,7 @@ class LLM_Proxy {
 	 */
 	public static function register_routes(): void {
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/llm-proxy/models',
 			array(
 				'methods'             => 'GET',
@@ -61,7 +61,7 @@ class LLM_Proxy {
 		);
 
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/llm-proxy/chat/completions',
 			array(
 				'methods'             => 'POST',

@@ -28,7 +28,7 @@ const MessageList = ( { messages, onAction } ) => {
 
 	return (
 		<div
-			className="wp-agentic-admin-messages"
+			className="agentic-admin-messages"
 			ref={ listRef }
 			role="log"
 			aria-live="polite"
