@@ -63,10 +63,10 @@ const ABILITY_BUNDLES = [
 	},
 	{
 		id: 'content-create',
-		label: 'Create Content',
+		label: 'Content',
 		icon: 'edit',
-		description: 'Generate and manage page content',
-		abilities: [ 'agentic-admin/post-list', 'core/get-editor-blocks' ],
+		description: 'Review and manage page content',
+		abilities: [ 'agentic-admin/post-list' ],
 	},
 	{
 		id: 'content-users',
@@ -77,8 +77,6 @@ const ABILITY_BUNDLES = [
 			'agentic-admin/post-list',
 			'agentic-admin/comment-stats',
 			'agentic-admin/user-list',
-			'core/get-editor-blocks',
-			'agentic-admin/write-file',
 		],
 	},
 	{

@@ -53,9 +53,10 @@ This plugin runs AI locally in your browser by default. No prompts or admin data
 On first use the browser downloads the selected model (Qwen 3 1.7B by default, ~1.2 GB) from `https://huggingface.co/mlc-ai/` and `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. Only HTTP GET requests for static model files are made; no prompts, admin data, or telemetry are sent. Weights are cached in the browser; subsequent sessions are offline.
 HuggingFace terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 
-**Transformers.js CDN (jsDelivr)** — Only when the local knowledge base is enabled in settings.
-The embedding model used to index documentation is loaded from `https://cdn.jsdelivr.net/npm/@xenova/transformers@3.8.1/`. Only the JS bundle and embedding model files are fetched; no prompts or admin data are sent.
+**Transformers.js library + embedding model (jsDelivr + Hugging Face)** — Only when the optional local knowledge base is enabled in settings.
+This performs in-browser semantic embedding of your documentation and code so the assistant can answer from a local knowledge base; the computation runs entirely in your browser. The Transformers.js library is loaded from jsDelivr (`https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/`) and the embedding model (`Xenova/all-MiniLM-L6-v2`, ~23 MB, one-time) from Hugging Face. Both are static files cached in the browser after first use; no prompts or admin data are sent.
 jsDelivr terms: https://www.jsdelivr.com/terms — Privacy: https://www.jsdelivr.com/privacy-policy-jsdelivr-net
+Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 
 **External LLM provider (user-configured)** — Only when you switch the engine from "Local" to "Remote" in settings.
 When enabled, chat messages, tool descriptions, and tool results are sent through this plugin's REST proxy (`/wp-json/agentic-admin/v1/llm-proxy/`) to the OpenAI-compatible endpoint URL you configure (e.g. Ollama, LM Studio, vLLM, OpenAI, Groq, Together). You choose the endpoint; the plugin does not preselect or default to any third-party provider. No data is sent until you save an endpoint and start a chat in Remote mode.
@@ -76,11 +77,24 @@ MITRE terms: https://www.cve.org/Legal/TermsOfUse — Privacy: https://www.cve.o
 Installed plugin slugs and versions are sent to `https://downloads.wordpress.org/plugin-checksums/` and `https://plugins.svn.wordpress.org/` to verify file integrity against the official WordPress.org distribution.
 WordPress.org policies: https://wordpress.org/about/privacy/
 
+== Source code and build process ==
+
+Agentic Admin is fully open source under GPL-2.0-or-later. The complete, human-readable source — including the JavaScript/React sources behind the compiled assets in `build-extensions/` — is maintained in a public repository:
+
+https://github.com/pluginslab/wp-agentic-admin
+
+The files under `build-extensions/` are generated from the sources in `src/` with @wordpress/scripts (webpack). They include the JavaScript bundles (`index.js`, `sw.js`, `indexing-worker.js`, and code-split chunks), the CSS, and the voy-search vector-index WebAssembly module (`*.module.wasm`, built from its npm package; source: https://github.com/tantaraio/voy). To regenerate them from a checkout:
+
+1. `npm install`
+2. `npm run build`
+
+There is no build step for the PHP. The WebLLM engine is bundled into the plugin from its npm package. The optional knowledge-base embedding library (Transformers.js) and all AI model weights are loaded at runtime from the providers documented under External services above; these are large provider-hosted files, not part of the plugin code.
+
 == Changelog ==
 
 = 0.11.0 =
 * Renamed: Plugin is now "Agentic Admin". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
-* Removed: feedback system, WebMCP bridge, voice input, and three low-value abilities (backup-check, opcode-cache-status, disk-usage). Code preserved in git history; voice + write-file + content-generate + plugin-ecosystem abilities parked for v1.x as opt-in via AGENTIC_ADMIN_ENABLE_LABS constant.
+* Removed: feedback system, WebMCP bridge, voice input, file editing (write-file), and AI content generation (content-generate), plus three low-value abilities (backup-check, opcode-cache-status, disk-usage). Agentic Admin is a site health and maintenance assistant: it does not edit files or generate content. Removed code remains available in the project's git history.
 * Security: blocked sensitive-column reads (user_email, user_pass) in query-database to prevent reconnaissance attacks (#166). Hardened query length cap and read-only verb gate.
 * Security: escaped output in functions-abilities.php (#121). Added sw-loader.php access-control rationale (#123). Documented direct-DB-call rationale in db-optimize and database-check.
 * Compliance: removed deprecated load_plugin_textdomain() call, prefixed uninstall.php globals, fixed nonexistent Domain Path header, excluded CLOUDFEST_HACKATHON.md from distribution build.

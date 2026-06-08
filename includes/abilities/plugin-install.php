@@ -113,17 +113,17 @@ function agentic_admin_execute_plugin_install( array $input = array() ): array {
 		$status      = $plugin_data && $plugin_data['active'] ? __( 'active', 'agentic-admin' ) : __( 'inactive', 'agentic-admin' );
 
 		return array(
-			'success'       => true,
-			'message'       => sprintf(
+			'success'           => true,
+			'message'           => sprintf(
 				/* translators: 1: plugin name, 2: plugin status */
 				__( 'Plugin "%1$s" is already installed (%2$s).', 'agentic-admin' ),
 				$resolved['plugin_name'],
 				$status
 			),
 			'already_installed' => true,
-			'plugin_name'   => $resolved['plugin_name'],
-			'plugin_slug'   => $resolved['plugin_file'],
-			'active'        => $plugin_data && $plugin_data['active'],
+			'plugin_name'       => $resolved['plugin_name'],
+			'plugin_slug'       => $resolved['plugin_file'],
+			'active'            => $plugin_data && $plugin_data['active'],
 		);
 	}
 

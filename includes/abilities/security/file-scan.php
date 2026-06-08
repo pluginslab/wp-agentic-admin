@@ -207,7 +207,7 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 		$dirs_to_scan[] = WP_PLUGIN_DIR;
 
 		// Also scan must-use plugins if the directory exists.
-		$mu_dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$mu_dir = WPMU_PLUGIN_DIR;
 		if ( is_dir( $mu_dir ) ) {
 			$dirs_to_scan[] = $mu_dir;
 		}
@@ -287,7 +287,7 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 
 		$normalized_dir = wp_normalize_path( $dir );
 		$is_plugin_dir  = wp_normalize_path( WP_PLUGIN_DIR ) === $normalized_dir;
-		$mu_plugin_dir  = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$mu_plugin_dir  = WPMU_PLUGIN_DIR;
 		$is_mu_dir      = wp_normalize_path( $mu_plugin_dir ) === $normalized_dir;
 
 		foreach ( $iterator as $file_info ) {

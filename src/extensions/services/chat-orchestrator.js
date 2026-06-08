@@ -522,42 +522,6 @@ class ChatOrchestrator {
 		}
 		const meta = this.getUsageStatsMeta();
 
-		// Auto-insert content into editor when content-create bundle is active
-		if (
-			bundleIds?.includes( 'content-create' ) &&
-			displayAnswer?.length > 50
-		) {
-			const contentTool = toolRegistry.get(
-				'agentic-admin/content-generate'
-			);
-			let autoInserted = false;
-
-			if ( contentTool ) {
-				try {
-					const insertResult = await contentTool.execute( {
-						content: displayAnswer,
-					} );
-					if ( insertResult?.success ) {
-						autoInserted = true;
-					}
-				} catch ( e ) {
-					log.warn( 'Auto-insert failed:', e.message );
-				}
-			}
-
-			// Fallback: show button if auto-insert failed
-			if ( ! autoInserted ) {
-				meta.actions = [
-					{
-						label: 'Add generated content to this page',
-						button_label: 'Insert into editor',
-						action: 'agentic-admin/content-generate',
-						args: { content: displayAnswer },
-					},
-				];
-			}
-		}
-
 		this.session.addAssistantMessage( displayAnswer, meta );
 		this.callbacks.onStreamEnd( displayAnswer );
 

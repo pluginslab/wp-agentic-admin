@@ -6,17 +6,15 @@
  * The PHP side (includes/abilities-manifest.php) is authoritative for
  * which PHP-backed abilities are enabled. PHP exposes the resolved list
  * as window.agenticAdmin.enabledAbilities. JS-only abilities (defined
- * in manifest.js as JS_ONLY_ABILITIES) are merged in on top. Labs-only
- * JS abilities are gated by window.agenticAdmin.enableLabs.
+ * in manifest.js as JS_ONLY_ABILITIES) are merged in on top.
  *
- * Test/dev fallback (no localized data): register everything in REGISTRARS
- * minus LABS unless enableLabs is set.
+ * Test/dev fallback (no localized data): register everything in REGISTRARS.
  *
  * See: src/extensions/abilities/manifest.js, includes/abilities-manifest.php
  */
 
 import { createLogger } from '../utils/logger';
-import { REGISTRARS, LABS_ABILITIES, JS_ONLY_ABILITIES } from './manifest';
+import { REGISTRARS, JS_ONLY_ABILITIES } from './manifest';
 
 const log = createLogger( 'Abilities' );
 
@@ -29,28 +27,18 @@ const log = createLogger( 'Abilities' );
  */
 export function resolveEnabledSlugs() {
 	const settings = window.agenticAdmin ?? {};
-	const enableLabs = settings.enableLabs === true;
 
 	if ( Array.isArray( settings.enabledAbilities ) ) {
 		// PHP authoritative: start with what PHP enabled, then add JS-only.
 		const enabled = new Set( settings.enabledAbilities );
 		for ( const slug of JS_ONLY_ABILITIES ) {
-			if ( LABS_ABILITIES.has( slug ) && ! enableLabs ) {
-				continue;
-			}
 			enabled.add( slug );
 		}
 		return enabled;
 	}
 
-	// No PHP data (tests, dev): register everything, gate labs locally.
-	const enabled = new Set( Object.keys( REGISTRARS ) );
-	if ( ! enableLabs ) {
-		for ( const slug of LABS_ABILITIES ) {
-			enabled.delete( slug );
-		}
-	}
-	return enabled;
+	// No PHP data (tests, dev): register everything in the manifest.
+	return new Set( Object.keys( REGISTRARS ) );
 }
 
 /**

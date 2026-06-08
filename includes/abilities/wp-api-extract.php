@@ -73,7 +73,7 @@ function agentic_admin_register_wp_api_extract(): void {
  * @return string[] Array of absolute file paths.
  */
 function agentic_admin_collect_wp_includes_files(): array {
-	$wp_includes = ABSPATH . 'wp-includes/';
+	$wp_includes = ABSPATH . WPINC . '/';
 
 	if ( ! is_dir( $wp_includes ) ) {
 		return array();
@@ -268,7 +268,7 @@ function agentic_admin_execute_wp_api_extract( array $input = array() ): array {
 	$files       = agentic_admin_collect_wp_includes_files();
 	$total_files = count( $files );
 	$chunks      = array();
-	$wp_includes = ABSPATH . 'wp-includes/';
+	$wp_includes = ABSPATH . WPINC . '/';
 
 	foreach ( $files as $file_path ) {
 		$relative_path = str_replace( $wp_includes, '', $file_path );

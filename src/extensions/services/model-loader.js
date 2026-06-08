@@ -326,18 +326,18 @@ class ModelLoader {
 	 * @return {string} Full URL to sw.js
 	 */
 	getServiceWorkerUrl() {
-		// Use PHP loader that adds Service-Worker-Allowed header
-		// agenticAdmin is set by PHP wp_localize_script
+		// PHP serves the SW through admin-post.php (WordPress loaded) and sets
+		// the Service-Worker-Allowed header. URL provided via wp_localize_script.
 		if (
 			typeof window.agenticAdmin !== 'undefined' &&
-			window.agenticAdmin.pluginUrl
+			window.agenticAdmin.swUrl
 		) {
-			return `${ window.agenticAdmin.pluginUrl }sw-loader.php`;
+			return window.agenticAdmin.swUrl;
 		}
 
-		// Fallback: relative path to PHP loader
-		log.warn( 'agenticAdmin.pluginUrl not found, using relative path' );
-		return '/wp-content/plugins/agentic-admin/sw-loader.php';
+		// Fallback: construct the admin-post endpoint from the site root.
+		log.warn( 'agenticAdmin.swUrl not found, using admin-post fallback' );
+		return '/wp-admin/admin-post.php?action=agentic_admin_sw';
 	}
 
 	/**

@@ -123,29 +123,6 @@ module.exports = {
 			expectTool: 'agentic-admin/post-list',
 		},
 
-		// ── File writing ──────────────────────────────────────────
-		{
-			input: 'add a line to my functions.php',
-			expectTool: 'agentic-admin/write-file',
-		},
-		{
-			input: 'edit the wp-config.php to enable debug mode',
-			expectTool: [
-				'agentic-admin/write-file',
-				'agentic-admin/read-file',
-			],
-		},
-
-		// ── Database queries ──────────────────────────────────────
-		{
-			input: 'run a SQL query to check the wp_options table',
-			expectTool: 'agentic-admin/query-database',
-		},
-		{
-			input: 'query the database for autoloaded options',
-			expectTool: 'agentic-admin/query-database',
-		},
-
 		// ── Web search ───────────────────────────────────────────
 		{
 			input: 'search for how to fix WordPress white screen of death',
@@ -289,16 +266,6 @@ module.exports = {
 		{
 			input: 'what external tools are available on this site?',
 			expectTool: 'agentic-admin/discover-plugin-abilities',
-		},
-
-		// ── Content generation & optimization ─────────────────────
-		{
-			input: 'generate content about dog training',
-			expectTool: 'agentic-admin/content-generate',
-		},
-		{
-			input: 'fill this page with content about cooking tips',
-			expectTool: 'agentic-admin/content-generate',
 		},
 
 		// ── No-tool tests (pure knowledge questions) ───────────────

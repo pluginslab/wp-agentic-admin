@@ -1,6 +1,5 @@
 includes/
 agentic-admin.php
-sw-loader.php
 uninstall.php
 build-extensions/
 languages/
