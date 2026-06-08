@@ -50,9 +50,7 @@ import {
 	modelLoader,
 	getAbilities,
 	getWorkflows,
-	toolRegistry,
 } from '../services';
-import { executeAbility } from '../services/agentic-abilities-api';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 import { createLogger } from '../utils/logger';
 
@@ -595,58 +593,6 @@ const ChatContainer = ( {
 	}, [ messages ] );
 
 	/**
-	 * Handle action button clicks from interactive ability results
-	 */
-	const handleAction = useCallback( async ( abilityId, params ) => {
-		const tool = toolRegistry.get( abilityId );
-		const needsConfirmation =
-			typeof tool?.requiresConfirmation === 'function'
-				? tool.requiresConfirmation( params )
-				: tool?.requiresConfirmation;
-
-		if ( needsConfirmation ) {
-			const confirmed = await new Promise( ( resolve ) => {
-				setPendingConfirmation( {
-					toolId: abilityId,
-					label: tool?.label || abilityId,
-					message:
-						tool?.confirmationMessage || `Execute ${ abilityId }?`,
-					resolve,
-				} );
-			} );
-			if ( ! confirmed ) {
-				return { success: false, cancelled: true };
-			}
-		}
-
-		try {
-			let result;
-
-			// JS-only abilities: execute directly via toolRegistry
-			if ( tool?.execute ) {
-				result = await tool.execute( params );
-			} else {
-				// PHP abilities: use REST API
-				result = await executeAbility( abilityId, params );
-			}
-
-			const msg =
-				result?.message ||
-				( result?.success
-					? 'Action completed successfully.'
-					: 'Action failed.' );
-			sessionRef.current?.addAssistantMessage( msg );
-			return result;
-		} catch ( error ) {
-			log.error( 'Action execution error:', error );
-			sessionRef.current?.addAssistantMessage(
-				`Action failed: ${ error.message || 'Unknown error' }`
-			);
-			return { success: false, error: error.message };
-		}
-	}, [] );
-
-	/**
 	 * Stop current AI generation
 	 */
 	const handleStopGeneration = useCallback( () => {
@@ -750,10 +696,7 @@ const ChatContainer = ( {
 				</Button>
 			</HStack>
 
-			<MessageList
-				messages={ displayMessages }
-				onAction={ handleAction }
-			/>
+			<MessageList messages={ displayMessages } />
 
 			{ /* Context usage warning */ }
 			{ contextUsage?.isHigh && (

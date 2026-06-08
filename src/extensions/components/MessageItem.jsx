@@ -46,52 +46,6 @@ const MessageType = {
 	FILE_VIEW: 'file_view',
 };
 
-const INVERSE_ACTIONS = {
-	'agentic-admin/plugin-activate': {
-		action: 'agentic-admin/plugin-deactivate',
-		button_label: 'Deactivate',
-	},
-	'agentic-admin/plugin-deactivate': {
-		action: 'agentic-admin/plugin-activate',
-		button_label: 'Activate',
-	},
-};
-
-const ActionButton = ( { action, onAction } ) => {
-	const [ override, setOverride ] = useState( null );
-	const [ loading, setLoading ] = useState( false );
-	const current = override ? { ...action, ...override } : action;
-
-	const handleClick = async () => {
-		setLoading( true );
-		try {
-			const result = await onAction( current.action, current.args );
-			if ( result && result.success !== false && ! result.error ) {
-				const inverse = INVERSE_ACTIONS[ current.action ];
-				if ( inverse ) {
-					setOverride( inverse );
-				}
-			}
-		} finally {
-			setLoading( false );
-		}
-	};
-
-	return (
-		<HStack justify="space-between" spacing={ 2 }>
-			<span>{ current.label }</span>
-			<Button
-				variant="secondary"
-				onClick={ handleClick }
-				disabled={ loading }
-				isBusy={ loading }
-			>
-				{ loading ? '…' : current.button_label }
-			</Button>
-		</HStack>
-	);
-};
-
 const formatTime = ( timestamp ) => {
 	const date = new Date( timestamp );
 	return date.toLocaleTimeString( [], {
@@ -298,7 +252,7 @@ const CollapsibleCard = ( {
 	);
 };
 
-const MessageItem = ( { message, onAction } ) => {
+const MessageItem = ( { message } ) => {
 	const { type, content, timestamp } = message;
 	const [ copied, setCopied ] = useState( false );
 
@@ -428,27 +382,12 @@ const MessageItem = ( { message, onAction } ) => {
 				.trim();
 		}
 
-		const messageActions = message.actions;
-
 		return (
 			<Card size="small">
 				<CardBody>
 					<VStack spacing={ 3 }>
 						{ displayContent && (
 							<div>{ parseContentBlocks( displayContent ) }</div>
-						) }
-						{ messageActions?.length > 0 && onAction && (
-							<VStack spacing={ 2 }>
-								{ messageActions.map( ( action ) => (
-									<ActionButton
-										key={ `${
-											action.action
-										}-${ JSON.stringify( action.args ) }` }
-										action={ action }
-										onAction={ onAction }
-									/>
-								) ) }
-							</VStack>
 						) }
 						<HStack justify="space-between" spacing={ 2 }>
 							<small>{ formatTime( timestamp ) }</small>
