@@ -107,7 +107,7 @@ Messages are routed through a simple 2-tier system:
 
 ## Try It Instantly
 
-[![Open in WordPress Playground](https://img.shields.io/badge/Open%20in-WordPress%20Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/pluginslab/agentic-admin/main/.playground/blueprint.json)
+[![Open in WordPress Playground](https://img.shields.io/badge/Open%20in-WordPress%20Playground-3858e9?logo=wordpress)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/pluginslab/wp-agentic-admin/main/.playground/blueprint.json)
 
 Click the badge above to launch a fully working WordPress instance with Agentic Admin for WordPress pre-installed — no setup required. Requires a browser with WebGPU support (Chrome or Edge).
 

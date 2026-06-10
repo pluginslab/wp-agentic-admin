@@ -64,6 +64,11 @@ if ( ! class_exists( 'AgenticAdmin' ) ) {
 
 			$this->define_constants();
 
+			// Migrate legacy option keys on upgrade. The activation hook does not
+			// fire on WordPress.org auto-updates, so this also runs on every load
+			// (cheap and idempotent: the old option is deleted once migrated).
+			self::maybe_migrate_settings();
+
 			// Translations: WordPress 4.6+ loads them automatically for plugins
 			// hosted on WordPress.org, so no explicit load_plugin_textdomain()
 			// call is needed here.
@@ -160,10 +165,33 @@ if ( ! class_exists( 'AgenticAdmin' ) ) {
 		}
 
 		/**
+		 * Migrate settings from the legacy option key.
+		 *
+		 * The settings option key was renamed `wp_agentic_admin_settings` →
+		 * `agentic_admin_settings` during the de-branding rename. Without this,
+		 * upgrading users would silently lose their saved settings (model
+		 * selection, endpoint URL, API keys, etc.).
+		 *
+		 * Idempotent: only copies when the old option exists and the new one
+		 * does not, then removes the old key so subsequent calls short-circuit.
+		 *
+		 * @since 0.11.0
+		 * @return void
+		 */
+		private static function maybe_migrate_settings(): void {
+			$old = get_option( 'wp_agentic_admin_settings' );
+			if ( false !== $old && false === get_option( 'agentic_admin_settings' ) ) {
+				update_option( 'agentic_admin_settings', $old );
+				delete_option( 'wp_agentic_admin_settings' );
+			}
+		}
+
+		/**
 		 * Activation hook
 		 */
 		public static function activate(): void {
 			update_option( 'agentic_admin_version', '0.11.0' );
+			self::maybe_migrate_settings();
 			flush_rewrite_rules();
 		}
 

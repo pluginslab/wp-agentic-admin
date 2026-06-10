@@ -215,24 +215,24 @@ class LLM_Proxy {
 		header( 'Connection: keep-alive' );
 		header( 'X-Accel-Buffering: no' );
 
-			// The WordPress HTTP API buffers rather than streams the response, so we
-			// fetch the complete SSE body and emit it as-is in standard SSE format.
-			$wp_headers = array(
-				'Content-Type' => 'application/json',
-				'Accept'       => 'text/event-stream',
-			);
-			if ( isset( $headers['Authorization'] ) ) {
-				$wp_headers['Authorization'] = $headers['Authorization'];
-			}
+		// The WordPress HTTP API buffers rather than streams the response, so we
+		// fetch the complete SSE body and emit it as-is in standard SSE format.
+		$wp_headers = array(
+			'Content-Type' => 'application/json',
+			'Accept'       => 'text/event-stream',
+		);
+		if ( isset( $headers['Authorization'] ) ) {
+			$wp_headers['Authorization'] = $headers['Authorization'];
+		}
 
-			$response = \wp_remote_post(
-				$url,
-				array(
-					'headers' => $wp_headers,
-					'body'    => wp_json_encode( $body ),
-					'timeout' => 300,
-				)
-			);
+		$response = \wp_remote_post(
+			$url,
+			array(
+				'headers' => $wp_headers,
+				'body'    => wp_json_encode( $body ),
+				'timeout' => 300,
+			)
+		);
 
 		if ( \is_wp_error( $response ) ) {
 			header( 'Content-Type: application/json', true, 502 );
@@ -245,12 +245,12 @@ class LLM_Proxy {
 			exit;
 		}
 
-			$response_body = \wp_remote_retrieve_body( $response );
-			echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$response_body = \wp_remote_retrieve_body( $response );
+		echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		if ( ob_get_level() ) {
 			ob_flush();
 		}
-			flush();
+		flush();
 
 		exit;
 	}

@@ -1,6 +1,6 @@
 # UI Audit — WordPress 7.0
 
-**Issue:** [#220 — Wider UI review to match WordPress 7.0 admin styling](https://github.com/pluginslab/agentic-admin/issues/220)
+**Issue:** [#220 — Wider UI review to match WordPress 7.0 admin styling](https://github.com/pluginslab/wp-agentic-admin/issues/220)
 **Target milestone:** v0.13 — WordPress.org Submission (with v0.14 spillover)
 **Date:** 2026-05-23
 **Plugin version at audit:** 0.12.0

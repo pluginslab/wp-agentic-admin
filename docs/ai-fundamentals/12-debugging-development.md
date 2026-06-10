@@ -23,7 +23,7 @@ phpcs (for WordPress coding standards)
 
 ```bash
 # Clone the repository
-git clone git@github.com:pluginslab/agentic-admin.git
+git clone git@github.com:pluginslab/wp-agentic-admin.git
 cd agentic-admin
 
 # Install dependencies
@@ -728,8 +728,8 @@ When something isn't working, check:
 
 ### Community
 
-- [GitHub Discussions](https://github.com/pluginslab/agentic-admin/discussions)
-- [Issue Tracker](https://github.com/pluginslab/agentic-admin/issues)
+- [GitHub Discussions](https://github.com/pluginslab/wp-agentic-admin/discussions)
+- [Issue Tracker](https://github.com/pluginslab/wp-agentic-admin/issues)
 
 ## Summary
 
