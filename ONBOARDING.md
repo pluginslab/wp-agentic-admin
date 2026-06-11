@@ -100,7 +100,7 @@ agentic-admin/
 
 ```bash
 git clone https://github.com/pluginslab/wp-agentic-admin.git
-cd agentic-admin
+cd wp-agentic-admin
 npm install
 npm run build        # or: npm run watch (dev mode)
 ```

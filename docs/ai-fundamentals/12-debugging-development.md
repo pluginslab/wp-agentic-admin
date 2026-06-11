@@ -24,7 +24,7 @@ phpcs (for WordPress coding standards)
 ```bash
 # Clone the repository
 git clone git@github.com:pluginslab/wp-agentic-admin.git
-cd agentic-admin
+cd wp-agentic-admin
 
 # Install dependencies
 npm install
