@@ -85,13 +85,13 @@ Options:
 module.exports = {
     abilities: [
         {
-            id: 'wp-agentic-admin/plugin-list',
+            id: 'agentic-admin/plugin-list',
             label: 'List installed plugins',
             description: 'List all installed WordPress plugins...',
         },
     ],
     tests: [
-        { input: 'list plugins', expectTool: 'wp-agentic-admin/plugin-list' },
+        { input: 'list plugins', expectTool: 'agentic-admin/plugin-list' },
         { input: 'what is a transient?', expectTool: null },  // No tool expected
         { input: 'is debug mode on?', expectTool: ['tool-a', 'tool-b'] },  // Either is acceptable
     ],
@@ -151,7 +151,7 @@ Edit `tests/e2e/config.js` to match your environment:
 export const config = {
     urls: {
         login: 'https://your-site.local/wp-login.php',
-        plugin: 'https://your-site.local/wp-admin/admin.php?page=wp-agentic-admin',
+        plugin: 'https://your-site.local/wp-admin/admin.php?page=agentic-admin',
     },
     credentials: {
         username: 'your-username',
@@ -199,7 +199,7 @@ Each test defines assertions that are checked against the actual result:
     name: 'List plugins',
     input: 'list all installed plugins',
     assertions: {
-        toolsCalled: ['wp-agentic-admin/plugin-list'],  // Exact tools expected
+        toolsCalled: ['agentic-admin/plugin-list'],  // Exact tools expected
         toolsCalledExactly: 1,                          // Exact count
         responseNotEmpty: true,                         // Non-trivial response
         responseContainsAny: ['plugin', 'installed'],   // Keyword checks
@@ -253,7 +253,7 @@ export const suite = {
             name: 'Descriptive test name',
             input: 'the message to send to the agent',
             assertions: {
-                toolsCalled: ['wp-agentic-admin/some-tool'],
+                toolsCalled: ['agentic-admin/some-tool'],
                 responseNotEmpty: true,
             },
         },

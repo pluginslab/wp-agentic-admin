@@ -84,7 +84,7 @@ To rebuild: say **"reindex the codebase"**.
 ### What gets scanned
 
 - Active theme (`get_stylesheet_directory()`)
-- All active plugins (except wp-agentic-admin itself)
+- All active plugins (except agentic-admin itself)
 
 ### What gets skipped
 

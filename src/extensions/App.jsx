@@ -27,7 +27,7 @@ const App = () => {
 	);
 	const [ initProgress, setInitProgress ] = useState( 5 );
 
-	const settings = window.wpAgenticAdmin || {};
+	const settings = window.agenticAdmin || {};
 	const {
 		i18n = {},
 		hasPrettyPermalinks = true,
@@ -190,8 +190,8 @@ const App = () => {
 	// If permalinks are not configured, show error
 	if ( ! hasPrettyPermalinks ) {
 		return (
-			<div className="wp-agentic-admin-app">
-				<div className="wp-agentic-admin-permalink-notice">
+			<div className="agentic-admin-app">
+				<div className="agentic-admin-permalink-notice">
 					<Notice status="error" isDismissible={ false }>
 						<p>
 							<strong>
@@ -256,9 +256,9 @@ const App = () => {
 	};
 
 	return (
-		<div className="wp-agentic-admin-app">
+		<div className="agentic-admin-app">
 			<TabPanel
-				className="wp-agentic-admin-tabs"
+				className="agentic-admin-tabs"
 				tabs={ tabs }
 				initialTabName="chat"
 			>

@@ -69,7 +69,7 @@ Users can now constrain the AI to curated tool sets via a `+` icon in the input 
 - **WCAG 2.2 AA accessibility** (PR #155 by @Stefan0x) — ARIA roles/labels, keyboard navigation, focus indicators, reduced motion support across entire chat UI.
 - **Fuzzy plugin matching** (PR #154 by @tomepajk) — activate/deactivate now accepts display names with tiered matching and candidate buttons for ambiguous matches. Fixes #53.
 - **Ability result status UI** (PR #153 by @0xLoopTheory) — three-state result display (success/info/error) instead of misleading green checkmark on failures. Fixes #74.
-- **Prefix global functions** (PR #152 by @AlexanderMelde) — all public PHP functions now use `wp_agentic_admin_` prefix. Fixes #120.
+- **Prefix global functions** (PR #152 by @AlexanderMelde) — all public PHP functions now use `agentic_admin_` prefix. Fixes #120.
 - **Dynamic plugin bundles** (PR #151 by @BoweFrankema) — plugin abilities appear as selectable bundles in the chat dropdown.
 - **Rewrite list categorization** (PR #159 by @Lucisu) — categorized rules with balanced sampling instead of raw dump. Fixes #56.
 - **HTTP WebGPU error** (PR #50 by @robert81) — clear "please use HTTPS" message instead of confusing WebGPU error. Day 1 PR finally merged!

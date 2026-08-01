@@ -7,7 +7,7 @@
  * not function bodies, to keep chunk count manageable.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_wp_api_extract(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/wp-api-extract',
+		'agentic-admin/wp-api-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Extract WP API Signatures', 'agentic-admin' ),
@@ -73,7 +73,7 @@ function agentic_admin_register_wp_api_extract(): void {
  * @return string[] Array of absolute file paths.
  */
 function agentic_admin_collect_wp_includes_files(): array {
-	$wp_includes = ABSPATH . 'wp-includes/';
+	$wp_includes = ABSPATH . WPINC . '/';
 
 	if ( ! is_dir( $wp_includes ) ) {
 		return array();
@@ -268,7 +268,7 @@ function agentic_admin_execute_wp_api_extract( array $input = array() ): array {
 	$files       = agentic_admin_collect_wp_includes_files();
 	$total_files = count( $files );
 	$chunks      = array();
-	$wp_includes = ABSPATH . 'wp-includes/';
+	$wp_includes = ABSPATH . WPINC . '/';
 
 	foreach ( $files as $file_path ) {
 		$relative_path = str_replace( $wp_includes, '', $file_path );

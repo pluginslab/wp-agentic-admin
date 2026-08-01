@@ -6,7 +6,7 @@
  * This allows the LLM to call abilities from other plugins dynamically.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_run_plugin_ability(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/run-plugin-ability',
+		'agentic-admin/run-plugin-ability',
 		array(
 			'label'               => __( 'Run Plugin Ability', 'agentic-admin' ),
 			'description'         => __( 'Run an ability from another plugin by its ID.', 'agentic-admin' ),

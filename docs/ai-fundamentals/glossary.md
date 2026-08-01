@@ -10,7 +10,7 @@ Quick reference for the terms used across the AI Fundamentals chapters. Entries 
 A discrete operation the AI can execute on WordPress — for example, reading error logs or listing plugins. Each ability has an ID, description, input/output schema, execute callback, and permission check. See [Ch. 9](09-tools-and-abilities.md).
 
 **Abilities API**
-The WordPress registration system for tools. PHP abilities are registered with `wp_agentic_admin_register_ability()`, JS abilities with `registerAbility()`. See [Ch. 9](09-tools-and-abilities.md).
+The WordPress registration system for tools. PHP abilities are registered with `agentic_admin_register_ability()`, JS abilities with `registerAbility()`. See [Ch. 9](09-tools-and-abilities.md).
 
 **Activation (Service Worker)**
 The lifecycle phase where a newly installed Service Worker takes control and can start intercepting requests. See [Ch. 7](07-service-worker-persistence.md).
@@ -29,7 +29,7 @@ The number of bits used to store each value in a quantized model. Lower bit-widt
 The OpenAI-compatible API format for conversational inference. WebLLM adopts this format, making it easy to swap between local and cloud models. See [Ch. 4](04-webllm.md).
 
 **Chat Template**
-A structured format that models use to encode conversations, system prompts, and function calls into a token sequence the model understands. See [Ch. 6](06-models-in-wp-agentic-admin.md).
+A structured format that models use to encode conversations, system prompts, and function calls into a token sequence the model understands. See [Ch. 6](06-models-in-agentic-admin.md).
 
 **Cold Start**
 The initial model load when no cached copy exists — includes downloading weights from the CDN (~1-5 minutes) and compiling shaders (~10-30 seconds). Subsequent loads use the cache. See [Ch. 10](10-performance-optimization.md).
@@ -65,7 +65,7 @@ The WebLLM inference engine object that manages model lifecycle: loading, compil
 Floating-point number formats using 16 or 32 bits of precision. Float32 is standard training precision; float16 is a common inference optimization. In quantization names like `q4f16`, the `f16` refers to activation precision. See [Ch. 5](05-quantization.md).
 
 **Function Calling**
-An LLM capability where the model generates structured JSON tool invocations instead of plain text. Qwen models have native function calling support, making them well-suited for agentic tasks. See [Ch. 1](01-what-is-a-language-model.md), [Ch. 6](06-models-in-wp-agentic-admin.md).
+An LLM capability where the model generates structured JSON tool invocations instead of plain text. Qwen models have native function calling support, making them well-suited for agentic tasks. See [Ch. 1](01-what-is-a-language-model.md), [Ch. 6](06-models-in-agentic-admin.md).
 
 ## G
 

@@ -38,7 +38,7 @@ import {
  * Register the site-health ability with the chat system.
  */
 export function registerSiteHealth() {
-	registerAbility( 'wp-agentic-admin/site-health', {
+	registerAbility( 'agentic-admin/site-health', {
 		// Descriptive label helps the LLM understand when to use this ability.
 		// Including examples in parentheses helps with keyword matching.
 		label: 'Check site health (PHP version, WordPress version, server info)',
@@ -204,7 +204,7 @@ export function registerSiteHealth() {
 		 */
 		execute: async () => {
 			// No input parameters needed for this ability.
-			return executeAbility( 'wp-agentic-admin/site-health', {} );
+			return executeAbility( 'agentic-admin/site-health', {} );
 		},
 
 		// Read-only - no confirmation needed.

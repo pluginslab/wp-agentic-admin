@@ -82,7 +82,7 @@ Our design decisions are optimized for these user personas:
 - **Require:** Clear APIs, WordPress coding standards compliance, extensibility
 
 **What they need:**
-- Simple `wp_agentic_admin_register_ability()` API
+- Simple `agentic_admin_register_ability()` API
 - PHP/JavaScript dual registration pattern
 - WordPress Abilities API integration
 - Shared helper functions to avoid duplication
@@ -285,7 +285,7 @@ skills:
 ### WordPress Abilities (Chosen)
 
 ```php
-wp_agentic_admin_register_ability('wp-agentic-admin/db-optimize', [
+agentic_admin_register_ability('agentic-admin/db-optimize', [
     'label' => 'Optimize Database',
     'description' => 'Optimize database tables',
     'category' => 'sre-tools',
@@ -475,7 +475,7 @@ The PHP settings system is managed by `class-settings.php` (`includes/class-sett
 - **Confirm destructive actions** - Toggle requiring user confirmation before executing destructive abilities (enabled by default)
 - **Max log lines** - Configure the maximum number of log lines to read at once (default: 100)
 
-Settings are stored as a single WordPress option (`wp_agentic_admin_settings`) and accessed via the `Settings` singleton.
+Settings are stored as a single WordPress option (`agentic_admin_settings`) and accessed via the `Settings` singleton.
 
 ---
 

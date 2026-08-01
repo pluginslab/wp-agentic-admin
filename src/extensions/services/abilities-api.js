@@ -17,7 +17,7 @@ class AbilitiesAPI {
 	 * Constructor
 	 */
 	constructor() {
-		const settings = window.wpAgenticAdmin || {};
+		const settings = window.agenticAdmin || {};
 		this.restUrl = settings.restUrl || '/wp-json/wp-abilities/v1';
 		this.nonce = settings.nonce || '';
 		this.abilitiesCache = new Map(); // Cache ability metadata
@@ -294,7 +294,7 @@ class AbilitiesAPI {
 	/**
 	 * Parse ability identifier string into namespace and name
 	 *
-	 * @param {string} abilityId - Full ability ID (e.g., 'wp-agentic-admin/error-log-read')
+	 * @param {string} abilityId - Full ability ID (e.g., 'agentic-admin/error-log-read')
 	 * @return {Object} Object with namespace and name properties
 	 */
 	static parseAbilityId( abilityId ) {

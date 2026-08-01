@@ -7,7 +7,7 @@
  * extra roles, and modified capabilities.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_role_capabilities_check(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/role-capabilities-check',
+		'agentic-admin/role-capabilities-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Check Role Capabilities', 'agentic-admin' ),

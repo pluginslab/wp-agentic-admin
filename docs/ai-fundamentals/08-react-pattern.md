@@ -128,7 +128,7 @@ The AI selects a tool and provides parameters:
 
 ```json
 {
-    "tool": "wp-agentic-admin/error-log-read",
+    "tool": "agentic-admin/error-log-read",
     "arguments": { "lines": 50 }
 }
 ```
@@ -284,7 +284,7 @@ The AI generates tool calls as JSON:
 
 ```json
 {
-    "tool": "wp-agentic-admin/plugin-list",
+    "tool": "agentic-admin/plugin-list",
     "arguments": {}
 }
 ```
@@ -293,7 +293,7 @@ The AI generates tool calls as JSON:
 
 ```json
 {
-    "tool": "wp-agentic-admin/error-log-read",
+    "tool": "agentic-admin/error-log-read",
     "arguments": {
         "lines": 100,
         "severity": "error"
@@ -524,7 +524,7 @@ The JSON parser extracts the tool call. Since `site-health` is read-only, no con
 The system calls the WordPress REST API:
 
 ```
-GET /wp-json/wp-agentic-admin/v1/abilities/site-health/execute
+GET /wp-json/agentic-admin/v1/abilities/site-health/execute
 ```
 
 WordPress runs the PHP callback, which gathers page load time, active plugin count, PHP version, memory usage, and database health. The response is truncated to 2,000 characters and fed back as an **Observation**.

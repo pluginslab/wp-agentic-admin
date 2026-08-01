@@ -2,7 +2,7 @@
   "wpVersion": "6.9",
   "phpVersion": "8.3",
   "plugins": [],
-  "landingPage": "/wp-admin/admin.php?page=wp-agentic-admin",
+  "landingPage": "/wp-admin/admin.php?page=agentic-admin",
   "multisite": false,
   "autoLogin": true,
   "phpConstants": {

@@ -40,10 +40,10 @@ npm run dev
 
 ```bash
 # Link plugin to WordPress installation
-ln -s $(pwd) /path/to/wordpress/wp-content/plugins/wp-agentic-admin
+ln -s $(pwd) /path/to/wordpress/wp-content/plugins/agentic-admin
 
 # Or use wp-cli
-wp plugin install /path/to/wp-agentic-admin --activate
+wp plugin install /path/to/agentic-admin --activate
 ```
 
 ### Local Development Workflow
@@ -88,7 +88,7 @@ This enables detailed logging:
 ```
 [WebLLM] Model loading: 67%
 [ReAct] Iteration 1: Calling site-health
-[Abilities] Executing wp-agentic-admin/site-health
+[Abilities] Executing agentic-admin/site-health
 [ReAct] Observation: {success: true, ...}
 ```
 
@@ -199,7 +199,7 @@ console.log(messages);
 const result = window.__wpAgenticTestHook.getLastReactResult();
 console.log(result);
 // {
-//   toolsUsed: ['wp-agentic-admin/plugin-list'],
+//   toolsUsed: ['agentic-admin/plugin-list'],
 //   observations: [{tool: 'plugin-list', result: {...}}],
 //   iterations: 1,
 //   finalResponse: 'You have 24 plugins...'
@@ -208,7 +208,7 @@ console.log(result);
 // Get tools called in last execution
 const tools = window.__wpAgenticTestHook.getToolsUsed();
 console.log(tools);
-// ['wp-agentic-admin/plugin-list']
+// ['agentic-admin/plugin-list']
 
 // Get tool observations
 const observations = window.__wpAgenticTestHook.getObservations();
@@ -237,7 +237,7 @@ window.__wpAgenticTestHook.sendMessage('list plugins');
 setTimeout(() => {
     const tools = window.__wpAgenticTestHook.getToolsUsed();
     console.assert(
-        tools.includes('wp-agentic-admin/plugin-list'),
+        tools.includes('agentic-admin/plugin-list'),
         'Expected plugin-list to be called'
     );
 }, 10000);
@@ -382,13 +382,13 @@ fetch('/wp-json/abilities/v1/list')
     });
 
 // Check specific ability
-fetch('/wp-json/abilities/v1/describe/wp-agentic-admin/plugin-list')
+fetch('/wp-json/abilities/v1/describe/agentic-admin/plugin-list')
     .then(r => r.json())
     .then(schema => console.log('Ability schema:', schema))
     .catch(e => console.error('Ability not found:', e));
 
 // Test execution manually
-fetch('/wp-json/abilities/v1/execute/wp-agentic-admin/plugin-list', {
+fetch('/wp-json/abilities/v1/execute/agentic-admin/plugin-list', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -447,7 +447,7 @@ console.log(sanitized);  // Should fix it
 ```javascript
 // Check ability configuration
 const tools = window.__wpAgenticTools;
-const tool = tools['wp-agentic-admin/plugin-deactivate'];
+const tool = tools['agentic-admin/plugin-deactivate'];
 console.log('Requires confirmation:', tool.requiresConfirmation);
 console.log('Confirmation message:', tool.confirmationMessage);
 
@@ -527,7 +527,7 @@ See [TESTING.md](../../tests/TESTING.md) for complete E2E testing guide.
     name: 'List plugins',
     input: 'list all installed plugins',
     assertions: {
-        toolsCalled: ['wp-agentic-admin/plugin-list'],
+        toolsCalled: ['agentic-admin/plugin-list'],
         responseNotEmpty: true,
     },
 }
@@ -605,7 +605,7 @@ console.log(`${tokensPerSec.toFixed(1)} tokens/sec`);
 ```javascript
 console.time('Tool: plugin-list');
 
-const result = await executeAbility('wp-agentic-admin/plugin-list', {});
+const result = await executeAbility('agentic-admin/plugin-list', {});
 
 console.timeEnd('Tool: plugin-list');
 // Tool: plugin-list: 142ms

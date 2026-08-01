@@ -6,13 +6,13 @@
  * Fixed sidebar panel for all wp-admin pages.
  * Imports base chat styles and adds sidebar-specific overrides.
  *
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 @import './main.scss';
 
 // ── Admin bar toggle button ───────────────────────────────
-#wp-admin-bar-wp-agentic-admin-sidebar-toggle {
+#wp-admin-bar-agentic-admin-sidebar-toggle {
 
 	&.is-active .ab-item {
 		background: rgba(0, 0, 0, 0.2) !important;
@@ -20,7 +20,7 @@
 }
 
 // ── Sidebar overlay (click to close) ──────────────────────
-.wp-agentic-admin-sidebar-overlay {
+.agentic-admin-sidebar-overlay {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -34,13 +34,13 @@
 }
 
 // Show overlay when sidebar is open
-.is-open + .wp-agentic-admin-sidebar-overlay {
+.is-open + .agentic-admin-sidebar-overlay {
 	opacity: 1;
 	visibility: visible;
 }
 
 // ── Sidebar panel ─────────────────────────────────────────
-#wp-agentic-admin-sidebar {
+#agentic-admin-sidebar {
 	position: fixed;
 	right: 0;
 	top: 32px; // Below admin bar
@@ -64,24 +64,24 @@
 // Responsive: admin bar is 46px on mobile
 @media screen and (max-width: 782px) {
 
-	#wp-agentic-admin-sidebar {
+	#agentic-admin-sidebar {
 		top: 46px;
 		height: calc(100vh - 46px);
 		width: 100%; // Full width on mobile
 	}
 
 	// Force our icon visible — WP hides custom top-secondary nodes on mobile
-	#wpadminbar #wp-admin-bar-wp-agentic-admin-sidebar-toggle {
+	#wpadminbar #wp-admin-bar-agentic-admin-sidebar-toggle {
 		display: block !important;
 	}
 
-	#wp-admin-bar-wp-agentic-admin-sidebar-toggle .ab-icon {
+	#wp-admin-bar-agentic-admin-sidebar-toggle .ab-icon {
 		font-size: 28px !important;
 	}
 }
 
 // ── Inner wrapper ─────────────────────────────────────────
-.wp-agentic-admin-sidebar__inner {
+.agentic-admin-sidebar__inner {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -89,7 +89,7 @@
 }
 
 // ── Sidebar header ────────────────────────────────────────
-.wp-agentic-admin-sidebar__header {
+.agentic-admin-sidebar__header {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -111,7 +111,7 @@
 	}
 }
 
-.wp-agentic-admin-sidebar__close {
+.agentic-admin-sidebar__close {
 	margin-left: auto;
 }
 
@@ -124,12 +124,12 @@
 //   3. Snackbar repositioning to top-right of the sidebar
 //
 // All previous overrides targeting hand-rolled classes
-// (.wp-agentic-admin-input-*, .wp-agentic-admin-bundle-*, .agentic-message*,
-// .wp-agentic-admin-loading-card, .wp-agentic-admin-model-info etc.)
+// (.agentic-admin-input-*, .agentic-admin-bundle-*, .agentic-message*,
+// .agentic-admin-loading-card, .agentic-admin-model-info etc.)
 // were dropped together with the classes they targeted.
-#wp-agentic-admin-sidebar {
+#agentic-admin-sidebar {
 
-	.wp-agentic-admin-chat-container {
+	.agentic-admin-chat-container {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
@@ -141,8 +141,8 @@
 	// narrow sidebar (default WP HStack is non-wrapping flexbox) and
 	// constrain to the sidebar width so children don't overflow the
 	// 381px panel.
-	.wp-agentic-admin-status .components-h-stack,
-	.wp-agentic-admin-chat-header.components-h-stack {
+	.agentic-admin-status .components-h-stack,
+	.agentic-admin-chat-header.components-h-stack {
 		flex-wrap: wrap;
 		row-gap: 4px;
 		max-width: 100%;
@@ -165,11 +165,11 @@
 // Respect user motion preferences
 @media ( prefers-reduced-motion: reduce ) {
 
-	#wp-agentic-admin-sidebar {
+	#agentic-admin-sidebar {
 		transition: none;
 	}
 
-	.wp-agentic-admin-sidebar-overlay {
+	.agentic-admin-sidebar-overlay {
 		transition: none;
 	}
 }

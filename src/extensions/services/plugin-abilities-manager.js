@@ -12,7 +12,7 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger( 'PluginAbilities' );
 
-const STORAGE_KEY = 'wp-agentic-admin-plugin-abilities';
+const STORAGE_KEY = 'agentic-admin-plugin-abilities';
 
 /**
  * Approximate characters per token for Qwen models.
@@ -62,7 +62,7 @@ function estimateAbilityTokens( ability ) {
 function getMaxContext() {
 	// Use ModelLoader's effective context size which respects localStorage overrides
 	const { ModelLoader } = require( './model-loader' );
-	const settings = window.wpAgenticAdmin || {};
+	const settings = window.agenticAdmin || {};
 	const modelId = settings.currentModel || '';
 	return ModelLoader.getEffectiveContextSize( modelId );
 }
@@ -94,7 +94,7 @@ class PluginAbilitiesManager {
 			const external = all.filter(
 				( a ) =>
 					a.name &&
-					! a.name.startsWith( 'wp-agentic-admin/' ) &&
+					! a.name.startsWith( 'agentic-admin/' ) &&
 					! a.name.startsWith( 'core/' )
 			);
 			this.setDiscoveredAbilities( external );
@@ -274,9 +274,7 @@ class PluginAbilitiesManager {
 	 * system prompt so the 1.7B model knows what ability_id values to use.
 	 */
 	updateRunToolDescription() {
-		const runTool = toolRegistry.get(
-			'wp-agentic-admin/run-plugin-ability'
-		);
+		const runTool = toolRegistry.get( 'agentic-admin/run-plugin-ability' );
 		if ( ! runTool ) {
 			return;
 		}
@@ -422,7 +420,7 @@ class PluginAbilitiesManager {
 			isPluginBundle: true,
 			pluginNamespace: namespace,
 			description: `${ group.abilities.length } abilities from ${ namespace }`,
-			abilities: [ 'wp-agentic-admin/run-plugin-ability' ],
+			abilities: [ 'agentic-admin/run-plugin-ability' ],
 			pluginAbilityIds: group.abilities.map( ( a ) => a.name || a.id ),
 		} ) );
 	}
@@ -439,9 +437,7 @@ class PluginAbilitiesManager {
 	 * @param {string|string[]} namespaces - Plugin namespace(s) to scope to.
 	 */
 	scopeToPlugin( namespaces ) {
-		const runTool = toolRegistry.get(
-			'wp-agentic-admin/run-plugin-ability'
-		);
+		const runTool = toolRegistry.get( 'agentic-admin/run-plugin-ability' );
 		if ( ! runTool ) {
 			return;
 		}
@@ -480,9 +476,7 @@ class PluginAbilitiesManager {
 	 * Restore the run-plugin-ability description after plugin-scoped request.
 	 */
 	clearPluginScope() {
-		const runTool = toolRegistry.get(
-			'wp-agentic-admin/run-plugin-ability'
-		);
+		const runTool = toolRegistry.get( 'agentic-admin/run-plugin-ability' );
 		if ( runTool && this._savedDescription ) {
 			runTool.description = this._savedDescription;
 			this._savedDescription = null;

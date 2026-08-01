@@ -21,157 +21,134 @@ module.exports = {
 		// ── Plugin management ──────────────────────────────────────
 		{
 			input: 'list all installed plugins',
-			expectTool: 'wp-agentic-admin/plugin-list',
+			expectTool: 'agentic-admin/plugin-list',
 		},
 		{
 			input: 'activate the WooCommerce plugin',
-			expectTool: 'wp-agentic-admin/plugin-activate',
+			expectTool: 'agentic-admin/plugin-activate',
 		},
 		{
 			input: 'deactivate hello dolly',
-			expectTool: 'wp-agentic-admin/plugin-deactivate',
+			expectTool: 'agentic-admin/plugin-deactivate',
 		},
 
 		// ── Theme management ──────────────────────────────────────
 		{
 			input: 'list installed themes',
-			expectTool: 'wp-agentic-admin/theme-list',
+			expectTool: 'agentic-admin/theme-list',
 		},
 		{
 			input: 'which theme is active on my site?',
-			expectTool: 'wp-agentic-admin/theme-list',
+			expectTool: 'agentic-admin/theme-list',
 		},
 		{
 			input: 'show me all themes',
-			expectTool: 'wp-agentic-admin/theme-list',
+			expectTool: 'agentic-admin/theme-list',
 		},
 
 		// ── Current user role ─────────────────────────────────────
 		{
 			input: 'what user role is my current user?',
-			expectTool: 'wp-agentic-admin/current-user-role',
+			expectTool: 'agentic-admin/current-user-role',
 		},
 		{
 			input: 'who am I logged in as?',
-			expectTool: 'wp-agentic-admin/current-user-role',
+			expectTool: 'agentic-admin/current-user-role',
 		},
 		{
 			input: 'am I an administrator?',
-			expectTool: 'wp-agentic-admin/current-user-role',
+			expectTool: 'agentic-admin/current-user-role',
 		},
 
 		// ── User management ───────────────────────────────────────
 		{
 			input: 'list all users on this site',
-			expectTool: 'wp-agentic-admin/user-list',
+			expectTool: 'agentic-admin/user-list',
 		},
 		{
 			input: 'show me the admin users',
-			expectTool: 'wp-agentic-admin/user-list',
+			expectTool: 'agentic-admin/user-list',
 		},
 
 		// ── Update management ─────────────────────────────────────
 		{
 			input: 'are there any updates available?',
-			expectTool: 'wp-agentic-admin/update-check',
+			expectTool: 'agentic-admin/update-check',
 		},
 		{
 			input: 'check for outdated plugins',
 			expectTool: [
-				'wp-agentic-admin/update-check',
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/update-check',
+				'agentic-admin/plugin-list',
 			],
 		},
 
 		// ── Error log search ──────────────────────────────────────
 		{
 			input: 'search the error log for fatal errors',
-			expectTool: 'wp-agentic-admin/error-log-search',
+			expectTool: 'agentic-admin/error-log-search',
 		},
 		{
 			input: 'filter the log for database warnings',
-			expectTool: 'wp-agentic-admin/error-log-search',
+			expectTool: 'agentic-admin/error-log-search',
 		},
 
 		// ── Comment stats ─────────────────────────────────────────
 		{
 			input: 'how many comments does my site have?',
-			expectTool: 'wp-agentic-admin/comment-stats',
+			expectTool: 'agentic-admin/comment-stats',
 		},
 		{
 			input: 'show me the spam comment count',
-			expectTool: 'wp-agentic-admin/comment-stats',
+			expectTool: 'agentic-admin/comment-stats',
 		},
 
 		// ── Security ──────────────────────────────────────────────
 		{
 			input: 'run a security scan on my site',
-			expectTool: 'wp-agentic-admin/security-scan',
+			expectTool: 'agentic-admin/security-scan',
 		},
 		{
 			input: 'check for security vulnerabilities',
-			expectTool: 'wp-agentic-admin/security-scan',
+			expectTool: 'agentic-admin/security-scan',
 		},
 
 		// ── Post management ───────────────────────────────────────
 		{
 			input: 'list my recent posts',
-			expectTool: 'wp-agentic-admin/post-list',
+			expectTool: 'agentic-admin/post-list',
 		},
 		{
 			input: 'show me all draft posts',
-			expectTool: 'wp-agentic-admin/post-list',
-		},
-
-		// ── File writing ──────────────────────────────────────────
-		{
-			input: 'add a line to my functions.php',
-			expectTool: 'wp-agentic-admin/write-file',
-		},
-		{
-			input: 'edit the wp-config.php to enable debug mode',
-			expectTool: [
-				'wp-agentic-admin/write-file',
-				'wp-agentic-admin/read-file',
-			],
-		},
-
-		// ── Database queries ──────────────────────────────────────
-		{
-			input: 'run a SQL query to check the wp_options table',
-			expectTool: 'wp-agentic-admin/query-database',
-		},
-		{
-			input: 'query the database for autoloaded options',
-			expectTool: 'wp-agentic-admin/query-database',
+			expectTool: 'agentic-admin/post-list',
 		},
 
 		// ── Web search ───────────────────────────────────────────
 		{
 			input: 'search for how to fix WordPress white screen of death',
-			expectTool: 'wp-agentic-admin/web-search',
+			expectTool: 'agentic-admin/web-search',
 		},
 		{
 			input: 'look up WooCommerce REST API documentation',
-			expectTool: 'wp-agentic-admin/web-search',
+			expectTool: 'agentic-admin/web-search',
 		},
 
 		// ── Diagnostics ────────────────────────────────────────────
 		{
 			input: 'show me the error log',
-			expectTool: 'wp-agentic-admin/error-log-read',
+			expectTool: 'agentic-admin/error-log-read',
 		},
 		{
 			input: 'is debug mode enabled?',
 			// Both error-log-read and site-health return debug mode status — either is valid.
 			expectTool: [
-				'wp-agentic-admin/error-log-read',
-				'wp-agentic-admin/site-health',
+				'agentic-admin/error-log-read',
+				'agentic-admin/site-health',
 			],
 		},
 		{
 			input: 'check my site health',
-			expectTool: 'wp-agentic-admin/site-health',
+			expectTool: 'agentic-admin/site-health',
 		},
 		{
 			input: 'what PHP version am I running?',
@@ -179,7 +156,7 @@ module.exports = {
 			// get-site-info is a reasonable guess since the model may associate
 			// "version" with site info.
 			expectTool: [
-				'wp-agentic-admin/site-health',
+				'agentic-admin/site-health',
 				'core/get-environment-info',
 				'core/get-site-info',
 			],
@@ -188,69 +165,69 @@ module.exports = {
 		// ── WP-Config constants ────────────────────────────────────
 		{
 			input: 'list all of the wp-config.php constants',
-			expectTool: 'wp-agentic-admin/wp-config-list',
+			expectTool: 'agentic-admin/wp-config-list',
 		},
 		{
 			input: 'what constants are defined in wp-config?',
-			expectTool: 'wp-agentic-admin/wp-config-list',
+			expectTool: 'agentic-admin/wp-config-list',
 		},
 		{
 			input: 'show me the wp-config settings',
 			// Both are valid: wp-config-list lists parsed constants, read-file shows raw file.
 			expectTool: [
-				'wp-agentic-admin/wp-config-list',
-				'wp-agentic-admin/read-file',
+				'agentic-admin/wp-config-list',
+				'agentic-admin/read-file',
 			],
 		},
 
 		// ── File reading ───────────────────────────────────────────
 		{
 			input: 'show me my wp-config.php',
-			expectTool: 'wp-agentic-admin/read-file',
+			expectTool: 'agentic-admin/read-file',
 		},
 		{
 			input: 'read the .htaccess file',
-			expectTool: 'wp-agentic-admin/read-file',
+			expectTool: 'agentic-admin/read-file',
 		},
 		{
 			input: "what's in my theme's functions.php",
-			expectTool: 'wp-agentic-admin/read-file',
+			expectTool: 'agentic-admin/read-file',
 		},
 		{
 			input: 'open wp-content/plugins/myplugin/readme.txt',
-			expectTool: 'wp-agentic-admin/read-file',
+			expectTool: 'agentic-admin/read-file',
 		},
 
 		// ── Cache & performance ────────────────────────────────────
 		{
 			input: 'flush the cache',
-			expectTool: 'wp-agentic-admin/cache-flush',
+			expectTool: 'agentic-admin/cache-flush',
 		},
 		{
 			input: 'optimize the database',
-			expectTool: 'wp-agentic-admin/db-optimize',
+			expectTool: 'agentic-admin/db-optimize',
 		},
 		{
 			input: 'clear all transients',
-			expectTool: 'wp-agentic-admin/transient-flush',
+			expectTool: 'agentic-admin/transient-flush',
 		},
 		{
 			input: 'clean up old post revisions',
-			expectTool: 'wp-agentic-admin/revision-cleanup',
+			expectTool: 'agentic-admin/revision-cleanup',
 		},
 
 		// ── Cron & rewrites ────────────────────────────────────────
 		{
 			input: 'show me the scheduled cron jobs',
-			expectTool: 'wp-agentic-admin/cron-list',
+			expectTool: 'agentic-admin/cron-list',
 		},
 		{
 			input: 'list all rewrite rules',
-			expectTool: 'wp-agentic-admin/rewrite-list',
+			expectTool: 'agentic-admin/rewrite-list',
 		},
 		{
 			input: 'flush the rewrite rules',
-			expectTool: 'wp-agentic-admin/rewrite-flush',
+			expectTool: 'agentic-admin/rewrite-flush',
 		},
 
 		// ── Core WordPress info ────────────────────────────────────
@@ -284,21 +261,11 @@ module.exports = {
 		// ── Plugin ability discovery ─────────────────────────────
 		{
 			input: 'discover what abilities other plugins have registered',
-			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
+			expectTool: 'agentic-admin/discover-plugin-abilities',
 		},
 		{
 			input: 'what external tools are available on this site?',
-			expectTool: 'wp-agentic-admin/discover-plugin-abilities',
-		},
-
-		// ── Content generation & optimization ─────────────────────
-		{
-			input: 'generate content about dog training',
-			expectTool: 'wp-agentic-admin/content-generate',
-		},
-		{
-			input: 'fill this page with content about cooking tips',
-			expectTool: 'wp-agentic-admin/content-generate',
+			expectTool: 'agentic-admin/discover-plugin-abilities',
 		},
 
 		// ── No-tool tests (pure knowledge questions) ───────────────
@@ -324,40 +291,40 @@ module.exports = {
 			source: '#82',
 		},
 		{
-			input: 'wp-agentic-admin/cron-list',
-			expectTool: 'wp-agentic-admin/cron-list',
+			input: 'agentic-admin/cron-list',
+			expectTool: 'agentic-admin/cron-list',
 			source: '#84',
 		},
 		{
 			input: 'list all cron jobs',
-			expectTool: 'wp-agentic-admin/cron-list',
+			expectTool: 'agentic-admin/cron-list',
 			source: '#84',
 		},
 		{
-			input: 'wp-agentic-admin/error-log-read',
-			expectTool: 'wp-agentic-admin/error-log-read',
+			input: 'agentic-admin/error-log-read',
+			expectTool: 'agentic-admin/error-log-read',
 			source: '#92',
 		},
 
 		// ── Plugin activate/deactivate (issues #53, #54) ─────────────
 		{
 			input: 'Activate Gutenberg',
-			expectTool: 'wp-agentic-admin/plugin-activate',
+			expectTool: 'agentic-admin/plugin-activate',
 			source: '#53',
 		},
 		{
 			input: 'Activate Gutenberg plugin',
-			expectTool: 'wp-agentic-admin/plugin-activate',
+			expectTool: 'agentic-admin/plugin-activate',
 			source: '#53',
 		},
 		{
 			input: 'deactivate generateblocks',
-			expectTool: 'wp-agentic-admin/plugin-deactivate',
+			expectTool: 'agentic-admin/plugin-deactivate',
 			source: '#54',
 		},
 		{
 			input: 'deactivate generateblocks plugin',
-			expectTool: 'wp-agentic-admin/plugin-deactivate',
+			expectTool: 'agentic-admin/plugin-deactivate',
 			source: '#54',
 		},
 
@@ -367,7 +334,7 @@ module.exports = {
 			expectTool: [
 				'core/get-site-info',
 				'core/get-environment-info',
-				'wp-agentic-admin/site-health',
+				'agentic-admin/site-health',
 			],
 			source: '#60',
 		},
@@ -386,43 +353,43 @@ module.exports = {
 		{
 			input: 'list plugins that need to be updated',
 			expectTool: [
-				'wp-agentic-admin/update-check',
-				'wp-agentic-admin/plugin-list',
+				'agentic-admin/update-check',
+				'agentic-admin/plugin-list',
 			],
 			source: '#66',
 		},
 		{
 			input: 'update the plugins that need to be updated',
-			expectTool: 'wp-agentic-admin/update-check',
+			expectTool: 'agentic-admin/update-check',
 			source: '#66',
 		},
 
 		// ── Database optimize with specific tables (issues #69, #73) ──
 		{
 			input: 'optimize the database table wp_options',
-			expectTool: 'wp-agentic-admin/db-optimize',
+			expectTool: 'agentic-admin/db-optimize',
 			source: '#69',
 		},
 		{
 			input: 'optimize the WooCommerce tables',
-			expectTool: 'wp-agentic-admin/db-optimize',
+			expectTool: 'agentic-admin/db-optimize',
 			source: '#73',
 		},
 		{
 			input: 'optimize the WooCommerce database tables',
-			expectTool: 'wp-agentic-admin/db-optimize',
+			expectTool: 'agentic-admin/db-optimize',
 			source: '#73',
 		},
 
 		// ── Revision cleanup (issue #96) ─────────────────────────────
 		{
 			input: 'how many post revisions are there to clean?',
-			expectTool: 'wp-agentic-admin/revision-cleanup',
+			expectTool: 'agentic-admin/revision-cleanup',
 			source: '#96',
 		},
 		{
-			input: 'wp-agentic-admin/revision-cleanup dry-run',
-			expectTool: 'wp-agentic-admin/revision-cleanup',
+			input: 'agentic-admin/revision-cleanup dry-run',
+			expectTool: 'agentic-admin/revision-cleanup',
 			source: '#96',
 		},
 

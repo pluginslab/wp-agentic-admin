@@ -20,11 +20,11 @@ jest.mock( '../workflow-registry', () => ( {
 jest.mock( '../tool-registry', () => ( {
 	getAll: jest.fn( () => [
 		{
-			id: 'wp-agentic-admin/plugin-list',
+			id: 'agentic-admin/plugin-list',
 			keywords: [ 'plugin', 'plugins', 'installed', 'extensions' ],
 		},
 		{
-			id: 'wp-agentic-admin/error-log-read',
+			id: 'agentic-admin/error-log-read',
 			keywords: [
 				'error',
 				'errors',
@@ -38,7 +38,7 @@ jest.mock( '../tool-registry', () => ( {
 			],
 		},
 		{
-			id: 'wp-agentic-admin/site-health',
+			id: 'agentic-admin/site-health',
 			keywords: [
 				'health',
 				'version',
@@ -50,11 +50,11 @@ jest.mock( '../tool-registry', () => ( {
 			],
 		},
 		{
-			id: 'wp-agentic-admin/cache-flush',
+			id: 'agentic-admin/cache-flush',
 			keywords: [ 'cache', 'flush', 'clear', 'purge' ],
 		},
 		{
-			id: 'wp-agentic-admin/db-optimize',
+			id: 'agentic-admin/db-optimize',
 			keywords: [
 				'database',
 				'db',
@@ -65,11 +65,11 @@ jest.mock( '../tool-registry', () => ( {
 			],
 		},
 		{
-			id: 'wp-agentic-admin/transient-flush',
+			id: 'agentic-admin/transient-flush',
 			keywords: [ 'transient', 'transients' ],
 		},
 		{
-			id: 'wp-agentic-admin/rewrite-list',
+			id: 'agentic-admin/rewrite-list',
 			keywords: [ 'rewrite', 'rewrite rules' ],
 		},
 	] ),

@@ -14,7 +14,7 @@ const useConnectors = () => {
 
 	const load = useCallback( () => {
 		setLoading( true );
-		apiFetch( { path: '/wp-agentic-admin/v1/connectors' } )
+		apiFetch( { path: '/agentic-admin/v1/connectors' } )
 			.then( ( res ) => {
 				setConnectors( res.connectors || [] );
 				setOptionsUrl( res.options_url || '' );

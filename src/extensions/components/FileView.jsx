@@ -74,7 +74,7 @@ const FileView = ( { file } ) => {
 				</HStack>
 			</CardHeader>
 			<CardBody>
-				<pre className="wp-agentic-admin-file-view-body">
+				<pre className="agentic-admin-file-view-body">
 					<code
 						className={ language ? `language-${ language }` : '' }
 					>

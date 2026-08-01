@@ -111,7 +111,7 @@ const EditorSidebar = () => {
 	}, [] );
 
 	return (
-		<div className="wp-agentic-admin-sidebar">
+		<div className="agentic-admin-sidebar">
 			<ModelStatus
 				onModelReady={ handleModelReady }
 				onModelError={ handleModelError }

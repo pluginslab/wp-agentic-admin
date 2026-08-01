@@ -15,7 +15,7 @@ import {
  * Register the current-user-role ability with the chat system.
  */
 export function registerCurrentUserRole() {
-	registerAbility( 'wp-agentic-admin/current-user-role', {
+	registerAbility( 'agentic-admin/current-user-role', {
 		label: 'Get current user role',
 		description:
 			'Check the role, username, email, and permissions of the current logged-in user. Use when users ask about their own role, who they are logged in as, or whether they are an administrator.',
@@ -71,7 +71,7 @@ export function registerCurrentUserRole() {
 		 * @return {Promise<Object>} The result from PHP.
 		 */
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/current-user-role', {} );
+			return executeAbility( 'agentic-admin/current-user-role', {} );
 		},
 
 		// Read-only operation — no confirmation needed.

@@ -37,7 +37,7 @@ import {
  * to the chat's keyword detection and tool execution system.
  */
 export function registerPluginList() {
-	registerAbility( 'wp-agentic-admin/plugin-list', {
+	registerAbility( 'agentic-admin/plugin-list', {
 		// Label appears in the AI's system prompt to describe capabilities.
 		// Make it descriptive so the LLM knows when to suggest using this ability.
 		label: 'List installed plugins',
@@ -151,7 +151,7 @@ export function registerPluginList() {
 			// This ability doesn't require any input parameters.
 			// For abilities with parameters, extract them from params.userMessage
 			// or pass them directly to executeAbility().
-			return executeAbility( 'wp-agentic-admin/plugin-list', {} );
+			return executeAbility( 'agentic-admin/plugin-list', {} );
 		},
 
 		// Read-only abilities don't need confirmation.

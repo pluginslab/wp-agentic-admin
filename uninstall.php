@@ -3,7 +3,7 @@
  * Uninstall script
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
@@ -18,10 +18,10 @@ delete_transient( 'agentic_admin_post_types' );
 
 // 2. Multisite Cleanup.
 if ( is_multisite() ) {
-	$wp_agentic_admin_sites = get_sites();
+	$agentic_admin_sites = get_sites();
 
-	foreach ( $wp_agentic_admin_sites as $wp_agentic_admin_site ) {
-		switch_to_blog( $wp_agentic_admin_site->blog_id );
+	foreach ( $agentic_admin_sites as $agentic_admin_site ) {
+		switch_to_blog( $agentic_admin_site->blog_id );
 
 		delete_option( 'agentic_admin_settings' );
 		delete_option( 'agentic_admin_version' );

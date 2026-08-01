@@ -10,7 +10,7 @@
  * documents). Any executable file is a strong indicator of malware.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_uploads_scan(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/uploads-scan',
+		'agentic-admin/uploads-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Scan Uploads for Suspicious Files', 'agentic-admin' ),

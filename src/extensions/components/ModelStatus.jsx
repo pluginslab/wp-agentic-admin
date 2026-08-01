@@ -493,7 +493,7 @@ const ModelStatus = ( {
 		providerMode === 'remote' && remoteUrl && selectedRemoteModel;
 
 	return (
-		<div className="wp-agentic-admin-model-status">
+		<div className="agentic-admin-model-status">
 			{ /* Loading state is shown inline in the composer toolbar as
 			   a Spinner + percent — see <ModelStatusPill> in ChatInput.
 			   This component only renders the provider config Card

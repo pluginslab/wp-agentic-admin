@@ -5,10 +5,10 @@
  * Handles the registration, rendering, and saving of plugin settings.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -57,7 +57,7 @@ class Settings {
 
 		// UX: Add settings link to plugin list table.
 		add_filter(
-			'plugin_action_links_' . plugin_basename( WP_AGENTIC_ADMIN_FILE ),
+			'plugin_action_links_' . plugin_basename( AGENTIC_ADMIN_FILE ),
 			array( $this, 'add_settings_link' )
 		);
 	}
@@ -78,7 +78,7 @@ class Settings {
 	 * @return array
 	 */
 	public function add_settings_link( array $links ): array {
-		$settings_link = '<a href="admin.php?page=wp-agentic-admin">' . __( 'Settings', 'agentic-admin' ) . '</a>';
+		$settings_link = '<a href="admin.php?page=agentic-admin">' . __( 'Settings', 'agentic-admin' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

@@ -10,9 +10,9 @@
 export const config = {
 	// WordPress URLs
 	urls: {
-		login: 'https://wp-agentic-admin.local/wp-login.php',
-		admin: 'https://wp-agentic-admin.local/wp-admin/',
-		plugin: 'https://wp-agentic-admin.local/wp-admin/admin.php?page=wp-agentic-admin',
+		login: 'https://agentic-admin.local/wp-login.php',
+		admin: 'https://agentic-admin.local/wp-admin/',
+		plugin: 'https://agentic-admin.local/wp-admin/admin.php?page=agentic-admin',
 	},
 
 	// WordPress credentials
@@ -35,15 +35,15 @@ export const config = {
 		loginSubmit: '#wp-submit',
 
 		// Plugin page
-		root: '#wp-agentic-admin-root',
-		modelSelect: '.wp-agentic-admin-model-select',
-		loadModelButton: '.wp-agentic-admin-load-model',
-		statusReady: '.wp-agentic-admin-status__indicator--ready',
-		chatInput: '.wp-agentic-admin-chat-input textarea',
-		chatSendButton: '.wp-agentic-admin-chat-input button',
-		messageList: '.wp-agentic-admin-message-list',
+		root: '#agentic-admin-root',
+		modelSelect: '.agentic-admin-model-select',
+		loadModelButton: '.agentic-admin-load-model',
+		statusReady: '.agentic-admin-status__indicator--ready',
+		chatInput: '.agentic-admin-chat-input textarea',
+		chatSendButton: '.agentic-admin-chat-input button',
+		messageList: '.agentic-admin-message-list',
 		lastMessage:
-			'.wp-agentic-admin-message-list .agentic-message:last-child',
+			'.agentic-admin-message-list .agentic-message:last-child',
 	},
 
 	// Timeouts (in milliseconds)

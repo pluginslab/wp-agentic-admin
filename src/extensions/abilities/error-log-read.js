@@ -37,7 +37,7 @@ import {
  * Register the error-log-read ability with the chat system.
  */
 export function registerErrorLogRead() {
-	registerAbility( 'wp-agentic-admin/error-log-read', {
+	registerAbility( 'agentic-admin/error-log-read', {
 		label: 'Read error logs',
 		description:
 			'Read the PHP error log (debug.log). Returns error entries, debug logging status, and file existence. Use for errors, crashes, white screens, or debug mode questions.',
@@ -147,7 +147,7 @@ export function registerErrorLogRead() {
 		execute: async () => {
 			// The PHP ability accepts optional 'lines' parameter to limit output.
 			// For now we use the default (typically 50-100 lines).
-			return executeAbility( 'wp-agentic-admin/error-log-read', {} );
+			return executeAbility( 'agentic-admin/error-log-read', {} );
 		},
 
 		// Read-only operation - no confirmation needed.

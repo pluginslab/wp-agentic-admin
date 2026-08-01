@@ -28,7 +28,7 @@ import { registerWorkflow } from '../services/agentic-abilities-api';
  * Register the "Full Site Cleanup" workflow.
  */
 export function registerSiteCleanupWorkflow() {
-	registerWorkflow( 'wp-agentic-admin/site-cleanup', {
+	registerWorkflow( 'agentic-admin/site-cleanup', {
 		label: 'Full Site Cleanup',
 		description:
 			'Clears all caches, optimizes the database, and checks site health.',
@@ -48,11 +48,11 @@ export function registerSiteCleanupWorkflow() {
 		// Steps execute in order. Each step references a registered ability.
 		steps: [
 			{
-				abilityId: 'wp-agentic-admin/cache-flush',
+				abilityId: 'agentic-admin/cache-flush',
 				label: 'Clear all caches',
 			},
 			{
-				abilityId: 'wp-agentic-admin/db-optimize',
+				abilityId: 'agentic-admin/db-optimize',
 				label: 'Optimize database',
 
 				// Skip database optimization if done recently
@@ -76,7 +76,7 @@ export function registerSiteCleanupWorkflow() {
 				},
 			},
 			{
-				abilityId: 'wp-agentic-admin/site-health',
+				abilityId: 'agentic-admin/site-health',
 				label: 'Check site health',
 			},
 		],
@@ -102,13 +102,13 @@ export function registerSiteCleanupWorkflow() {
 			// Find each step's result by abilityId.
 			// This is more reliable than using array index if step order changes.
 			const cacheResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/cache-flush'
+				( r ) => r.abilityId === 'agentic-admin/cache-flush'
 			);
 			const dbResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/db-optimize'
+				( r ) => r.abilityId === 'agentic-admin/db-optimize'
 			);
 			const healthResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/site-health'
+				( r ) => r.abilityId === 'agentic-admin/site-health'
 			);
 
 			const successCount = results.filter( ( r ) => r.success ).length;

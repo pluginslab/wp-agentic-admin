@@ -76,7 +76,7 @@ describe( 'knowledge-base', () => {
 		workerInstances = [];
 		workerAutoComplete = true;
 
-		window.wpAgenticAdmin = { pluginUrl: 'http://test/' };
+		window.agenticAdmin = { pluginUrl: 'http://test/' };
 		global.Worker = FakeWorker;
 		localStorage.clear();
 
@@ -108,7 +108,7 @@ describe( 'knowledge-base', () => {
 
 	afterEach( () => {
 		delete global.Worker;
-		delete window.wpAgenticAdmin;
+		delete window.agenticAdmin;
 		localStorage.clear();
 	} );
 
@@ -118,7 +118,7 @@ describe( 'knowledge-base', () => {
 	function stubSuccessfulExtraction() {
 		mockExecuteAbility.mockImplementation( ( id ) => {
 			switch ( id ) {
-				case 'wp-agentic-admin/codebase-extract':
+				case 'agentic-admin/codebase-extract':
 					return Promise.resolve( {
 						chunks: [
 							{
@@ -132,7 +132,7 @@ describe( 'knowledge-base', () => {
 						total_files: 1,
 						has_more: false,
 					} );
-				case 'wp-agentic-admin/schema-extract':
+				case 'agentic-admin/schema-extract':
 					return Promise.resolve( {
 						chunks: [
 							{
@@ -145,7 +145,7 @@ describe( 'knowledge-base', () => {
 						],
 						total_tables: 1,
 					} );
-				case 'wp-agentic-admin/wp-api-extract':
+				case 'agentic-admin/wp-api-extract':
 					return Promise.resolve( {
 						chunks: [
 							{
@@ -157,7 +157,7 @@ describe( 'knowledge-base', () => {
 							},
 						],
 					} );
-				case 'wp-agentic-admin/docs-extract':
+				case 'agentic-admin/docs-extract':
 					return Promise.resolve( {
 						chunks: [
 							{
@@ -327,7 +327,7 @@ describe( 'knowledge-base', () => {
 	describe( 'buildIndex — error path', () => {
 		it( 'surfaces a missing plugin URL via getError and isBuilding=false', async () => {
 			stubSuccessfulExtraction();
-			delete window.wpAgenticAdmin;
+			delete window.agenticAdmin;
 
 			await expect( kb.buildIndex() ).rejects.toThrow(
 				/Plugin URL not available/

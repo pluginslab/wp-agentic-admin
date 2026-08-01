@@ -66,7 +66,7 @@ Qwen models natively support function/tool calling through their chat template. 
 
 ```json
 {
-    "name": "wp-agentic-admin/plugin-list",
+    "name": "agentic-admin/plugin-list",
     "arguments": {}
 }
 ```
@@ -142,7 +142,7 @@ The 7B model better understands conditional logic and multi-step reasoning.
 
 ### Current Method (Manual)
 
-In `wp-agentic-admin` settings:
+In `agentic-admin` settings:
 
 1. Navigate to **Agentic Admin** in WordPress admin
 2. Click the **Settings** tab

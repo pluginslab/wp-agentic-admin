@@ -1,10 +1,9 @@
 /**
  * Ability Manifest Tests
  *
- * Locks in the contract introduced by PR 1:
+ * Locks in the manifest contract:
  *   - Every entry in REGISTRARS is a function
- *   - LOCAL_ONLY_ABILITIES and LABS_ABILITIES are subsets of REGISTRARS
- *   - The two category sets don't overlap
+ *   - LOCAL_ONLY_ABILITIES and JS_ONLY_ABILITIES are subsets of REGISTRARS
  *   - Expected core abilities are present (regression guard)
  */
 
@@ -24,7 +23,6 @@ jest.mock( '../../utils/logger', () => ( {
 import {
 	REGISTRARS,
 	LOCAL_ONLY_ABILITIES,
-	LABS_ABILITIES,
 	JS_ONLY_ABILITIES,
 } from '../manifest';
 
@@ -44,18 +42,6 @@ describe( 'abilities manifest', () => {
 	it( 'every LOCAL_ONLY ability exists in REGISTRARS', () => {
 		for ( const slug of LOCAL_ONLY_ABILITIES ) {
 			expect( REGISTRARS ).toHaveProperty( slug );
-		}
-	} );
-
-	it( 'every LABS ability exists in REGISTRARS', () => {
-		for ( const slug of LABS_ABILITIES ) {
-			expect( REGISTRARS ).toHaveProperty( slug );
-		}
-	} );
-
-	it( 'LOCAL_ONLY and LABS do not overlap', () => {
-		for ( const slug of LOCAL_ONLY_ABILITIES ) {
-			expect( LABS_ABILITIES.has( slug ) ).toBe( false );
 		}
 	} );
 
@@ -92,29 +78,19 @@ describe( 'abilities manifest', () => {
 			'core-environment-info',
 			'codebase-index',
 			'code-search',
+			'discover-plugin-abilities',
+			'run-plugin-ability',
 		];
 
 		for ( const slug of expectedCore ) {
 			expect( REGISTRARS ).toHaveProperty( slug );
 			expect( LOCAL_ONLY_ABILITIES.has( slug ) ).toBe( false );
-			expect( LABS_ABILITIES.has( slug ) ).toBe( false );
 		}
-	} );
-
-	it( 'expected labs slugs match the parked-feature plan', () => {
-		expect( [ ...LABS_ABILITIES ].sort() ).toEqual(
-			[
-				'write-file',
-				'content-generate',
-				'discover-plugin-abilities',
-				'run-plugin-ability',
-			].sort()
-		);
 	} );
 
 	it( 'expected local-only slugs match the privacy gate plan', () => {
 		expect( [ ...LOCAL_ONLY_ABILITIES ].sort() ).toEqual(
-			[ 'query-database', 'read-file', 'wp-config-list' ].sort()
+			[ 'read-file', 'wp-config-list' ].sort()
 		);
 	} );
 
@@ -124,7 +100,7 @@ describe( 'abilities manifest', () => {
 		}
 	} );
 
-	it( 'JS_ONLY contains the expected mix of CORE / LOCAL_ONLY / LABS abilities', () => {
+	it( 'JS_ONLY contains the expected JS-only abilities', () => {
 		// These have no PHP register function — PHP enabledAbilities will
 		// never include them, so JS must add them back on its own.
 		expect( [ ...JS_ONLY_ABILITIES ].sort() ).toEqual(
@@ -135,7 +111,6 @@ describe( 'abilities manifest', () => {
 				'codebase-index',
 				'code-search',
 				'wp-config-list', // also LOCAL_ONLY
-				'content-generate', // also LABS
 			].sort()
 		);
 	} );

@@ -96,7 +96,7 @@ Screenshots in `docs/audit-assets/wp-7.0-before/`.
 
 | # | Finding | Priority | Recommended fix |
 |---|---|---|---|
-| 1.1 | Hand-rolled tab strip ("Chat / Abilities / Plugin Abilities" + "Settings" gear button) using `wp-agentic-admin-tab` class | P1 | Use `@wordpress/components` `TabPanel` or `Tabs` (32.0.0). Keeps keyboard nav + a11y for free. |
+| 1.1 | Hand-rolled tab strip ("Chat / Abilities / Plugin Abilities" + "Settings" gear button) using `agentic-admin-tab` class | P1 | Use `@wordpress/components` `TabPanel` or `Tabs` (32.0.0). Keeps keyboard nav + a11y for free. |
 | 1.2 | "Copy All" + "Clear Chat" buttons at top of chat panel are hand-rolled | P2 | Use `Button` `variant="tertiary"` for "Copy All", `variant="secondary"` for "Clear Chat" (`isDestructive` if confirming). |
 | 1.3 | Greeting bubble has an inline timestamp + copy button — custom card | P2 | Acceptable as a custom chat-bubble design (this is the product's identity). No fix. |
 

@@ -7,10 +7,10 @@
  * the 'agentic_admin_register_abilities' action.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -79,7 +79,7 @@ class Abilities {
 	 * Load all ability files from the abilities directory.
 	 */
 	private function load_ability_files(): void {
-		$abilities_dir = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities/';
+		$abilities_dir = AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities/';
 
 		// Check if directory exists.
 		if ( ! is_dir( $abilities_dir ) ) {
@@ -128,7 +128,7 @@ class Abilities {
 	 * to register their own abilities.
 	 */
 	public function register_core_abilities(): void {
-		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
+		require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
 
 		foreach ( agentic_admin_resolve_enabled_abilities() as $slug => $register_fn ) {
 			if ( function_exists( $register_fn ) ) {
@@ -138,7 +138,7 @@ class Abilities {
 				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
 				\trigger_error(
 					sprintf(
-						'wp-agentic-admin: enabled ability "%s" has no registrar function %s().',
+						'agentic-admin: enabled ability "%s" has no registrar function %s().',
 						\esc_html( $slug ),
 						\esc_html( $register_fn )
 					),

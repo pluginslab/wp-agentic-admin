@@ -47,7 +47,7 @@ if ( fileIndex === -1 || ! args[ fileIndex + 1 ] ) {
 	console.error( '  --model <id>        Ollama model (default: qwen3:1.7b)' );
 	console.error( '  --think             Enable thinking (default: off)' );
 	console.error(
-		'  --wp-url <url>      WordPress URL (default: https://wp-agentic-admin.local)'
+		'  --wp-url <url>      WordPress URL (default: https://agentic-admin.local)'
 	);
 	console.error( '  --wp-user <user>    WP application password username' );
 	console.error( '  --wp-pass <pass>    WP application password' );
@@ -65,7 +65,7 @@ const modelId =
 const wpUrl = (
 	wpUrlIndex !== -1 && args[ wpUrlIndex + 1 ]
 		? args[ wpUrlIndex + 1 ]
-		: 'https://wp-agentic-admin.local'
+		: 'https://agentic-admin.local'
 ).replace( /\/$/, '' );
 const wpUser = wpUserIndex !== -1 ? args[ wpUserIndex + 1 ] : '';
 // Application passwords have spaces — collect all args until the next flag
@@ -296,7 +296,7 @@ RULES:
 EXAMPLE:
 
 User: "list plugins"
-{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
+{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}
 
 [Tool returns data]
 {"action": "final_answer", "content": "You have 2 plugins: Akismet (active) and Hello Dolly (inactive)."}
@@ -754,7 +754,7 @@ function formatToolResultForHistory( toolId, result ) {
 function evaluateTurn( turn, result ) {
 	// Normalize tool names
 	const toolsUsed = result.toolsUsed.map( ( t ) =>
-		t.includes( '/' ) ? t : `wp-agentic-admin/${ t }`
+		t.includes( '/' ) ? t : `agentic-admin/${ t }`
 	);
 	const firstTool = toolsUsed[ 0 ] || null;
 

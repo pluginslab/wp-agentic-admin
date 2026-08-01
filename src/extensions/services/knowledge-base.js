@@ -114,7 +114,7 @@ function clearKBStatus() {
  */
 function indexInWorker( chunks, onProgress ) {
 	return new Promise( ( resolve, reject ) => {
-		const pluginUrl = window.wpAgenticAdmin?.pluginUrl;
+		const pluginUrl = window.agenticAdmin?.pluginUrl;
 
 		if ( ! pluginUrl ) {
 			reject( new Error( 'Plugin URL not available for worker.' ) );
@@ -228,7 +228,7 @@ async function _runBuild() {
 		while ( hasMore ) {
 			try {
 				const page = await executeAbility(
-					'wp-agentic-admin/codebase-extract',
+					'agentic-admin/codebase-extract',
 					{ offset, limit: 50 }
 				);
 
@@ -268,7 +268,7 @@ async function _runBuild() {
 
 		try {
 			const schema = await executeAbility(
-				'wp-agentic-admin/schema-extract',
+				'agentic-admin/schema-extract',
 				{}
 			);
 			if ( schema && schema.chunks && schema.chunks.length ) {
@@ -288,7 +288,7 @@ async function _runBuild() {
 
 		try {
 			const api = await executeAbility(
-				'wp-agentic-admin/wp-api-extract',
+				'agentic-admin/wp-api-extract',
 				{}
 			);
 			if ( api && api.chunks && api.chunks.length ) {
@@ -308,7 +308,7 @@ async function _runBuild() {
 
 		try {
 			const docs = await executeAbility(
-				'wp-agentic-admin/docs-extract',
+				'agentic-admin/docs-extract',
 				{}
 			);
 			if ( docs && docs.chunks && docs.chunks.length ) {

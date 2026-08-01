@@ -7,13 +7,9 @@
  * Categories match the PHP side:
  *   - CORE       Always on. Defines what the plugin IS.
  *   - LOCAL_ONLY Hidden from the LLM when an external AI provider is active.
- *   - LABS       Opt-in. Preserved for v1.x add-on releases. Off by default
- *                in v0.11+ (enabled via PHP's WP_AGENTIC_ADMIN_ENABLE_LABS
- *                constant or the agentic_admin_enabled_abilities filter).
  *
- * NOTE for PR 1: REGISTRARS contains every ability so behavior is unchanged.
- * The category sets exist for future use by PR 4 (which will read the
- * filtered list from window.wpAgenticAdmin.enabledAbilities).
+ * Production reads the PHP-authoritative enabled list from
+ * window.agenticAdmin.enabledAbilities; JS-only abilities are merged on top.
  */
 
 import { registerErrorLogRead } from './error-log-read';
@@ -49,14 +45,11 @@ import { registerCodebaseIndex } from './codebase-index';
 import { registerCodeSearch } from './code-search';
 
 // Local-only abilities (hidden from LLM when external provider is active).
-import { registerQueryDatabase } from './query-database';
 import { registerReadFile } from './read-file';
 import { registerWpConfigList } from './wp-config-list';
 
-// Labs (parked) abilities — still imported so they ship in the bundle;
-// off by default once PR 4 flips the resolve() to exclude labs.
-import { registerWriteFile } from './write-file';
-import { registerContentGenerate } from './content-generate';
+// Plugin abilities platform — discover and run abilities registered by
+// other plugins via the WordPress Abilities API.
 import { registerDiscoverPluginAbilities } from './discover-plugin-abilities';
 import { registerRunPluginAbility } from './run-plugin-ability';
 
@@ -111,13 +104,10 @@ export const REGISTRARS = {
 	'code-search': registerCodeSearch,
 
 	// LOCAL_ONLY — sensitive abilities.
-	'query-database': registerQueryDatabase,
 	'read-file': registerReadFile,
 	'wp-config-list': registerWpConfigList,
 
-	// LABS — opt-in.
-	'write-file': registerWriteFile,
-	'content-generate': registerContentGenerate,
+	// Plugin abilities platform.
 	'discover-plugin-abilities': registerDiscoverPluginAbilities,
 	'run-plugin-ability': registerRunPluginAbility,
 };
@@ -127,25 +117,13 @@ export const REGISTRARS = {
  * Used by future tool-filter logic (issue: external-provider safety).
  */
 export const LOCAL_ONLY_ABILITIES = new Set( [
-	'query-database',
 	'read-file',
 	'wp-config-list',
 ] );
 
 /**
- * Abilities parked for v1.x add-on releases.
- */
-export const LABS_ABILITIES = new Set( [
-	'write-file',
-	'content-generate',
-	'discover-plugin-abilities',
-	'run-plugin-ability',
-] );
-
-/**
  * JS-only abilities (no PHP register function). PHP's enabledAbilities
  * list doesn't include these, so index.js adds them back when iterating.
- * Members that also live in LABS_ABILITIES are still gated by labs.
  */
 export const JS_ONLY_ABILITIES = new Set( [
 	'current-user-role',
@@ -154,5 +132,4 @@ export const JS_ONLY_ABILITIES = new Set( [
 	'codebase-index',
 	'code-search',
 	'wp-config-list',
-	'content-generate', // also LABS
 ] );

@@ -15,7 +15,7 @@ import {
  * Register the update-check ability with the chat system.
  */
 export function registerUpdateCheck() {
-	registerAbility( 'wp-agentic-admin/update-check', {
+	registerAbility( 'agentic-admin/update-check', {
 		label: 'Check for available updates',
 		description:
 			'Check for available WordPress core, plugin, and theme updates. Use when users ask about outdated software, available upgrades, or which plugins need to be updated.',
@@ -86,7 +86,7 @@ export function registerUpdateCheck() {
 		},
 
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/update-check', {} );
+			return executeAbility( 'agentic-admin/update-check', {} );
 		},
 
 		requiresConfirmation: false,
