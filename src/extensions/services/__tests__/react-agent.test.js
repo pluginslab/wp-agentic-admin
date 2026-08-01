@@ -511,9 +511,32 @@ describe( 'ReactAgent', () => {
 			]?.[ 0 ]?.response_format;
 		}
 
-		it( 'should NOT constrain output while thinking is enabled', async () => {
-			// Thinking on is the default. A JSON grammar cannot represent the
-			// leading <think> block, so the envelope must stay unconstrained.
+		it( 'should be OFF by default, even when thinking is disabled', async () => {
+			// Default is off because it breaks thinking models: Qwen 3 emits
+			// `{` then whitespace to max_tokens when the grammar blocks its
+			// <think> block. Verified in-browser 2026-08-01, reproduced 2/2.
+			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				disableThinking: true,
+			} );
+			reactAgent.setCallbacks( mockCallbacks );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Done"}'
+			);
+
+			await reactAgent.execute( 'flush the cache', [] );
+
+			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
+		} );
+
+		it( 'should NOT constrain a thinking turn even when opted in', async () => {
+			// A JSON grammar cannot represent the leading <think> block.
+			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				structuredOutput: true,
+			} );
+			reactAgent.setCallbacks( mockCallbacks );
+
 			mockStreamOnce(
 				mockEngine,
 				'{"action": "final_answer", "content": "Done"}'
@@ -524,8 +547,9 @@ describe( 'ReactAgent', () => {
 			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
 		} );
 
-		it( 'should constrain output when thinking is disabled', async () => {
+		it( 'should constrain output when opted in AND thinking is disabled', async () => {
 			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				structuredOutput: true,
 				disableThinking: true,
 			} );
 			reactAgent.setCallbacks( mockCallbacks );
@@ -552,6 +576,7 @@ describe( 'ReactAgent', () => {
 
 		it( 'should constrain follow-up turns once disableThinkingAfterTool fires', async () => {
 			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				structuredOutput: true,
 				disableThinkingAfterTool: true,
 			} );
 			reactAgent.setCallbacks( mockCallbacks );
@@ -567,23 +592,6 @@ describe( 'ReactAgent', () => {
 			// First turn still thinks, second turn (post-tool) does not.
 			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
 			expect( responseFormatOfCall( 1 ) ).toBeDefined();
-		} );
-
-		it( 'should honour structuredOutput: false as an escape hatch', async () => {
-			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
-				disableThinking: true,
-				structuredOutput: false,
-			} );
-			reactAgent.setCallbacks( mockCallbacks );
-
-			mockStreamOnce(
-				mockEngine,
-				'{"action": "final_answer", "content": "Done"}'
-			);
-
-			await reactAgent.execute( 'flush the cache', [] );
-
-			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
 		} );
 	} );
 } );

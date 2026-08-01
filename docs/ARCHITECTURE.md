@@ -326,7 +326,7 @@ The 1.7B model is recommended for most users — it loads faster, uses less VRAM
 - Repeated call detection (same tool twice = stop)
 - Max 10 iterations
 - Tool result truncation (`maxToolResultLength`, 3000 chars, in prompt-based mode)
-- Schema-constrained JSON for the ReAct action envelope when thinking is disabled (see below)
+- Schema-constrained JSON for the ReAct action envelope (`structuredOutput`, **off by default** — it breaks thinking models; see `REACT_ACTION_SCHEMA` in `react-agent.js`)
 - Context window overflow handling
 - JSON envelope unwrapping (prevents raw `{"action": "final_answer", ...}` leaking to user)
 

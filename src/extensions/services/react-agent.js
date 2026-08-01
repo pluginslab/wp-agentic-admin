@@ -49,7 +49,7 @@ const REACT_CONFIG = {
 	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
 	disableThinkingAfterTool: false, // Skip thinking on iterations after tool results
-	structuredOutput: true, // Grammar-constrain the action envelope (see REACT_ACTION_SCHEMA)
+	structuredOutput: false, // Opt-in. Breaks thinking models — see REACT_ACTION_SCHEMA
 };
 
 /**
@@ -65,10 +65,25 @@ const REACT_CONFIG = {
  * fact. WebLLM implements this in the WASM layer; OpenAI-compatible providers
  * get plain JSON mode (see ExternalEngine, which strips the `schema` key).
  *
- * IMPORTANT: this can only be applied when thinking is disabled. Qwen 3 emits
- * `<think>...</think>` *before* the JSON, which a JSON grammar forbids, so
- * constraining a thinking turn would truncate the reasoning block and fail.
- * The call site gates on `suppressThinkingUi` for exactly this reason.
+ * OFF BY DEFAULT — it breaks thinking models. Measured in a real browser
+ * (WebGPU, Service Worker mode) on 2026-08-01:
+ *
+ *   Qwen2.5-7B-Instruct  structuredOutput ON  -> works, 2 iterations, 1 tool
+ *   Qwen3-1.7B-q4f32_1   structuredOutput ON  -> BROKEN, 0 tools, reproduced 2/2
+ *
+ * On Qwen3 the model emits `{` and then thousands of newlines until it hits
+ * max_tokens, so `parseActionFromResponse()` fails and the loop falls through
+ * to "I had trouble understanding how to help."
+ *
+ * Cause: Qwen 3 is a thinking model and wants to open `<think>` before the
+ * JSON. A JSON grammar cannot represent that block. `/nothink` is only a soft
+ * instruction, so when the model still reaches for `<think>` the grammar
+ * blocks every token except whitespace and decoding degenerates.
+ *
+ * Gating on `suppressThinkingUi` (below) is therefore necessary but NOT
+ * sufficient: it tracks whether we *asked* for no thinking, not whether the
+ * model complied. Enable this only on a non-thinking model such as
+ * Qwen2.5-7B, via `new ReactAgent( ..., { structuredOutput: true } )`.
  */
 const REACT_ACTION_SCHEMA = {
 	type: 'object',
