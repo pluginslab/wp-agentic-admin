@@ -30,7 +30,7 @@ const SW_VERSION = '0.4.101';
  */
 function swLog( ...args ) {
 	const timestamp = new Date().toISOString().split( 'T' )[ 1 ].slice( 0, -1 );
-	console.log( `[WP Agentic SW ${ timestamp }]`, ...args );
+	console.log( `[Agentic Admin SW ${ timestamp }]`, ...args );
 }
 
 /**
