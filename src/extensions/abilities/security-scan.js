@@ -95,6 +95,11 @@ export function registerSecurityScan() {
 		},
 
 		requiresConfirmation: false,
+
+		// summarize() renders the full pass/fail report grouped by severity.
+		// Re-rendering it through the LLM risks dropping findings when the
+		// payload exceeds maxToolResultLength.
+		preferSummarize: true,
 	} );
 }
 

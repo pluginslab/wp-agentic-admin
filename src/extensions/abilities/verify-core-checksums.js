@@ -191,6 +191,11 @@ export function registerVerifyCoreChecksums() {
 
 		// Read-only - no confirmation needed.
 		requiresConfirmation: false,
+
+		// summarize() emits fenced diff blocks for modified core files. The LLM
+		// mangles fenced code and the diffs blow past maxToolResultLength, so
+		// render them directly.
+		preferSummarize: true,
 	} );
 }
 

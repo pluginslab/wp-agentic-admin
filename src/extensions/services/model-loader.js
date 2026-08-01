@@ -70,14 +70,6 @@ const log = createLogger( 'ModelLoader' );
 const DEFAULT_MODEL = 'Qwen3-1.7B-q4f16_1-MLC';
 
 /**
- * Model configuration options
- */
-const MODEL_CONFIG = {
-	// Context window size (larger for 7B models)
-	context_window_size: 8192,
-};
-
-/**
  * Mapping from f16 model IDs to their f32 equivalents.
  * Used when the GPU does not support the shader-f16 WebGPU feature.
  */
@@ -1376,7 +1368,6 @@ export {
 	ModelLoader,
 	modelLoader,
 	DEFAULT_MODEL,
-	MODEL_CONFIG,
 	MODEL_CONTEXT_SIZES,
 	ExternalEngine,
 };

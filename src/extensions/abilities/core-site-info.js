@@ -110,25 +110,25 @@ export function registerCoreSiteInfo() {
 			const lines = [];
 
 			if ( result.name ) {
-				lines.push( ` * * Site Name: * * ${ result.name }` );
+				lines.push( `**Site Name:** ${ result.name }` );
 			}
 			if ( result.description ) {
-				lines.push( ` * * Tagline: * * ${ result.description }` );
+				lines.push( `**Tagline:** ${ result.description }` );
 			}
 			if ( result.url ) {
-				lines.push( ` * * Site URL: * * ${ result.url }` );
+				lines.push( `**Site URL:** ${ result.url }` );
 			}
 			if ( result.version ) {
-				lines.push( ` * * WordPress Version: * * ${ result.version }` );
+				lines.push( `**WordPress Version:** ${ result.version }` );
 			}
 			if ( result.language ) {
-				lines.push( ` * * Language: * * ${ result.language }` );
+				lines.push( `**Language:** ${ result.language }` );
 			}
 			if ( result.admin_email ) {
-				lines.push( ` * * Admin Email: * * ${ result.admin_email }` );
+				lines.push( `**Admin Email:** ${ result.admin_email }` );
 			}
 			if ( result.charset ) {
-				lines.push( ` * * Charset: * * ${ result.charset }` );
+				lines.push( `**Charset:** ${ result.charset }` );
 			}
 
 			if ( lines.length === 0 ) {

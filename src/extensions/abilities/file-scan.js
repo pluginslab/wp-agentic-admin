@@ -159,6 +159,11 @@ export function registerFileScan() {
 
 		// Read-only — no confirmation needed.
 		requiresConfirmation: false,
+
+		// summarize() lists every plugin, theme and mu-plugin scanned plus the
+		// findings. That payload routinely exceeds maxToolResultLength, and a
+		// truncated security scan is worse than none.
+		preferSummarize: true,
 	} );
 }
 
