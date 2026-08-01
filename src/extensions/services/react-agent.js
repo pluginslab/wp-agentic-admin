@@ -310,13 +310,20 @@ class ReactAgent {
 				const useStructuredOutput =
 					this.config.structuredOutput && suppressThinkingUi;
 
-				log.debug(
-					`Structured output: ${
-						useStructuredOutput
-							? 'ON — action envelope is grammar-constrained'
-							: 'off — thinking turn, envelope unconstrained'
-					}`
-				);
+				// Name the actual reason — "disabled" and "thinking turn" are
+				// different causes and conflating them misleads when debugging.
+				let structuredOutputReason;
+				if ( useStructuredOutput ) {
+					structuredOutputReason =
+						'ON — action envelope is grammar-constrained';
+				} else if ( ! this.config.structuredOutput ) {
+					structuredOutputReason =
+						'off — structuredOutput disabled (default)';
+				} else {
+					structuredOutputReason =
+						'off — thinking turn, envelope unconstrained';
+				}
+				log.debug( `Structured output: ${ structuredOutputReason }` );
 
 				// Stream LLM response to show thinking tokens live
 				const stream = await engine.chat.completions.create( {
