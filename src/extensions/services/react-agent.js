@@ -295,6 +295,14 @@ class ReactAgent {
 				const useStructuredOutput =
 					this.config.structuredOutput && suppressThinkingUi;
 
+				log.debug(
+					`Structured output: ${
+						useStructuredOutput
+							? 'ON — action envelope is grammar-constrained'
+							: 'off — thinking turn, envelope unconstrained'
+					}`
+				);
+
 				// Stream LLM response to show thinking tokens live
 				const stream = await engine.chat.completions.create( {
 					messages,
