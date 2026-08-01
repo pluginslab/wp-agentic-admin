@@ -49,6 +49,39 @@ const REACT_CONFIG = {
 	maxToolResultLength: 3000, // 7B models handle more context
 	disableThinking: false, // Disable Qwen 3 <think> blocks for faster inference
 	disableThinkingAfterTool: false, // Skip thinking on iterations after tool results
+	structuredOutput: true, // Grammar-constrain the action envelope (see REACT_ACTION_SCHEMA)
+};
+
+/**
+ * JSON schema for the ReAct action envelope.
+ *
+ * The loop only ever accepts two shapes:
+ *   {"action": "tool_call",    "tool": "<tool-id>", "args": {...}}
+ *   {"action": "final_answer", "content": "..."}
+ *
+ * Passing this to the engine as `response_format` makes the grammar enforce
+ * the envelope during decoding, so malformed JSON becomes unrepresentable
+ * rather than something `parseActionFromResponse()` has to repair after the
+ * fact. WebLLM implements this in the WASM layer; OpenAI-compatible providers
+ * get plain JSON mode (see ExternalEngine, which strips the `schema` key).
+ *
+ * IMPORTANT: this can only be applied when thinking is disabled. Qwen 3 emits
+ * `<think>...</think>` *before* the JSON, which a JSON grammar forbids, so
+ * constraining a thinking turn would truncate the reasoning block and fail.
+ * The call site gates on `suppressThinkingUi` for exactly this reason.
+ */
+const REACT_ACTION_SCHEMA = {
+	type: 'object',
+	properties: {
+		action: {
+			type: 'string',
+			enum: [ 'tool_call', 'final_answer' ],
+		},
+		tool: { type: 'string' },
+		args: { type: 'object' },
+		content: { type: 'string' },
+	},
+	required: [ 'action' ],
 };
 
 /**
@@ -255,6 +288,13 @@ class ReactAgent {
 			);
 
 			try {
+				// Grammar-constrain the action envelope, but only on turns where
+				// thinking is off. A JSON grammar cannot represent the leading
+				// <think> block, so constraining a thinking turn would break it.
+				// See REACT_ACTION_SCHEMA.
+				const useStructuredOutput =
+					this.config.structuredOutput && suppressThinkingUi;
+
 				// Stream LLM response to show thinking tokens live
 				const stream = await engine.chat.completions.create( {
 					messages,
@@ -262,6 +302,12 @@ class ReactAgent {
 					max_tokens: this.config.maxTokens,
 					stream: true,
 					stream_options: { include_usage: true },
+					...( useStructuredOutput && {
+						response_format: {
+							type: 'json_object',
+							schema: JSON.stringify( REACT_ACTION_SCHEMA ),
+						},
+					} ),
 				} );
 
 				let fullResponse = '';

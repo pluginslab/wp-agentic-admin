@@ -98,12 +98,12 @@ export function registerPluginList() {
 			} are inactive.\n\n`;
 
 			if ( activePlugins.length > 0 ) {
-				summary += ` * * Active plugins: * * ${ activePlugins.join(
+				summary += `**Active plugins:** ${ activePlugins.join(
 					', '
 				) }\n\n`;
 			}
 			if ( inactivePlugins.length > 0 ) {
-				summary += ` * * Inactive plugins: * * ${ inactivePlugins.join(
+				summary += `**Inactive plugins:** ${ inactivePlugins.join(
 					', '
 				) }`;
 			}

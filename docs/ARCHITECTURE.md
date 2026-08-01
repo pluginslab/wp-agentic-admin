@@ -319,13 +319,14 @@ The 1.7B model is recommended for most users — it loads faster, uses less VRAM
 1. **JSON formatting** - 7B models produce valid JSON consistently (100% parse success with Qwen2.5-7B). Robust parsing still handles edge cases: try native `JSON.parse` first, then fall back to quote sanitization.
 2. **Goal efficiency** - Qwen2.5-7B calls exactly 1 tool for single-goal tasks (no over-shooting).
 3. **Multi-step reasoning** - 100% success on conditional logic and diagnose-then-fix chains.
-4. **Context limits** - 4096 token context window configured (models support up to 32K).
+4. **Context limits** - Context window is set per model in `MODEL_CONTEXT_SIZES` (`model-loader.js`): 8192 tokens for Qwen3 1.7B, 32768 for Qwen2.5 7B, 8192 default fallback. A per-model override can be stored in the `agentic_admin_context_size` localStorage key and is resolved by `ModelLoader.getEffectiveContextSize()`.
 
 ### Safety Mechanisms
 
 - Repeated call detection (same tool twice = stop)
 - Max 10 iterations
-- Tool result truncation (2000 chars max in prompt-based mode)
+- Tool result truncation (`maxToolResultLength`, 3000 chars, in prompt-based mode)
+- Schema-constrained JSON for the ReAct action envelope when thinking is disabled (see below)
 - Context window overflow handling
 - JSON envelope unwrapping (prevents raw `{"action": "final_answer", ...}` leaking to user)
 

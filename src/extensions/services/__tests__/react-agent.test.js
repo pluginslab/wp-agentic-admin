@@ -497,4 +497,93 @@ describe( 'ReactAgent', () => {
 			expect( result.toolsUsed ).toContain( 'agentic-admin/site-health' );
 		} );
 	} );
+
+	describe( 'Structured output (grammar-constrained action envelope)', () => {
+		/**
+		 * Returns the response_format of the Nth create() call, if any.
+		 *
+		 * @param {number} callIndex - Zero-based index of the create() call.
+		 * @return {Object|undefined} The response_format passed, or undefined.
+		 */
+		function responseFormatOfCall( callIndex ) {
+			return mockEngine.chat.completions.create.mock.calls[
+				callIndex
+			]?.[ 0 ]?.response_format;
+		}
+
+		it( 'should NOT constrain output while thinking is enabled', async () => {
+			// Thinking on is the default. A JSON grammar cannot represent the
+			// leading <think> block, so the envelope must stay unconstrained.
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Done"}'
+			);
+
+			await reactAgent.execute( 'hello', [] );
+
+			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
+		} );
+
+		it( 'should constrain output when thinking is disabled', async () => {
+			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				disableThinking: true,
+			} );
+			reactAgent.setCallbacks( mockCallbacks );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Done"}'
+			);
+
+			await reactAgent.execute( 'flush the cache', [] );
+
+			const format = responseFormatOfCall( 0 );
+			expect( format ).toBeDefined();
+			expect( format.type ).toBe( 'json_object' );
+
+			// The schema is passed stringified, as WebLLM expects.
+			const schema = JSON.parse( format.schema );
+			expect( schema.required ).toEqual( [ 'action' ] );
+			expect( schema.properties.action.enum ).toEqual( [
+				'tool_call',
+				'final_answer',
+			] );
+		} );
+
+		it( 'should constrain follow-up turns once disableThinkingAfterTool fires', async () => {
+			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				disableThinkingAfterTool: true,
+			} );
+			reactAgent.setCallbacks( mockCallbacks );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}',
+				'{"action": "final_answer", "content": "You have 1 plugin."}'
+			);
+
+			await reactAgent.execute( 'list plugins', [] );
+
+			// First turn still thinks, second turn (post-tool) does not.
+			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
+			expect( responseFormatOfCall( 1 ) ).toBeDefined();
+		} );
+
+		it( 'should honour structuredOutput: false as an escape hatch', async () => {
+			reactAgent = new ReactAgent( mockModelLoader, mockToolRegistry, {
+				disableThinking: true,
+				structuredOutput: false,
+			} );
+			reactAgent.setCallbacks( mockCallbacks );
+
+			mockStreamOnce(
+				mockEngine,
+				'{"action": "final_answer", "content": "Done"}'
+			);
+
+			await reactAgent.execute( 'flush the cache', [] );
+
+			expect( responseFormatOfCall( 0 ) ).toBeUndefined();
+		} );
+	} );
 } );
