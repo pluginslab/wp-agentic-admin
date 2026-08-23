@@ -17,7 +17,7 @@ Agentic Admin transforms your WordPress admin panel into an intelligent command 
 = Features =
 
 * **100% Local AI**: Uses WebLLM to run Qwen 3 1.7B (default) or Qwen 2.5 7B directly in your browser via WebGPU
-* **Privacy-First**: No admin data ever leaves your device - GDPR compliant by design
+* **Privacy-First**: AI inference runs in your browser - your prompts and content are never sent to an AI service. A few abilities look up public data (CVE databases, WordPress.org checksums, web search); all are listed under External services
 * **Zero Server Costs**: No GPU infrastructure needed - computation happens on the client
 * **WordPress Abilities API**: Natively integrates with WordPress's official Abilities API
 * **Natural Language Interface**: Describe problems in plain English, get intelligent solutions
@@ -47,7 +47,9 @@ Agentic Admin transforms your WordPress admin panel into an intelligent command 
 
 == External services ==
 
-This plugin runs AI locally in your browser by default. No prompts or admin data are sent to any server unless you explicitly enable the external LLM provider. The following external services are contacted under specific, disclosed conditions:
+This plugin runs AI locally in your browser by default, and your prompts and chat content are never sent to an AI service unless you explicitly enable the external LLM provider below.
+
+Separately from AI inference, some abilities query public data sources to do their job: a security scan checks your plugin versions against CVE databases, a checksum verification compares your files against WordPress.org, and a web search sends your query to a search engine. Every external request the plugin makes is listed here:
 
 **Model weights CDN (MLC-AI / HuggingFace)** — Always for the local engine.
 On first use the browser downloads the selected model (Qwen 3 1.7B by default, ~1.2 GB) from `https://huggingface.co/mlc-ai/` and `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. Only HTTP GET requests for static model files are made; no prompts, admin data, or telemetry are sent. Weights are cached in the browser; subsequent sessions are offline.
@@ -65,16 +67,20 @@ When enabled, chat messages, tool descriptions, and tool results are sent throug
 The user's search query is sent to `https://html.duckduckgo.com/html/` over GET. No WordPress user data is sent.
 DuckDuckGo terms: https://duckduckgo.com/terms — Privacy: https://duckduckgo.com/privacy
 
-**NVD CVE database (NIST)** — Only when the optional `plugin-vulnerability-scan` ability is invoked.
-Installed plugin names and versions are sent to `https://services.nvd.nist.gov/rest/json/cves/2.0` to check for known CVEs.
+**NVD CVE database (NIST)** — Whenever the `security-scan` ability is invoked.
+`security-scan` includes a plugin vulnerability check, so the names and versions of your active plugins are sent to `https://services.nvd.nist.gov/rest/json/cves/2.0` to look up known CVEs. No user data, post content, or credentials are sent.
 NVD terms: https://nvd.nist.gov/developers/terms-of-use — Privacy: https://www.nist.gov/privacy-policy
 
-**MITRE CVE API** — Only when the optional `plugin-vulnerability-scan` ability follows up on a CVE identifier.
+**MITRE CVE API** — Only when the `security-scan` vulnerability check finds a CVE identifier and follows up on it.
 The CVE ID (e.g. `CVE-2024-12345`) is sent to `https://cveawg.mitre.org/api/cve/` for details. No WordPress user data is sent.
 MITRE terms: https://www.cve.org/Legal/TermsOfUse — Privacy: https://www.cve.org/Legal/PrivacyPolicy
 
 **WordPress.org plugin checksums** — Only when the optional `verify-plugin-checksums` ability is invoked.
 Installed plugin slugs and versions are sent to `https://downloads.wordpress.org/plugin-checksums/` and `https://plugins.svn.wordpress.org/` to verify file integrity against the official WordPress.org distribution.
+WordPress.org policies: https://wordpress.org/about/privacy/
+
+**WordPress.org core source (SVN)** — Only when the optional `verify-core-checksums` ability finds a modified core file and diffs are requested.
+The original copy of that one file is fetched from `https://core.svn.wordpress.org/tags/{version}/` so the plugin can show you a diff against your local version. Only the WordPress version number and the core file path are sent, both of which are public information; no site data is transmitted. The checksum list itself comes from WordPress core's own `get_core_checksums()` function.
 WordPress.org policies: https://wordpress.org/about/privacy/
 
 == Source code and build process ==
@@ -96,7 +102,8 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 * Renamed: Plugin is now "Agentic Admin". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.
 * Removed: feedback system, WebMCP bridge, voice input, file editing (write-file), and AI content generation (content-generate), plus three low-value abilities (backup-check, opcode-cache-status, disk-usage). Agentic Admin is a site health and maintenance assistant: it does not edit files or generate content. Removed code remains available in the project's git history.
 * Security: blocked sensitive-column reads (user_email, user_pass) in query-database to prevent reconnaissance attacks (#166). Hardened query length cap and read-only verb gate.
-* Security: escaped output in functions-abilities.php (#121). Added sw-loader.php access-control rationale (#123). Documented direct-DB-call rationale in db-optimize and database-check.
+* Security: escaped output in functions-abilities.php (#121). Documented direct-DB-call rationale in db-optimize and database-check.
+* Docs: corrected the External services section. The CVE lookups were attributed to a `plugin-vulnerability-scan` ability that does not exist; they are made by `security-scan`. Added the previously undisclosed `core.svn.wordpress.org` fetch used by `verify-core-checksums` to build diffs. Replaced two absolute privacy claims that the section's own list contradicted.
 * Compliance: removed deprecated load_plugin_textdomain() call, prefixed uninstall.php globals, fixed nonexistent Domain Path header, excluded CLOUDFEST_HACKATHON.md from distribution build.
 * New: ability manifest as single source of truth for which abilities register, with a agentic_admin_enabled_abilities filter for selective override. PHP authoritative for PHP-backed abilities; JS adds back the JS-only ones.
 * Fixed: thinking-disable setting now actually suppresses the streaming UI even when Qwen ignores /nothink (#181).
