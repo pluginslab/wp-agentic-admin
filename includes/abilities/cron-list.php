@@ -6,7 +6,7 @@
  * Similar to WP-CLI: wp cron event list
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since 0.1.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_cron_list(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/cron-list',
+		'agentic-admin/cron-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'List Cron Events', 'agentic-admin' ),

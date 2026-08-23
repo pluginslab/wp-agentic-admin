@@ -23,7 +23,7 @@ module.exports = {
 			turns: [
 				{
 					input: 'do a quick security check on this install',
-					expectTool: 'wp-agentic-admin/security-scan',
+					expectTool: 'agentic-admin/security-scan',
 				},
 				{
 					input: 'what is the deal with the WordPress version being exposed?',
@@ -39,7 +39,7 @@ module.exports = {
 			turns: [
 				{
 					input: 'which plugins are installed?',
-					expectTool: 'wp-agentic-admin/plugin-list',
+					expectTool: 'agentic-admin/plugin-list',
 				},
 				{
 					input: 'how many are active?',
@@ -55,11 +55,11 @@ module.exports = {
 			turns: [
 				{
 					input: 'show me the error log',
-					expectTool: 'wp-agentic-admin/error-log-read',
+					expectTool: 'agentic-admin/error-log-read',
 				},
 				{
 					input: 'search the log for fatal errors',
-					expectTool: 'wp-agentic-admin/error-log-search',
+					expectTool: 'agentic-admin/error-log-search',
 				},
 			],
 		},
@@ -70,11 +70,11 @@ module.exports = {
 			turns: [
 				{
 					input: 'check my site health',
-					expectTool: 'wp-agentic-admin/site-health',
+					expectTool: 'agentic-admin/site-health',
 				},
 				{
 					input: 'now optimize the database',
-					expectTool: 'wp-agentic-admin/db-optimize',
+					expectTool: 'agentic-admin/db-optimize',
 				},
 			],
 		},
@@ -90,7 +90,7 @@ module.exports = {
 				},
 				{
 					input: 'clear all transients',
-					expectTool: 'wp-agentic-admin/transient-flush',
+					expectTool: 'agentic-admin/transient-flush',
 				},
 			],
 		},

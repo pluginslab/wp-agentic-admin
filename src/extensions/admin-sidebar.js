@@ -17,21 +17,21 @@ const log = createLogger( 'AdminSidebar' );
 
 document.addEventListener( 'DOMContentLoaded', () => {
 	// Find the container rendered by PHP in admin_footer.
-	const container = document.getElementById( 'wp-agentic-admin-sidebar' );
+	const container = document.getElementById( 'agentic-admin-sidebar' );
 
 	if ( ! container ) {
 		log.warn( 'Sidebar container not found' );
 		return;
 	}
 
-	if ( typeof window.wpAgenticAdmin === 'undefined' ) {
+	if ( typeof window.agenticAdmin === 'undefined' ) {
 		log.error( 'Settings not found' );
 		return;
 	}
 
 	// Toggle sidebar on admin bar icon click.
 	const toggleBtn = document.getElementById(
-		'wp-admin-bar-wp-agentic-admin-sidebar-toggle'
+		'wp-admin-bar-agentic-admin-sidebar-toggle'
 	);
 
 	if ( toggleBtn ) {
@@ -49,7 +49,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			// React's side. See AdminSidebar.jsx.
 			if ( isOpen ) {
 				window.dispatchEvent(
-					new CustomEvent( 'wp-agentic-admin/sidebar-opened' )
+					new CustomEvent( 'agentic-admin/sidebar-opened' )
 				);
 			}
 		} );
@@ -68,9 +68,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	};
 
 	// Close sidebar when clicking the overlay.
-	const overlay = document.getElementById(
-		'wp-agentic-admin-sidebar-overlay'
-	);
+	const overlay = document.getElementById( 'agentic-admin-sidebar-overlay' );
 	if ( overlay ) {
 		overlay.addEventListener( 'click', () => closeSidebar( false ) );
 	}
@@ -83,7 +81,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	} );
 
 	// Close sidebar from React (in-panel close button dispatches this).
-	window.addEventListener( 'wp-agentic-admin/sidebar-close', () =>
+	window.addEventListener( 'agentic-admin/sidebar-close', () =>
 		closeSidebar()
 	);
 

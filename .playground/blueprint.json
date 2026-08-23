@@ -1,6 +1,6 @@
 {
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-  "landingPage": "/wp-admin/admin.php?page=wp-agentic-admin",
+  "landingPage": "/wp-admin/admin.php?page=agentic-admin",
   "preferredVersions": {
     "wp": "6.9",
     "php": "8.3"

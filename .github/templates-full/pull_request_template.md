@@ -65,7 +65,7 @@ Related to #
 - [ ] Example queries provided
 
 **Ability Details:**
-- Ability ID: `wp-agentic-admin/`
+- Ability ID: `agentic-admin/`
 - Category:
 - Operation Type: [ ] read-only [ ] write [ ] write-destructive
 - Required Capability:

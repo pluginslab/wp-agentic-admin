@@ -5,7 +5,7 @@
  * Gets comprehensive site health information.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_site_health(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/site-health',
+		'agentic-admin/site-health',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Site Health', 'agentic-admin' ),

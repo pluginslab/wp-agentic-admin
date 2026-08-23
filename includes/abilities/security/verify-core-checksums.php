@@ -6,7 +6,7 @@
  * and reports any mismatches or missing files with diffs.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_verify_core_checksums(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/verify-core-checksums',
+		'agentic-admin/verify-core-checksums',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Verify Core Checksums', 'agentic-admin' ),

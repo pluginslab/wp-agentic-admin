@@ -88,7 +88,7 @@ function saveThinkingPrefs( prefs ) {
  */
 /**
  * Render a label/value pair as a HStack row. Used in place of the
- * old hand-rolled .wp-agentic-admin-settings-tab__gpu-table.
+ * old hand-rolled .agentic-admin-settings-tab__gpu-table.
  * @param root0
  * @param root0.label
  * @param root0.children
@@ -213,12 +213,10 @@ const SettingsTab = () => {
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
 
 	return (
-		<div className="wp-agentic-admin-settings-tab wp-agentic-admin-tab-padded">
-			<div className="wp-agentic-admin-settings-tab__header">
-				<h3 className="wp-agentic-admin-settings-tab__title">
-					Settings
-				</h3>
-				<p className="wp-agentic-admin-settings-tab__intro">
+		<div className="agentic-admin-settings-tab agentic-admin-tab-padded">
+			<div className="agentic-admin-settings-tab__header">
+				<h3 className="agentic-admin-settings-tab__title">Settings</h3>
+				<p className="agentic-admin-settings-tab__intro">
 					Configure GPU, context windows, and model behavior.
 				</p>
 			</div>
@@ -366,7 +364,7 @@ const SettingsTab = () => {
 					</VStack>
 				</CardHeader>
 				<CardBody>
-					<div className="wp-agentic-admin-ability-grid">
+					<div className="agentic-admin-ability-grid">
 						{ models.map( ( model ) => {
 							const rec = recommendations[ model.id ];
 							const currentDefault =

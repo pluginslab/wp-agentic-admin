@@ -5,10 +5,10 @@
  * Handles the main Agentic Admin page in WP-Admin.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -48,12 +48,46 @@ class Admin_Page {
 	public function __construct() {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_post_agentic_admin_sw', array( $this, 'serve_service_worker' ) );
+		add_action( 'admin_post_nopriv_agentic_admin_sw', array( $this, 'serve_service_worker' ) );
+	}
+
+	/**
+	 * Serve the Service Worker through WordPress.
+	 *
+	 * The browser fetches the SW via admin-post.php so WordPress is fully
+	 * loaded — there is no direct plugin-file access. We send the
+	 * Service-Worker-Allowed header so the SW registered from
+	 * '/wp-admin/admin-post.php' may control the '/wp-admin/' scope, then
+	 * stream the compiled sw.js.
+	 *
+	 * @return void
+	 */
+	public function serve_service_worker(): void {
+		$sw_file = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/sw.js';
+
+		if ( ! file_exists( $sw_file ) ) {
+			status_header( 404 );
+			exit;
+		}
+
+		header( 'Content-Type: application/javascript; charset=utf-8' );
+		header( 'Service-Worker-Allowed: /wp-admin/' );
+		header( 'Cache-Control: no-cache, no-store, must-revalidate' );
+
+		// Stream the compiled, static asset. WP_Filesystem is unnecessary for a
+		// hard-coded, plugin-local path with no user input or traversal vector.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
+		readfile( $sw_file );
+		exit;
 	}
 
 	/**
 	 * Add the top-level admin menu.
 	 */
 	public function add_admin_menu(): void {
+		// Appended to the bottom of the menu (position null) so it integrates
+		// alongside other plugins rather than competing with core items.
 		add_menu_page(
 			__( 'Agentic Admin', 'agentic-admin' ),
 			__( 'Agentic Admin', 'agentic-admin' ),
@@ -61,7 +95,7 @@ class Admin_Page {
 			'agentic-admin',
 			array( $this, 'render_page' ),
 			'dashicons-superhero-alt',
-			3
+			null
 		);
 	}
 
@@ -76,7 +110,7 @@ class Admin_Page {
 			return;
 		}
 
-		$asset_file = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.asset.php';
+		$asset_file = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.asset.php';
 
 		if ( ! file_exists( $asset_file ) ) {
 			return;
@@ -84,17 +118,17 @@ class Admin_Page {
 
 		$asset = require $asset_file;
 		$deps  = isset( $asset['dependencies'] ) ? (array) $asset['dependencies'] : array( 'wp-element' );
-		$ver   = isset( $asset['version'] ) ? $asset['version'] : WP_AGENTIC_ADMIN_VERSION;
+		$ver   = isset( $asset['version'] ) ? $asset['version'] : AGENTIC_ADMIN_VERSION;
 
 		// Enqueue WordPress components styles.
 		wp_enqueue_style( 'wp-components' );
 
 		// Enqueue our styles.
-		$css_file = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
+		$css_file = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
 		if ( file_exists( $css_file ) ) {
 			wp_enqueue_style(
-				'wp-agentic-admin-style',
-				WP_AGENTIC_ADMIN_PLUGIN_URL . 'build-extensions/index.css',
+				'agentic-admin-style',
+				AGENTIC_ADMIN_PLUGIN_URL . 'build-extensions/index.css',
 				array( 'wp-components' ),
 				filemtime( $css_file )
 			);
@@ -103,7 +137,7 @@ class Admin_Page {
 		// Register and enqueue our script.
 		wp_register_script(
 			'agentic-admin',
-			WP_AGENTIC_ADMIN_PLUGIN_URL . 'build-extensions/index.js',
+			AGENTIC_ADMIN_PLUGIN_URL . 'build-extensions/index.js',
 			$deps,
 			$ver,
 			true
@@ -112,7 +146,7 @@ class Admin_Page {
 		// Localize script with data.
 		wp_localize_script(
 			'agentic-admin',
-			'wpAgenticAdmin',
+			'agenticAdmin',
 			self::get_localized_data()
 		);
 
@@ -144,29 +178,29 @@ class Admin_Page {
 			$abilities_js_config = agentic_admin_get_abilities_js_config();
 		}
 
-		// Resolve the PHP-side enabled abilities (CORE + LOCAL_ONLY + LABS-if-enabled),
-		// then expose to JS so the manifest can mirror the PHP gate.
-		require_once WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
+		// Resolve the enabled abilities (CORE + LOCAL_ONLY) and expose to JS
+		// so the manifest mirrors the PHP-authoritative list.
+		require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities-manifest.php';
 		$enabled_abilities = array_keys( agentic_admin_resolve_enabled_abilities() );
 
 		// Asset versions exposed to JS so bug reports / copied transcripts can show
 		// which bundle the user was running (helps spot stale-cache reports).
-		$js_asset_file = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.asset.php';
+		$js_asset_file = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.asset.php';
 		$js_version    = file_exists( $js_asset_file )
 			? ( ( require $js_asset_file )['version'] ?? '' )
 			: '';
-		$css_file      = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
+		$css_file      = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
 		$css_version   = file_exists( $css_file ) ? (string) filemtime( $css_file ) : '';
 
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'restRoot'            => esc_url_raw( rest_url() ),
-			'connectorsRestUrl'   => esc_url_raw( rest_url( 'wp-agentic-admin/v1/connectors' ) ),
+			'connectorsRestUrl'   => esc_url_raw( rest_url( 'agentic-admin/v1/connectors' ) ),
 			'nonce'               => wp_create_nonce( 'wp_rest' ),
 			'userId'              => get_current_user_id(),
-			'pluginUrl'           => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL ),
-			'swUrl'               => esc_url( WP_AGENTIC_ADMIN_PLUGIN_URL . 'sw-loader.php' ),
-			'version'             => WP_AGENTIC_ADMIN_VERSION,
+			'pluginUrl'           => esc_url( AGENTIC_ADMIN_PLUGIN_URL ),
+			'swUrl'               => esc_url( admin_url( 'admin-post.php?action=agentic_admin_sw' ) ),
+			'version'             => AGENTIC_ADMIN_VERSION,
 			'jsVersion'           => $js_version,
 			'cssVersion'          => $css_version,
 			'hasPrettyPermalinks' => self::has_pretty_permalinks(),
@@ -179,7 +213,6 @@ class Admin_Page {
 			'browserRequirements' => Utils::get_browser_requirements(),
 			'abilities'           => $abilities_js_config,
 			'enabledAbilities'    => $enabled_abilities,
-			'enableLabs'          => agentic_admin_labs_enabled(),
 			'i18n'                => array(
 				'loading'            => __( 'Loading AI model...', 'agentic-admin' ),
 				'ready'              => __( 'AI assistant ready', 'agentic-admin' ),
@@ -207,7 +240,7 @@ class Admin_Page {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<div id="wp-agentic-admin-root">
+			<div id="agentic-admin-root">
 				<noscript>
 					<div class="notice notice-error">
 						<p><?php esc_html_e( 'JavaScript is required to use Agentic Admin.', 'agentic-admin' ); ?></p>

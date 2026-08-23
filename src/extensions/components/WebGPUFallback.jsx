@@ -17,7 +17,7 @@ import { Notice, ExternalLink } from '@wordpress/components';
 const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 	if ( isInsecureContext ) {
 		return (
-			<div className="wp-agentic-admin-webgpu-fallback">
+			<div className="agentic-admin-webgpu-fallback">
 				<Notice status="warning" isDismissible={ false }>
 					<h3>{ reason }</h3>
 				</Notice>
@@ -26,7 +26,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 	}
 
 	return (
-		<div className="wp-agentic-admin-webgpu-fallback">
+		<div className="agentic-admin-webgpu-fallback">
 			<Notice status="warning" isDismissible={ false }>
 				<h3>WebGPU Not Available</h3>
 				<p>
@@ -39,11 +39,11 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 				</p>
 			</Notice>
 
-			<div className="wp-agentic-admin-webgpu-fallback__help">
+			<div className="agentic-admin-webgpu-fallback__help">
 				<h4>How to Enable WebGPU</h4>
 
-				<div className="wp-agentic-admin-browser-instructions">
-					<div className="wp-agentic-admin-browser-card">
+				<div className="agentic-admin-browser-instructions">
+					<div className="agentic-admin-browser-card">
 						<h5>Google Chrome (113+)</h5>
 						<p>
 							WebGPU is enabled by default in Chrome 113 and
@@ -62,7 +62,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 						</ol>
 					</div>
 
-					<div className="wp-agentic-admin-browser-card">
+					<div className="agentic-admin-browser-card">
 						<h5>Microsoft Edge (113+)</h5>
 						<p>
 							WebGPU is enabled by default in Edge 113 and later.
@@ -80,7 +80,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 						</ol>
 					</div>
 
-					<div className="wp-agentic-admin-browser-card">
+					<div className="agentic-admin-browser-card">
 						<h5>Firefox (Nightly)</h5>
 						<p>
 							WebGPU is available in Firefox Nightly with a flag.
@@ -98,7 +98,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 						</ol>
 					</div>
 
-					<div className="wp-agentic-admin-browser-card">
+					<div className="agentic-admin-browser-card">
 						<h5>Safari (18+)</h5>
 						<p>WebGPU is available in Safari 18 on macOS Sonoma.</p>
 						<ol>
@@ -109,7 +109,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 					</div>
 				</div>
 
-				<div className="wp-agentic-admin-webgpu-fallback__requirements">
+				<div className="agentic-admin-webgpu-fallback__requirements">
 					<h4>System Requirements</h4>
 					<ul>
 						<li>A modern GPU (integrated or dedicated)</li>
@@ -122,7 +122,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 					</ul>
 				</div>
 
-				<div className="wp-agentic-admin-webgpu-fallback__alternatives">
+				<div className="agentic-admin-webgpu-fallback__alternatives">
 					<h4>Alternative: Manual Abilities</h4>
 					<p>
 						While you won&apos;t be able to use the AI chat
@@ -133,7 +133,7 @@ const WebGPUFallback = ( { reason, isInsecureContext } ) => {
 					</p>
 				</div>
 
-				<div className="wp-agentic-admin-webgpu-fallback__links">
+				<div className="agentic-admin-webgpu-fallback__links">
 					<h4>Learn More</h4>
 					<ul>
 						<li>

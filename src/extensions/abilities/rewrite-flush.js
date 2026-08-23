@@ -43,7 +43,7 @@ import {
  * Register the rewrite-flush ability with the chat system.
  */
 export function registerRewriteFlush() {
-	registerAbility( 'wp-agentic-admin/rewrite-flush', {
+	registerAbility( 'agentic-admin/rewrite-flush', {
 		label: 'Flush rewrite rules',
 		description:
 			'Regenerate WordPress rewrite rules (permalinks). Fixes 404 errors caused by stale URL routing. Returns the new permalink structure.',
@@ -108,7 +108,7 @@ export function registerRewriteFlush() {
 		 * @return {Promise<Object>} The result from PHP.
 		 */
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/rewrite-flush', {} );
+			return executeAbility( 'agentic-admin/rewrite-flush', {} );
 		},
 
 		// Flushing rewrites is safe and common - no confirmation needed.

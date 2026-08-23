@@ -16,7 +16,7 @@ export const suite = {
 			name: 'Stop after listing plugins',
 			input: 'list all installed plugins',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/plugin-list' ],
+				toolsCalled: [ 'agentic-admin/plugin-list' ],
 				toolsCalledExactly: 1,
 				responseNotEmpty: true,
 				responseContainsAny: [ 'plugin', 'installed' ],
@@ -35,7 +35,7 @@ export const suite = {
 			name: 'Stop after database optimization',
 			input: 'run database optimization',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/db-optimize' ],
+				toolsCalled: [ 'agentic-admin/db-optimize' ],
 				toolsCalledExactly: 1,
 				responseNotEmpty: true,
 				responseContainsAny: [ 'database', 'optimiz' ],

@@ -19,7 +19,7 @@ AI: Formats response for user
 ```
 
 Each ability has:
-- **ID** — Unique identifier (e.g., `wp-agentic-admin/plugin-list`)
+- **ID** — Unique identifier (e.g., `agentic-admin/plugin-list`)
 - **Description** — What it does (for the AI to understand)
 - **Input Schema** — What parameters it accepts
 - **Output Schema** — What data it returns
@@ -34,7 +34,7 @@ These terms are used interchangeably, but technically:
 - WordPress ecosystem term
 - Used in WordPress Abilities API (core feature in WP 6.9+)
 - PHP-side concept
-- Example: `wp-agentic-admin/cache-flush`
+- Example: `agentic-admin/cache-flush`
 
 **Tool:**
 - AI/LLM ecosystem term
@@ -55,8 +55,8 @@ Both refer to the same underlying operations.
 Abilities are registered with WordPress using the Abilities API:
 
 ```php
-wp_agentic_admin_register_ability(
-    'wp-agentic-admin/plugin-list',  // Unique ID
+agentic_admin_register_ability(
+    'agentic-admin/plugin-list',  // Unique ID
     array(
         'label'               => 'List installed plugins',
         'description'         => 'Get all installed WordPress plugins',
@@ -73,7 +73,7 @@ wp_agentic_admin_register_ability(
                 'total'   => array( 'type' => 'integer' ),
             ),
         ),
-        'execute_callback'    => 'wp_agentic_admin_execute_plugin_list',
+        'execute_callback'    => 'agentic_admin_execute_plugin_list',
         'permission_callback' => function() {
             return current_user_can( 'manage_options' );
         },
@@ -99,7 +99,7 @@ When the AI calls an ability, WordPress:
 5. Returns result via REST API
 
 ```php
-function wp_agentic_admin_execute_plugin_list( array $input = array() ): array {
+function agentic_admin_execute_plugin_list( array $input = array() ): array {
     if ( ! function_exists( 'get_plugins' ) ) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
@@ -128,12 +128,12 @@ function wp_agentic_admin_execute_plugin_list( array $input = array() ): array {
 The frontend registers a JS wrapper that tells the AI about the ability:
 
 ```javascript
-registerAbility('wp-agentic-admin/plugin-list', {
+registerAbility('agentic-admin/plugin-list', {
     label: 'List installed plugins with status',
     keywords: ['plugin', 'list', 'installed'],
     
     execute: async (params) => {
-        return executeAbility('wp-agentic-admin/plugin-list', {});
+        return executeAbility('agentic-admin/plugin-list', {});
     },
     
     summarize: (result) => {
@@ -406,7 +406,7 @@ Destructive abilities require user confirmation before execution:
 ### JavaScript Configuration
 
 ```javascript
-registerAbility('wp-agentic-admin/plugin-deactivate', {
+registerAbility('agentic-admin/plugin-deactivate', {
     requiresConfirmation: true,
     confirmationMessage: 'Deactivating a plugin may break site functionality. Continue?',
     
@@ -494,8 +494,8 @@ The AI cannot bypass WordPress security — it operates within the logged-in use
 Other plugins can register custom abilities:
 
 ```php
-add_action( 'wp_agentic_admin_register_abilities', function() {
-    wp_agentic_admin_register_ability(
+add_action( 'agentic_admin_register_abilities', function() {
+    agentic_admin_register_ability(
         'my-plugin/custom-ability',
         array(
             'label'            => 'My Custom Action',
@@ -522,8 +522,8 @@ Happens on every page load:
 add_action( 'init', array( $this, 'register_core_abilities' ) );
 
 public function register_core_abilities() {
-    wp_agentic_admin_register_plugin_list();
-    wp_agentic_admin_register_site_health();
+    agentic_admin_register_plugin_list();
+    agentic_admin_register_site_health();
     // ... all core abilities
 }
 ```
@@ -551,7 +551,7 @@ const tools = getAvailableTools();
 When the AI calls a tool:
 
 ```javascript
-const result = await executeAbility('wp-agentic-admin/plugin-list', {});
+const result = await executeAbility('agentic-admin/plugin-list', {});
 // Makes REST API request to WordPress
 // Returns result to AI for observation
 ```

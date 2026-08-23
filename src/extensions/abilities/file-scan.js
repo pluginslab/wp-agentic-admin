@@ -33,7 +33,7 @@ import {
  * Register the file-scan ability with the chat system.
  */
 export function registerFileScan() {
-	registerAbility( 'wp-agentic-admin/file-scan', {
+	registerAbility( 'agentic-admin/file-scan', {
 		label: 'Scan theme and plugin files for malware patterns',
 		description:
 			'Scan PHP files in themes and plugins for obfuscation (eval+base64, gzinflate, str_rot13), shell execution, backdoors, and injected code.',
@@ -154,7 +154,7 @@ export function registerFileScan() {
 				input.scan_themes = params.scan_themes;
 			}
 
-			return executeAbility( 'wp-agentic-admin/file-scan', input );
+			return executeAbility( 'agentic-admin/file-scan', input );
 		},
 
 		// Read-only — no confirmation needed.

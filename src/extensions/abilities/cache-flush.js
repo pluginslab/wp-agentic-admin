@@ -35,7 +35,7 @@ import {
  * Register the cache-flush ability with the chat system.
  */
 export function registerCacheFlush() {
-	registerAbility( 'wp-agentic-admin/cache-flush', {
+	registerAbility( 'agentic-admin/cache-flush', {
 		label: 'Flush cache',
 		description:
 			'Clear all WordPress object caches (page cache, object cache, opcode cache). Use when the user wants to flush, clear, purge, or refresh caches.',
@@ -91,7 +91,7 @@ export function registerCacheFlush() {
 		 */
 		execute: async () => {
 			// No parameters needed - just flush the cache.
-			return executeAbility( 'wp-agentic-admin/cache-flush', {} );
+			return executeAbility( 'agentic-admin/cache-flush', {} );
 		},
 
 		// Cache clearing is safe and reversible - no confirmation needed.

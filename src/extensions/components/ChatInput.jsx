@@ -138,7 +138,7 @@ const ChatInput = ( {
 							role="menuitemcheckbox"
 							onClick={ () => toggleBundle( bundle.id ) }
 							suffix={
-								<span className="wp-agentic-admin-bundle-count">
+								<span className="agentic-admin-bundle-count">
 									{ bundle.abilities.length }
 								</span>
 							}
@@ -161,7 +161,7 @@ const ChatInput = ( {
 								role="menuitemcheckbox"
 								onClick={ () => toggleBundle( bundle.id ) }
 								suffix={
-									<span className="wp-agentic-admin-bundle-count">
+									<span className="agentic-admin-bundle-count">
 										{ bundle.pluginAbilityIds.length }
 									</span>
 								}
@@ -178,7 +178,7 @@ const ChatInput = ( {
 	return (
 		<VStack
 			spacing={ 2 }
-			className="wp-agentic-admin-input-area"
+			className="agentic-admin-input-area"
 			ref={ textareaWrapperRef }
 		>
 			<TextareaControl

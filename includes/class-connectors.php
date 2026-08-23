@@ -7,14 +7,14 @@
  * render the dropdown of "connected" AI provider plugins.
  *
  * Endpoint:
- *   GET /wp-agentic-admin/v1/connectors
+ *   GET /agentic-admin/v1/connectors
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.13.0
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,7 +59,7 @@ class Connectors {
 	 */
 	public static function register_routes(): void {
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/connectors',
 			array(
 				'methods'             => 'GET',
@@ -69,7 +69,7 @@ class Connectors {
 		);
 
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/connectors/chat/completions',
 			array(
 				'methods'             => 'POST',
@@ -134,15 +134,12 @@ class Connectors {
 				continue;
 			}
 
-			$is_connected = false;
-			if ( null !== $ai_registry ) {
-				try {
-					$is_connected = $ai_registry->hasProvider( $id )
-						&& $ai_registry->isProviderConfigured( $id );
-				} catch ( \Exception $e ) {
-					$is_connected = false;
-				}
-			}
+			// "Connected" = the connector's API credential is present. This is
+			// deterministic. The AI Client registry's isProviderConfigured()
+			// proved flaky here (it can report a configured provider as not
+			// configured between calls), which made the connector list flap and
+			// show "no connectors configured" even when keys were set.
+			$is_connected = self::is_connector_configured( $data );
 
 			$models = array();
 			if ( $is_connected && null !== $ai_registry ) {
@@ -176,6 +173,37 @@ class Connectors {
 	}
 
 	/**
+	 * Whether a connector has its API credential configured.
+	 *
+	 * Deterministic check against the connector's declared authentication
+	 * sources (a defined constant, an environment variable, or a saved
+	 * option), in that order. Used instead of the AI Client registry's
+	 * isProviderConfigured(), which proved non-deterministic.
+	 *
+	 * @param array $data Connector definition from wp_get_connectors().
+	 * @return bool True when a non-empty credential is found.
+	 */
+	private static function is_connector_configured( array $data ): bool {
+		$auth = isset( $data['authentication'] ) && is_array( $data['authentication'] )
+			? $data['authentication']
+			: array();
+
+		if ( ! empty( $auth['constant_name'] ) && defined( $auth['constant_name'] ) && constant( $auth['constant_name'] ) ) {
+			return true;
+		}
+
+		if ( ! empty( $auth['env_var_name'] ) && getenv( $auth['env_var_name'] ) ) {
+			return true;
+		}
+
+		if ( ! empty( $auth['setting_name'] ) && ! empty( \get_option( $auth['setting_name'] ) ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * POST /v1/connectors/chat/completions — proxy a chat completion through
 	 * the AI Client to a configured connector's provider.
 	 *
@@ -194,7 +222,7 @@ class Connectors {
 	public static function chat_completion( \WP_REST_Request $request ) {
 		if ( ! class_exists( '\\WordPress\\AiClient\\AiClient' ) ) {
 			return new \WP_Error(
-				'wpaa_no_ai_client',
+				'agentic_admin_no_ai_client',
 				'WP AI Client is not available (requires WordPress 7.0+).',
 				array( 'status' => 501 )
 			);
@@ -206,7 +234,7 @@ class Connectors {
 
 		if ( '' === $connector_id || empty( $messages ) ) {
 			return new \WP_Error(
-				'wpaa_bad_request',
+				'agentic_admin_bad_request',
 				'connector_id and messages are required.',
 				array( 'status' => 400 )
 			);
@@ -214,7 +242,7 @@ class Connectors {
 
 		if ( count( $messages ) > self::MAX_MESSAGES ) {
 			return new \WP_Error(
-				'wpaa_too_many_messages',
+				'agentic_admin_too_many_messages',
 				sprintf( 'Too many messages: limit is %d per request.', self::MAX_MESSAGES ),
 				array( 'status' => 413 )
 			);
@@ -228,7 +256,7 @@ class Connectors {
 		}
 		if ( $total_chars > self::MAX_TOTAL_CHARS ) {
 			return new \WP_Error(
-				'wpaa_payload_too_large',
+				'agentic_admin_payload_too_large',
 				sprintf( 'Combined message content exceeds %d characters.', self::MAX_TOTAL_CHARS ),
 				array( 'status' => 413 )
 			);
@@ -243,14 +271,15 @@ class Connectors {
 			$registry = \WordPress\AiClient\AiClient::defaultRegistry();
 			if ( ! $registry->hasProvider( $connector_id ) ) {
 				return new \WP_Error(
-					'wpaa_unknown_connector',
+					'agentic_admin_unknown_connector',
 					sprintf( 'Connector "%s" is not registered with the AI Client.', $connector_id ),
 					array( 'status' => 404 )
 				);
 			}
-			if ( ! $registry->isProviderConfigured( $connector_id ) ) {
+			$connectors_meta = function_exists( '\\wp_get_connectors' ) ? \wp_get_connectors() : array();
+			if ( ! self::is_connector_configured( $connectors_meta[ $connector_id ] ?? array() ) ) {
 				return new \WP_Error(
-					'wpaa_unconfigured_connector',
+					'agentic_admin_unconfigured_connector',
 					sprintf( 'Connector "%s" is not configured (missing API key).', $connector_id ),
 					array( 'status' => 400 )
 				);
@@ -292,9 +321,29 @@ class Connectors {
 
 			return new \WP_REST_Response( $response, 200 );
 		} catch ( \Exception $e ) {
+			$message = $e->getMessage();
+
+			// WP 7.0's AI connector approval gate blocks a plugin from using a
+			// connector until the site admin approves it. Turn that low-level
+			// error into an actionable message pointing to the approval screen.
+			if ( false !== stripos( $message, 'not been approved' ) ) {
+				return new \WP_Error(
+					'agentic_admin_connector_not_approved',
+					sprintf(
+						/* translators: %s: connector name, e.g. "anthropic". */
+						__( 'Agentic Admin needs your approval to use the "%s" connector. Approve it under Tools → AI Connector Approval, then try again.', 'agentic-admin' ),
+						$connector_id
+					),
+					array(
+						'status'       => 403,
+						'approval_url' => \admin_url( 'tools.php?page=ai-connector-approval' ),
+					)
+				);
+			}
+
 			return new \WP_Error(
-				'wpaa_connector_error',
-				$e->getMessage(),
+				'agentic_admin_connector_error',
+				$message,
 				array( 'status' => 500 )
 			);
 		}
@@ -439,12 +488,12 @@ class Connectors {
 			return null;
 		}
 
-		$key   = 'wpaa_conn_rl_' . $user_id;
+		$key   = 'agentic_admin_conn_rl_' . $user_id;
 		$count = (int) \get_transient( $key );
 
 		if ( $count >= self::RATE_LIMIT_PER_MINUTE ) {
 			return new \WP_Error(
-				'wpaa_rate_limited',
+				'agentic_admin_rate_limited',
 				sprintf(
 					'Connector chat completions are rate-limited to %d requests per minute.',
 					self::RATE_LIMIT_PER_MINUTE

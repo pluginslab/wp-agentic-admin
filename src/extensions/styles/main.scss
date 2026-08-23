@@ -8,12 +8,12 @@
  * Duplicate selectors disabled: Messages area intentionally split between
  * base layout (line ~37) and Perplexity-style chat UI section.
  *
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 @import './tokens';
 
-.wp-agentic-admin-app {
+.agentic-admin-app {
 	margin: 20px 0;
 	display: flex;
 	flex-direction: column;
@@ -27,29 +27,29 @@
 // :last-of-type) injected as inline <style> tags at runtime. Those win
 // the cascade tie at equal specificity, so !important is the only way
 // to flatten Cards plugin-wide.
-.wp-agentic-admin-app .components-card,
-.wp-agentic-admin-app .components-card__body,
-.wp-agentic-admin-app .components-card__header,
-.wp-agentic-admin-app .components-card__footer,
-#wp-agentic-admin-sidebar .components-card,
-#wp-agentic-admin-sidebar .components-card__body,
-#wp-agentic-admin-sidebar .components-card__header,
-#wp-agentic-admin-sidebar .components-card__footer {
+.agentic-admin-app .components-card,
+.agentic-admin-app .components-card__body,
+.agentic-admin-app .components-card__header,
+.agentic-admin-app .components-card__footer,
+#agentic-admin-sidebar .components-card,
+#agentic-admin-sidebar .components-card__body,
+#agentic-admin-sidebar .components-card__header,
+#agentic-admin-sidebar .components-card__footer {
 	border-radius: 0 !important;
 }
 
 // Chat header HStack must constrain to its parent column (default WP
 // HStack sizes to content and overflows narrow parents — same issue
 // we hit in admin-sidebar.scss).
-.wp-agentic-admin-chat-header.components-h-stack,
-.wp-agentic-admin-chat-actions.components-h-stack {
+.agentic-admin-chat-header.components-h-stack,
+.agentic-admin-chat-actions.components-h-stack {
 	max-width: 100%;
 	box-sizing: border-box;
 	flex-wrap: wrap;
 	row-gap: 4px;
 }
 
-.wp-agentic-admin-main {
+.agentic-admin-main {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -57,7 +57,7 @@
 }
 
 // Chat Container
-.wp-agentic-admin-chat {
+.agentic-admin-chat {
 	background: $color-surface;
 	border: 1px solid $color-border;
 	border-radius: 4px;
@@ -69,7 +69,7 @@
 }
 
 // Messages Area
-.wp-agentic-admin-messages {
+.agentic-admin-messages {
 	flex: 1;
 	min-height: 200px;
 	overflow-y: auto;
@@ -104,7 +104,7 @@
 	// HStack to left-align — WP's Button centers content + uses
 	// width: max-content, which pushes "Thinking… ▼" toward the
 	// middle of the header instead of the left edge.
-	.wp-agentic-admin-collapsible {
+	.agentic-admin-collapsible {
 		.components-card__header {
 			border-bottom: 0;
 		}
@@ -159,7 +159,7 @@
 
 
 // Context Warning
-.wp-agentic-admin-context-warning {
+.agentic-admin-context-warning {
 	padding: 0 12px;
 
 	.components-notice {
@@ -185,14 +185,14 @@
 
 
 // Individual Message
-.wp-agentic-admin-message {
+.agentic-admin-message {
 	margin-bottom: 16px;
 	max-width: 85%;
 
 	&--user {
 		margin-left: auto;
 
-		.wp-agentic-admin-message__content {
+		.agentic-admin-message__content {
 			background: $color-accent;
 			color: $color-surface;
 			border-radius: 16px 16px 4px 16px;
@@ -202,7 +202,7 @@
 	&--assistant {
 		margin-right: auto;
 
-		.wp-agentic-admin-message__content {
+		.agentic-admin-message__content {
 			background: $color-surface;
 			border: 1px solid $color-border;
 			border-radius: 16px 16px 16px 4px;
@@ -213,7 +213,7 @@
 		margin: 0 auto 16px;
 		max-width: 100%;
 
-		.wp-agentic-admin-message__content {
+		.agentic-admin-message__content {
 			background: $color-surface;
 			border: 1px solid $color-border;
 			border-left: 4px solid $color-accent;
@@ -267,7 +267,7 @@
 }
 
 // Ability Execution Block
-.wp-agentic-admin-ability {
+.agentic-admin-ability {
 	background: $color-info-bg;
 	border: 1px solid $color-border;
 	border-radius: 4px;
@@ -304,7 +304,7 @@
 
 	&--pending {
 
-		.wp-agentic-admin-ability__header {
+		.agentic-admin-ability__header {
 			color: $color-warning-text;
 		}
 	}
@@ -312,7 +312,7 @@
 	&--success {
 		border-color: $color-success;
 
-		.wp-agentic-admin-ability__header {
+		.agentic-admin-ability__header {
 			color: $color-success;
 		}
 	}
@@ -320,7 +320,7 @@
 	&--error {
 		border-color: $color-error;
 
-		.wp-agentic-admin-ability__header {
+		.agentic-admin-ability__header {
 			color: $color-error;
 		}
 	}
@@ -330,7 +330,7 @@
 // Composer area — only the panel chrome (white background + top
 // border separating it from the message list). Layout comes from
 // VStack/HStack and inputs come from @wordpress/components.
-.wp-agentic-admin-input-area {
+.agentic-admin-input-area {
 	padding: 15px;
 	border-top: 1px solid $color-border;
 	background: $color-surface;
@@ -338,12 +338,12 @@
 
 // Textarea container — needed to anchor the transcribing overlay
 // (used by the parked VoiceButton component).
-.wp-agentic-admin-textarea-container {
+.agentic-admin-textarea-container {
 	position: relative;
 }
 
 // Transcribing overlay — appears over textarea while Whisper runs
-.wp-agentic-admin-transcribing-overlay {
+.agentic-admin-transcribing-overlay {
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -369,7 +369,7 @@
 }
 
 // Equaliser-style wave bars
-.wp-agentic-admin-transcribing-wave {
+.agentic-admin-transcribing-wave {
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -418,7 +418,7 @@
 	}
 }
 
-.wp-agentic-admin-transcribing-label {
+.agentic-admin-transcribing-label {
 	font-size: 12px;
 	color: $color-text-muted;
 	letter-spacing: 0.02em;
@@ -430,7 +430,7 @@
 
 // Bundle DropdownMenu — count suffix (per-bundle ability count) must
 // not wrap onto a second line in the slim ~240px menu.
-.wp-agentic-admin-bundle-count {
+.agentic-admin-bundle-count {
 	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
 	color: $color-text-faint;
@@ -450,13 +450,13 @@
 		background: $color-info-bg;
 	}
 
-	.wp-agentic-admin-bundle-count {
+	.agentic-admin-bundle-count {
 		color: $color-accent;
 	}
 }
 
 // Voice button (microphone) — speech-to-text input
-.wp-agentic-admin-voice-button {
+.agentic-admin-voice-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -504,7 +504,7 @@
 		background: $color-error-border;
 		animation-duration: 0.7s;
 
-		.wp-agentic-admin-voice-timer {
+		.agentic-admin-voice-timer {
 			color: #7f1d1d;
 		}
 	}
@@ -523,7 +523,7 @@
 }
 
 // ── Countdown timer shown inline inside the recording button ─────────
-.wp-agentic-admin-voice-timer {
+.agentic-admin-voice-timer {
 	font-size: 9px;
 	font-weight: 700;
 	line-height: 1;
@@ -554,7 +554,7 @@
 }
 
 // ── Thinking dots (CSS-animated, shown during transcription) ─────────
-.wp-agentic-admin-voice-dots {
+.agentic-admin-voice-dots {
 	display: flex;
 	align-items: center;
 	gap: 3px;
@@ -595,7 +595,7 @@
 // Status pill (toolbar) — keep the Spinner vertically centred. WP's
 // Spinner ships with a default 5px margin that breaks alignment with
 // the icon Buttons next to it in the composer toolbar.
-.wp-agentic-admin-status-pill {
+.agentic-admin-status-pill {
 	min-height: 36px; // match toolbar icon Button height
 
 	.components-spinner {
@@ -605,7 +605,7 @@
 
 // Status dot — colored indicator inside the model-status Card.
 // 10px circle; color reflects model state.
-.wp-agentic-admin-status-dot {
+.agentic-admin-status-dot {
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
@@ -630,13 +630,13 @@
 // Inline ProgressBar in the model-status row needs a constrained width —
 // ProgressBar defaults to filling its parent flex item, which makes it
 // expand the whole status bar. Cap it so it stays inline.
-.wp-agentic-admin-status-progress {
+.agentic-admin-status-progress {
 	width: 80px;
 	flex-shrink: 0;
 }
 
 // Confirm Dialog
-.wp-agentic-admin-confirm {
+.agentic-admin-confirm {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -700,7 +700,7 @@
 // chat view needs to occupy remaining vertical space. The tab strip itself,
 // active-state indicator, hover styling, and content padding all come from
 // the component's bundled stylesheet.
-.wp-agentic-admin-tabs {
+.agentic-admin-tabs {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
@@ -720,7 +720,7 @@
 }
 
 // Chat Container wrapper
-.wp-agentic-admin-chat-container {
+.agentic-admin-chat-container {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
@@ -735,7 +735,7 @@
 // the Execute Button (in CardFooter) always sits at the bottom edge.
 // !important is needed because @wordpress/components emotion classes
 // win the cascade tie against equal-specificity bundled rules.
-.wp-agentic-admin-ability-grid {
+.agentic-admin-ability-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 16px;
@@ -769,7 +769,7 @@
 // edge-to-edge chrome (chat-header / messages / composer); the
 // other tabs (Abilities, Plugin Abilities, Settings) need a uniform
 // 20px breathing room from the panel edges.
-.wp-agentic-admin-tab-padded {
+.agentic-admin-tab-padded {
 	padding: 20px;
 
 	// WP admin's global styles give h3 a sizeable top margin and p a
@@ -789,7 +789,7 @@
 // Plugin Abilities Panel
 // Plugin Abilities — only the per-ability icon needs custom layout.
 // Cards / toggles / spacing all come from @wordpress/components.
-.wp-agentic-admin-plugin-panel-icon {
+.agentic-admin-plugin-panel-icon {
 	width: 36px;
 	height: 36px;
 	border-radius: 6px;
@@ -798,7 +798,7 @@
 }
 
 // Error content in messages
-.wp-agentic-admin-error-content {
+.agentic-admin-error-content {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
@@ -821,9 +821,9 @@
 }
 
 // Message type: error
-.wp-agentic-admin-message--error {
+.agentic-admin-message--error {
 
-	.wp-agentic-admin-message__content {
+	.agentic-admin-message__content {
 		background: $color-error-bg;
 		border: 1px solid $color-error;
 		border-radius: 4px;
@@ -831,31 +831,31 @@
 }
 
 // Message type: ability-request and ability-result
-.wp-agentic-admin-message--ability-request,
-.wp-agentic-admin-message--ability-result {
+.agentic-admin-message--ability-request,
+.agentic-admin-message--ability-result {
 	max-width: 100%;
 }
 
 // Chat Header with actions
 // Chat header + chat-actions chrome: just visual decoration on top
 // of the HStack from @wordpress/components (which handles layout).
-.wp-agentic-admin-chat-header,
-.wp-agentic-admin-chat-actions {
+.agentic-admin-chat-header,
+.agentic-admin-chat-actions {
 	padding: 8px 16px;
 	background: $color-surface-subtle;
 }
 
-.wp-agentic-admin-chat-header {
+.agentic-admin-chat-header {
 	border-top: 1px solid $color-border;
 	border-bottom: 1px solid $color-border;
 }
 
-.wp-agentic-admin-chat-actions {
+.agentic-admin-chat-actions {
 	border-top: 1px solid $color-border;
 }
 
 // Override WordPress default snackbar positioning with higher specificity
-.wp-agentic-admin-app .wp-agentic-admin-chat-container .components-snackbar {
+.agentic-admin-app .agentic-admin-chat-container .components-snackbar {
 	position: fixed !important;
 	top: 60px !important;
 	right: 20px !important;
@@ -864,12 +864,12 @@
 	z-index: 1000000 !important;
 }
 
-.wp-agentic-admin-app .components-snackbar {
+.agentic-admin-app .components-snackbar {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 // WebGPU Fallback
-.wp-agentic-admin-webgpu-fallback {
+.agentic-admin-webgpu-fallback {
 	padding: 20px;
 
 	.components-notice {
@@ -928,13 +928,13 @@
 }
 
 // Browser instruction cards
-.wp-agentic-admin-browser-instructions {
+.agentic-admin-browser-instructions {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	gap: 16px;
 }
 
-.wp-agentic-admin-browser-card {
+.agentic-admin-browser-card {
 	background: $color-surface;
 	border: 1px solid $color-border;
 	border-radius: 4px;
@@ -965,7 +965,7 @@
 }
 
 // Confirmation Modal
-.wp-agentic-admin-confirm-modal {
+.agentic-admin-confirm-modal {
 
 	.components-modal__content {
 		padding: 0;
@@ -985,7 +985,7 @@
 		}
 	}
 
-	.wp-agentic-admin-confirm-params {
+	.agentic-admin-confirm-params {
 		margin: 16px 24px;
 		padding: 12px;
 		background: $color-surface-subtle;
@@ -1007,7 +1007,7 @@
 		}
 	}
 
-	.wp-agentic-admin-confirm-actions {
+	.agentic-admin-confirm-actions {
 		display: flex;
 		justify-content: flex-end;
 		gap: 8px;
@@ -1017,20 +1017,20 @@
 	}
 
 	// Intent Confirmation Styles (v1.3.0 - Fuzzy Matching)
-	.wp-agentic-admin-intent-question {
+	.agentic-admin-intent-question {
 		font-size: 14px;
 		color: $color-text-muted;
 		margin-bottom: 8px !important;
 	}
 
-	.wp-agentic-admin-intent-tool {
+	.agentic-admin-intent-tool {
 		font-size: 18px;
 		font-weight: 600;
 		color: $color-text;
 		margin-bottom: 16px !important;
 	}
 
-	.wp-agentic-admin-intent-details {
+	.agentic-admin-intent-details {
 		margin: 16px 24px;
 		padding: 12px 16px;
 		background: $color-info-bg;
@@ -1038,7 +1038,7 @@
 		border-radius: 4px;
 	}
 
-	.wp-agentic-admin-intent-match-info {
+	.agentic-admin-intent-match-info {
 		font-size: 13px;
 		color: $color-text;
 		font-weight: 600;
@@ -1046,7 +1046,7 @@
 		padding: 0 !important;
 	}
 
-	.wp-agentic-admin-fuzzy-matches {
+	.agentic-admin-fuzzy-matches {
 		list-style: none;
 		padding: 0 !important;
 		margin: 0 !important;
@@ -1085,7 +1085,7 @@
 		}
 	}
 
-	.wp-agentic-admin-intent-type {
+	.agentic-admin-intent-type {
 		margin: 12px 24px 0 24px !important;
 		padding: 0 !important;
 		text-align: center;
@@ -1120,12 +1120,12 @@
 	}
 
 	// Workflow Confirmation Styles
-	.wp-agentic-admin-confirm-description {
+	.agentic-admin-confirm-description {
 		color: $color-text-faint;
 		font-style: italic;
 	}
 
-	.wp-agentic-admin-confirm-steps {
+	.agentic-admin-confirm-steps {
 		margin: 16px 24px;
 		padding: 12px 16px;
 		background: $color-surface-subtle;
@@ -1273,9 +1273,9 @@
 // @wordpress/components. See src/extensions/components/MessageItem.jsx.
 //
 // Two tiny custom classes remain (declared below):
-//   .wp-agentic-admin-msg--user  — primary-tinted right-aligned bubble
-//   .wp-agentic-admin-md-table   — bare markdown-table fallback styling
-.wp-agentic-admin-msg--user {
+//   .agentic-admin-msg--user  — primary-tinted right-aligned bubble
+//   .agentic-admin-md-table   — bare markdown-table fallback styling
+.agentic-admin-msg--user {
 	.components-card__body {
 		background: $color-accent;
 		color: $color-surface;
@@ -1290,7 +1290,7 @@
 	}
 }
 
-.wp-agentic-admin-md-table {
+.agentic-admin-md-table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 13px;
@@ -1317,7 +1317,7 @@
 
 // AbilityPicker — only the numbered-list marker styling. Everything else
 // (buttons, inputs, spacing) comes from @wordpress/components.
-.wp-agentic-admin-ability-picker-list {
+.agentic-admin-ability-picker-list {
 	margin: 0;
 	padding: 0 0 0 24px;
 	list-style-type: decimal;
@@ -1330,8 +1330,8 @@
 
 
 // Global focus-visible styles for interactive elements
-.wp-agentic-admin-app,
-#wp-agentic-admin-sidebar {
+.agentic-admin-app,
+#agentic-admin-sidebar {
 
 	button:focus-visible,
 	a:focus-visible,
@@ -1345,8 +1345,8 @@
 // Respect user motion preferences (WCAG 2.3.3)
 @media ( prefers-reduced-motion: reduce ) {
 
-	.wp-agentic-admin-app,
-	#wp-agentic-admin-sidebar {
+	.agentic-admin-app,
+	#agentic-admin-sidebar {
 
 		*,
 		*::before,
@@ -1360,7 +1360,7 @@
 
 
 /* Settings Tab */
-.wp-agentic-admin-settings-tab {
+.agentic-admin-settings-tab {
 	padding: 20px;
 	overflow-y: auto;
 
@@ -1427,8 +1427,8 @@
 // CardBody. Only the scroll + max-height + tab-size behavior remains;
 // fonts and colors come from the Card primitive.
 // Dark-themed scrollable monospace body inside the FileView Card —
-// same look as <pre> inside .wp-agentic-admin-messages.
-.wp-agentic-admin-file-view-body {
+// same look as <pre> inside .agentic-admin-messages.
+.agentic-admin-file-view-body {
 	margin: 0;
 	overflow-x: auto;
 	max-height: 480px;

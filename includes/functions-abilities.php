@@ -7,7 +7,7 @@
  * to register abilities that the AI assistant can use.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -30,7 +30,7 @@ $agentic_admin_abilities = array();
  *
  * @since 0.1.0
  *
- * @param string $id         Unique ability identifier (e.g., 'wp-agentic-admin/cache-flush').
+ * @param string $id         Unique ability identifier (e.g., 'agentic-admin/cache-flush').
  * @param array  $php_args   PHP configuration for the WordPress Abilities API.
  *                           See wp_register_ability() for available options.
  * @param array  $js_args    Optional. JavaScript configuration for the chat interface.

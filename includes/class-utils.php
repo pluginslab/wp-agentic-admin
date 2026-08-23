@@ -3,10 +3,10 @@
  * Utils class
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

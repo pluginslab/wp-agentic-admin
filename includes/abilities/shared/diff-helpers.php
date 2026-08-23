@@ -5,7 +5,7 @@
  * Common diff functionality used across security abilities.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -59,14 +59,14 @@ function agentic_admin_get_remote_file_diff( string $original_url, string $file_
 function agentic_admin_generate_unified_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
 	// Use WordPress built-in Text_Diff if available.
 	if ( ! class_exists( 'Text_Diff', false ) ) {
-		$diff_file = ABSPATH . 'wp-includes/Text/Diff.php';
+		$diff_file = ABSPATH . WPINC . '/Text/Diff.php';
 		if ( file_exists( $diff_file ) ) {
 			require_once $diff_file;
 		}
 	}
 
 	if ( ! class_exists( 'Text_Diff_Renderer_unified', false ) ) {
-		$renderer_file = ABSPATH . 'wp-includes/Text/Diff/Renderer/unified.php';
+		$renderer_file = ABSPATH . WPINC . '/Text/Diff/Renderer/unified.php';
 		if ( file_exists( $renderer_file ) ) {
 			require_once $renderer_file;
 		}

@@ -10,7 +10,7 @@
  * documents). Any executable file is a strong indicator of malware.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_uploads_scan(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/uploads-scan',
+		'agentic-admin/uploads-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Scan Uploads for Suspicious Files', 'agentic-admin' ),
@@ -172,7 +172,12 @@ function agentic_admin_execute_uploads_scan( array $input = array() ): array {
 	// 3. Scan .well-known directory (recursive).
 	// Attackers hide backdoors in .well-known/ because admins rarely check it
 	// and some security scanners skip dotfiles/dotdirs.
-	$well_known_dir = ABSPATH . '.well-known';
+	// .well-known lives at the site root (document root), which is get_home_path()
+	// and can differ from ABSPATH on subdirectory installs.
+	if ( ! function_exists( 'get_home_path' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+	}
+	$well_known_dir = trailingslashit( get_home_path() ) . '.well-known';
 	if ( is_dir( $well_known_dir ) ) {
 		$areas_scanned[] = '.well-known';
 		agentic_admin_scan_directory_for_dangerous_files(

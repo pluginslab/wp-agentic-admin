@@ -15,7 +15,7 @@ import {
  * Register the comment-stats ability with the chat system.
  */
 export function registerCommentStats() {
-	registerAbility( 'wp-agentic-admin/comment-stats', {
+	registerAbility( 'agentic-admin/comment-stats', {
 		label: 'Show comment statistics',
 		description:
 			'Show comment counts by status including approved, pending, spam, and trash. Use for questions about comments or moderation.',
@@ -42,7 +42,7 @@ export function registerCommentStats() {
 		},
 
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/comment-stats', {} );
+			return executeAbility( 'agentic-admin/comment-stats', {} );
 		},
 
 		requiresConfirmation: false,

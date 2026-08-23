@@ -23,7 +23,7 @@ const AbilityPicker = ( { abilities, workflows, onExecute, isProcessing } ) => {
 			return true;
 		}
 		const schema =
-			window.wpAgenticAdmin?.abilities?.[ tool.id ]?.input_schema;
+			window.agenticAdmin?.abilities?.[ tool.id ]?.input_schema;
 		return !! ( schema && Object.keys( schema ).length > 0 );
 	};
 
@@ -89,7 +89,7 @@ const AbilityPicker = ( { abilities, workflows, onExecute, isProcessing } ) => {
 		items.length > 0 && (
 			<VStack spacing={ 2 }>
 				<strong>{ title }</strong>
-				<ol className="wp-agentic-admin-ability-picker-list">
+				<ol className="agentic-admin-ability-picker-list">
 					{ items.map( renderItem ) }
 				</ol>
 			</VStack>

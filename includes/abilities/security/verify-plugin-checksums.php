@@ -6,7 +6,7 @@
  * Plugins not hosted on WordPress.org (no checksums available) are counted and skipped.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @see https://github.com/wp-cli/checksum-command — WP-CLI plugin verify-checksums
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_verify_plugin_checksums(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/verify-plugin-checksums',
+		'agentic-admin/verify-plugin-checksums',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Verify Plugin Checksums', 'agentic-admin' ),

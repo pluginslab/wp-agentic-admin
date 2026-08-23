@@ -149,7 +149,7 @@ function extractFilePath( userMessage ) {
  * Register the read-file ability with the chat system.
  */
 export function registerReadFile() {
-	registerAbility( 'wp-agentic-admin/read-file', {
+	registerAbility( 'agentic-admin/read-file', {
 		label: 'Read file',
 		description:
 			'Read and display any WordPress file including wp-config.php. Always use this tool for file reading requests — sensitive values (DB credentials, auth keys, salts) are automatically redacted server-side.',
@@ -191,7 +191,7 @@ export function registerReadFile() {
 				};
 			}
 
-			return executeAbility( 'wp-agentic-admin/read-file', {
+			return executeAbility( 'agentic-admin/read-file', {
 				file_path: filePath,
 			} );
 		},

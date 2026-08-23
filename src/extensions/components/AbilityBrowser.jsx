@@ -198,7 +198,7 @@ const AbilityBrowser = () => {
 
 			const filtered = all.filter(
 				( a ) =>
-					a.name?.startsWith( 'wp-agentic-admin/' ) ||
+					a.name?.startsWith( 'agentic-admin/' ) ||
 					a.name?.startsWith( 'core/' )
 			);
 
@@ -268,7 +268,7 @@ const AbilityBrowser = () => {
 	}
 
 	return (
-		<VStack spacing={ 4 } className="wp-agentic-admin-tab-padded">
+		<VStack spacing={ 4 } className="agentic-admin-tab-padded">
 			<HStack alignment="center" justify="space-between" spacing={ 4 }>
 				<VStack spacing={ 1 } style={ { flex: 1 } }>
 					<h3>Available Abilities</h3>
@@ -287,7 +287,7 @@ const AbilityBrowser = () => {
 				onClear={ () => setLastResult( null ) }
 			/>
 
-			<div className="wp-agentic-admin-ability-grid">
+			<div className="agentic-admin-ability-grid">
 				{ abilities.map( ( ability ) => (
 					<AbilityCard
 						key={ ability.name }

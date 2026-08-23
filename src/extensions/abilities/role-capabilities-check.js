@@ -30,7 +30,7 @@ import {
  * Register the role-capabilities-check ability with the chat system.
  */
 export function registerRoleCapabilitiesCheck() {
-	registerAbility( 'wp-agentic-admin/role-capabilities-check', {
+	registerAbility( 'agentic-admin/role-capabilities-check', {
 		label: 'Check role capabilities against WordPress defaults',
 		description:
 			'Compare site role capabilities against WordPress defaults to detect privilege escalation, modified roles, or suspicious non-default roles.',
@@ -169,7 +169,7 @@ export function registerRoleCapabilitiesCheck() {
 		 */
 		execute: async () => {
 			return executeAbility(
-				'wp-agentic-admin/role-capabilities-check',
+				'agentic-admin/role-capabilities-check',
 				{}
 			);
 		},

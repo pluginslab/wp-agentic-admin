@@ -22,7 +22,7 @@ const log = createLogger( 'WorkflowRegistry' );
 
 /**
  * @typedef {Object} WorkflowDefinition
- * @property {string}         id                          - Unique workflow identifier (e.g., 'wp-agentic-admin/cleanup-site')
+ * @property {string}         id                          - Unique workflow identifier (e.g., 'agentic-admin/cleanup-site')
  * @property {string}         label                       - Human-readable name
  * @property {string}         description                 - Description of what this workflow does
  * @property {string[]}       keywords                    - Keywords that trigger this workflow

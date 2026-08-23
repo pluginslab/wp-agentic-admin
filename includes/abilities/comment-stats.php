@@ -5,7 +5,7 @@
  * Shows comment counts by status.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_comment_stats(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/comment-stats',
+		'agentic-admin/comment-stats',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Comment Statistics', 'agentic-admin' ),

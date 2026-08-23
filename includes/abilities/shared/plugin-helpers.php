@@ -5,7 +5,7 @@
  * Common functionality used across plugin-related abilities to avoid code duplication.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -58,14 +58,14 @@ function agentic_admin_get_all_plugins( string $status_filter = 'all' ): array {
 			$actions[] = array(
 				'label'        => $plugin['name'],
 				'button_label' => __( 'Deactivate', 'agentic-admin' ),
-				'action'       => 'wp-agentic-admin/plugin-deactivate',
+				'action'       => 'agentic-admin/plugin-deactivate',
 				'args'         => array( 'plugin' => $plugin['slug'] ),
 			);
 		} else {
 			$actions[] = array(
 				'label'        => $plugin['name'],
 				'button_label' => __( 'Activate', 'agentic-admin' ),
-				'action'       => 'wp-agentic-admin/plugin-activate',
+				'action'       => 'agentic-admin/plugin-activate',
 				'args'         => array( 'plugin' => $plugin['slug'] ),
 			);
 		}
@@ -303,7 +303,7 @@ function agentic_admin_activate_plugin_by_slug( string $plugin_identifier ): arr
 		return agentic_admin_build_candidate_response(
 			$resolved,
 			$plugin_identifier,
-			'wp-agentic-admin/plugin-activate',
+			'agentic-admin/plugin-activate',
 			__( 'Activate', 'agentic-admin' )
 		);
 	}
@@ -403,7 +403,7 @@ function agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier ): a
 		return agentic_admin_build_candidate_response(
 			$resolved,
 			$plugin_identifier,
-			'wp-agentic-admin/plugin-deactivate',
+			'agentic-admin/plugin-deactivate',
 			__( 'Deactivate', 'agentic-admin' )
 		);
 	}
@@ -463,7 +463,7 @@ function agentic_admin_deactivate_plugin_by_slug( string $plugin_identifier ): a
  *
  * @param array  $resolved         Result from agentic_admin_resolve_plugin().
  * @param string $original_input   The user's original input string.
- * @param string $action_id        The ability action ID (e.g. "wp-agentic-admin/plugin-activate").
+ * @param string $action_id        The ability action ID (e.g. "agentic-admin/plugin-activate").
  * @param string $button_label     Label for the action button (e.g. "Activate").
  * @return array Response with actions for UI buttons.
  */

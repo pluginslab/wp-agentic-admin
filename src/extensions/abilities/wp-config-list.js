@@ -216,7 +216,7 @@ function formatConstants( constants, wasRedacted ) {
  * Register the wp-config-list ability with the chat system.
  */
 export function registerWpConfigList() {
-	registerAbility( 'wp-agentic-admin/wp-config-list', {
+	registerAbility( 'agentic-admin/wp-config-list', {
 		label: 'List wp-config constants',
 		description:
 			'List and categorize all PHP constants defined in wp-config.php, grouped by purpose (database, debug, security, performance, etc.). Sensitive values are automatically redacted. Use this to check any specific constant value (e.g. is WP_DEBUG enabled? what is WP_MEMORY_LIMIT?) or to list all wp-config constants.',
@@ -244,7 +244,7 @@ export function registerWpConfigList() {
 		 */
 		execute: async () => {
 			const fileResult = await executeAbility(
-				'wp-agentic-admin/read-file',
+				'agentic-admin/read-file',
 				{ file_path: 'wp-config.php', lines: 500 }
 			);
 

@@ -50,7 +50,7 @@ import {
  * Register the cron-list ability with the chat system.
  */
 export function registerCronList() {
-	registerAbility( 'wp-agentic-admin/cron-list', {
+	registerAbility( 'agentic-admin/cron-list', {
 		label: 'List cron events',
 		description:
 			'List all scheduled WordPress cron events with their next run time, schedule, and overdue status. Use for questions about scheduled tasks, background jobs, or overdue cron events.',
@@ -164,7 +164,7 @@ export function registerCronList() {
 		 * @return {Promise<Object>} The result from PHP.
 		 */
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/cron-list', {
+			return executeAbility( 'agentic-admin/cron-list', {
 				show_overdue: true,
 			} );
 		},

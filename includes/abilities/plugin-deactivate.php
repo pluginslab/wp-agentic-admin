@@ -5,7 +5,7 @@
  * Deactivates a specific plugin by its slug.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_plugin_deactivate(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/plugin-deactivate',
+		'agentic-admin/plugin-deactivate',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Deactivate Plugin', 'agentic-admin' ),

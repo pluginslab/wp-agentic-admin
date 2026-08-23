@@ -5,7 +5,7 @@
  * Reads recent entries from the WordPress debug.log file.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_error_log_read(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/error-log-read',
+		'agentic-admin/error-log-read',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Read Error Log', 'agentic-admin' ),
@@ -92,7 +92,7 @@ function agentic_admin_execute_error_log_read( array $input = array() ): array {
 	$lines = isset( $input['lines'] ) ? absint( $input['lines'] ) : 50;
 
 	// Check if debug.log exists.
-	$log_file = \WPAgenticAdmin\Utils::get_debug_log_path();
+	$log_file = \AgenticAdmin\Utils::get_debug_log_path();
 
 	if ( ! file_exists( $log_file ) ) {
 		return array(

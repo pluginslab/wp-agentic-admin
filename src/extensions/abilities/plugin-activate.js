@@ -44,7 +44,7 @@ function extractParams( userMessage ) {
  * is generally less risky than deactivation.
  */
 export function registerPluginActivate() {
-	registerAbility( 'wp-agentic-admin/plugin-activate', {
+	registerAbility( 'agentic-admin/plugin-activate', {
 		label: 'Activate plugins',
 		description:
 			'Activate a WordPress plugin by name or slug. Returns success or failure with the reason (e.g., plugin not found, already active).',
@@ -134,7 +134,7 @@ export function registerPluginActivate() {
 			}
 
 			// Execute the PHP ability with the extracted parameters.
-			return executeAbility( 'wp-agentic-admin/plugin-activate', params );
+			return executeAbility( 'agentic-admin/plugin-activate', params );
 		},
 
 		// NON-DESTRUCTIVE ACTION: No confirmation needed.

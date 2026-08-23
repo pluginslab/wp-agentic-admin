@@ -31,7 +31,7 @@ import {
  * Register the verify-plugin-checksums ability with the chat system.
  */
 export function registerVerifyPluginChecksums() {
-	registerAbility( 'wp-agentic-admin/verify-plugin-checksums', {
+	registerAbility( 'agentic-admin/verify-plugin-checksums', {
 		label: 'Verify plugin file checksums',
 		description:
 			'Verify installed plugin file integrity by comparing checksums against the WordPress.org API. Detects modified, missing, and extra files in plugin directories.',
@@ -175,7 +175,7 @@ export function registerVerifyPluginChecksums() {
 			}
 
 			return executeAbility(
-				'wp-agentic-admin/verify-plugin-checksums',
+				'agentic-admin/verify-plugin-checksums',
 				input
 			);
 		},

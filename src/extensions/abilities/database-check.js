@@ -29,7 +29,7 @@ import {
  * Register the database-check ability with the chat system.
  */
 export function registerDatabaseCheck() {
-	registerAbility( 'wp-agentic-admin/database-check', {
+	registerAbility( 'agentic-admin/database-check', {
 		label: 'Database security scan',
 		description:
 			'Scan the WordPress database for indicators of compromise: injected scripts, base64 payloads, eval() calls, rogue cron jobs, suspicious admin accounts, and SEO spam.',
@@ -127,7 +127,7 @@ export function registerDatabaseCheck() {
 		 * @return {Promise<Object>} The result from the PHP ability.
 		 */
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/database-check', {} );
+			return executeAbility( 'agentic-admin/database-check', {} );
 		},
 
 		// Read-only — no confirmation needed.

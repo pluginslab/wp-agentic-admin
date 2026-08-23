@@ -5,7 +5,7 @@
  * Checks for available WordPress core, plugin, and theme updates.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_update_check(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/update-check',
+		'agentic-admin/update-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Check Updates', 'agentic-admin' ),

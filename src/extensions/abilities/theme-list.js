@@ -15,7 +15,7 @@ import {
  * Register the theme-list ability with the chat system.
  */
 export function registerThemeList() {
-	registerAbility( 'wp-agentic-admin/theme-list', {
+	registerAbility( 'agentic-admin/theme-list', {
 		label: 'List installed themes',
 		description:
 			'List all installed WordPress themes with their active/inactive status and version. Use for questions about installed themes or which theme is active.',
@@ -75,7 +75,7 @@ export function registerThemeList() {
 		},
 
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/theme-list', {} );
+			return executeAbility( 'agentic-admin/theme-list', {} );
 		},
 
 		requiresConfirmation: false,

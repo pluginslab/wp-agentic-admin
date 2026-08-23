@@ -53,7 +53,7 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
    ```
 
 6. **Set up WordPress**:
-   - Copy plugin to your local WordPress installation: `wp-content/plugins/wp-agentic-admin/`
+   - Copy plugin to your local WordPress installation: `wp-content/plugins/agentic-admin/`
    - Activate the plugin
    - Navigate to "Agentic Admin" in WordPress admin
 
@@ -157,7 +157,7 @@ Follow [WordPress PHP Coding Standards](https://developer.wordpress.org/coding-s
 
 ```php
 // Good
-function wp_agentic_admin_example_function( string $param ): bool {
+function agentic_admin_example_function( string $param ): bool {
     if ( ! current_user_can( 'manage_options' ) ) {
         return false;
     }

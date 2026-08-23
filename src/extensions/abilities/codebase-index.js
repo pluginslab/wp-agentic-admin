@@ -16,7 +16,7 @@ import { buildIndex, getKBStatus } from '../services/knowledge-base';
  * Register the codebase-index ability with the chat system.
  */
 export function registerCodebaseIndex() {
-	registerAbility( 'wp-agentic-admin/codebase-index', {
+	registerAbility( 'agentic-admin/codebase-index', {
 		label: 'Build knowledge base index',
 		description:
 			'Build a search index from site code, database schema, WordPress API, and reference docs. Only use when the user explicitly says "index", "reindex", or "build knowledge base". Do NOT use for searching.',

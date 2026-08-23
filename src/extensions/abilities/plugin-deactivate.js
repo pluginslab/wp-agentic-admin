@@ -64,7 +64,7 @@ function extractParams( userMessage ) {
  * Register the plugin-deactivate ability with the chat system.
  */
 export function registerPluginDeactivate() {
-	registerAbility( 'wp-agentic-admin/plugin-deactivate', {
+	registerAbility( 'agentic-admin/plugin-deactivate', {
 		label: 'Deactivate plugins',
 		description:
 			'Deactivate a WordPress plugin by name or slug. Returns success or failure with the reason (e.g., plugin not found, already inactive).',
@@ -149,10 +149,7 @@ export function registerPluginDeactivate() {
 			}
 
 			// Execute the PHP ability with the extracted parameters.
-			return executeAbility(
-				'wp-agentic-admin/plugin-deactivate',
-				params
-			);
+			return executeAbility( 'agentic-admin/plugin-deactivate', params );
 		},
 
 		// DESTRUCTIVE ACTION: Require user confirmation before executing.

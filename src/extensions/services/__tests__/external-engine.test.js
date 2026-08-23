@@ -23,9 +23,9 @@ describe( 'ExternalEngine', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 
-		// Mock window.wpAgenticAdmin
+		// Mock window.agenticAdmin
 		global.window = {
-			wpAgenticAdmin: {
+			agenticAdmin: {
 				restUrl: 'https://example.com/wp-json/wp-abilities/v1',
 				nonce: 'test-nonce',
 			},

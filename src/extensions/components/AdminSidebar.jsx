@@ -55,12 +55,12 @@ const AdminSidebar = () => {
 
 	// Most wp-admin page loads never open the sidebar. Defer the WebGPU
 	// check + 1.2 GB model load until the user actually opens it.
-	// Toggle in admin-sidebar.js dispatches 'wp-agentic-admin/sidebar-opened'
+	// Toggle in admin-sidebar.js dispatches 'agentic-admin/sidebar-opened'
 	// on first open. Issue #116.
 	const [ hasOpened, setHasOpened ] = useState( () =>
 		typeof document !== 'undefined'
 			? document
-					.getElementById( 'wp-agentic-admin-sidebar' )
+					.getElementById( 'agentic-admin-sidebar' )
 					?.classList.contains( 'is-open' ) || false
 			: false
 	);
@@ -70,10 +70,10 @@ const AdminSidebar = () => {
 			return undefined;
 		}
 		const handler = () => setHasOpened( true );
-		window.addEventListener( 'wp-agentic-admin/sidebar-opened', handler );
+		window.addEventListener( 'agentic-admin/sidebar-opened', handler );
 		return () =>
 			window.removeEventListener(
-				'wp-agentic-admin/sidebar-opened',
+				'agentic-admin/sidebar-opened',
 				handler
 			);
 	}, [ hasOpened ] );
@@ -218,18 +218,18 @@ const AdminSidebar = () => {
 	}, [] );
 
 	return (
-		<div className="wp-agentic-admin-sidebar__inner">
-			<div className="wp-agentic-admin-sidebar__header">
+		<div className="agentic-admin-sidebar__inner">
+			<div className="agentic-admin-sidebar__header">
 				<span className="dashicons dashicons-superhero-alt" />
 				<strong>AI Assistant</strong>
 				<Button
 					icon={ close }
 					label={ __( 'Close sidebar', 'agentic-admin' ) }
 					showTooltip
-					className="wp-agentic-admin-sidebar__close"
+					className="agentic-admin-sidebar__close"
 					onClick={ () =>
 						window.dispatchEvent(
-							new CustomEvent( 'wp-agentic-admin/sidebar-close' )
+							new CustomEvent( 'agentic-admin/sidebar-close' )
 						)
 					}
 				/>
