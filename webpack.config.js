@@ -13,12 +13,6 @@ const path = require( 'path' );
 module.exports = {
 	...defaultConfig,
 
-	// Enable WASM support for voy-search vector database.
-	experiments: {
-		...( defaultConfig.experiments || {} ),
-		asyncWebAssembly: true,
-	},
-
 	entry: {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),
@@ -38,7 +32,7 @@ module.exports = {
 		// and src/extensions/components/VoiceButton.jsx for v1.4 (per roadmap).
 		// Re-add this entry to ship voice input again.
 
-		// Indexing Web Worker - background embedding + Voy indexing
+		// Indexing Web Worker - background embedding
 		'indexing-worker': {
 			import: path.resolve(
 				__dirname,

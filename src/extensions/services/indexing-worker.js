@@ -3,7 +3,7 @@
  *
  * Runs Transformers.js embedding inside a Web Worker to avoid blocking
  * the main thread during knowledge base builds. Only handles the slow
- * part (neural network inference); the main thread builds the Voy index
+ * part (neural network inference); the main thread builds the index
  * and persists to IndexedDB.
  *
  * Message protocol:

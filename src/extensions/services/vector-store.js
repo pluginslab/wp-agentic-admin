@@ -1,12 +1,19 @@
 /**
  * Vector Store Service
  *
- * In-browser RAG vector store using Transformers.js (CDN) + voy-search (bundled)
- * + IndexedDB persistence. Embeds code chunks and enables semantic search.
+ * In-browser RAG vector store using Transformers.js (CDN) + a plain-JS
+ * similarity index + IndexedDB persistence. Embeds code chunks and enables
+ * semantic search.
  *
  * - Transformers.js loaded lazily from CDN (~100MB, not bundled)
  * - Embeddings run on CPU (WASM) to avoid GPU contention with the LLM
- * - Voy index + chunk metadata persisted in IndexedDB
+ * - Vectors + chunk metadata persisted in IndexedDB
+ *
+ * Search is an exhaustive cosine scan. The embedding model emits L2-normalised
+ * vectors (`normalize: true`), so cosine similarity is a plain dot product.
+ * At 384 dimensions a few thousand chunks score in single-digit milliseconds,
+ * which is well under the embedding cost of the query itself, so an ANN index
+ * would buy nothing at this scale.
  */
 
 import { createLogger } from '../utils/logger';
@@ -17,8 +24,10 @@ const TRANSFORMERS_CDN =
 	'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
 const DB_NAME = 'wp-agentic-rag-db';
-const DB_VERSION = 1;
-const STORE_INDEX = 'voy-index';
+// v2 replaced the voy-search index store with plain Float32Array vectors.
+const DB_VERSION = 2;
+const STORE_INDEX = 'embedding-index';
+const LEGACY_STORE_INDEX = 'voy-index';
 const STORE_CHUNKS = 'chunk-metadata';
 const BATCH_SIZE = 10;
 
@@ -28,9 +37,11 @@ const BATCH_SIZE = 10;
 let pipeline = null;
 
 /**
- * @type {import('voy-search').Voy|null}
+ * Indexed vectors, positionally aligned with `chunkMetadata`.
+ *
+ * @type {Float32Array[]}
  */
-let voyInstance = null;
+let vectors = [];
 
 /**
  * @type {Array<Object>}
@@ -63,6 +74,11 @@ function openDB() {
 			}
 			if ( ! db.objectStoreNames.contains( STORE_CHUNKS ) ) {
 				db.createObjectStore( STORE_CHUNKS );
+			}
+			// Drop the old voy-search index; its serialised format is not
+			// readable here. Affected users re-index from the settings screen.
+			if ( db.objectStoreNames.contains( LEGACY_STORE_INDEX ) ) {
+				db.deleteObjectStore( LEGACY_STORE_INDEX );
 			}
 		};
 
@@ -165,42 +181,67 @@ async function loadPipeline() {
 }
 
 /**
- * Load Voy search instance from bundled npm package.
+ * Convert worker/index embedding entries into the internal vector array.
+ *
+ * Entries use the `{ id, title, url, embeddings }` shape produced by
+ * `indexing-worker.js`; only the vector itself is retained, positionally.
+ *
+ * @param {Object[]} entries Embedding entries.
+ * @return {Float32Array[]} Vectors.
+ */
+function toVectors( entries ) {
+	return entries.map( ( entry ) => Float32Array.from( entry.embeddings ) );
+}
+
+/**
+ * Restore the index and chunk metadata from IndexedDB.
+ *
+ * Vectors and metadata are positionally aligned, so a length mismatch (a
+ * partial write, or the v1 → v2 upgrade dropping the old voy index) resets
+ * both rather than serving results against the wrong metadata.
  *
  * @return {Promise<void>}
  */
-async function loadVoy() {
-	if ( voyInstance ) {
+async function loadIndex() {
+	if ( vectors.length ) {
 		return;
 	}
 
-	const { Voy } = await import( 'voy-search' );
-
-	// Try to restore from IndexedDB.
 	try {
-		const savedIndex = await dbGet( STORE_INDEX, 'current' );
+		const savedVectors = await dbGet( STORE_INDEX, 'current' );
 		const savedChunks = await dbGet( STORE_CHUNKS, 'current' );
 
-		if ( savedIndex && savedChunks ) {
-			voyInstance = Voy.deserialize( savedIndex );
+		if (
+			Array.isArray( savedVectors ) &&
+			Array.isArray( savedChunks ) &&
+			savedVectors.length === savedChunks.length &&
+			savedVectors.length > 0
+		) {
+			vectors = savedVectors.map( ( v ) => Float32Array.from( v ) );
 			chunkMetadata = savedChunks;
 			log.info(
 				`Restored index from IndexedDB (${ chunkMetadata.length } chunks).`
 			);
 			return;
 		}
+
+		if ( savedVectors || savedChunks ) {
+			log.warn(
+				'Persisted index is incomplete or from an older format; starting empty. Re-index to rebuild.'
+			);
+		}
 	} catch ( err ) {
 		log.warn( 'Could not restore index from IndexedDB:', err.message );
 	}
 
-	voyInstance = new Voy( { embeddings: [] } );
+	vectors = [];
 	chunkMetadata = [];
-	log.info( 'Created new empty Voy index.' );
+	log.info( 'Created new empty index.' );
 }
 
 /**
  * Initialize the vector store.
- * Loads Voy immediately (bundled), defers Transformers.js until needed.
+ * Restores any persisted index, defers Transformers.js until needed.
  *
  * @return {Promise<void>}
  */
@@ -212,7 +253,7 @@ async function init() {
 	initializing = true;
 
 	try {
-		await loadVoy();
+		await loadIndex();
 		initialized = true;
 		log.info( 'Vector store initialized.' );
 	} catch ( err ) {
@@ -244,14 +285,16 @@ async function embed( text ) {
 }
 
 /**
- * Persist the current Voy index and chunk metadata to IndexedDB.
+ * Persist the current vectors and chunk metadata to IndexedDB.
+ *
+ * Float32Array survives the structured clone algorithm, so the vectors are
+ * stored as-is rather than being stringified.
  *
  * @return {Promise<void>}
  */
 async function persist() {
 	try {
-		const serialized = voyInstance.serialize();
-		await dbPut( STORE_INDEX, 'current', serialized );
+		await dbPut( STORE_INDEX, 'current', vectors );
 		await dbPut( STORE_CHUNKS, 'current', chunkMetadata );
 		log.debug( `Persisted index (${ chunkMetadata.length } chunks).` );
 	} catch ( err ) {
@@ -261,7 +304,7 @@ async function persist() {
 
 /**
  * Index an array of code chunks.
- * Embeds in batches and adds to the Voy index.
+ * Embeds in batches and rebuilds the index.
  *
  * @param {Object[]} chunks       Array of { path, start_line, end_line, content, type }.
  * @param {Function} [onProgress] Optional callback: (indexed, total) => void.
@@ -275,10 +318,11 @@ async function index( chunks, onProgress ) {
 	// Ensure pipeline is loaded for embedding.
 	await loadPipeline();
 
-	const { Voy } = await import( 'voy-search' );
-
-	// Reset index with fresh data.
+	// Reset index with fresh data. chunkMetadata is rebuilt alongside
+	// `embeddings` and must be cleared with it, or a second index() run leaves
+	// the two positionally misaligned and search returns the wrong chunks.
 	const embeddings = [];
+	chunkMetadata = [];
 	let indexed = 0;
 
 	for ( let i = 0; i < chunks.length; i += BATCH_SIZE ) {
@@ -323,14 +367,32 @@ async function index( chunks, onProgress ) {
 		}
 	}
 
-	// Build new Voy index with all embeddings.
-	voyInstance = new Voy( { embeddings } );
+	// Build the new index from all embeddings.
+	vectors = toVectors( embeddings );
 
 	// Persist to IndexedDB.
 	await persist();
 
 	log.info( `Indexed ${ indexed } chunks.` );
 	return indexed;
+}
+
+/**
+ * Cosine similarity between two L2-normalised vectors.
+ *
+ * Both operands come from the embedding pipeline with `normalize: true`, so
+ * the magnitudes are 1 and the dot product *is* the cosine.
+ *
+ * @param {Float32Array} a First vector.
+ * @param {Float32Array} b Second vector.
+ * @return {number} Similarity in [-1, 1].
+ */
+function cosine( a, b ) {
+	let dot = 0;
+	for ( let i = 0; i < a.length; i++ ) {
+		dot += a[ i ] * b[ i ];
+	}
+	return dot;
 }
 
 /**
@@ -341,30 +403,36 @@ async function index( chunks, onProgress ) {
  * @return {Promise<Object[]>} Array of { path, start_line, end_line, content, type, score }.
  */
 async function search( query, topK = 3 ) {
-	if ( ! initialized || ! voyInstance || chunkMetadata.length === 0 ) {
+	if ( ! initialized || vectors.length === 0 || chunkMetadata.length === 0 ) {
 		return [];
 	}
 
-	const queryEmbedding = await embed( query );
-	// Voy.search() requires Float32Array, not a plain Array.
-	const queryFloat32 = new Float32Array( queryEmbedding );
-	const results = voyInstance.search( queryFloat32, topK );
+	const queryVector = Float32Array.from( await embed( query ) );
+
+	const ranked = vectors
+		.map( ( vector, idx ) => ( {
+			idx,
+			score: cosine( queryVector, vector ),
+		} ) )
+		.sort( ( a, b ) => b.score - a.score )
+		.slice( 0, topK );
 
 	log.info(
-		'Voy results:',
-		results.neighbors.map( ( n ) => `${ n.id }: ${ n.title }` )
+		'Search results:',
+		ranked.map(
+			( r ) =>
+				`${ r.idx }: ${
+					chunkMetadata[ r.idx ]?.path
+				} (${ r.score.toFixed( 3 ) })`
+		)
 	);
 
-	return results.neighbors.map( ( neighbor, rank ) => {
-		const idx = parseInt( neighbor.id, 10 );
-		const meta = chunkMetadata[ idx ];
-		return {
-			...meta,
-			// Voy doesn't return distances; results are pre-sorted by similarity.
-			// Use inverse rank as a rough relevance indicator.
-			score: topK - rank,
-		};
-	} );
+	return ranked.map( ( { idx, score } ) => ( {
+		...chunkMetadata[ idx ],
+		// Real cosine similarity, unlike the inverse-rank placeholder the
+		// previous ANN index forced (it returned no distances).
+		score: Number( score.toFixed( 3 ) ),
+	} ) );
 }
 
 /**
@@ -386,17 +454,17 @@ function getChunkCount() {
 }
 
 /**
- * Reload the Voy index and chunk metadata from IndexedDB.
+ * Reload the index and chunk metadata from IndexedDB.
  * Used after the indexing worker finishes persisting new data.
  *
  * @return {Promise<void>}
  */
 async function reload() {
-	voyInstance = null;
+	vectors = [];
 	chunkMetadata = [];
 	initialized = false;
 	initializing = false;
-	await loadVoy();
+	await loadIndex();
 	initialized = true;
 	log.info(
 		`Reloaded index from IndexedDB (${ chunkMetadata.length } chunks).`
@@ -404,10 +472,10 @@ async function reload() {
 }
 
 /**
- * Build the Voy index from pre-computed embeddings and persist.
+ * Build the index from pre-computed embeddings and persist.
  * Used after the indexing worker returns embeddings from a background thread.
  *
- * @param {Object[]} embeddings Pre-computed Voy embedding entries.
+ * @param {Object[]} embeddings Pre-computed embedding entries.
  * @param {Object[]} metadata   Chunk metadata array.
  * @return {Promise<number>} Number of chunks indexed.
  */
@@ -416,8 +484,7 @@ async function buildFromEmbeddings( embeddings, metadata ) {
 		await init();
 	}
 
-	const { Voy } = await import( 'voy-search' );
-	voyInstance = new Voy( { embeddings } );
+	vectors = toVectors( embeddings );
 	chunkMetadata = metadata;
 
 	await persist();
@@ -434,8 +501,7 @@ async function buildFromEmbeddings( embeddings, metadata ) {
  * @return {Promise<void>}
  */
 async function clear() {
-	const { Voy } = await import( 'voy-search' );
-	voyInstance = new Voy( { embeddings: [] } );
+	vectors = [];
 	chunkMetadata = [];
 	await persist();
 	log.info( 'Vector store cleared.' );

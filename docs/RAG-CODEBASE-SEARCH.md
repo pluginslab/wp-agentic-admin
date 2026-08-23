@@ -8,7 +8,7 @@ The RAG (Retrieval-Augmented Generation) system lets the LLM answer questions ab
 
 1. **Extracting** code from your active theme and plugins (PHP backend)
 2. **Embedding** code chunks into vectors using Transformers.js (CPU/WASM)
-3. **Storing** vectors in a Voy search index, persisted in IndexedDB
+3. **Storing** vectors in IndexedDB, as plain `Float32Array`s
 4. **Searching** with semantic similarity when users ask about code
 
 All processing happens locally — no code leaves the browser.
@@ -22,7 +22,7 @@ User: "find the login function"
   ↓
 [Transformers.js] → embed query on CPU/WASM
   ↓
-[Voy index] → nearest neighbor search across 1000+ code chunks
+[vector index] → cosine similarity scan across 1000+ code chunks
   ↓
 [Results] → top 3 matching code snippets with file paths + line numbers
   ↓
@@ -43,8 +43,15 @@ User: "find the login function"
 | Dependency | How loaded | Size | Purpose |
 |------------|-----------|------|---------|
 | [Transformers.js v3](https://huggingface.co/docs/transformers.js) | CDN (lazy, on first use) | ~100MB + 23MB model | Text embeddings |
-| [voy-search](https://github.com/tantaraio/voy) | Bundled via npm | ~168KB WASM | Vector nearest-neighbor search |
 | IndexedDB | Browser native | — | Persist index across sessions |
+
+**Why no vector-search library?** Search is an exhaustive cosine scan written in
+plain JavaScript in `vector-store.js`. The embedding model emits L2-normalised
+vectors, so cosine similarity is a dot product; at 384 dimensions a few thousand
+chunks score in single-digit milliseconds, far below the cost of embedding the
+query itself. An ANN index buys nothing at this scale, and dropping it removed
+the only WebAssembly binary the plugin distributed — every shipped file now has
+readable source in this repository.
 
 **Why CDN for Transformers.js?** At ~100MB it would 17x the current 5.8MB bundle. Lazy-loading from CDN means zero cost until RAG is actually used, and the model is cached by the browser after first download.
 
@@ -68,14 +75,14 @@ User: "index codebase"
 
 ```
 User: "search code for authentication"
-→ Embeds query, searches Voy index
+→ Embeds query, scores it against every indexed vector
 → Returns top 3 matching code snippets
 → LLM summarizes the results
 ```
 
 ### The index persists
 
-After indexing once, the Voy index is restored from IndexedDB on page reload. No need to re-index unless your code changes.
+After indexing once, the index is restored from IndexedDB on page reload. No need to re-index unless your code changes.
 
 To rebuild: say **"reindex the codebase"**.
 
@@ -120,7 +127,7 @@ Returns 50 files per page. The JS ability paginates automatically until `has_mor
 
 ### Persistence
 
-- Serialized Voy index stored in IndexedDB (`wp-agentic-rag-db`)
+- Vectors stored as `Float32Array`s in IndexedDB (`wp-agentic-rag-db`, store `embedding-index`)
 - Chunk metadata (path, lines, content, type) stored alongside
 - Restored automatically on `vectorStore.init()`
 
