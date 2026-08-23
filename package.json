@@ -45,5 +45,8 @@
     "abilities-api"
   ],
   "author": "Pluginslab",
-  "license": "GPL-2.0-or-later"
+  "license": "GPL-2.0-or-later",
+  "overrides": {
+    "tar": "7.5.21"
+  }
 }
