@@ -3,7 +3,7 @@
  *
  * Wraps fetch() calls through the WordPress REST API proxy endpoint to avoid
  * CORS issues when connecting to external LLM providers. The proxy is at:
- *   /wp-json/wp-agentic-admin/v1/llm-proxy/
+ *   /wp-json/agentic-admin/v1/llm-proxy/
  *
  * Exposes the same engine.chat.completions.create() interface that WebLLM uses,
  * so react-agent.js, chat-orchestrator.js, and workflow-orchestrator.js need
@@ -17,20 +17,20 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'ExternalEngine' );
 
 /**
- * Get the WP REST proxy base URL and nonce from wpAgenticAdmin globals.
+ * Get the WP REST proxy base URL and nonce from agenticAdmin globals.
  *
  * @return {Object} { proxyBase, nonce }
  */
 function getProxyConfig() {
-	const wpData = window.wpAgenticAdmin || {};
+	const wpData = window.agenticAdmin || {};
 	// REST URL for abilities is like /wp-json/wp-abilities/v1
-	// We need /wp-json/wp-agentic-admin/v1/llm-proxy
+	// We need /wp-json/agentic-admin/v1/llm-proxy
 	const restBase = ( wpData.restUrl || '/wp-json/wp-abilities/v1' ).replace(
 		/wp-abilities\/v1\/?$/,
 		''
 	);
 	return {
-		proxyBase: `${ restBase }wp-agentic-admin/v1/llm-proxy`,
+		proxyBase: `${ restBase }agentic-admin/v1/llm-proxy`,
 		nonce: wpData.nonce || '',
 	};
 }

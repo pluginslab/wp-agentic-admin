@@ -45,7 +45,7 @@ const ModelStatusPill = () => {
 				alignment="center"
 				spacing={ 2 }
 				justify="flex-start"
-				className="wp-agentic-admin-status-pill wp-agentic-admin-status-pill--loading"
+				className="agentic-admin-status-pill agentic-admin-status-pill--loading"
 			>
 				<Spinner />
 				<span className="screen-reader-text">
@@ -69,10 +69,10 @@ const ModelStatusPill = () => {
 			alignment="center"
 			spacing={ 2 }
 			justify="flex-start"
-			className="wp-agentic-admin-status-pill"
+			className="agentic-admin-status-pill"
 		>
 			<span
-				className={ `wp-agentic-admin-status-dot wp-agentic-admin-status-dot--${ status }` }
+				className={ `agentic-admin-status-dot agentic-admin-status-dot--${ status }` }
 				aria-hidden="true"
 			/>
 			<span className="screen-reader-text">

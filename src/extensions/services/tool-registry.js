@@ -18,7 +18,7 @@ const log = createLogger( 'ToolRegistry' );
 
 /**
  * @typedef {Object} ToolDefinition
- * @property {string}          id                           - Unique tool identifier (e.g., 'wp-agentic-admin/plugin-list')
+ * @property {string}          id                           - Unique tool identifier (e.g., 'agentic-admin/plugin-list')
  * @property {string[]}        keywords                     - Keywords that trigger this tool
  * @property {string}          initialMessage               - Message shown when tool starts executing
  * @property {Function}        summarize                    - Function that generates summary from result (for users)

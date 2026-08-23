@@ -96,11 +96,11 @@ wp.agenticAdmin.registerWorkflow('my-plugin/cleanup', {
     keywords: ['cleanup', 'clean up', 'tidy up'],
     steps: [
         {
-            abilityId: 'wp-agentic-admin/cache-flush',
+            abilityId: 'agentic-admin/cache-flush',
             label: 'Clear caches',
         },
         {
-            abilityId: 'wp-agentic-admin/db-optimize',
+            abilityId: 'agentic-admin/db-optimize',
             label: 'Optimize database',
         },
     ],
@@ -149,11 +149,11 @@ wp.agenticAdmin.registerWorkflow('my-plugin/full-check', {
     keywords: ['full check', 'diagnose everything'],
     steps: [
         {
-            abilityId: 'wp-agentic-admin/site-health',
+            abilityId: 'agentic-admin/site-health',
             label: 'Check site health',
         },
         {
-            abilityId: 'wp-agentic-admin/error-log-read',
+            abilityId: 'agentic-admin/error-log-read',
             label: 'Review error logs',
             optional: true, // Continue if error log unavailable
         },
@@ -410,10 +410,10 @@ WP-Agentic-Admin includes these workflows out of the box:
 
 | ID | Label | Steps |
 |----|-------|-------|
-| `wp-agentic-admin/site-cleanup` | Full Site Cleanup | Cache flush → DB optimize (conditional, `includeIf` skips if recently optimized) → Site health |
-| `wp-agentic-admin/performance-check` | Quick Performance Check | Site health → Error log (optional, `includeIf` skips unless debug mode is on or user mentioned errors) |
-| `wp-agentic-admin/plugin-audit` | Plugin Audit | Plugin list → Site health |
-| `wp-agentic-admin/database-maintenance` | Database Maintenance | DB optimize → Cache flush |
+| `agentic-admin/site-cleanup` | Full Site Cleanup | Cache flush → DB optimize (conditional, `includeIf` skips if recently optimized) → Site health |
+| `agentic-admin/performance-check` | Quick Performance Check | Site health → Error log (optional, `includeIf` skips unless debug mode is on or user mentioned errors) |
+| `agentic-admin/plugin-audit` | Plugin Audit | Plugin list → Site health |
+| `agentic-admin/database-maintenance` | Database Maintenance | DB optimize → Cache flush |
 
 ## Workflow Types: Rigid vs Flexible
 
@@ -477,11 +477,11 @@ wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
     keywords: ['optimize', 'performance', 'speed up'],
     steps: [
         { 
-            abilityId: 'wp-agentic-admin/site-health', 
+            abilityId: 'agentic-admin/site-health', 
             label: 'Check site health'
         },
         { 
-            abilityId: 'wp-agentic-admin/db-optimize',
+            abilityId: 'agentic-admin/db-optimize',
             label: 'Optimize database',
             includeIf: (previousResults, params) => {
                 // Access previous step results
@@ -505,7 +505,7 @@ wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
             }
         },
         {
-            abilityId: 'wp-agentic-admin/cache-flush',
+            abilityId: 'agentic-admin/cache-flush',
             label: 'Clear caches'
         }
     ],
@@ -531,11 +531,11 @@ wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
     keywords: ['optimize', 'performance', 'speed up'],
     steps: [
         { 
-            abilityId: 'wp-agentic-admin/site-health', 
+            abilityId: 'agentic-admin/site-health', 
             label: 'Check site health'
         },
         { 
-            abilityId: 'wp-agentic-admin/db-optimize',
+            abilityId: 'agentic-admin/db-optimize',
             label: 'Optimize database',
             includeIf: {
                 prompt: `Should we optimize the database?
@@ -560,7 +560,7 @@ wp.agenticAdmin.registerWorkflow('my-plugin/performance-optimization', {
             }
         },
         {
-            abilityId: 'wp-agentic-admin/cache-flush',
+            abilityId: 'agentic-admin/cache-flush',
             label: 'Clear caches'
         }
     ],
@@ -615,7 +615,7 @@ includeIf: {
 **StepResult Structure:**
 ```typescript
 {
-    abilityId: string,      // e.g., "wp-agentic-admin/site-health"
+    abilityId: string,      // e.g., "agentic-admin/site-health"
     label: string,          // e.g., "Check site health"
     stepIndex: number,      // Position in workflow (0-based)
     success: boolean,       // Did the step succeed?
@@ -683,7 +683,7 @@ You: test performance optimization workflow
 ```javascript
 // Simulate previous results
 const mockResults = [{
-    abilityId: 'wp-agentic-admin/site-health',
+    abilityId: 'agentic-admin/site-health',
     success: true,
     result: { database_size: 600 * 1024 * 1024, last_optimized: '2024-01-01' }
 }];
@@ -897,7 +897,7 @@ summarize: (results) => {
     // results is an array like:
     // [
     //   {
-    //     abilityId: 'wp-agentic-admin/plugin-list',
+    //     abilityId: 'agentic-admin/plugin-list',
     //     label: 'List all installed plugins',
     //     stepIndex: 0,
     //     success: true,
@@ -905,7 +905,7 @@ summarize: (results) => {
     //     duration: 234
     //   },
     //   {
-    //     abilityId: 'wp-agentic-admin/site-health',
+    //     abilityId: 'agentic-admin/site-health',
     //     label: 'Check site health',
     //     stepIndex: 1,
     //     success: true,
@@ -925,8 +925,8 @@ summarize: (results) => {
 ```javascript
 summarize: (results) => {
     // Find specific step results by abilityId
-    const pluginResult = results.find(r => r.abilityId === 'wp-agentic-admin/plugin-list');
-    const healthResult = results.find(r => r.abilityId === 'wp-agentic-admin/site-health');
+    const pluginResult = results.find(r => r.abilityId === 'agentic-admin/plugin-list');
+    const healthResult = results.find(r => r.abilityId === 'agentic-admin/site-health');
 ```
 
 #### 2. Check success before accessing data
@@ -995,14 +995,14 @@ wp.agenticAdmin.registerWorkflow('my-plugin/plugin-audit', {
     description: 'Lists all plugins and checks for issues.',
     keywords: ['plugin audit', 'audit plugins', 'check plugins'],
     steps: [
-        { abilityId: 'wp-agentic-admin/plugin-list', label: 'List plugins' },
-        { abilityId: 'wp-agentic-admin/site-health', label: 'Check health' },
+        { abilityId: 'agentic-admin/plugin-list', label: 'List plugins' },
+        { abilityId: 'agentic-admin/site-health', label: 'Check health' },
     ],
     requiresConfirmation: false,
     
     summarize: (results) => {
-        const pluginResult = results.find(r => r.abilityId === 'wp-agentic-admin/plugin-list');
-        const healthResult = results.find(r => r.abilityId === 'wp-agentic-admin/site-health');
+        const pluginResult = results.find(r => r.abilityId === 'agentic-admin/plugin-list');
+        const healthResult = results.find(r => r.abilityId === 'agentic-admin/site-health');
         
         let summary = 'Plugin audit complete.\n\n';
         

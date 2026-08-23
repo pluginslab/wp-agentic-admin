@@ -53,8 +53,8 @@ export function extractPluginParams( userMessage, actionKeywords = [] ) {
 	}
 
 	// Second, try to use the dynamically loaded plugin list from plugin-list ability.
-	if ( window.wpAgenticAdmin?.pluginsList ) {
-		const plugins = window.wpAgenticAdmin.pluginsList;
+	if ( window.agenticAdmin?.pluginsList ) {
+		const plugins = window.agenticAdmin.pluginsList;
 
 		// Try to find the plugin by matching against name or slug.
 		for ( const [ pluginFile, pluginData ] of Object.entries( plugins ) ) {

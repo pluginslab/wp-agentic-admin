@@ -56,7 +56,7 @@ We have 4 workflows today. We'd love more.
 ### The codebase at a glance
 
 ```
-wp-agentic-admin/
+agentic-admin/
 ├── includes/                    ← PHP: plugin core + abilities
 │   ├── abilities/               ← One PHP file per ability
 │   ├── class-abilities.php      ← Ability registration system
@@ -186,7 +186,7 @@ Find your role below. Each section tells you what you'll build, where the code l
 
 **What you'll do:**
 1. Pick an ability from the [must-have list](CLOUDFEST_HACKATHON.md#goal-2-expanded-abilities-must-have) or grab an issue labeled `ability` + `php`
-2. Create a PHP file in `includes/abilities/` using `wp_agentic_admin_register_ability()`
+2. Create a PHP file in `includes/abilities/` using `agentic_admin_register_ability()`
 3. Coordinate with a JS developer who builds the chat-side counterpart
 
 **Your workspace:**

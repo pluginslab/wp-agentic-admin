@@ -21,7 +21,7 @@ import pluginAbilitiesManager from '../services/plugin-abilities-manager';
  * Register the run-plugin-ability ability with the chat system.
  */
 export function registerRunPluginAbility() {
-	registerAbility( 'wp-agentic-admin/run-plugin-ability', {
+	registerAbility( 'agentic-admin/run-plugin-ability', {
 		label: 'Run a plugin ability',
 		description:
 			'Run an ability from another plugin by its ID. Use discover-plugin-abilities first to find available abilities and their parameters. Pass ability_id and args.',
@@ -105,10 +105,7 @@ export function registerRunPluginAbility() {
 			if ( params.args ) {
 				input.args = params.args;
 			}
-			return executeAbility(
-				'wp-agentic-admin/run-plugin-ability',
-				input
-			);
+			return executeAbility( 'agentic-admin/run-plugin-ability', input );
 		},
 
 		requiresConfirmation: true,

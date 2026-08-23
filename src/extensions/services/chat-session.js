@@ -46,7 +46,7 @@ class ChatSession {
 	 */
 	constructor( options = {} ) {
 		this.id = options.id || `session_${ Date.now() }`;
-		this.storageKey = options.storageKey || 'wp-agentic-admin-chat-session';
+		this.storageKey = options.storageKey || 'agentic-admin-chat-session';
 		this.onChange = options.onChange || ( () => {} );
 
 		/** @type {Array} */

@@ -14,7 +14,7 @@ import { createLogger } from '../utils/logger';
 const log = createLogger( 'VectorStore' );
 
 const TRANSFORMERS_CDN =
-	'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
+	'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
 const DB_NAME = 'wp-agentic-rag-db';
 const DB_VERSION = 1;

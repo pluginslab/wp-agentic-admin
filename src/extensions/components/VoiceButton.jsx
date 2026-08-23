@@ -91,7 +91,7 @@ const StopIcon = () => (
 
 /** Three pulsing dots shown while Whisper is running the final pass. */
 const ThinkingDots = () => (
-	<span className="wp-agentic-admin-voice-dots" aria-hidden="true">
+	<span className="agentic-admin-voice-dots" aria-hidden="true">
 		<span />
 		<span />
 		<span />
@@ -167,7 +167,7 @@ const VoiceButton = forwardRef(
 				return workerRef.current;
 			}
 
-			const pluginUrl = window.wpAgenticAdmin?.pluginUrl;
+			const pluginUrl = window.agenticAdmin?.pluginUrl;
 
 			if ( ! pluginUrl ) {
 				return null;
@@ -366,7 +366,7 @@ const VoiceButton = forwardRef(
 				<>
 					<StopIcon />
 					<span
-						className="wp-agentic-admin-voice-timer"
+						className="agentic-admin-voice-timer"
 						aria-hidden="true"
 					>
 						{ remaining }s
@@ -382,8 +382,8 @@ const VoiceButton = forwardRef(
 		return (
 			<button
 				type="button"
-				className={ `wp-agentic-admin-voice-button wp-agentic-admin-voice-button--${ state }${
-					isNearLimit ? ' wp-agentic-admin-voice-button--warning' : ''
+				className={ `agentic-admin-voice-button agentic-admin-voice-button--${ state }${
+					isNearLimit ? ' agentic-admin-voice-button--warning' : ''
 				}` }
 				onClick={ handleClick }
 				disabled={ disabled || isProcessing }

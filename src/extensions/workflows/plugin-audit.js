@@ -26,7 +26,7 @@ import { registerWorkflow } from '../services/agentic-abilities-api';
  * Register the "Plugin Audit" workflow.
  */
 export function registerPluginAuditWorkflow() {
-	registerWorkflow( 'wp-agentic-admin/plugin-audit', {
+	registerWorkflow( 'agentic-admin/plugin-audit', {
 		label: 'Plugin Audit',
 		description: 'Lists all plugins and checks for plugin-related issues.',
 		keywords: [
@@ -43,11 +43,11 @@ export function registerPluginAuditWorkflow() {
 		],
 		steps: [
 			{
-				abilityId: 'wp-agentic-admin/plugin-list',
+				abilityId: 'agentic-admin/plugin-list',
 				label: 'List all installed plugins',
 			},
 			{
-				abilityId: 'wp-agentic-admin/site-health',
+				abilityId: 'agentic-admin/site-health',
 				label: 'Check for plugin-related issues',
 			},
 		],
@@ -67,10 +67,10 @@ export function registerPluginAuditWorkflow() {
 		 */
 		summarize: ( results ) => {
 			const pluginResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/plugin-list'
+				( r ) => r.abilityId === 'agentic-admin/plugin-list'
 			);
 			const healthResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/site-health'
+				( r ) => r.abilityId === 'agentic-admin/site-health'
 			);
 
 			let summary = 'Plugin audit complete.\n\n';

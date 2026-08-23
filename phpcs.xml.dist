@@ -19,17 +19,16 @@
 			</property>
 		</properties>
 	</rule>
-	<!-- Allowed prefixes for plugin globals.
-	     - agentic_admin: new function prefix (WP.org-required, no "wp_" lookalike)
-	     - WP_AGENTIC_ADMIN: legacy constant prefix, kept for now to avoid a
-	       broad rename (constants are not WP.org-checked).
-	     - WPAgenticAdmin: legacy namespace, same reason. -->
+	<!-- Allowed prefixes for plugin globals (no "wp_" lookalike, per WP.org review).
+	     - agentic_admin: function/hook/option prefix
+	     - AGENTIC_ADMIN: constant prefix
+	     - AgenticAdmin: namespace/class prefix -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
 				<element value="agentic_admin"/>
-				<element value="WP_AGENTIC_ADMIN"/>
-				<element value="WPAgenticAdmin"/>
+				<element value="AGENTIC_ADMIN"/>
+				<element value="AgenticAdmin"/>
 			</property>
 		</properties>
 	</rule>
@@ -53,7 +52,7 @@
 
 	<!-- Main plugin file naming convention - not a class file -->
 	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
-		<exclude-pattern>wp-agentic-admin\.php</exclude-pattern>
+		<exclude-pattern>agentic-admin\.php</exclude-pattern>
 	</rule>
 
 	<!-- Allow direct database calls in database optimization utility -->

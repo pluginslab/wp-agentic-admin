@@ -6,15 +6,15 @@
  * avoiding CORS issues. All requests require a valid WP REST nonce.
  *
  * Endpoints:
- *   GET  /wp-agentic-admin/v1/llm-proxy/models?endpoint_url=...
- *   POST /wp-agentic-admin/v1/llm-proxy/chat/completions
+ *   GET  /agentic-admin/v1/llm-proxy/models?endpoint_url=...
+ *   POST /agentic-admin/v1/llm-proxy/chat/completions
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since   0.10.0
  */
 
-namespace WPAgenticAdmin;
+namespace AgenticAdmin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -39,7 +39,7 @@ class LLM_Proxy {
 	 */
 	public static function register_routes(): void {
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/llm-proxy/models',
 			array(
 				'methods'             => 'GET',
@@ -61,7 +61,7 @@ class LLM_Proxy {
 		);
 
 		\register_rest_route(
-			'wp-agentic-admin/v1',
+			'agentic-admin/v1',
 			'/llm-proxy/chat/completions',
 			array(
 				'methods'             => 'POST',
@@ -196,8 +196,8 @@ class LLM_Proxy {
 	/**
 	 * Handle streaming proxy request — pass-through SSE.
 	 *
-	 * Opens a cURL connection to the external endpoint and streams
-	 * SSE chunks directly to the browser.
+	 * The WordPress HTTP API buffers the full response, so we fetch the
+	 * complete SSE body and emit it to the browser in standard SSE format.
 	 *
 	 * @param string $url     Target URL.
 	 * @param array  $headers Request headers.
@@ -215,82 +215,42 @@ class LLM_Proxy {
 		header( 'Connection: keep-alive' );
 		header( 'X-Accel-Buffering: no' );
 
-		if ( function_exists( 'curl_init' ) ) {
-			$curl_headers = array(
-				'Content-Type: application/json',
-				'Accept: text/event-stream',
-			);
-			if ( isset( $headers['Authorization'] ) ) {
-				$curl_headers[] = 'Authorization: ' . $headers['Authorization'];
-			}
+		// The WordPress HTTP API buffers rather than streams the response, so we
+		// fetch the complete SSE body and emit it as-is in standard SSE format.
+		$wp_headers = array(
+			'Content-Type' => 'application/json',
+			'Accept'       => 'text/event-stream',
+		);
+		if ( isset( $headers['Authorization'] ) ) {
+			$wp_headers['Authorization'] = $headers['Authorization'];
+		}
 
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_init -- wp_remote_post does not support streaming responses.
-			$ch = curl_init( $url );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_POST, true );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_POSTFIELDS, wp_json_encode( $body ) );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_HTTPHEADER, $curl_headers );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt( $ch, CURLOPT_TIMEOUT, 300 );
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
-			curl_setopt(
-				$ch,
-				CURLOPT_WRITEFUNCTION,
-				function ( $ch, $data ) {
-					echo $data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SSE pass-through from trusted external API.
-					if ( ob_get_level() ) {
-						ob_flush();
-					}
-					flush();
-					return strlen( $data );
-				}
-			);
-			// phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
-			curl_exec( $ch );
-		} else {
-			// Fallback for environments without CURL (like wp-now WASM).
-			// Uses wp_remote_post which is the only HTTP method available in WASM.
-			// True streaming is not possible, so we fetch the full response
-			// and then output it as-is (the SSE data).
-			$wp_headers = array(
-				'Content-Type' => 'application/json',
-				'Accept'       => 'text/event-stream',
-			);
-			if ( isset( $headers['Authorization'] ) ) {
-				$wp_headers['Authorization'] = $headers['Authorization'];
-			}
+		$response = \wp_remote_post(
+			$url,
+			array(
+				'headers' => $wp_headers,
+				'body'    => wp_json_encode( $body ),
+				'timeout' => 300,
+			)
+		);
 
-			$response = \wp_remote_post(
-				$url,
+		if ( \is_wp_error( $response ) ) {
+			header( 'Content-Type: application/json', true, 502 );
+			echo wp_json_encode(
 				array(
-					'headers' => $wp_headers,
-					'body'    => wp_json_encode( $body ),
-					'timeout' => 300,
+					'error' => 'LLM proxy request failed: ' . $response->get_error_message(),
+					'url'   => $url,
 				)
 			);
-
-			if ( \is_wp_error( $response ) ) {
-				header( 'Content-Type: application/json', true, 502 );
-				echo wp_json_encode(
-					array(
-						'error' => 'LLM proxy request failed: ' . $response->get_error_message(),
-						'url'   => $url,
-					)
-				);
-				exit;
-			}
-
-			$response_body = \wp_remote_retrieve_body( $response );
-			echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			if ( ob_get_level() ) {
-				ob_flush();
-			}
-			flush();
+			exit;
 		}
+
+		$response_body = \wp_remote_retrieve_body( $response );
+		echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		if ( ob_get_level() ) {
+			ob_flush();
+		}
+		flush();
 
 		exit;
 	}

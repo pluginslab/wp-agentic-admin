@@ -28,7 +28,7 @@ import { registerWorkflow } from '../services/agentic-abilities-api';
  * Register the "Quick Performance Check" workflow.
  */
 export function registerPerformanceCheckWorkflow() {
-	registerWorkflow( 'wp-agentic-admin/performance-check', {
+	registerWorkflow( 'agentic-admin/performance-check', {
 		label: 'Quick Performance Check',
 		description: 'Checks site health and reviews error logs for issues.',
 		keywords: [
@@ -43,11 +43,11 @@ export function registerPerformanceCheckWorkflow() {
 		],
 		steps: [
 			{
-				abilityId: 'wp-agentic-admin/site-health',
+				abilityId: 'agentic-admin/site-health',
 				label: 'Check site health status',
 			},
 			{
-				abilityId: 'wp-agentic-admin/error-log-read',
+				abilityId: 'agentic-admin/error-log-read',
 				label: 'Review error logs',
 				optional: true, // Still optional in case file read fails
 
@@ -94,10 +94,10 @@ export function registerPerformanceCheckWorkflow() {
 		 */
 		summarize: ( results ) => {
 			const healthResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/site-health'
+				( r ) => r.abilityId === 'agentic-admin/site-health'
 			);
 			const errorResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/error-log-read'
+				( r ) => r.abilityId === 'agentic-admin/error-log-read'
 			);
 
 			let summary = 'Performance check complete.\n\n';

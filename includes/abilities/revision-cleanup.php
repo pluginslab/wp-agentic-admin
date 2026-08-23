@@ -6,7 +6,7 @@
  * Similar to WP-CLI: wp post delete $(wp post list --post_type=revision --format=ids)
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  * @since 0.1.0
  */
 
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_revision_cleanup(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/revision-cleanup',
+		'agentic-admin/revision-cleanup',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Clean Up Revisions', 'agentic-admin' ),

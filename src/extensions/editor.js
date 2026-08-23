@@ -17,7 +17,7 @@ registerPlugin( 'agentic-admin', {
 	icon: 'superhero-alt',
 	render: () => (
 		<PluginSidebar
-			name="wp-agentic-admin-chat"
+			name="agentic-admin-chat"
 			title="AI Assistant"
 			icon="superhero-alt"
 		>

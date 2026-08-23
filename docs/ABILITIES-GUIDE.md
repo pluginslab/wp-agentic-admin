@@ -75,7 +75,7 @@ See the [Shared Helper Functions](#shared-helper-functions-best-practice) sectio
 ## File Structure
 
 ```
-wp-agentic-admin/
+agentic-admin/
 ├── includes/
 │   ├── functions-abilities.php      # Public API: register/unregister/exists
 │   ├── class-abilities.php          # Loads ability files, fires registration hook
@@ -113,7 +113,7 @@ Create a new file in `includes/abilities/` (e.g., `my-new-ability.php`):
  *
  * Description of what this ability does.
  *
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -125,13 +125,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function wp_agentic_admin_register_my_new_ability(): void {
-    wp_agentic_admin_register_ability(
-        'wp-agentic-admin/my-new-ability',
+function agentic_admin_register_my_new_ability(): void {
+    agentic_admin_register_ability(
+        'agentic-admin/my-new-ability',
         // PHP configuration for WordPress Abilities API
         array(
-            'label'               => __( 'My New Ability', 'wp-agentic-admin' ),
-            'description'         => __( 'Does something useful.', 'wp-agentic-admin' ),
+            'label'               => __( 'My New Ability', 'agentic-admin' ),
+            'description'         => __( 'Does something useful.', 'agentic-admin' ),
             'category'            => 'sre-tools',
             'input_schema'        => array(
                 'type'                 => 'object',
@@ -144,11 +144,11 @@ function wp_agentic_admin_register_my_new_ability(): void {
                 'properties' => array(
                     'success' => array(
                         'type'        => 'boolean',
-                        'description' => __( 'Whether the operation succeeded.', 'wp-agentic-admin' ),
+                        'description' => __( 'Whether the operation succeeded.', 'agentic-admin' ),
                     ),
                 ),
             ),
-            'execute_callback'    => 'wp_agentic_admin_execute_my_new_ability',
+            'execute_callback'    => 'agentic_admin_execute_my_new_ability',
             'permission_callback' => function () {
                 return current_user_can( 'manage_options' );
             },
@@ -164,7 +164,7 @@ function wp_agentic_admin_register_my_new_ability(): void {
         // JS configuration for chat interface
         array(
             'keywords'       => array( 'my', 'ability', 'keywords' ),
-            'initialMessage' => __( 'Working on it...', 'wp-agentic-admin' ),
+            'initialMessage' => __( 'Working on it...', 'agentic-admin' ),
         )
     );
 }
@@ -175,7 +175,7 @@ function wp_agentic_admin_register_my_new_ability(): void {
  * @param array $input Input parameters.
  * @return array
  */
-function wp_agentic_admin_execute_my_new_ability( array $input = array() ): array {
+function agentic_admin_execute_my_new_ability( array $input = array() ): array {
     // Your implementation here
     return array(
         'success' => true,
@@ -188,17 +188,17 @@ function wp_agentic_admin_execute_my_new_ability( array $input = array() ): arra
 **For core WP-Agentic-Admin abilities:** Add a call in the `register_core_abilities()` method in `class-abilities.php`:
 
 ```php
-if ( function_exists( 'wp_agentic_admin_register_my_new_ability' ) ) {
-    wp_agentic_admin_register_my_new_ability();
+if ( function_exists( 'agentic_admin_register_my_new_ability' ) ) {
+    agentic_admin_register_my_new_ability();
 }
 ```
 
-**For third-party plugins:** Use the `wp_agentic_admin_register_abilities` action hook instead of modifying `class-abilities.php` directly. This hook fires after all core abilities are registered:
+**For third-party plugins:** Use the `agentic_admin_register_abilities` action hook instead of modifying `class-abilities.php` directly. This hook fires after all core abilities are registered:
 
 ```php
-add_action( 'wp_agentic_admin_register_abilities', function() {
-    if ( function_exists( 'wp_agentic_admin_register_ability' ) ) {
-        wp_agentic_admin_register_my_new_ability();
+add_action( 'agentic_admin_register_abilities', function() {
+    if ( function_exists( 'agentic_admin_register_ability' ) ) {
+        agentic_admin_register_my_new_ability();
     }
 } );
 ```
@@ -211,7 +211,7 @@ Create a new file in `src/extensions/abilities/` (e.g., `my-new-ability.js`):
 /**
  * My New Ability
  * 
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 import { registerAbility, executeAbility } from '../services/agentic-abilities-api';
@@ -220,7 +220,7 @@ import { registerAbility, executeAbility } from '../services/agentic-abilities-a
  * Register the my-new-ability with the chat system.
  */
 export function registerMyNewAbility() {
-    registerAbility('wp-agentic-admin/my-new-ability', {
+    registerAbility('agentic-admin/my-new-ability', {
         // Label is used in the AI's system prompt to describe available capabilities
         label: 'My new ability description',
         keywords: ['my', 'ability', 'keywords'],
@@ -234,7 +234,7 @@ export function registerMyNewAbility() {
         },
         
         execute: async (params) => {
-            return executeAbility('wp-agentic-admin/my-new-ability', {});
+            return executeAbility('agentic-admin/my-new-ability', {});
         },
         
         requiresConfirmation: false,
@@ -274,7 +274,7 @@ The WP Abilities API determines HTTP method based on annotations:
 GET requests don't have a JSON body. When no `input` query parameter is provided, the API receives `null`. If your schema says `type: 'object'` but receives `null`, validation fails:
 
 ```
-Error: Ability "wp-agentic-admin/my-ability" has invalid input. Reason: input is not of type object.
+Error: Ability "agentic-admin/my-ability" has invalid input. Reason: input is not of type object.
 ```
 
 ### Solution
@@ -348,7 +348,7 @@ Use the `required` array in input schema:
     'properties' => array(
         'plugin' => array(
             'type'        => 'string',
-            'description' => __( 'Plugin file path to deactivate.', 'wp-agentic-admin' ),
+            'description' => __( 'Plugin file path to deactivate.', 'agentic-admin' ),
         ),
     ),
     'required'             => array( 'plugin' ),
@@ -371,7 +371,7 @@ execute: async (params) => {
     }
     
     const pluginSlug = pluginMatch[1];
-    return executeAbility('wp-agentic-admin/plugin-deactivate', { 
+    return executeAbility('agentic-admin/plugin-deactivate', { 
         plugin: `${pluginSlug}/${pluginSlug}.php` 
     });
 },
@@ -429,7 +429,7 @@ const merged = {
 };
 ```
 
-The original PHP label is still available as `phpLabel` (set by `wp_agentic_admin_get_abilities_js_config()` in `functions-abilities.php`). This means:
+The original PHP label is still available as `phpLabel` (set by `agentic_admin_get_abilities_js_config()` in `functions-abilities.php`). This means:
 - `tool.label` -- the JS label (or PHP label if JS didn't provide one)
 - `tool.phpLabel` -- always the PHP-defined label, if one was registered
 
@@ -437,7 +437,7 @@ The original PHP label is still available as `phpLabel` (set by `wp_agentic_admi
 
 If you don't provide a `label` in either PHP or JS, one is derived from the ability ID:
 - `my-plugin/user-list` -> "user list"
-- `wp-agentic-admin/cache-flush` -> "cache flush"
+- `agentic-admin/cache-flush` -> "cache flush"
 
 This works but isn't as descriptive. Always provide an explicit `label` for best results.
 
@@ -548,7 +548,7 @@ By default, after a single ability runs, the LLM generates a natural-language su
 Set `preferSummarize: true` on the JS ability to bypass the LLM entirely. The orchestrator will call `tool.summarize()` directly and display the result instantly, without streaming.
 
 ```javascript
-registerAbility('wp-agentic-admin/my-ability', {
+registerAbility('agentic-admin/my-ability', {
     // ...
 
     summarize: (result) => {
@@ -644,7 +644,7 @@ Use `parseIntent` when your ability needs to extract structured parameters from 
 From `revision-cleanup.js`:
 
 ```javascript
-registerAbility('wp-agentic-admin/revision-cleanup', {
+registerAbility('agentic-admin/revision-cleanup', {
     parseIntent: (message) => {
         const lowerMessage = message.toLowerCase();
 
@@ -670,7 +670,7 @@ registerAbility('wp-agentic-admin/revision-cleanup', {
     requiresConfirmation: (params) => !params.dry_run,
 
     execute: async (params) => {
-        return executeAbility('wp-agentic-admin/revision-cleanup', {
+        return executeAbility('agentic-admin/revision-cleanup', {
             keep_last: params.keep_last,
             dry_run: params.dry_run,
         });
@@ -694,12 +694,12 @@ When creating multiple related abilities (e.g., `plugin-list`, `plugin-activate`
 Following [WordPress Abilities API best practices](https://developer.wordpress.org/news/2025/11/introducing-the-wordpress-abilities-api/), each ability should represent **one discrete operation** with clear operational characteristics (readonly, destructive, HTTP method). This means:
 
 ✅ **Correct:** Three separate abilities
-- `wp-agentic-admin/plugin-list` (readonly: true)
-- `wp-agentic-admin/plugin-activate` (readonly: false, destructive: false)
-- `wp-agentic-admin/plugin-deactivate` (readonly: false, destructive: true)
+- `agentic-admin/plugin-list` (readonly: true)
+- `agentic-admin/plugin-activate` (readonly: false, destructive: false)
+- `agentic-admin/plugin-deactivate` (readonly: false, destructive: true)
 
 ❌ **Incorrect:** One unified ability with action parameter
-- `wp-agentic-admin/plugin-manager` with mixed characteristics
+- `agentic-admin/plugin-manager` with mixed characteristics
 
 However, separate abilities can lead to code duplication. **Solution: Shared helper functions.**
 
@@ -712,7 +712,7 @@ Create `includes/abilities/shared/plugin-helpers.php`:
 /**
  * Shared Plugin Helper Functions
  *
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -725,7 +725,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param string $status_filter Filter by status: 'all', 'active', or 'inactive'.
  * @return array Array with plugins list and counts.
  */
-function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): array {
+function agentic_admin_get_all_plugins( string $status_filter = 'all' ): array {
     if ( ! function_exists( 'get_plugins' ) ) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
@@ -771,7 +771,7 @@ function wp_agentic_admin_get_all_plugins( string $status_filter = 'all' ): arra
  * @param string $plugin_file The plugin file path (slug) to activate.
  * @return array Result with success status and message.
  */
-function wp_agentic_admin_activate_plugin_by_slug( string $plugin_file ): array {
+function agentic_admin_activate_plugin_by_slug( string $plugin_file ): array {
     // Implementation with validation, error handling, etc.
 }
 ```
@@ -780,20 +780,20 @@ Then your ability files become thin wrappers:
 
 ```php
 // includes/abilities/plugin-list.php
-function wp_agentic_admin_execute_plugin_list( array $input = array() ): array {
+function agentic_admin_execute_plugin_list( array $input = array() ): array {
     $status = isset( $input['status'] ) ? $input['status'] : 'all';
-    return wp_agentic_admin_get_all_plugins( $status );
+    return agentic_admin_get_all_plugins( $status );
 }
 
 // includes/abilities/plugin-activate.php
-function wp_agentic_admin_execute_plugin_activate( array $input = array() ): array {
+function agentic_admin_execute_plugin_activate( array $input = array() ): array {
     if ( empty( $input['plugin'] ) ) {
         return array(
             'success' => false,
-            'message' => __( 'No plugin specified.', 'wp-agentic-admin' ),
+            'message' => __( 'No plugin specified.', 'agentic-admin' ),
         );
     }
-    return wp_agentic_admin_activate_plugin_by_slug( $input['plugin'] );
+    return agentic_admin_activate_plugin_by_slug( $input['plugin'] );
 }
 ```
 
@@ -801,7 +801,7 @@ function wp_agentic_admin_execute_plugin_activate( array $input = array() ): arr
 
 ```php
 private function load_ability_files(): void {
-    $abilities_dir = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities/';
+    $abilities_dir = AGENTIC_ADMIN_PLUGIN_DIR . 'includes/abilities/';
 
     // Load shared helper functions first
     $shared_helpers = $abilities_dir . 'shared/plugin-helpers.php';
@@ -838,7 +838,7 @@ export function extractPluginParams(userMessage, actionKeywords = []) {
     };
 
     // 2. Check dynamic plugin list from plugin-list ability
-    if (window.wpAgenticAdmin?.pluginsList) {
+    if (window.agenticAdmin?.pluginsList) {
         // Fuzzy match against actual plugin names
     }
 
@@ -877,7 +877,7 @@ function extractParams(userMessage) {
 }
 
 export function registerPluginActivate() {
-    registerAbility('wp-agentic-admin/plugin-activate', {
+    registerAbility('agentic-admin/plugin-activate', {
         // ...
         summarize: (result) => formatPluginActionResult(
             result, 
@@ -888,7 +888,7 @@ export function registerPluginActivate() {
             if (!params) {
                 return { error: 'Could not determine which plugin to activate.' };
             }
-            return executeAbility('wp-agentic-admin/plugin-activate', params);
+            return executeAbility('agentic-admin/plugin-activate', params);
         },
     });
 }
@@ -951,47 +951,47 @@ export function registerCoreSiteInfo() {
 Key differences from regular abilities:
 - **No PHP file** in `includes/abilities/` -- WordPress core handles backend registration
 - **No entry in `class-abilities.php`** -- the ability already exists in the WP Abilities API
-- The ability ID uses the `core/` namespace (e.g., `core/get-site-info`), not `wp-agentic-admin/`
+- The ability ID uses the `core/` namespace (e.g., `core/get-site-info`), not `agentic-admin/`
 - See `core-site-info.js` and `core-environment-info.js` for working examples
 
 ## PHP API Reference
 
 All public PHP functions are defined in `functions-abilities.php`.
 
-### `wp_agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool`
+### `agentic_admin_register_ability( string $id, array $php_args, array $js_args = array() ): bool`
 
 Registers an ability with both the WordPress Abilities API (backend) and stores JS configuration for the frontend. See the [Creating a New Ability](#creating-a-new-ability) section for full usage.
 
-### `wp_agentic_admin_unregister_ability( string $id ): bool`
+### `agentic_admin_unregister_ability( string $id ): bool`
 
 Removes a previously registered ability. Returns `true` if the ability was unregistered, `false` if it did not exist. Also calls `wp_unregister_ability()` if the WordPress Abilities API is available.
 
 ```php
 // Example: conditionally remove an ability
-if ( wp_agentic_admin_ability_exists( 'wp-agentic-admin/cache-flush' ) ) {
-    wp_agentic_admin_unregister_ability( 'wp-agentic-admin/cache-flush' );
+if ( agentic_admin_ability_exists( 'agentic-admin/cache-flush' ) ) {
+    agentic_admin_unregister_ability( 'agentic-admin/cache-flush' );
 }
 ```
 
-### `wp_agentic_admin_ability_exists( string $id ): bool`
+### `agentic_admin_ability_exists( string $id ): bool`
 
 Checks whether an ability with the given ID is currently registered. Useful for guard checks before registering or unregistering.
 
 ```php
-if ( ! wp_agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
-    wp_agentic_admin_register_ability( 'my-plugin/my-ability', $php_args, $js_args );
+if ( ! agentic_admin_ability_exists( 'my-plugin/my-ability' ) ) {
+    agentic_admin_register_ability( 'my-plugin/my-ability', $php_args, $js_args );
 }
 ```
 
-### `wp_agentic_admin_get_abilities(): array`
+### `agentic_admin_get_abilities(): array`
 
 Returns all registered abilities as an associative array keyed by ability ID.
 
-### `wp_agentic_admin_get_ability( string $id ): ?array`
+### `agentic_admin_get_ability( string $id ): ?array`
 
 Returns the configuration for a single ability, or `null` if not found.
 
-### `wp_agentic_admin_get_abilities_js_config(): array`
+### `agentic_admin_get_abilities_js_config(): array`
 
 Returns JS-facing configurations for all abilities. Used internally by `wp_localize_script()` to pass ability metadata to the frontend. Includes `phpLabel`, `description`, and `annotations` from the PHP config.
 

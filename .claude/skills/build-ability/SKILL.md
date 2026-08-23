@@ -58,7 +58,7 @@ Create files in this order:
 File: `includes/abilities/{name}.php`
 
 Rules:
-- Function names: `wp_agentic_admin_register_{snake}` and `wp_agentic_admin_execute_{snake}`
+- Function names: `agentic_admin_register_{snake}` and `agentic_admin_execute_{snake}`
 - Always include `permission_callback`
 - Always include `input_schema` with top-level `default` for optional/no-input abilities
 - Always include `output_schema`

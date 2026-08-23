@@ -15,7 +15,7 @@ import {
  * Register the user-list ability with the chat system.
  */
 export function registerUserList() {
-	registerAbility( 'wp-agentic-admin/user-list', {
+	registerAbility( 'agentic-admin/user-list', {
 		label: 'List WordPress users',
 		description:
 			'List all WordPress users with their roles, registration dates, and masked emails. Use for questions about site users or user counts.',
@@ -68,7 +68,7 @@ export function registerUserList() {
 		},
 
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/user-list', {} );
+			return executeAbility( 'agentic-admin/user-list', {} );
 		},
 
 		requiresConfirmation: false,

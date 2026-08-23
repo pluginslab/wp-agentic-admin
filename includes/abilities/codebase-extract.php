@@ -5,7 +5,7 @@
  * Extracts code chunks from the active theme and plugins for local RAG indexing.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_codebase_extract(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/codebase-extract',
+		'agentic-admin/codebase-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Extract Codebase', 'agentic-admin' ),
@@ -112,7 +112,7 @@ function agentic_admin_collect_code_files(): array {
 		);
 	}
 
-	// 2. Active plugins (exclude wp-agentic-admin itself).
+	// 2. Active plugins (exclude agentic-admin itself).
 	$active_plugins = get_option( 'active_plugins', array() );
 	$plugins_dir    = WP_PLUGIN_DIR;
 

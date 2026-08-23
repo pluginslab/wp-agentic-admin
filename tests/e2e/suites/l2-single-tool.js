@@ -15,7 +15,7 @@ export const suite = {
 			name: 'List plugins',
 			input: 'list my plugins',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/plugin-list' ],
+				toolsCalled: [ 'agentic-admin/plugin-list' ],
 				toolsCalledExactly: 1,
 				responseContainsAny: [ 'plugin', 'installed', 'active' ],
 				responseNotEmpty: true,
@@ -25,7 +25,7 @@ export const suite = {
 			name: 'Check site health',
 			input: 'check my site health',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/site-health' ],
+				toolsCalled: [ 'agentic-admin/site-health' ],
 				toolsCalledExactly: 1,
 				responseNotEmpty: true,
 			},
@@ -34,7 +34,7 @@ export const suite = {
 			name: 'View error log',
 			input: 'show me the error log',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/error-log-read' ],
+				toolsCalled: [ 'agentic-admin/error-log-read' ],
 				toolsCalledExactly: 1,
 				responseNotEmpty: true,
 			},
@@ -52,7 +52,7 @@ export const suite = {
 			name: 'Optimize database',
 			input: 'optimize the database',
 			assertions: {
-				toolsCalled: [ 'wp-agentic-admin/db-optimize' ],
+				toolsCalled: [ 'agentic-admin/db-optimize' ],
 				toolsCalledExactly: 1,
 				responseContainsAny: [ 'database', 'optimiz' ],
 				responseNotEmpty: true,

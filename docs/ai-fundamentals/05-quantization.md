@@ -224,4 +224,4 @@ WebLLM's q4f16 variants use mixed precision strategies, though the exact distrib
 
 Quantization reduces model size by lowering numerical precision. Agentic Admin for WordPress uses q4f16 quantization to fit 7-billion parameter models into ~4.5GB, making browser-based AI practical. The trade-off is slight accuracy loss (~5%), which is acceptable for structured WordPress tasks. Models are pre-quantized and distributed via CDN — your browser downloads the compressed version directly.
 
-**Next:** [Models in Agentic Admin for WordPress](06-models-in-wp-agentic-admin.md)
+**Next:** [Models in Agentic Admin for WordPress](06-models-in-agentic-admin.md)

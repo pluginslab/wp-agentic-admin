@@ -5,7 +5,7 @@
  * Lists all installed themes with their status.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_theme_list(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/theme-list',
+		'agentic-admin/theme-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'List Themes', 'agentic-admin' ),

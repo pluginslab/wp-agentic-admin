@@ -7,7 +7,7 @@
  * suspicious admin users, SEO spam, and more.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_database_check(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/database-check',
+		'agentic-admin/database-check',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Database Security Check', 'agentic-admin' ),

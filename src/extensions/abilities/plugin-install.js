@@ -80,7 +80,7 @@ function extractParams( userMessage ) {
  * "download contact form 7 and activate it".
  */
 export function registerPluginInstall() {
-	registerAbility( 'wp-agentic-admin/plugin-install', {
+	registerAbility( 'agentic-admin/plugin-install', {
 		label: 'Install plugins',
 		description:
 			'Install a WordPress plugin from the WordPress.org directory by name or slug. Can optionally activate after installing.',
@@ -159,7 +159,7 @@ export function registerPluginInstall() {
 			}
 
 			// Execute the PHP ability with the extracted parameters.
-			return executeAbility( 'wp-agentic-admin/plugin-install', params );
+			return executeAbility( 'agentic-admin/plugin-install', params );
 		},
 
 		requiresConfirmation: true,

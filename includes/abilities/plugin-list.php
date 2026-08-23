@@ -5,7 +5,7 @@
  * Lists all installed plugins with their status.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_plugin_list(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/plugin-list',
+		'agentic-admin/plugin-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'List Plugins', 'agentic-admin' ),

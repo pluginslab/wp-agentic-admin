@@ -15,7 +15,7 @@ import {
  * Register the security-scan ability with the chat system.
  */
 export function registerSecurityScan() {
-	registerAbility( 'wp-agentic-admin/security-scan', {
+	registerAbility( 'agentic-admin/security-scan', {
 		label: 'Run basic security scan',
 		description:
 			'Run basic WordPress security checks including debug mode, file permissions, salts, and version exposure. Use for security audits.',
@@ -91,7 +91,7 @@ export function registerSecurityScan() {
 		},
 
 		execute: async () => {
-			return executeAbility( 'wp-agentic-admin/security-scan', {} );
+			return executeAbility( 'agentic-admin/security-scan', {} );
 		},
 
 		requiresConfirmation: false,

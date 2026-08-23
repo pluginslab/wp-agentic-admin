@@ -22,7 +22,7 @@ import { registerWorkflow } from '../services/agentic-abilities-api';
  * Register the "Check If Hacked" workflow.
  */
 export function registerCheckIfHackedWorkflow() {
-	registerWorkflow( 'wp-agentic-admin/check-if-hacked', {
+	registerWorkflow( 'agentic-admin/check-if-hacked', {
 		label: 'Check If Hacked',
 		description:
 			'Verifies WordPress core and plugin file integrity by checking checksums against the official WordPress.org API. Detects modified, missing, and extra files.',
@@ -44,23 +44,23 @@ export function registerCheckIfHackedWorkflow() {
 		],
 		steps: [
 			{
-				abilityId: 'wp-agentic-admin/verify-core-checksums',
+				abilityId: 'agentic-admin/verify-core-checksums',
 				label: 'Verify WordPress core file checksums',
 			},
 			{
-				abilityId: 'wp-agentic-admin/verify-plugin-checksums',
+				abilityId: 'agentic-admin/verify-plugin-checksums',
 				label: 'Verify plugin file checksums',
 			},
 			{
-				abilityId: 'wp-agentic-admin/database-check',
+				abilityId: 'agentic-admin/database-check',
 				label: 'Scan database for indicators of compromise',
 			},
 			{
-				abilityId: 'wp-agentic-admin/file-scan',
+				abilityId: 'agentic-admin/file-scan',
 				label: 'Scan theme and plugin PHP files for malware patterns',
 			},
 			{
-				abilityId: 'wp-agentic-admin/role-capabilities-check',
+				abilityId: 'agentic-admin/role-capabilities-check',
 				label: 'Check role capabilities for privilege escalation',
 			},
 		],
@@ -76,18 +76,16 @@ export function registerCheckIfHackedWorkflow() {
 		 */
 		summarize: ( results ) => {
 			const coreResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/verify-core-checksums'
+				( r ) => r.abilityId === 'agentic-admin/verify-core-checksums'
 			);
 			const pluginResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/verify-plugin-checksums'
+				( r ) => r.abilityId === 'agentic-admin/verify-plugin-checksums'
 			);
 			const dbResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/database-check'
+				( r ) => r.abilityId === 'agentic-admin/database-check'
 			);
 			const fileScanResult = results.find(
-				( r ) => r.abilityId === 'wp-agentic-admin/file-scan'
+				( r ) => r.abilityId === 'agentic-admin/file-scan'
 			);
 
 			const lines = [];
@@ -275,8 +273,7 @@ export function registerCheckIfHackedWorkflow() {
 
 			// --- Role capabilities table ---
 			const roleResult = results.find(
-				( r ) =>
-					r.abilityId === 'wp-agentic-admin/role-capabilities-check'
+				( r ) => r.abilityId === 'agentic-admin/role-capabilities-check'
 			);
 
 			lines.push( '**Role Capabilities**' );

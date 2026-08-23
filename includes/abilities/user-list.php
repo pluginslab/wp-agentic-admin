@@ -5,7 +5,7 @@
  * Lists all WordPress users with their roles.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_user_list(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/user-list',
+		'agentic-admin/user-list',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'List Users', 'agentic-admin' ),

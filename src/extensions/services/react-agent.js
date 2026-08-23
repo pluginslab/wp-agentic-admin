@@ -436,9 +436,7 @@ class ReactAgent {
 					// Resolve the actual tool object (handles bare names without namespace).
 					const executedTool =
 						this.toolRegistry.get( toolName ) ||
-						this.toolRegistry.get(
-							`wp-agentic-admin/${ toolName }`
-						);
+						this.toolRegistry.get( `agentic-admin/${ toolName }` );
 
 					toolsUsed.push( toolName );
 					observations.push( {
@@ -845,12 +843,12 @@ class ReactAgent {
 		let tool = this.toolRegistry.get( toolId );
 
 		// Fallback: LLM sometimes drops the namespace prefix (e.g. "read-file" instead
-		// of "wp-agentic-admin/read-file"). Try the default namespace before giving up.
+		// of "agentic-admin/read-file"). Try the default namespace before giving up.
 		if ( ! tool && ! toolId.includes( '/' ) ) {
-			tool = this.toolRegistry.get( `wp-agentic-admin/${ toolId }` );
+			tool = this.toolRegistry.get( `agentic-admin/${ toolId }` );
 			if ( tool ) {
 				log.warn(
-					`Tool "${ toolId }" not found — resolved to "wp-agentic-admin/${ toolId }"`
+					`Tool "${ toolId }" not found — resolved to "agentic-admin/${ toolId }"`
 				);
 			}
 		}
@@ -1016,7 +1014,7 @@ RULES:
 EXAMPLE:
 
 User: "list plugins"
-{"action": "tool_call", "tool": "wp-agentic-admin/plugin-list", "args": {}}
+{"action": "tool_call", "tool": "agentic-admin/plugin-list", "args": {}}
 
 [Tool returns the list — the user sees it rendered above]
 {"action": "final_answer", "content": "You have 2 plugins installed. One is active."}

@@ -39,7 +39,7 @@ import {
  * Register the db-optimize ability with the chat system.
  */
 export function registerDbOptimize() {
-	registerAbility( 'wp-agentic-admin/db-optimize', {
+	registerAbility( 'agentic-admin/db-optimize', {
 		label: 'Optimize database',
 		description:
 			'Optimize WordPress database tables to reclaim space and improve query performance. Returns the number of tables optimized and space saved.',
@@ -105,7 +105,7 @@ export function registerDbOptimize() {
 		 */
 		execute: async () => {
 			// No parameters needed - optimize all tables.
-			return executeAbility( 'wp-agentic-admin/db-optimize', {} );
+			return executeAbility( 'agentic-admin/db-optimize', {} );
 		},
 
 		// Safe operation - no confirmation needed.

@@ -9,7 +9,7 @@
  * that have no checksums on WordPress.org (premium/custom) and all themes.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_file_scan(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/file-scan',
+		'agentic-admin/file-scan',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Scan Files for Malware Patterns', 'agentic-admin' ),
@@ -207,7 +207,7 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 		$dirs_to_scan[] = WP_PLUGIN_DIR;
 
 		// Also scan must-use plugins if the directory exists.
-		$mu_dir = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$mu_dir = WPMU_PLUGIN_DIR;
 		if ( is_dir( $mu_dir ) ) {
 			$dirs_to_scan[] = $mu_dir;
 		}
@@ -236,7 +236,7 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 	$skip_dirs = apply_filters( 'agentic_admin_file_scan_skip_dirs', $skip_dirs );
 
 	// Exclude this plugin's own directory — it contains pattern strings that would self-trigger.
-	$self_dir = defined( 'WP_AGENTIC_ADMIN_PLUGIN_DIR' ) ? wp_normalize_path( WP_AGENTIC_ADMIN_PLUGIN_DIR ) : '';
+	$self_dir = defined( 'AGENTIC_ADMIN_PLUGIN_DIR' ) ? wp_normalize_path( AGENTIC_ADMIN_PLUGIN_DIR ) : '';
 
 	/**
 	 * Filters absolute paths to exclude from the file scan.
@@ -287,7 +287,7 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 
 		$normalized_dir = wp_normalize_path( $dir );
 		$is_plugin_dir  = wp_normalize_path( WP_PLUGIN_DIR ) === $normalized_dir;
-		$mu_plugin_dir  = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
+		$mu_plugin_dir  = WPMU_PLUGIN_DIR;
 		$is_mu_dir      = wp_normalize_path( $mu_plugin_dir ) === $normalized_dir;
 
 		foreach ( $iterator as $file_info ) {

@@ -15,7 +15,7 @@ import {
  * Register the web-search ability with the chat system.
  */
 export function registerWebSearch() {
-	registerAbility( 'wp-agentic-admin/web-search', {
+	registerAbility( 'agentic-admin/web-search', {
 		label: 'Search the web for documentation',
 		description:
 			'Search the web via DuckDuckGo for WordPress docs, error solutions, and troubleshooting. Use when users ask how to fix an error, need documentation, or want external help. Args: query (search string).',
@@ -70,7 +70,7 @@ export function registerWebSearch() {
 			if ( ! params.query ) {
 				return { success: false, message: 'No search query provided.' };
 			}
-			return executeAbility( 'wp-agentic-admin/web-search', {
+			return executeAbility( 'agentic-admin/web-search', {
 				query: params.query,
 				num_results: params.num_results || 3,
 			} );

@@ -172,7 +172,7 @@ Users see responses immediately, not after full generation.
 // User: "list plugins"
 // Skip ReAct, go straight to plugin-list tool
 if (matchesKeywords(message, ['list', 'plugin'])) {
-    return executeAbility('wp-agentic-admin/plugin-list');
+    return executeAbility('agentic-admin/plugin-list');
 }
 ```
 
@@ -363,7 +363,7 @@ Only return fields the AI needs.
 Cache expensive operations:
 
 ```php
-function wp_agentic_admin_execute_site_health( $input ) {
+function agentic_admin_execute_site_health( $input ) {
     $cache_key = 'agentic_site_health';
     $cached    = get_transient( $cache_key );
     

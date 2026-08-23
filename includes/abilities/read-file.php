@@ -5,7 +5,7 @@
  * Reads WordPress files with automatic sanitization of sensitive data.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_read_file(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/read-file',
+		'agentic-admin/read-file',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Read File', 'agentic-admin' ),

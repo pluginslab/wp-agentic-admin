@@ -6,7 +6,7 @@
  * by heading boundaries for local RAG knowledge base indexing.
  *
  * @license GPL-2.0-or-later
- * @package WPAgenticAdmin
+ * @package AgenticAdmin
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function agentic_admin_register_docs_extract(): void {
 	agentic_admin_register_ability(
-		'wp-agentic-admin/docs-extract',
+		'agentic-admin/docs-extract',
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Extract Reference Docs', 'agentic-admin' ),
@@ -135,7 +135,7 @@ function agentic_admin_execute_docs_extract( array $input = array() ): array {
 		WP_Filesystem();
 	}
 
-	$docs_dir = WP_AGENTIC_ADMIN_PLUGIN_DIR . 'docs/knowledge/';
+	$docs_dir = AGENTIC_ADMIN_PLUGIN_DIR . 'docs/knowledge/';
 
 	if ( ! is_dir( $docs_dir ) ) {
 		return array(

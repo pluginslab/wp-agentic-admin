@@ -71,7 +71,7 @@ const PluginAbilitiesPanel = () => {
 				abilitiesApi.listAbilities(),
 				abilitiesApi
 					.executeAbilityById(
-						'wp-agentic-admin/discover-plugin-abilities',
+						'agentic-admin/discover-plugin-abilities',
 						{}
 					)
 					.catch( () => null ),
@@ -81,7 +81,7 @@ const PluginAbilitiesPanel = () => {
 			const external = all.filter(
 				( a ) =>
 					a.name &&
-					! a.name.startsWith( 'wp-agentic-admin/' ) &&
+					! a.name.startsWith( 'agentic-admin/' ) &&
 					! a.name.startsWith( 'core/' )
 			);
 
@@ -172,7 +172,7 @@ const PluginAbilitiesPanel = () => {
 	).length;
 
 	return (
-		<VStack spacing={ 4 } className="wp-agentic-admin-tab-padded">
+		<VStack spacing={ 4 } className="agentic-admin-tab-padded">
 			<VStack spacing={ 1 }>
 				<h3>Plugin Abilities</h3>
 				<p>
@@ -207,7 +207,7 @@ const PluginAbilitiesPanel = () => {
 				</CardBody>
 			</Card>
 
-			<div className="wp-agentic-admin-ability-grid">
+			<div className="agentic-admin-ability-grid">
 				{ abilities.map( ( ability ) => {
 					const id = ability.name;
 					const enabled = pluginAbilitiesManager.isEnabled( id );
@@ -241,7 +241,7 @@ const PluginAbilitiesPanel = () => {
 											<img
 												src={ ability.icon }
 												alt={ namespace }
-												className="wp-agentic-admin-plugin-panel-icon"
+												className="agentic-admin-plugin-panel-icon"
 											/>
 										)
 									) }
