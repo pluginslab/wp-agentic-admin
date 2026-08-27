@@ -106,7 +106,7 @@ function clearKBStatus() {
 /* ── Worker helper ───────────────────────────────────────────────────── */
 
 /**
- * Embed chunks in a Web Worker, then build Voy index on main thread.
+ * Embed chunks in a Web Worker, then build the index on the main thread.
  *
  * @param {Object[]} chunks     Chunks to index.
  * @param {Function} onProgress Callback: (done, total, message) => void.
@@ -133,7 +133,7 @@ function indexInWorker( chunks, onProgress ) {
 			} else if ( msg.type === 'complete' ) {
 				worker.terminate();
 
-				// Build Voy index on main thread (fast, < 1s).
+				// Build the index on the main thread (fast, < 1s).
 				try {
 					onProgress(
 						msg.chunkMetadata.length,

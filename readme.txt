@@ -83,7 +83,7 @@ Agentic Admin is fully open source under GPL-2.0-or-later. The complete, human-r
 
 https://github.com/pluginslab/wp-agentic-admin
 
-The files under `build-extensions/` are generated from the sources in `src/` with @wordpress/scripts (webpack). They include the JavaScript bundles (`index.js`, `sw.js`, `indexing-worker.js`, and code-split chunks), the CSS, and the voy-search vector-index WebAssembly module (`*.module.wasm`, built from its npm package; source: https://github.com/tantaraio/voy). To regenerate them from a checkout:
+The files under `build-extensions/` are generated from the sources in `src/` with @wordpress/scripts (webpack). They contain only JavaScript and CSS: the bundles (`index.js`, `sw.js`, `indexing-worker.js`, and code-split chunks) and the stylesheets. No WebAssembly, binaries, or other compiled artifacts are distributed with the plugin. To regenerate them from a checkout:
 
 1. `npm install`
 2. `npm run build`
@@ -107,6 +107,9 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 * Improved: ChatInput keyboard handling simplified (Space inserts a space, no push-to-talk hijacking).
 * Improved: KB embedding moved to a Web Worker with persistent progress across tab switches.
 * Pinned: Transformers.js CDN URL to @3.8.1 (was floating @3 range), privacy-first plugin shouldn't depend on a CDN range that can ship new code without a deliberate bump.
+* Removed: the voy-search dependency and the WebAssembly module it distributed. Vector search is now plain JavaScript (exhaustive cosine over L2-normalised embeddings), so the plugin ships no compiled binaries at all and every distributed file has readable source in the repository.
+* Fixed: re-running the knowledge base index no longer leaves vectors and chunk metadata misaligned, which could return the wrong code chunk for a query.
+* Fixed: `.well-known` scanning resolves via get_home_path() instead of ABSPATH, so subdirectory installs scan the real site root.
 * Removed: 7 stale tab references and 6+ stale docs files (FEEDBACK-DEV.md).
 * Tests: 96 unit tests passing, plus the new manifest test suite (7 cases), index test suite (6 cases), knowledge-base test suite (16 cases), and react-agent regression tests (3 cases for the per-call state cleanup fix).
 

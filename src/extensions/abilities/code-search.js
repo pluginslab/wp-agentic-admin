@@ -96,7 +96,7 @@ export function registerCodeSearch() {
 
 		execute: async ( params ) => {
 			try {
-				// Initialize vector store (loads Voy, restores from IndexedDB).
+				// Initialize vector store (restores index from IndexedDB).
 				await vectorStore.init();
 
 				if ( ! vectorStore.isReady() ) {

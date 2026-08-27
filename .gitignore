@@ -2,6 +2,7 @@
 node_modules/
 vendor/
 wp-agentic-admin.zip
+agentic-admin.zip
 *.pdf
 tests/e2e/screenshots/
 tests/e2e/RESULTS.md

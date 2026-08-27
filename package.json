@@ -8,8 +8,8 @@
     "test:abilities": "node tests/abilities/runner.js",
     "test:e2e": "node tests/abilities/e2e-runner.js",
     "watch": "wp-scripts start src/extensions/index.js --output-path=build-extensions",
-    "clean": "del-cli build-extensions wp-agentic-admin.zip",
-    "dist": "npm run clean && npm run build && rm -f wp-agentic-admin.zip && zip -r wp-agentic-admin.zip -@ < .distpackage",
+    "clean": "del-cli build-extensions agentic-admin.zip wp-agentic-admin.zip",
+    "dist": "npm run clean && npm run build && zip -r agentic-admin.zip -@ < .distpackage",
     "test": "wp-scripts test-unit-js --testMatch='**/__tests__/**/*.test.js'",
     "test:watch": "npm run test -- --watch",
     "lint:js": "wp-scripts lint-js src/",
@@ -33,8 +33,7 @@
     "@huggingface/transformers": "^3.8.1",
     "@mlc-ai/web-llm": "^0.2.82",
     "@wordpress/icons": "^12.0.0",
-    "fastest-levenshtein": "^1.0.16",
-    "voy-search": "^0.6.3"
+    "fastest-levenshtein": "^1.0.16"
   },
   "keywords": [
     "wordpress",
