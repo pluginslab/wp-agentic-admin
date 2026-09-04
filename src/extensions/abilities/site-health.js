@@ -85,15 +85,15 @@ export function registerSiteHealth() {
 			// This creates a more natural conversational experience.
 
 			if ( msg.includes( 'php' ) ) {
-				return `Your PHP version is * * ${
+				return `Your PHP version is **${
 					result.php_version || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			if ( msg.includes( 'wordpress' ) || msg.includes( 'wp version' ) ) {
-				return `You're running * * WordPress ${
+				return `You're running **WordPress ${
 					result.wordpress_version || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			if (
@@ -101,9 +101,9 @@ export function registerSiteHealth() {
 				msg.includes( 'database' ) ||
 				msg.includes( 'db version' )
 			) {
-				return `Your database is * * MySQL ${
+				return `Your database is **MySQL ${
 					result.mysql_version || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			if (
@@ -111,22 +111,22 @@ export function registerSiteHealth() {
 				msg.includes( 'nginx' ) ||
 				msg.includes( 'apache' )
 			) {
-				return `Your server is * * ${
+				return `Your server is **${
 					result.server_software || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			if ( msg.includes( 'theme' ) ) {
 				// Handle nested object safely with optional chaining.
-				return `Your active theme is * * ${
+				return `Your active theme is **${
 					result.active_theme?.name || 'Unknown'
-				} * * (version ${ result.active_theme?.version || '?' }).`;
+				}** (version ${ result.active_theme?.version || '?' }).`;
 			}
 
 			if ( msg.includes( 'memory' ) ) {
-				return `Your PHP memory limit is * * ${
+				return `Your PHP memory limit is **${
 					result.memory_limit || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			if (
@@ -134,27 +134,23 @@ export function registerSiteHealth() {
 				msg.includes( 'site address' ) ||
 				msg.includes( 'home' )
 			) {
-				return `Your site URL is * * ${
+				return `Your site URL is **${
 					result.site_url || result.home_url || 'Unknown'
-				} * * .`;
+				}**.`;
 			}
 
 			// No specific question detected - return full health summary.
 			// This is the default when user asks something general like "site health".
 			return (
 				`Here's your site health information:\n\n` +
-				` * * WordPress: * * ${
-					result.wordpress_version || 'Unknown'
-				}\n` +
-				` * * PHP: * * ${ result.php_version || 'Unknown' }\n` +
-				` * * Database: * * MySQL ${
-					result.mysql_version || 'Unknown'
-				}\n` +
-				` * * Server: * * ${ result.server_software || 'Unknown' }\n` +
-				` * * Theme: * * ${ result.active_theme?.name || 'Unknown' } (${
+				`**WordPress:** ${ result.wordpress_version || 'Unknown' }\n` +
+				`**PHP:** ${ result.php_version || 'Unknown' }\n` +
+				`**Database:** MySQL ${ result.mysql_version || 'Unknown' }\n` +
+				`**Server:** ${ result.server_software || 'Unknown' }\n` +
+				`**Theme:** ${ result.active_theme?.name || 'Unknown' } (${
 					result.active_theme?.version || '?'
 				})\n` +
-				` * * Memory Limit: * * ${ result.memory_limit || 'Unknown' }`
+				`**Memory Limit:** ${ result.memory_limit || 'Unknown' }`
 			);
 		},
 
@@ -209,6 +205,11 @@ export function registerSiteHealth() {
 
 		// Read-only - no confirmation needed.
 		requiresConfirmation: false,
+
+		// summarize() already branches on the user's question (PHP version, theme,
+		// memory limit, ...) and returns a complete answer, so the second LLM call
+		// adds nothing but a truncation risk on the full health payload.
+		preferSummarize: true,
 	} );
 }
 

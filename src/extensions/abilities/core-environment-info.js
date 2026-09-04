@@ -71,18 +71,16 @@ export function registerCoreEnvironmentInfo() {
 				const envDisplay =
 					result.environment.charAt( 0 ).toUpperCase() +
 					result.environment.slice( 1 );
-				lines.push( ` * * Environment: * * ${ envDisplay }` );
+				lines.push( `**Environment:** ${ envDisplay }` );
 			}
 			if ( result.wp_version ) {
-				lines.push(
-					` * * WordPress Version: * * ${ result.wp_version }`
-				);
+				lines.push( `**WordPress Version:** ${ result.wp_version }` );
 			}
 			if ( result.php_version ) {
-				lines.push( ` * * PHP Version: * * ${ result.php_version }` );
+				lines.push( `**PHP Version:** ${ result.php_version }` );
 			}
 			if ( result.db_server_info ) {
-				lines.push( ` * * Database: * * ${ result.db_server_info }` );
+				lines.push( `**Database:** ${ result.db_server_info }` );
 			}
 
 			if ( lines.length === 0 ) {

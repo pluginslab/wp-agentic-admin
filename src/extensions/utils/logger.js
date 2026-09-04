@@ -15,19 +15,21 @@ const LOG_LEVELS = {
 	DEBUG: 3,
 };
 
-// Set default log level (can be changed via console: window.wpAgenticLogLevel = 2)
+// Set default log level (can be changed via console: window.agenticAdminLogLevel = 3)
 let currentLogLevel = LOG_LEVELS.INFO;
 
-// Allow setting log level from browser console
+// Allow setting log level from the browser console.
+// Named without the reserved `wp` prefix, per the WordPress.org plugin
+// guidelines on avoiding naming collisions.
 if ( typeof window !== 'undefined' ) {
-	window.wpAgenticLogLevel = currentLogLevel;
-	Object.defineProperty( window, 'wpAgenticLogLevel', {
+	Object.defineProperty( window, 'agenticAdminLogLevel', {
+		configurable: true,
 		get: () => currentLogLevel,
 		set: ( level ) => {
 			if ( typeof level === 'number' && level >= 0 && level <= 3 ) {
 				currentLogLevel = level;
 				console.log(
-					`[WP Agentic] Log level set to: ${ Object.keys(
+					`[Agentic Admin] Log level set to: ${ Object.keys(
 						LOG_LEVELS
 					).find( ( key ) => LOG_LEVELS[ key ] === level ) }`
 				);

@@ -153,6 +153,14 @@ class ExternalEngine {
 			model: this.modelId,
 		};
 
+		// WebLLM accepts a `schema` key inside response_format to grammar-constrain
+		// decoding. That key is WebLLM-specific: OpenAI rejects unrecognized keys
+		// in response_format outright, and other providers ignore it. Keep plain
+		// JSON mode, which every OpenAI-compatible provider understands.
+		if ( body.response_format?.schema ) {
+			body.response_format = { type: body.response_format.type };
+		}
+
 		// o1/o3/gpt-5 models require specific parameter mapping and don't support many standard params
 		if ( isModernModel ) {
 			if ( body.max_tokens ) {

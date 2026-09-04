@@ -58,8 +58,8 @@ Update ALL of these:
 
 ## Constraints
 
-- **Context window**: 4096 tokens (1.7B) / 32768 (7B). Tool descriptions sent every request — keep them concise.
-- **Tool results truncated** to 2000 chars before sending to LLM.
+- **Context window**: 8192 tokens (1.7B) / 32768 (7B), 8192 default. Source of truth is `MODEL_CONTEXT_SIZES` in `model-loader.js`; override per model via the `agentic_admin_context_size` localStorage key. Tool descriptions sent every request — keep them concise.
+- **Tool results truncated** to `maxToolResultLength` (3000 chars) before sending to LLM. Abilities with `preferSummarize: true` bypass this entirely.
 - **Max 10 ReAct iterations**. Repeated tool call detection stops oscillation.
 - **Service Worker** (`sw.js`) must be self-contained — no code splitting, no dynamic imports.
 
