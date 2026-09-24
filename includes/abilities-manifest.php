@@ -67,12 +67,6 @@ function agentic_admin_core_abilities(): array {
 		// Knowledge.
 		'web-search'                => 'agentic_admin_register_web_search',
 
-		// RAG infrastructure (used by the knowledge base — always on).
-		'schema-extract'            => 'agentic_admin_register_schema_extract',
-		'wp-api-extract'            => 'agentic_admin_register_wp_api_extract',
-		'docs-extract'              => 'agentic_admin_register_docs_extract',
-		'codebase-extract'          => 'agentic_admin_register_codebase_extract',
-
 		// Plugin abilities platform — lets the assistant discover and run
 		// abilities that other plugins register via the WordPress Abilities API.
 		'discover-plugin-abilities' => 'agentic_admin_register_discover_plugin_abilities',
@@ -84,14 +78,12 @@ function agentic_admin_core_abilities(): array {
  * Local-only abilities — registered server-side, but the JS layer hides
  * them from the LLM whenever an external AI provider is active.
  *
- * Note: wp-config-list is JS-only (no PHP register function) so it lives
- * only in the JS manifest.
- *
  * @return array<string, string>
  */
 function agentic_admin_local_only_abilities(): array {
 	return array(
-		'read-file' => 'agentic_admin_register_read_file',
+		'read-file'      => 'agentic_admin_register_read_file',
+		'wp-config-list' => 'agentic_admin_register_wp_config_list',
 	);
 }
 

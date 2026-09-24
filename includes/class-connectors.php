@@ -134,12 +134,7 @@ class Connectors {
 				continue;
 			}
 
-			// "Connected" = the connector's API credential is present. This is
-			// deterministic. The AI Client registry's isProviderConfigured()
-			// proved flaky here (it can report a configured provider as not
-			// configured between calls), which made the connector list flap and
-			// show "no connectors configured" even when keys were set.
-			$is_connected = self::is_connector_configured( $data );
+			$is_connected = self::is_connector_configured( $id );
 
 			$models = array();
 			if ( $is_connected && null !== $ai_registry ) {
@@ -173,34 +168,40 @@ class Connectors {
 	}
 
 	/**
-	 * Whether a connector has its API credential configured.
+	 * Whether a connector's provider is configured in the AI Client.
 	 *
-	 * Deterministic check against the connector's declared authentication
-	 * sources (a defined constant, an environment variable, or a saved
-	 * option), in that order. Used instead of the AI Client registry's
-	 * isProviderConfigured(), which proved non-deterministic.
+	 * Uses the same check as the core Connectors screen
+	 * (hasProvider() && isProviderConfigured()), so the plugin never reads
+	 * API keys itself. isProviderConfigured() can briefly report a configured
+	 * provider as unconfigured, which made the connector list flap, so a
+	 * positive result is remembered for a few minutes. Only the boolean is
+	 * cached, never a credential.
 	 *
-	 * @param array $data Connector definition from wp_get_connectors().
-	 * @return bool True when a non-empty credential is found.
+	 * @param string $connector_id Connector / provider ID.
+	 * @return bool True when the provider is configured.
 	 */
-	private static function is_connector_configured( array $data ): bool {
-		$auth = isset( $data['authentication'] ) && is_array( $data['authentication'] )
-			? $data['authentication']
-			: array();
+	private static function is_connector_configured( string $connector_id ): bool {
+		if ( '' === $connector_id || ! class_exists( '\\WordPress\\AiClient\\AiClient' ) ) {
+			return false;
+		}
 
-		if ( ! empty( $auth['constant_name'] ) && defined( $auth['constant_name'] ) && constant( $auth['constant_name'] ) ) {
+		$cache_key = 'agentic_admin_conn_ok_' . md5( $connector_id );
+		if ( get_transient( $cache_key ) ) {
 			return true;
 		}
 
-		if ( ! empty( $auth['env_var_name'] ) && getenv( $auth['env_var_name'] ) ) {
-			return true;
+		try {
+			$registry   = \WordPress\AiClient\AiClient::defaultRegistry();
+			$configured = $registry->hasProvider( $connector_id ) && $registry->isProviderConfigured( $connector_id );
+		} catch ( \Exception $e ) {
+			$configured = false;
 		}
 
-		if ( ! empty( $auth['setting_name'] ) && ! empty( \get_option( $auth['setting_name'] ) ) ) {
-			return true;
+		if ( $configured ) {
+			set_transient( $cache_key, 1, 5 * MINUTE_IN_SECONDS );
 		}
 
-		return false;
+		return $configured;
 	}
 
 	/**
@@ -276,8 +277,7 @@ class Connectors {
 					array( 'status' => 404 )
 				);
 			}
-			$connectors_meta = function_exists( '\\wp_get_connectors' ) ? \wp_get_connectors() : array();
-			if ( ! self::is_connector_configured( $connectors_meta[ $connector_id ] ?? array() ) ) {
+			if ( ! self::is_connector_configured( $connector_id ) ) {
 				return new \WP_Error(
 					'agentic_admin_unconfigured_connector',
 					sprintf( 'Connector "%s" is not configured (missing API key).', $connector_id ),

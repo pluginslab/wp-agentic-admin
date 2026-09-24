@@ -5,11 +5,10 @@
  * =================
  * Lists and categorizes all PHP constants defined in wp-config.php.
  *
- * Delegates file reading to the read-file ability so that all path
- * resolution, ABSPATH security checks, and sensitive-value redaction
- * (DB_PASSWORD, auth keys, salts) are handled by the existing PHP backend.
- * The JS layer then parses define() calls from the already-redacted content
- * and groups them by purpose.
+ * The PHP backend tokenizes wp-config.php for constant names only and
+ * returns runtime values for non-sensitive constants. Credentials, auth
+ * keys, and salts come back as [REDACTED] without their value being read.
+ * The JS layer groups the constants by purpose.
  *
  * EXECUTE RETURNS:
  * {
@@ -23,7 +22,7 @@
  * Uses preferSummarize: true — summarize() renders a grouped markdown list
  * directly, bypassing the LLM to avoid truncation of long constant tables.
  *
- * @see includes/abilities/read-file.php  — file reading and redaction backend
+ * @see includes/abilities/wp-config-list.php — PHP backend
  * @see docs/ABILITIES-GUIDE.md           — registration API reference
  */
 
@@ -140,35 +139,6 @@ function getCategory( name ) {
 }
 
 /**
- * Parse define() constants from PHP file content.
- *
- * Handles boolean, integer, float, null, and string (single- or double-quoted)
- * values. Strings may contain [REDACTED] after server-side redaction.
- *
- * @param {string} content - PHP file content (already redacted server-side).
- * @return {Array<{name: string, value: string, category: string}>} Parsed constants.
- */
-function parseDefineConstants( content ) {
-	const constants = [];
-	const defineRe =
-		/define\s*\(\s*['"]([A-Z][A-Z0-9_]*)["']\s*,\s*(true|false|null|-?\d+(?:\.\d+)?|'[^']*'|"[^"]*")\s*\)/gi;
-	let match;
-	while ( ( match = defineRe.exec( content ) ) !== null ) {
-		const name = match[ 1 ];
-		let value = match[ 2 ];
-		// Strip surrounding quotes from string values.
-		if (
-			( value.startsWith( "'" ) && value.endsWith( "'" ) ) ||
-			( value.startsWith( '"' ) && value.endsWith( '"' ) )
-		) {
-			value = value.slice( 1, -1 );
-		}
-		constants.push( { name, value, category: getCategory( name ) } );
-	}
-	return constants;
-}
-
-/**
  * Format parsed constants as markdown grouped by category.
  *
  * @param {Array<{name: string, value: string, category: string}>} constants   - Parsed constants.
@@ -235,34 +205,36 @@ export function registerWpConfigList() {
 		initialMessage: "I'll list the wp-config.php constants...",
 
 		/**
-		 * Read wp-config.php via the read-file ability and parse its constants.
+		 * Fetch the constants from the PHP backend and categorize them.
 		 *
-		 * Delegates to read-file so that path resolution, ABSPATH validation,
-		 * and sensitive-value redaction are handled by the existing PHP backend.
-		 *
-		 * @return {Promise<Object>} Structured result with parsed constants.
+		 * @return {Promise<Object>} Structured result with categorized constants.
 		 */
 		execute: async () => {
-			const fileResult = await executeAbility(
-				'agentic-admin/read-file',
-				{ file_path: 'wp-config.php', lines: 500 }
+			const result = await executeAbility(
+				'agentic-admin/wp-config-list',
+				{}
 			);
 
-			if ( ! fileResult.success ) {
+			if ( ! result.success ) {
 				return {
 					success: false,
-					message:
-						fileResult.message || 'Could not read wp-config.php.',
+					message: result.message || 'Could not read wp-config.php.',
 				};
 			}
 
-			const constants = parseDefineConstants( fileResult.content || '' );
+			const constants = ( result.constants || [] ).map(
+				( { name, value } ) => ( {
+					name,
+					value,
+					category: getCategory( name ),
+				} )
+			);
 
 			return {
 				success: true,
 				constants,
 				total: constants.length,
-				was_redacted: fileResult.was_redacted || false,
+				was_redacted: result.was_redacted || false,
 			};
 		},
 

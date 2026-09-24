@@ -89,11 +89,20 @@ class Utils {
 	 * @return string|false
 	 */
 	public static function get_debug_log_path() {
+		// When WP_DEBUG_LOG is on, wp_debug_mode() points PHP's error_log
+		// setting at the log file, custom path or default location alike.
+		if ( self::is_debug_log_enabled() ) {
+			$log_file = ini_get( 'error_log' );
+			if ( is_string( $log_file ) && '' !== $log_file ) {
+				return $log_file;
+			}
+		}
+
 		if ( defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG ) ) {
 			return WP_DEBUG_LOG;
 		}
 
-		return WP_CONTENT_DIR . '/debug.log';
+		return false;
 	}
 
 	/**

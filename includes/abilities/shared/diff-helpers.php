@@ -57,39 +57,11 @@ function agentic_admin_get_remote_file_diff( string $original_url, string $file_
  * @return string Unified diff output.
  */
 function agentic_admin_generate_unified_diff( array $old_lines, array $new_lines, string $old_label, string $new_label ): string {
-	// Use WordPress built-in Text_Diff if available.
-	if ( ! class_exists( 'Text_Diff', false ) ) {
-		$diff_file = ABSPATH . WPINC . '/Text/Diff.php';
-		if ( file_exists( $diff_file ) ) {
-			require_once $diff_file;
-		}
-	}
-
-	if ( ! class_exists( 'Text_Diff_Renderer_unified', false ) ) {
-		$renderer_file = ABSPATH . WPINC . '/Text/Diff/Renderer/unified.php';
-		if ( file_exists( $renderer_file ) ) {
-			require_once $renderer_file;
-		}
-	}
-
-	if ( class_exists( 'Text_Diff' ) && class_exists( 'Text_Diff_Renderer_unified' ) ) {
-		$diff     = new \Text_Diff( 'auto', array( $old_lines, $new_lines ) );
-		$renderer = new \Text_Diff_Renderer_unified();
-		$output   = $renderer->render( $diff );
-
-		if ( empty( $output ) ) {
-			return '';
-		}
-
-		return "--- {$old_label}\n+++ {$new_label}\n{$output}";
-	}
-
-	// Fallback: simple line-by-line comparison.
 	return agentic_admin_simple_diff( $old_lines, $new_lines, $old_label, $new_label );
 }
 
 /**
- * Simple fallback diff when Text_Diff is not available.
+ * Simple line-by-line diff.
  *
  * @param array  $old_lines Lines from the original file.
  * @param array  $new_lines Lines from the modified file.

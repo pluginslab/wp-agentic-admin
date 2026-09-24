@@ -13,6 +13,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Absolute path of the plugins directory, without a trailing slash.
+ *
+ * Derived from this plugin's own location (plugin_dir_path( __FILE__ ),
+ * saved in AGENTIC_ADMIN_PLUGIN_DIR), which sits directly inside it.
+ *
+ * @return string
+ */
+function agentic_admin_plugins_dir(): string {
+	return wp_normalize_path( dirname( AGENTIC_ADMIN_PLUGIN_DIR ) );
+}
+
+/**
+ * Absolute path of the must-use plugins directory, or '' when no
+ * must-use plugins are installed.
+ *
+ * @return string
+ */
+function agentic_admin_mu_plugins_dir(): string {
+	$mu_plugins = wp_get_mu_plugins();
+	return empty( $mu_plugins ) ? '' : wp_normalize_path( dirname( $mu_plugins[0] ) );
+}
+
+/**
  * Get all installed plugins with their status.
  *
  * @param string $status_filter Optional. Filter by status: 'all', 'active', or 'inactive'. Default 'all'.

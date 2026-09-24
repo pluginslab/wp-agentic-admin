@@ -41,8 +41,6 @@ import { registerVerifyPluginChecksums } from './verify-plugin-checksums';
 import { registerDatabaseCheck } from './database-check';
 import { registerFileScan } from './file-scan';
 import { registerRoleCapabilitiesCheck } from './role-capabilities-check';
-import { registerCodebaseIndex } from './codebase-index';
-import { registerCodeSearch } from './code-search';
 
 // Local-only abilities (hidden from LLM when external provider is active).
 import { registerReadFile } from './read-file';
@@ -100,8 +98,6 @@ export const REGISTRARS = {
 
 	// CORE — knowledge.
 	'web-search': registerWebSearch,
-	'codebase-index': registerCodebaseIndex,
-	'code-search': registerCodeSearch,
 
 	// LOCAL_ONLY — sensitive abilities.
 	'read-file': registerReadFile,
@@ -129,7 +125,4 @@ export const JS_ONLY_ABILITIES = new Set( [
 	'current-user-role',
 	'core-site-info',
 	'core-environment-info',
-	'codebase-index',
-	'code-search',
-	'wp-config-list',
 ] );

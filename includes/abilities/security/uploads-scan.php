@@ -154,10 +154,17 @@ function agentic_admin_execute_uploads_scan( array $input = array() ): array {
 		);
 	}
 
-	// 2. Scan WordPress root for unexpected PHP files.
+	// The site root (document root) is get_home_path(). It can differ from
+	// the WordPress directory on subdirectory installs.
+	if ( ! function_exists( 'get_home_path' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+	}
+	$site_root = untrailingslashit( wp_normalize_path( get_home_path() ) );
+
+	// 2. Scan the site root for unexpected PHP files.
 	// Core files are already covered by verify-core-checksums. Here we look for
 	// non-wp-* PHP files that attackers drop at the root (e.g., db.php, x.php, shell.php).
-	$root_dir = untrailingslashit( ABSPATH );
+	$root_dir = $site_root;
 	if ( is_dir( $root_dir ) ) {
 		$areas_scanned[] = 'root';
 		agentic_admin_scan_root_for_dangerous_files(
@@ -172,12 +179,8 @@ function agentic_admin_execute_uploads_scan( array $input = array() ): array {
 	// 3. Scan .well-known directory (recursive).
 	// Attackers hide backdoors in .well-known/ because admins rarely check it
 	// and some security scanners skip dotfiles/dotdirs.
-	// .well-known lives at the site root (document root), which is get_home_path()
-	// and can differ from ABSPATH on subdirectory installs.
-	if ( ! function_exists( 'get_home_path' ) ) {
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-	}
-	$well_known_dir = trailingslashit( get_home_path() ) . '.well-known';
+	// .well-known lives at the site root.
+	$well_known_dir = $site_root . '/.well-known';
 	if ( is_dir( $well_known_dir ) ) {
 		$areas_scanned[] = '.well-known';
 		agentic_admin_scan_directory_for_dangerous_files(
@@ -332,7 +335,7 @@ function agentic_admin_scan_directory_for_dangerous_files(
  * since those are covered by verify-core-checksums. Flags anything else
  * with a dangerous extension.
  *
- * @param string $root_dir              Absolute path to ABSPATH.
+ * @param string $root_dir              Absolute path to the site root.
  * @param array  $dangerous_extensions  Extensions to flag.
  * @param int    $total_files           Running count (by reference).
  * @param array  $suspicious_files      Running list (by reference).

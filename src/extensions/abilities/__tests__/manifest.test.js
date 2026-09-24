@@ -76,8 +76,6 @@ describe( 'abilities manifest', () => {
 			'current-user-role',
 			'core-site-info',
 			'core-environment-info',
-			'codebase-index',
-			'code-search',
 			'discover-plugin-abilities',
 			'run-plugin-ability',
 		];
@@ -108,9 +106,6 @@ describe( 'abilities manifest', () => {
 				'current-user-role',
 				'core-site-info',
 				'core-environment-info',
-				'codebase-index',
-				'code-search',
-				'wp-config-list', // also LOCAL_ONLY
 			].sort()
 		);
 	} );

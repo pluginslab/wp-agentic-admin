@@ -132,10 +132,10 @@ function agentic_admin_execute_verify_plugin_checksums( array $input = array() )
 		}
 
 		// Verify files against checksums.
-		$plugin_dir = WP_PLUGIN_DIR . '/' . dirname( $plugin_file );
-		$is_single  = ! str_contains( $plugin_file, '/' );
-		$base_dir   = $is_single ? WP_PLUGIN_DIR : $plugin_dir;
-		$issues     = array();
+		$plugins_dir = agentic_admin_plugins_dir();
+		$is_single   = ! str_contains( $plugin_file, '/' );
+		$base_dir    = $is_single ? $plugins_dir : $plugins_dir . '/' . dirname( $plugin_file );
+		$issues      = array();
 
 		foreach ( $checksums as $file => $hashes ) {
 			$file_path = $base_dir . '/' . $file;

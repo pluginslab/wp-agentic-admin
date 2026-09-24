@@ -95,8 +95,8 @@ function agentic_admin_execute_security_scan( array $input = array() ): array {
 	);
 
 	// 3. Check wp-config.php file permissions.
-	$wp_config = ABSPATH . 'wp-config.php';
-	if ( file_exists( $wp_config ) ) {
+	$wp_config = agentic_admin_locate_wp_config();
+	if ( '' !== $wp_config ) {
 		$perms     = fileperms( $wp_config ) & 0777;
 		$is_secure = $perms <= 0640;
 		$checks[]  = array(
@@ -109,19 +109,7 @@ function agentic_admin_execute_security_scan( array $input = array() ): array {
 		);
 	}
 
-	// 4. Check for default auth salts.
-	$salt       = wp_salt( 'auth' );
-	$is_default = ( 'put your unique phrase here' === $salt );
-	$checks[]   = array(
-		'check'    => 'Authentication salts',
-		'status'   => $is_default ? 'fail' : 'pass',
-		'severity' => 'critical',
-		'message'  => $is_default
-			? 'Using default salts. Generate new ones immediately.'
-			: 'Custom salts are configured.',
-	);
-
-	// 5. Check WordPress version exposure.
+	// 4. Check WordPress version exposure.
 	$checks[] = array(
 		'check'    => 'Version in HTML',
 		'status'   => has_action( 'wp_head', 'wp_generator' ) ? 'fail' : 'pass',
@@ -131,7 +119,7 @@ function agentic_admin_execute_security_scan( array $input = array() ): array {
 			: 'WordPress version is hidden.',
 	);
 
-	// 6. Check directory listing.
+	// 5. Check directory listing.
 	$uploads_dir  = wp_upload_dir();
 	$uploads_path = $uploads_dir['basedir'];
 	$htaccess     = $uploads_path . '/.htaccess';
