@@ -283,35 +283,22 @@ function agentic_admin_check_options_eval(): array {
 function agentic_admin_check_options_suspicious_urls(): array {
 	global $wpdb;
 
-	$suspicious_patterns = array(
-		'%' . $wpdb->esc_like( '<script' ) . '%',
-		'%' . $wpdb->esc_like( 'document.write' ) . '%',
-		'%' . $wpdb->esc_like( 'window.location' ) . '%',
-		'%' . $wpdb->esc_like( 'String.fromCharCode' ) . '%',
-	);
-
-	$where_clauses = array();
-	$values        = array();
-	foreach ( $suspicious_patterns as $pattern ) {
-		$where_clauses[] = 'option_value LIKE %s';
-		$values[]        = $pattern;
-	}
-
-	// The WHERE clause is built from literal "option_value LIKE %s" fragments
-	// in a fixed-size loop over $suspicious_patterns — no user input touches
-	// the SQL string. The %s count always matches ...$values, but phpcs can't
-	// see through the implode + spread to verify that statically.
-	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	$rows = $wpdb->get_results(
 		$wpdb->prepare(
 			"SELECT option_name, LEFT(option_value, 200) AS option_value_preview
 			FROM {$wpdb->options}
-			WHERE " . implode( ' OR ', $where_clauses ) . '
-			LIMIT 50',
-			...$values
+			WHERE option_value LIKE %s
+			OR option_value LIKE %s
+			OR option_value LIKE %s
+			OR option_value LIKE %s
+			LIMIT 50",
+			'%' . $wpdb->esc_like( '<script' ) . '%',
+			'%' . $wpdb->esc_like( 'document.write' ) . '%',
+			'%' . $wpdb->esc_like( 'window.location' ) . '%',
+			'%' . $wpdb->esc_like( 'String.fromCharCode' ) . '%'
 		)
 	);
-	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
 	$findings = array();
 	foreach ( $rows as $row ) {
