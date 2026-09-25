@@ -2,7 +2,7 @@
 Contributors: schmitzoide
 Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.2
 Stable tag: 0.11.0
 License: GPL-2.0-or-later
