@@ -9,9 +9,6 @@ import {
 	CardBody,
 	CardFooter,
 	CardHeader,
-	FlexBlock,
-	FlexItem,
-	ProgressBar,
 	SelectControl,
 	Notice,
 	ToggleControl,
@@ -22,15 +19,6 @@ import modelLoader, {
 	ModelLoader,
 	MODEL_CONTEXT_SIZES,
 } from '../services/model-loader';
-import {
-	buildIndex,
-	clearIndex,
-	getKBStatus,
-	subscribe as kbSubscribe,
-	isBuilding as kbIsBuilding,
-	getProgress as kbGetProgress,
-	getError as kbGetError,
-} from '../services/knowledge-base';
 
 const CONTEXT_OPTIONS = [
 	{ label: '2,048 tokens (minimal)', value: '2048' },
@@ -81,12 +69,6 @@ function saveThinkingPrefs( prefs ) {
 }
 
 /**
- * Format a timestamp as a relative time string.
- *
- * @param {number} timestamp Unix timestamp in milliseconds.
- * @return {string} Relative time (e.g. "2 hours ago").
- */
-/**
  * Render a label/value pair as a HStack row. Used in place of the
  * old hand-rolled .agentic-admin-settings-tab__gpu-table.
  * @param root0
@@ -100,23 +82,6 @@ const InfoRow = ( { label, children } ) => (
 	</HStack>
 );
 
-function timeAgo( timestamp ) {
-	const seconds = Math.floor( ( Date.now() - timestamp ) / 1000 );
-	if ( seconds < 60 ) {
-		return 'just now';
-	}
-	const minutes = Math.floor( seconds / 60 );
-	if ( minutes < 60 ) {
-		return `${ minutes } minute${ minutes !== 1 ? 's' : '' } ago`;
-	}
-	const hours = Math.floor( minutes / 60 );
-	if ( hours < 24 ) {
-		return `${ hours } hour${ hours !== 1 ? 's' : '' } ago`;
-	}
-	const days = Math.floor( hours / 24 );
-	return `${ days } day${ days !== 1 ? 's' : '' } ago`;
-}
-
 const SettingsTab = () => {
 	const [ gpuInfo, setGpuInfo ] = useState( null );
 	const [ recommendations, setRecommendations ] = useState( {} );
@@ -127,22 +92,6 @@ const SettingsTab = () => {
 	const [ thinkingPrefs, setThinkingPrefs ] = useState(
 		getSavedThinkingPrefs
 	);
-	// Knowledge Base — read from singleton so state survives tab switches.
-	const [ kbStatus, setKbStatus ] = useState( getKBStatus );
-	const [ kbBuilding, setKbBuilding ] = useState( kbIsBuilding );
-	const [ kbProgress, setKbProgress ] = useState( kbGetProgress );
-	const [ kbError, setKbError ] = useState( kbGetError );
-
-	useEffect( () => {
-		return kbSubscribe( () => {
-			setKbBuilding( kbIsBuilding() );
-			setKbProgress( kbGetProgress() );
-			setKbError( kbGetError() );
-			if ( ! kbIsBuilding() ) {
-				setKbStatus( getKBStatus() );
-			}
-		} );
-	}, [] );
 
 	const models = ModelLoader.getAvailableModels();
 
@@ -194,22 +143,6 @@ const SettingsTab = () => {
 		setTimeout( () => setSavedNotice( null ), 3000 );
 	};
 
-	const handleBuildIndex = async () => {
-		try {
-			await buildIndex();
-		} catch {
-			// Error is already stored in the singleton and surfaced via subscribe.
-		}
-	};
-
-	const handleClearIndex = async () => {
-		try {
-			await clearIndex();
-		} catch {
-			// Error surfaced via subscribe.
-		}
-	};
-
 	const estimatedVRAM = modelLoader.getEstimatedVRAM();
 
 	return (
@@ -220,96 +153,6 @@ const SettingsTab = () => {
 					Configure GPU, context windows, and model behavior.
 				</p>
 			</div>
-			<Card>
-				<CardHeader>
-					<h3 style={ { margin: 0 } }>Knowledge Base</h3>
-				</CardHeader>
-				<CardBody>
-					<VStack spacing={ 3 }>
-						<HStack
-							alignment="center"
-							justify="space-between"
-							spacing={ 3 }
-						>
-							<FlexBlock>
-								<p style={ { margin: 0 } }>
-									Build a local search index from your
-									site&apos;s code, database schema, WordPress
-									API signatures, and reference documentation.
-									The AI assistant automatically consults this
-									knowledge base when answering questions.
-								</p>
-							</FlexBlock>
-							<FlexItem>
-								<HStack spacing={ 2 } justify="flex-end">
-									<Button
-										variant="primary"
-										onClick={ handleBuildIndex }
-										disabled={ kbBuilding }
-										isBusy={ kbBuilding }
-									>
-										{ kbStatus
-											? 'Rebuild Index'
-											: 'Build Index' }
-									</Button>
-									{ kbStatus && ! kbBuilding && (
-										<Button
-											variant="tertiary"
-											isDestructive
-											onClick={ handleClearIndex }
-										>
-											Clear Index
-										</Button>
-									) }
-								</HStack>
-							</FlexItem>
-						</HStack>
-
-						{ kbStatus && ! kbBuilding && (
-							<VStack spacing={ 2 }>
-								<InfoRow label="Last built">
-									{ timeAgo( kbStatus.lastIndexed ) }
-								</InfoRow>
-								<InfoRow label="Total chunks">
-									{ kbStatus.totalChunks.toLocaleString() }
-								</InfoRow>
-								<InfoRow label="Code files">
-									{ kbStatus.codeFiles }
-								</InfoRow>
-								<InfoRow label="DB tables">
-									{ kbStatus.schemaTables }
-								</InfoRow>
-								<InfoRow label="API signatures">
-									{ kbStatus.apiChunks } chunks
-								</InfoRow>
-								<InfoRow label="Reference docs">
-									{ kbStatus.docsChunks } chunks
-								</InfoRow>
-							</VStack>
-						) }
-
-						{ kbBuilding && kbProgress && (
-							<VStack spacing={ 2 }>
-								<p style={ { margin: 0 } }>
-									{ kbProgress.message }
-								</p>
-								<ProgressBar value={ kbProgress.percent } />
-							</VStack>
-						) }
-
-						{ kbError && (
-							<Notice
-								status="error"
-								isDismissible={ true }
-								onDismiss={ () => setKbError( null ) }
-							>
-								{ kbError }
-							</Notice>
-						) }
-					</VStack>
-				</CardBody>
-			</Card>
-
 			<Card>
 				<CardHeader>
 					<h3 style={ { margin: 0 } }>GPU Information</h3>

@@ -23,12 +23,12 @@ function agentic_admin_register_read_file(): void {
 		// PHP configuration for WordPress Abilities API.
 		array(
 			'label'               => __( 'Read File', 'agentic-admin' ),
-			'description'         => __( 'Read a WordPress file with sensitive data (credentials, keys, salts) automatically redacted.', 'agentic-admin' ),
+			'description'         => __( 'Read a WordPress file. Files that can hold credentials, keys, or salts (such as wp-config.php) are never read.', 'agentic-admin' ),
 			'category'            => 'sre-tools',
 			'input_schema'        => array(
 				'type'                 => 'object',
 				'default'              => array(
-					'file_path' => 'wp-config.php',
+					'file_path' => '.htaccess',
 					'offset'    => 0,
 					'lines'     => 100,
 				),
@@ -36,7 +36,7 @@ function agentic_admin_register_read_file(): void {
 				'properties'           => array(
 					'file_path' => array(
 						'type'        => 'string',
-						'description' => __( 'Path to the file relative to ABSPATH (e.g. wp-config.php or wp-content/themes/mytheme/functions.php).', 'agentic-admin' ),
+						'description' => __( 'Path to the file relative to the site root (e.g. .htaccess or wp-content/themes/mytheme/functions.php).', 'agentic-admin' ),
 					),
 					'offset'    => array(
 						'type'        => 'integer',
@@ -67,7 +67,7 @@ function agentic_admin_register_read_file(): void {
 					),
 					'file_path'      => array(
 						'type'        => 'string',
-						'description' => __( 'Resolved file path relative to ABSPATH.', 'agentic-admin' ),
+						'description' => __( 'Resolved file path relative to the site root.', 'agentic-admin' ),
 					),
 					'content'        => array(
 						'type'        => 'string',
@@ -102,7 +102,7 @@ function agentic_admin_register_read_file(): void {
 		),
 		// JS configuration for chat interface.
 		array(
-			'keywords'       => array( 'read', 'show', 'view', 'open', 'display', 'cat', 'file', 'config', 'htaccess', 'functions.php', 'wp-config', 'wp-config.php', 'contents', 'source' ),
+			'keywords'       => array( 'read', 'show', 'view', 'open', 'display', 'cat', 'file', 'config', 'htaccess', 'functions.php', 'contents', 'source' ),
 			'initialMessage' => __( "I'll read that file for you...", 'agentic-admin' ),
 		)
 	);
@@ -127,8 +127,12 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 		);
 	}
 
-	// Resolve the absolute path: support both absolute paths and paths relative to ABSPATH.
-	$abspath = wp_normalize_path( ABSPATH );
+	// Resolve the absolute path: support both absolute paths and paths
+	// relative to the site root (get_home_path()).
+	if ( ! function_exists( 'get_home_path' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+	}
+	$site_root = trailingslashit( wp_normalize_path( get_home_path() ) );
 
 	// Detect absolute paths: starts with / (Unix) or drive letter (Windows e.g. C:\).
 	$is_absolute = ( '/' === $raw_path[0] ) || ( strlen( $raw_path ) > 2 && ':' === $raw_path[1] );
@@ -137,13 +141,13 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 		$absolute_path = wp_normalize_path( $raw_path );
 	} else {
 		// For bare filenames with no directory component, try common WordPress locations.
-		// e.g. "functions.php" → active theme, "style.css" → active theme, "wp-config.php" → ABSPATH.
+		// e.g. "functions.php" → active theme, "style.css" → active theme, ".htaccess" → site root.
 		$bare_name = basename( $raw_path );
 		if ( $bare_name === $raw_path && false === strpos( $raw_path, '/' ) ) {
-			$absolute_path = agentic_admin_resolve_bare_filename( $raw_path, $abspath );
+			$absolute_path = agentic_admin_resolve_bare_filename( $raw_path, $site_root );
 		} else {
 			// Strip any leading slash before joining.
-			$absolute_path = wp_normalize_path( $abspath . ltrim( $raw_path, '/\\' ) );
+			$absolute_path = wp_normalize_path( $site_root . ltrim( $raw_path, '/\\' ) );
 		}
 	}
 
@@ -161,11 +165,11 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 		);
 	}
 
-	$real_path    = wp_normalize_path( $real_path );
-	$real_abspath = wp_normalize_path( realpath( ABSPATH ) );
+	$real_path = wp_normalize_path( $real_path );
+	$real_root = trailingslashit( wp_normalize_path( (string) realpath( $site_root ) ) );
 
-	// Security: ensure the file is within the WordPress root directory.
-	if ( ! str_starts_with( $real_path, $real_abspath ) ) {
+	// Security: ensure the file is within the site root directory.
+	if ( '/' === $real_root || ! str_starts_with( $real_path, $real_root ) ) {
 		return array(
 			'success' => false,
 			'message' => __( 'Access denied: file is outside the WordPress root directory.', 'agentic-admin' ),
@@ -183,6 +187,16 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 		return array(
 			'success' => false,
 			'message' => __( 'Path points to a directory, not a file.', 'agentic-admin' ),
+		);
+	}
+
+	// Security: never return files that hold credentials, keys, or salts.
+	// These are refused outright rather than redacted, because pattern-based
+	// redaction cannot reliably catch every way a secret can be written.
+	if ( agentic_admin_is_secret_file( $real_path ) ) {
+		return array(
+			'success' => false,
+			'message' => __( 'Access denied: this file can contain credentials, authentication keys, or salts, so it is never read. Use the wp-config-list ability to see non-sensitive configuration constants.', 'agentic-admin' ),
 		);
 	}
 
@@ -211,7 +225,7 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 	// Redact sensitive values before the content leaves PHP.
 	list( $content, $was_redacted ) = agentic_admin_redact_sensitive_data( $content );
 
-	$relative_path = ltrim( str_replace( $real_abspath, '', $real_path ), '/' );
+	$relative_path = substr( $real_path, strlen( $real_root ) );
 
 	return array(
 		'success'        => true,
@@ -231,18 +245,18 @@ function agentic_admin_execute_read_file( array $input = array() ): array {
 /**
  * Resolve a bare filename (no directory) to its most likely WordPress path.
  *
- * Tries ABSPATH first, then the active theme directory, so that e.g.
- * "functions.php" resolves to the theme rather than the WordPress root.
+ * Root-level files resolve to the site root; anything else tries the active
+ * theme directory, so that e.g. "functions.php" resolves to the theme.
  *
  * @param string $filename Bare filename (e.g. 'functions.php').
- * @param string $abspath  Normalised ABSPATH.
+ * @param string $site_root Normalised site root with trailing slash.
  * @return string Absolute path to the best candidate (may not exist).
  */
-function agentic_admin_resolve_bare_filename( string $filename, string $abspath ): string {
+function agentic_admin_resolve_bare_filename( string $filename, string $site_root ): string {
 	// Always-at-root files.
-	$root_files = array( 'wp-config.php', '.htaccess', 'robots.txt', 'wp-login.php', 'wp-cron.php', 'xmlrpc.php', 'index.php' );
+	$root_files = array( '.htaccess', 'robots.txt', 'wp-login.php', 'wp-cron.php', 'xmlrpc.php', 'index.php' );
 	if ( in_array( $filename, $root_files, true ) ) {
-		return wp_normalize_path( $abspath . $filename );
+		return wp_normalize_path( $site_root . $filename );
 	}
 
 	// Theme files: check active (child) theme, then parent theme.
@@ -256,8 +270,50 @@ function agentic_admin_resolve_bare_filename( string $filename, string $abspath 
 		}
 	}
 
-	// Fall back to ABSPATH root.
-	return wp_normalize_path( $abspath . $filename );
+	// Fall back to the site root.
+	return wp_normalize_path( $site_root . $filename );
+}
+
+/**
+ * Whether a file must never be returned because it can hold secrets.
+ *
+ * Matches by name first (wp-config.php and its variants, .env files,
+ * password files, private keys, database dumps), then scans the whole file
+ * for define() calls of the authentication keys and salts or the database
+ * password, so a secrets file with an unexpected name is refused too.
+ *
+ * @param string $real_path Canonical absolute path of the file.
+ * @return bool True when the file must not be read.
+ */
+function agentic_admin_is_secret_file( string $real_path ): bool {
+	$name = strtolower( basename( $real_path ) );
+
+	if ( preg_match( '/^wp-config.*\.php$/', $name ) ) {
+		return true;
+	}
+
+	if ( str_starts_with( $name, '.env' ) || in_array( $name, array( '.htpasswd', 'auth.json', '.netrc', '.pgpass', '.my.cnf' ), true ) ) {
+		return true;
+	}
+
+	if ( preg_match( '/^id_(rsa|dsa|ecdsa|ed25519)/', $name ) || preg_match( '/\.(pem|key|p12|pfx|sql|sqlite|sqlite3|db)$/', $name ) ) {
+		return true;
+	}
+
+	if ( preg_match( '#/\.(git|ssh)/#', wp_normalize_path( $real_path ) ) ) {
+		return true;
+	}
+
+	// Content check over the whole file, not just the requested line range.
+	$handle = new \SplFileObject( $real_path, 'r' );
+	while ( ! $handle->eof() ) {
+		$line = (string) $handle->fgets();
+		if ( preg_match( '/define\s*\(\s*[\'"](?:(?:SECURE_AUTH|LOGGED_IN|AUTH|NONCE)_(?:KEY|SALT)|DB_PASSWORD)[\'"]/i', $line ) ) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**

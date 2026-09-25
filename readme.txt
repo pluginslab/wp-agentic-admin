@@ -41,7 +41,7 @@ Agentic Admin transforms your WordPress admin panel into an intelligent command 
 1. The Agentic Admin chat tab in wp-admin, mid-conversation. The model has just answered a question about installed plugins by calling the `plugin-list` tool locally — full ReAct trace (user question, thought process, tool call, answer) visible.
 2. First-run model download in progress. The Qwen 3 1.7B weights (~1.2 GB) are fetched from the MLC-AI / HuggingFace CDN — once per browser, cancellable, cached for subsequent sessions.
 3. The Abilities browser, listing every tool the assistant can call against the WordPress Abilities API on this site.
-4. Settings panel. Build the local knowledge base, see detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
+4. Settings panel. See detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
 5. Multi-step workflow execution. "Do a performance check" is recognized as a 2-step workflow — the assistant runs `site-health` and `error-log-read` in sequence, then summarizes the environment (WP version, PHP, memory, debug mode, error log status) in one answer.
 6. WordPress 7.0 AI Connector integration. The Connector tab picks up any AI provider registered via WP 7.0's built-in Connector API — Anthropic, Google, OpenAI, or any third-party `ai_provider` plugin — and uses it as the model backend with zero extra setup.
 
@@ -51,14 +51,10 @@ This plugin runs AI locally in your browser by default, and your prompts and cha
 
 Separately from AI inference, some abilities query public data sources to do their job: a security scan checks your plugin versions against CVE databases, a checksum verification compares your files against WordPress.org, and a web search sends your query to a search engine. Every external request the plugin makes is listed here:
 
-**Model weights CDN (MLC-AI / HuggingFace)** — Always for the local engine.
-On first use the browser downloads the selected model (Qwen 3 1.7B by default, ~1.2 GB) from `https://huggingface.co/mlc-ai/` and `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. Only HTTP GET requests for static model files are made; no prompts, admin data, or telemetry are sent. Weights are cached in the browser; subsequent sessions are offline.
-HuggingFace terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
-
-**Transformers.js library + embedding model (jsDelivr + Hugging Face)** — Only when the optional local knowledge base is enabled in settings.
-This performs in-browser semantic embedding of your documentation and code so the assistant can answer from a local knowledge base; the computation runs entirely in your browser. The Transformers.js library is loaded from jsDelivr (`https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/`) and the embedding model (`Xenova/all-MiniLM-L6-v2`, ~23 MB, one-time) from Hugging Face. Both are static files cached in the browser after first use; no prompts or admin data are sent.
-jsDelivr terms: https://www.jsdelivr.com/terms — Privacy: https://www.jsdelivr.com/privacy-policy-jsdelivr-net
+**AI model download service (MLC-AI, hosted on Hugging Face and GitHub)** — Only when the local engine is used.
+The local engine is the plugin's core service: it runs a language model in the administrator's browser. The model is not part of the plugin, because model files are over 1 GB and are published and versioned by the MLC-AI project. When the site owner selects a local model in the plugin's settings (Qwen 3 1.7B by default, ~1.2 GB, or Qwen 2.5 7B, ~4.5 GB), the administrator's browser downloads that model's weights from `https://huggingface.co/mlc-ai/` and its compiled model library from `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. The site owner's choice of engine and model determines what is downloaded. No account or API key is needed. Only HTTP GET requests for static files are made, directly from the browser (the WordPress server makes no requests for them), and no prompts, admin data, or telemetry are sent. Files are cached in the browser after the first download.
 Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
+GitHub terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service — Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
 **External LLM provider (user-configured)** — Only when you switch the engine from "Local" to "Remote" in settings.
 When enabled, chat messages, tool descriptions, and tool results are sent through this plugin's REST proxy (`/wp-json/agentic-admin/v1/llm-proxy/`) to the OpenAI-compatible endpoint URL you configure (e.g. Ollama, LM Studio, vLLM, OpenAI, Groq, Together). You choose the endpoint; the plugin does not preselect or default to any third-party provider. No data is sent until you save an endpoint and start a chat in Remote mode.
@@ -89,12 +85,12 @@ Agentic Admin is fully open source under GPL-2.0-or-later. The complete, human-r
 
 https://github.com/pluginslab/wp-agentic-admin
 
-The files under `build-extensions/` are generated from the sources in `src/` with @wordpress/scripts (webpack). They contain only JavaScript and CSS: the bundles (`index.js`, `sw.js`, `indexing-worker.js`, and code-split chunks) and the stylesheets. No WebAssembly, binaries, or other compiled artifacts are distributed with the plugin. To regenerate them from a checkout:
+The files under `build-extensions/` are generated from the sources in `src/` with @wordpress/scripts (webpack). They contain only JavaScript and CSS: the bundles (`index.js`, `sw.js`, and code-split chunks) and the stylesheets. No WebAssembly, binaries, or other compiled artifacts are distributed with the plugin. To regenerate them from a checkout:
 
 1. `npm install`
 2. `npm run build`
 
-There is no build step for the PHP. The WebLLM engine is bundled into the plugin from its npm package. The optional knowledge-base embedding library (Transformers.js) and all AI model weights are loaded at runtime from the providers documented under External services above; these are large provider-hosted files, not part of the plugin code.
+There is no build step for the PHP. The WebLLM engine is bundled into the plugin from its npm package. The AI model weights and their compiled model libraries are loaded at runtime from the provider documented under External services above; these are large provider-hosted model files (over 1 GB), not part of the plugin code.
 
 == Changelog ==
 
@@ -112,13 +108,16 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 * Fixed: AI model no longer preloads on every wp-admin page, deferred until the user opens the sidebar for the first time (#116).
 * Improved: post-tool summarization is brief (no re-listing items the user already sees in the tool result UI).
 * Improved: ChatInput keyboard handling simplified (Space inserts a space, no push-to-talk hijacking).
-* Improved: KB embedding moved to a Web Worker with persistent progress across tab switches.
-* Pinned: Transformers.js CDN URL to @3.8.1 (was floating @3 range), privacy-first plugin shouldn't depend on a CDN range that can ship new code without a deliberate bump.
-* Removed: the voy-search dependency and the WebAssembly module it distributed. Vector search is now plain JavaScript (exhaustive cosine over L2-normalised embeddings), so the plugin ships no compiled binaries at all and every distributed file has readable source in the repository.
-* Fixed: re-running the knowledge base index no longer leaves vectors and chunk metadata misaligned, which could return the wrong code chunk for a query.
+* Removed: the local knowledge base (in-browser embeddings, vector store, and the codebase-index, code-search, schema-extract, wp-api-extract, docs-extract, and codebase-extract abilities). The plugin no longer loads Transformers.js from a CDN or ships any WebAssembly module.
+* Security: read-file now refuses files that can hold credentials, keys, or salts (wp-config.php, .env, private keys, database dumps, and any file defining the auth keys, salts, or DB password) instead of relying on redaction.
+* Security: wp-config-list now has its own PHP backend that reads constant names with the PHP tokenizer and never reads the values of credentials, keys, or salts.
+* Security: removed the security-scan salts check, which read the auth salt and could never fail.
+* Changed: AI Connectors are detected through the AI Client registry, as on the core Connectors screen, instead of reading API-key options.
+* Fixed: plugin, must-use plugin, and content paths are derived from the plugin's own location and WordPress functions instead of WP_PLUGIN_DIR, WPMU_PLUGIN_DIR, and WP_CONTENT_DIR. Core checksum verification no longer miscounts files when the content directory is moved. The debug log path follows WordPress's own error_log setting.
+* Fixed: read-file and uploads-scan resolve the site root with get_home_path(), so subdirectory installs work.
 * Fixed: `.well-known` scanning resolves via get_home_path() instead of ABSPATH, so subdirectory installs scan the real site root.
 * Removed: 7 stale tab references and 6+ stale docs files (FEEDBACK-DEV.md).
-* Tests: 96 unit tests passing, plus the new manifest test suite (7 cases), index test suite (6 cases), knowledge-base test suite (16 cases), and react-agent regression tests (3 cases for the per-call state cleanup fix).
+* Tests: 96 unit tests passing, plus the new manifest test suite (7 cases), index test suite (6 cases), and react-agent regression tests (3 cases for the per-call state cleanup fix).
 
 = 0.10.0 =
 * CloudFest Hackathon 2026 release: 78 PRs merged, 42+ abilities shipped by 11 contributors

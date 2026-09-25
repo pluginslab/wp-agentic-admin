@@ -5,7 +5,6 @@
  */
 
 import { useState, useRef, useEffect } from '@wordpress/element';
-import vectorStore from '../services/vector-store';
 import {
 	Button,
 	Dropdown,
@@ -15,7 +14,7 @@ import {
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { plus, send, globe, search } from '@wordpress/icons';
+import { plus, send, globe } from '@wordpress/icons';
 import ABILITY_BUNDLES from '../data/ability-bundles';
 import pluginAbilitiesManager from '../services/plugin-abilities-manager';
 import ModelStatusPill from './ModelStatusPill';
@@ -32,22 +31,8 @@ const ChatInput = ( {
 	// via the "+" DropdownMenu. Clicking a row toggles its membership.
 	const [ selectedBundleIds, setSelectedBundleIds ] = useState( [] );
 	const [ webSearchEnabled, setWebSearchEnabled ] = useState( false );
-	const [ docSearchEnabled, setDocSearchEnabled ] = useState( false );
-	const [ kbIndexReady, setKbIndexReady ] = useState( false );
 	const [ pluginBundles, setPluginBundles ] = useState( [] );
 	const textareaWrapperRef = useRef( null );
-
-	useEffect( () => {
-		const checkIndex = async () => {
-			try {
-				await vectorStore.init();
-				setKbIndexReady( vectorStore.isReady() );
-			} catch {
-				setKbIndexReady( false );
-			}
-		};
-		checkIndex();
-	}, [] );
 
 	useEffect( () => {
 		const refresh = () => {
@@ -108,7 +93,6 @@ const ChatInput = ( {
 			pluginNamespace: first?.pluginNamespace || null,
 			pluginNamespaces: pluginNamespaces.length ? pluginNamespaces : null,
 			webSearch: webSearchEnabled,
-			docSearch: docSearchEnabled,
 		} );
 		setMessage( '' );
 	};
@@ -225,20 +209,6 @@ const ChatInput = ( {
 					isPressed={ webSearchEnabled }
 					onClick={ () => setWebSearchEnabled( ! webSearchEnabled ) }
 					disabled={ isDisabled }
-				/>
-				<Button
-					icon={ search }
-					label={
-						! kbIndexReady
-							? 'Knowledge Base: not indexed (build in Settings)'
-							: `Knowledge Base: ${
-									docSearchEnabled ? 'active' : 'inactive'
-							  }`
-					}
-					showTooltip
-					isPressed={ docSearchEnabled }
-					onClick={ () => setDocSearchEnabled( ! docSearchEnabled ) }
-					disabled={ isDisabled || ! kbIndexReady }
 				/>
 				<div style={ { flex: 1, minWidth: 0 } }>
 					<ModelStatusPill />

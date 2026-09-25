@@ -204,11 +204,11 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 	$dirs_to_scan   = array();
 
 	if ( $scan_plugins ) {
-		$dirs_to_scan[] = WP_PLUGIN_DIR;
+		$dirs_to_scan[] = agentic_admin_plugins_dir();
 
-		// Also scan must-use plugins if the directory exists.
-		$mu_dir = WPMU_PLUGIN_DIR;
-		if ( is_dir( $mu_dir ) ) {
+		// Also scan must-use plugins if any are installed.
+		$mu_dir = agentic_admin_mu_plugins_dir();
+		if ( '' !== $mu_dir && is_dir( $mu_dir ) ) {
 			$dirs_to_scan[] = $mu_dir;
 		}
 	}
@@ -286,9 +286,9 @@ function agentic_admin_execute_file_scan( array $input = array() ): array {
 		);
 
 		$normalized_dir = wp_normalize_path( $dir );
-		$is_plugin_dir  = wp_normalize_path( WP_PLUGIN_DIR ) === $normalized_dir;
-		$mu_plugin_dir  = WPMU_PLUGIN_DIR;
-		$is_mu_dir      = wp_normalize_path( $mu_plugin_dir ) === $normalized_dir;
+		$is_plugin_dir  = agentic_admin_plugins_dir() === $normalized_dir;
+		$mu_plugin_dir  = agentic_admin_mu_plugins_dir();
+		$is_mu_dir      = '' !== $mu_plugin_dir && $mu_plugin_dir === $normalized_dir;
 
 		foreach ( $iterator as $file_info ) {
 			if ( ! $file_info->isFile() ) {
@@ -506,13 +506,17 @@ function agentic_admin_resolve_theme_names( array $slugs ): array {
 }
 
 /**
- * Get a file path relative to wp-content for display.
+ * Get a file path relative to the content directory for display.
+ *
+ * The content directory is taken as the parent of the plugins directory;
+ * paths outside it are returned unchanged.
  *
  * @param string $absolute_path Absolute file path.
- * @return string Relative path from wp-content.
+ * @return string Relative path from the content directory.
  */
 function agentic_admin_get_content_relative_path( string $absolute_path ): string {
-	$content_dir = WP_CONTENT_DIR;
+	$absolute_path = wp_normalize_path( $absolute_path );
+	$content_dir   = dirname( agentic_admin_plugins_dir() );
 
 	if ( str_starts_with( $absolute_path, $content_dir ) ) {
 		return substr( $absolute_path, strlen( $content_dir ) + 1 );

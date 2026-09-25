@@ -18,7 +18,7 @@ export function registerSecurityScan() {
 	registerAbility( 'agentic-admin/security-scan', {
 		label: 'Run basic security scan',
 		description:
-			'Run basic WordPress security checks including debug mode, file permissions, salts, and version exposure. Use for security audits.',
+			'Run basic WordPress security checks including debug mode, file permissions, and version exposure. Use for security audits.',
 
 		keywords: [
 			'security',

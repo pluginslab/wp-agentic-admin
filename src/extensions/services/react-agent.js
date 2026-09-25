@@ -11,7 +11,6 @@
  */
 
 import { createLogger } from '../utils/logger';
-import vectorStore from './vector-store';
 
 const log = createLogger( 'ReactAgent' );
 
@@ -118,10 +117,9 @@ class ReactAgent {
 	async execute( userMessage, conversationHistory = [], options = {} ) {
 		log.info( 'Starting ReAct loop for:', userMessage );
 
-		// Store tool filter, web search context, and doc search for this execution
+		// Store tool filter and web search context for this execution
 		this.currentToolFilter = options.toolFilter || null;
 		this.webSearchContext = options.webSearchContext || null;
-		this.docSearch = options.docSearch || false;
 
 		try {
 			const engine = this.modelLoader.getEngine();
@@ -150,7 +148,6 @@ class ReactAgent {
 			// even if executeWithPromptBased throws.
 			this.currentToolFilter = null;
 			this.webSearchContext = null;
-			this.docSearch = false;
 		}
 	}
 
@@ -171,52 +168,10 @@ class ReactAgent {
 		const toolsUsed = [];
 		let iteration = 0;
 
-		// Auto-consult: inject relevant RAG context before the ReAct loop.
-		// Only runs when the user has enabled the knowledge base toggle.
-		let augmentedMessage = userMessage;
-		try {
-			if ( this.docSearch ) {
-				await vectorStore.init();
-				if ( vectorStore.isReady() ) {
-					const ragResults = await vectorStore.search(
-						userMessage,
-						2
-					);
-					if ( ragResults.length > 0 ) {
-						// Budget: ~1750 chars max for injected context.
-						let context = '[Relevant knowledge base context]\n';
-						let charBudget = 1750;
-
-						for ( const result of ragResults ) {
-							const snippet = result.content.slice(
-								0,
-								Math.min( result.content.length, charBudget )
-							);
-							context += `${ result.path }: ${ snippet }\n`;
-							charBudget -=
-								snippet.length + result.path.length + 3;
-							if ( charBudget <= 0 ) {
-								break;
-							}
-						}
-
-						context += '[End context]\n\n';
-						augmentedMessage = context + userMessage;
-						log.info(
-							`Auto-consult: injected ${ ragResults.length } RAG results (${ context.length } chars)`
-						);
-					}
-				}
-			}
-		} catch ( e ) {
-			// Auto-consult is best-effort — don't block the agent.
-			log.warn( 'Auto-consult RAG failed:', e.message );
-		}
-
 		const messages = [
 			{ role: 'system', content: systemPrompt },
 			...conversationHistory,
-			{ role: 'user', content: augmentedMessage },
+			{ role: 'user', content: userMessage },
 		];
 
 		// Inject web search results as context before the user message

@@ -139,10 +139,10 @@ function agentic_admin_execute_verify_core_checksums( array $input = array() ): 
 	// Build a set of known core files for extra-file detection.
 	$known_files = array();
 
-	// Derive the content directory prefix relative to ABSPATH.
-	// WP_CONTENT_DIR is the absolute path (e.g., /var/www/html/wp-content or /var/www/html/content).
-	// We need the relative prefix to match against checksums entries.
-	$content_dir_prefix = trailingslashit( substr( WP_CONTENT_DIR, strlen( ABSPATH ) ) );
+	// The checksums API lists content files under their location in the
+	// release package ("wp-content/..."), whatever the site's own content
+	// directory is, so skip that literal prefix.
+	$content_dir_prefix = 'wp-content/';
 
 	foreach ( $checksums as $file => $expected_md5 ) {
 		// Skip content directory files — those are user-managed.

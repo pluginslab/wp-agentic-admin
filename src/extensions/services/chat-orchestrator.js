@@ -18,7 +18,6 @@ import workflowRegistry from './workflow-registry';
 import workflowOrchestrator from './workflow-orchestrator';
 import ReactAgent from './react-agent';
 import messageRouter from './message-router';
-import vectorStore from './vector-store';
 import { executeAbility } from './agentic-abilities-api';
 import { createLogger } from '../utils/logger';
 
@@ -275,10 +274,7 @@ class ChatOrchestrator {
 					userMessage,
 					false,
 					options.bundleToolIds,
-					webSearchContext,
-					options.bundleIds ||
-						( options.bundleId ? [ options.bundleId ] : null ),
-					options.docSearch
+					webSearchContext
 				);
 			}
 
@@ -293,14 +289,6 @@ class ChatOrchestrator {
 				);
 			}
 
-			// Knowledge-base intent (book button) bypasses ReAct entirely.
-			// The user explicitly asked for a docs answer — fishing for tools
-			// produces hallucinated tool calls on small models (issue #209).
-			if ( options.docSearch ) {
-				log.info( 'Routing to doc-search (RAG, no tools)' );
-				return await this.processWithDocSearch( userMessage );
-			}
-
 			// All non-workflow messages go through ReAct.
 			log.info(
 				`Routing to ReAct loop (thinking: ${
@@ -311,9 +299,7 @@ class ChatOrchestrator {
 				userMessage,
 				route.disableThinking,
 				null,
-				webSearchContext,
-				null,
-				options.docSearch
+				webSearchContext
 			);
 		} catch ( error ) {
 			log.error( 'Error processing message:', error );
@@ -392,17 +378,13 @@ class ChatOrchestrator {
 	 * @param {boolean}     disableThinking  - Whether to disable model thinking
 	 * @param {Array}       toolFilter       - Optional array of tool IDs to constrain the agent
 	 * @param {string|null} webSearchContext - Formatted search results from pre-step
-	 * @param {Array|null}  bundleIds        - Active bundle identifiers (multi-select)
-	 * @param {boolean}     docSearch        - Whether to augment prompt with KB vector search results
 	 * @return {Promise<Object>} Result with success status and ReAct execution details.
 	 */
 	async processWithReact(
 		userMessage,
 		disableThinking = false,
 		toolFilter = null,
-		webSearchContext = null,
-		bundleIds = null,
-		docSearch = false
+		webSearchContext = null
 	) {
 		if ( ! this.isLLMReady() ) {
 			this.session.addAssistantMessage(
@@ -456,7 +438,7 @@ class ChatOrchestrator {
 		const result = await this.reactAgent.execute(
 			userMessage,
 			this.session.getConversationHistory(),
-			{ toolFilter, webSearchContext, docSearch }
+			{ toolFilter, webSearchContext }
 		);
 
 		// For tools that prefer to display their own summary (e.g. read-file),
@@ -749,174 +731,6 @@ Explain what went wrong and suggest what the user might try next.`;
 			const messageWithContext = `• ${ toolName }\n${ fallbackSummary }`;
 			this.session.addAssistantMessage( messageWithContext );
 			this.callbacks.onStreamEnd( fallbackSummary );
-		}
-	}
-
-	/**
-	 * Process message via knowledge-base RAG (no tools).
-	 *
-	 * Invoked when the user enabled the docs/book button. Skips ReAct
-	 * entirely, runs a vector search over the indexed knowledge base, and
-	 * streams an LLM answer grounded in the retrieved snippets. If the
-	 * index is empty, falls back to a conversational LLM answer without
-	 * RAG context — but still no tools.
-	 *
-	 * @param {string} userMessage - User's message
-	 * @return {Promise<Object>} Result with success status.
-	 */
-	async processWithDocSearch( userMessage ) {
-		if ( ! this.isLLMReady() ) {
-			this.session.addAssistantMessage(
-				'The AI model is not loaded yet. Please load the model first.'
-			);
-			return { success: false, error: 'Model not loaded' };
-		}
-
-		// Retrieve RAG context (best-effort; failure falls through to a
-		// context-less conversational answer).
-		let ragContext = '';
-		let ragHits = 0;
-		try {
-			await vectorStore.init();
-			if ( vectorStore.isReady() ) {
-				const results = await vectorStore.search( userMessage, 3 );
-				if ( results.length > 0 ) {
-					ragHits = results.length;
-					const CHAR_BUDGET = 2500;
-					let budget = CHAR_BUDGET;
-					const parts = [ '[Knowledge base context]' ];
-					for ( const r of results ) {
-						const snippet = r.content.slice(
-							0,
-							Math.min( r.content.length, budget )
-						);
-						parts.push( `${ r.path }:\n${ snippet }` );
-						budget -= snippet.length + r.path.length + 3;
-						if ( budget <= 0 ) {
-							break;
-						}
-					}
-					parts.push( '[End context]' );
-					ragContext = parts.join( '\n\n' );
-				}
-			}
-		} catch ( err ) {
-			log.warn( 'Doc-search vector lookup failed:', err.message );
-		}
-
-		log.info(
-			`Doc-search: ${ ragHits } hit(s), context ${ ragContext.length } chars`
-		);
-
-		const systemPrompt = ragContext
-			? "You are a WordPress assistant answering from the user's indexed knowledge base. Use the provided context to answer accurately. If the context doesn't cover the question, say so plainly — do not invent details."
-			: 'You are a helpful WordPress assistant. The user has the knowledge-base mode on, but no indexed content matched their question. Answer from general WordPress knowledge and tell them no local docs were found.';
-
-		// Honor the user's thinking-mode setting. Qwen 3 occasionally ignores
-		// /nothink and emits <think> anyway, so we also strip blocks below.
-		const thinkingPrefs = ChatOrchestrator.getThinkingPreferences();
-		const suppressThinking = !! thinkingPrefs.disableThinkingBeforeTool;
-		const nothinkSuffix = suppressThinking ? '\n\n/nothink' : '';
-
-		const userPrompt =
-			( ragContext
-				? `${ ragContext }\n\nQuestion: ${ userMessage }`
-				: userMessage ) + nothinkSuffix;
-
-		const engine = modelLoader.getEngine();
-		const messages = [
-			{ role: 'system', content: systemPrompt },
-			{ role: 'user', content: userPrompt },
-		];
-
-		this.callbacks.onStreamStart();
-		let fullResponse = '';
-		let visibleResponse = '';
-		let inThinkBlock = false;
-		let thinkAnnounced = false;
-
-		const stripThink = ( text ) =>
-			text.replace( /<think>[\s\S]*?<\/think>\s*/g, '' );
-
-		try {
-			const stream = await engine.chat.completions.create( {
-				messages,
-				temperature: 0.3,
-				max_tokens: this.llmOptions.maxTokens,
-				stream: true,
-				stream_options: { include_usage: true },
-				stop: [ 'User:', 'USER:', '\n\nUser' ],
-			} );
-
-			for await ( const chunk of stream ) {
-				if ( this.currentAbortController?.signal.aborted ) {
-					break;
-				}
-				const delta = chunk.choices[ 0 ]?.delta?.content || '';
-				fullResponse += delta;
-
-				// Detect and route <think> tokens.
-				const hasOpen = fullResponse.includes( '<think>' );
-				const hasClose = fullResponse.includes( '</think>' );
-
-				if ( hasOpen && ! hasClose ) {
-					if ( ! inThinkBlock ) {
-						inThinkBlock = true;
-						if ( ! suppressThinking ) {
-							thinkAnnounced = true;
-							this.callbacks.onThinkingStart?.();
-						}
-					}
-					if ( ! suppressThinking ) {
-						const thinkStart =
-							fullResponse.indexOf( '<think>' ) + 7;
-						const thinkContent = fullResponse
-							.substring( thinkStart )
-							.trim();
-						this.callbacks.onThinkingChunk?.( delta, thinkContent );
-					}
-					// Skip onStreamChunk while inside a think block.
-					continue;
-				}
-
-				if ( inThinkBlock && hasClose ) {
-					inThinkBlock = false;
-					const match = fullResponse.match(
-						/<think>([\s\S]*?)<\/think>/
-					);
-					const thinkContent = match ? match[ 1 ].trim() : '';
-					if ( ! suppressThinking ) {
-						this.callbacks.onThinkingEnd?.( thinkContent || null );
-					}
-				}
-
-				visibleResponse = stripThink( fullResponse ).trimStart();
-				this.callbacks.onStreamChunk( delta, visibleResponse );
-
-				if ( chunk.usage ) {
-					modelLoader.updateUsageStats( chunk.usage );
-				}
-			}
-
-			// Edge case: model produced <think> without closing tag.
-			if ( inThinkBlock && thinkAnnounced ) {
-				this.callbacks.onThinkingEnd?.( null );
-			}
-
-			const finalText = stripThink( fullResponse ).trim();
-			this.session.addAssistantMessage(
-				finalText,
-				this.getUsageStatsMeta()
-			);
-			this.callbacks.onStreamEnd( finalText );
-			return { success: true };
-		} catch ( error ) {
-			log.error( 'Doc-search LLM stream failed:', error );
-			const fallback =
-				"I couldn't complete the knowledge-base answer. Try again, or toggle the knowledge-base button off to use tools.";
-			this.session.addAssistantMessage( fallback );
-			this.callbacks.onStreamEnd( fallback );
-			return { success: false, error: error.message };
 		}
 	}
 

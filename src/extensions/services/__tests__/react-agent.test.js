@@ -346,7 +346,7 @@ describe( 'ReactAgent', () => {
 	} );
 
 	describe( 'Per-call instance state cleanup', () => {
-		it( 'clears toolFilter / webSearchContext / docSearch after a successful run', async () => {
+		it( 'clears toolFilter / webSearchContext after a successful run', async () => {
 			mockStreamOnce(
 				mockEngine,
 				'{"action": "final_answer", "content": "ok"}'
@@ -355,12 +355,10 @@ describe( 'ReactAgent', () => {
 			await reactAgent.execute( 'hi', [], {
 				toolFilter: [ 'agentic-admin/plugin-list' ],
 				webSearchContext: 'some context',
-				docSearch: true,
 			} );
 
 			expect( reactAgent.currentToolFilter ).toBeNull();
 			expect( reactAgent.webSearchContext ).toBeNull();
-			expect( reactAgent.docSearch ).toBe( false );
 		} );
 
 		it( 'clears state even when execute throws (try/finally guard)', async () => {
@@ -373,13 +371,11 @@ describe( 'ReactAgent', () => {
 				reactAgent.execute( 'hi', [], {
 					toolFilter: [ 'agentic-admin/plugin-list' ],
 					webSearchContext: 'some context',
-					docSearch: true,
 				} )
 			).rejects.toThrow( /engine boom/ );
 
 			expect( reactAgent.currentToolFilter ).toBeNull();
 			expect( reactAgent.webSearchContext ).toBeNull();
-			expect( reactAgent.docSearch ).toBe( false );
 		} );
 
 		it( 'clears state on the early-return "Model not loaded" path', async () => {
@@ -388,14 +384,12 @@ describe( 'ReactAgent', () => {
 			const result = await reactAgent.execute( 'hi', [], {
 				toolFilter: [ 'agentic-admin/plugin-list' ],
 				webSearchContext: 'some context',
-				docSearch: true,
 			} );
 
 			expect( result.success ).toBe( false );
 			expect( result.error ).toBe( 'Model not loaded' );
 			expect( reactAgent.currentToolFilter ).toBeNull();
 			expect( reactAgent.webSearchContext ).toBeNull();
-			expect( reactAgent.docSearch ).toBe( false );
 		} );
 	} );
 
