@@ -570,14 +570,13 @@ const ModelStatus = ( {
 										status="info"
 										isDismissible={ false }
 									>
-										The AI model runs entirely in your
-										browser using WebGPU. The first load
-										will download model data (250MB-1GB
-										depending on model), which is cached for
-										future use. Using a Service Worker, the
-										model stays loaded as you navigate
-										wp-admin — no reload needed! No data is
-										sent to external servers.
+										Load Model downloads the selected model
+										once from MLC-AI, hosted on Hugging Face
+										and GitHub (about 1.2 GB for the
+										default), and caches it in your browser.
+										The model then runs in your browser
+										using WebGPU. Your prompts and site data
+										are not sent to these hosts.
 									</Notice>
 									<Notice
 										status="warning"
