@@ -19,6 +19,7 @@ import modelLoader, {
 	ModelLoader,
 	MODEL_CONTEXT_SIZES,
 } from '../services/model-loader';
+import ModelSourceCard from './ModelSourceCard';
 
 const CONTEXT_OPTIONS = [
 	{ label: '2,048 tokens (minimal)', value: '2048' },
@@ -153,6 +154,7 @@ const SettingsTab = () => {
 					Configure GPU, context windows, and model behavior.
 				</p>
 			</div>
+			<ModelSourceCard />
 			<Card>
 				<CardHeader>
 					<h3 style={ { margin: 0 } }>GPU Information</h3>

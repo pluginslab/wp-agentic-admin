@@ -55,6 +55,8 @@ class Settings {
 	public function __construct() {
 		$this->init_settings();
 
+		add_action( 'init', array( $this, 'register_model_source_setting' ) );
+
 		// UX: Add settings link to plugin list table.
 		add_filter(
 			'plugin_action_links_' . plugin_basename( AGENTIC_ADMIN_FILE ),
@@ -179,6 +181,68 @@ class Settings {
 				break;
 		}
 		$this->settings[ $field ] = $cleaned;
+	}
+
+	/**
+	 * Register the model source option.
+	 *
+	 * The local engine downloads model files only from the addresses the
+	 * site owner enters here. The plugin ships no default. Exposed through
+	 * the core /wp/v2/settings endpoint, which requires manage_options.
+	 *
+	 * @return void
+	 */
+	public function register_model_source_setting(): void {
+		register_setting(
+			'agentic_admin',
+			'agentic_admin_model_source',
+			array(
+				'type'              => 'object',
+				'description'       => __( 'Where the local AI engine downloads model files from.', 'agentic-admin' ),
+				'default'           => array(
+					'weights_url' => '',
+					'library_url' => '',
+				),
+				'sanitize_callback' => array( __CLASS__, 'sanitize_model_source' ),
+				'show_in_rest'      => array(
+					'schema' => array(
+						'type'                 => 'object',
+						'properties'           => array(
+							'weights_url' => array( 'type' => 'string' ),
+							'library_url' => array( 'type' => 'string' ),
+						),
+						'additionalProperties' => false,
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Sanitize the model source option.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return array{weights_url: string, library_url: string}
+	 */
+	public static function sanitize_model_source( $value ): array {
+		$value = is_array( $value ) ? $value : array();
+		$clean = array();
+
+		foreach ( array( 'weights_url', 'library_url' ) as $key ) {
+			$url           = isset( $value[ $key ] ) ? esc_url_raw( trim( (string) $value[ $key ] ), array( 'https', 'http' ) ) : '';
+			$clean[ $key ] = '' === $url ? '' : trailingslashit( $url );
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Get the configured model source.
+	 *
+	 * @return array{weights_url: string, library_url: string}
+	 */
+	public static function get_model_source(): array {
+		return self::sanitize_model_source( get_option( 'agentic_admin_model_source', array() ) );
 	}
 
 	/**

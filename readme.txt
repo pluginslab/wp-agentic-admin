@@ -41,7 +41,7 @@ Agentic Admin transforms your WordPress admin panel into an intelligent command 
 1. The Agentic Admin chat tab in wp-admin, mid-conversation. The model has just answered a question about installed plugins by calling the `plugin-list` tool locally — full ReAct trace (user question, thought process, tool call, answer) visible.
 2. First-run model download in progress. The Qwen 3 1.7B weights (~1.2 GB) are fetched from the MLC-AI / HuggingFace CDN — once per browser, cancellable, cached for subsequent sessions.
 3. The Abilities browser, listing every tool the assistant can call against the WordPress Abilities API on this site.
-4. Settings panel. See detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
+4. Settings panel. Set the model source, see detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
 5. Multi-step workflow execution. "Do a performance check" is recognized as a 2-step workflow — the assistant runs `site-health` and `error-log-read` in sequence, then summarizes the environment (WP version, PHP, memory, debug mode, error log status) in one answer.
 6. WordPress 7.0 AI Connector integration. The Connector tab picks up any AI provider registered via WP 7.0's built-in Connector API — Anthropic, Google, OpenAI, or any third-party `ai_provider` plugin — and uses it as the model backend with zero extra setup.
 
@@ -51,8 +51,15 @@ This plugin runs AI locally in your browser by default, and your prompts and cha
 
 Separately from AI inference, some abilities query public data sources to do their job: a security scan checks your plugin versions against CVE databases, a checksum verification compares your files against WordPress.org, and a web search sends your query to a search engine. Every external request the plugin makes is listed here:
 
-**AI model download service (MLC-AI, hosted on Hugging Face and GitHub)** — Only when the local engine is used.
-The local engine is the plugin's core service: it runs a language model in the administrator's browser. The model is not part of the plugin, because model files are over 1 GB and are published and versioned by the MLC-AI project. Nothing is downloaded until an administrator selects a model (Qwen 3 1.7B by default, ~1.2 GB, or Qwen 2.5 7B, ~4.5 GB) and clicks Load Model. The browser then downloads that model's weights from `https://huggingface.co/mlc-ai/` and its compiled model library from `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/`. The site owner's choice of engine and model determines what is downloaded. No account or API key is needed. Only HTTP GET requests for static files are made, directly from the browser (the WordPress server makes no requests for them), and no prompts, admin data, or telemetry are sent. Files are cached in the browser after the first download.
+**Model source for the local engine (site-owner configured)** — Only when an administrator sets a model source and loads a model.
+The local engine runs a language model in the administrator's browser. The model is not part of the plugin: model files are over 1 GB. The plugin contains no model download address. An administrator enters where models are downloaded from under Settings → Model source, and until then the local engine is off. Nothing is downloaded until an administrator then selects a model and clicks Load Model. The browser fetches the files directly from the configured source (the WordPress server makes no requests for them), and no prompts, admin data, or telemetry are sent. Files are cached in the browser after the first download.
+
+To use the models published by the MLC-AI project, enter these addresses. No account or API key is needed:
+
+* Model weights URL: `https://huggingface.co/mlc-ai/`
+* Model library URL: `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/`
+
+You can also host the same files yourself and enter your own addresses.
 Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 GitHub terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service — Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
@@ -118,6 +125,7 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 * Security: the external LLM proxy no longer relays the provider's response verbatim. Each streamed event is decoded and re-encoded as escaped JSON; anything else is dropped.
 * Changed: "Tested up to" is declared only in readme.txt.
 * Fixed: the model notice names where the model is downloaded from and its real size, instead of saying no data is sent to external servers.
+* Changed: the plugin no longer contains any model download address. The site owner sets the model source under Settings → Model source (the MLC-AI addresses are listed under External services), and the local engine stays off until it is set. WebLLM's built-in model list is removed at build time.
 * Fixed: `.well-known` scanning resolves via get_home_path() instead of ABSPATH, so subdirectory installs scan the real site root.
 * Removed: 7 stale tab references and 6+ stale docs files (FEEDBACK-DEV.md).
 * Tests: 96 unit tests passing, plus the new manifest test suite (7 cases), index test suite (6 cases), and react-agent regression tests (3 cases for the per-call state cleanup fix).
