@@ -210,7 +210,8 @@ class LLM_Proxy {
 		}
 
 		// Set SSE headers.
-		header( 'Content-Type: text/event-stream' );
+		header( 'Content-Type: text/event-stream; charset=utf-8' );
+		header( 'X-Content-Type-Options: nosniff' );
 		header( 'Cache-Control: no-cache' );
 		header( 'Connection: keep-alive' );
 		header( 'X-Accel-Buffering: no' );
@@ -240,13 +241,36 @@ class LLM_Proxy {
 				array(
 					'error' => 'LLM proxy request failed: ' . $response->get_error_message(),
 					'url'   => $url,
-				)
+				),
+				JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
 			);
 			exit;
 		}
 
-		$response_body = \wp_remote_retrieve_body( $response );
-		echo $response_body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		// Never relay the remote body verbatim. Each SSE event is decoded as
+		// JSON and re-encoded with wp_json_encode(), which escapes HTML-
+		// significant characters. Anything that is not a valid JSON event is
+		// dropped.
+		$json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+		$lines      = preg_split( '/\r\n|\r|\n/', \wp_remote_retrieve_body( $response ) );
+
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( ! str_starts_with( $line, 'data:' ) ) {
+				continue;
+			}
+
+			$data = trim( substr( $line, 5 ) );
+			if ( '[DONE]' === $data ) {
+				echo "data: [DONE]\n\n";
+				continue;
+			}
+
+			$event = json_decode( $data, true );
+			if ( is_array( $event ) ) {
+				echo 'data: ' . wp_json_encode( $event, $json_flags ) . "\n\n";
+			}
+		}
 		if ( ob_get_level() ) {
 			ob_flush();
 		}
