@@ -221,6 +221,9 @@ class Settings {
 	/**
 	 * Sanitize the model source option.
 	 *
+	 * Only https addresses are kept: the admin screen is served over https on
+	 * most sites, where browsers block http downloads as mixed content.
+	 *
 	 * @param mixed $value Raw value.
 	 * @return array{weights_url: string, library_url: string}
 	 */
@@ -229,7 +232,7 @@ class Settings {
 		$clean = array();
 
 		foreach ( array( 'weights_url', 'library_url' ) as $key ) {
-			$url           = isset( $value[ $key ] ) ? esc_url_raw( trim( (string) $value[ $key ] ), array( 'https', 'http' ) ) : '';
+			$url           = isset( $value[ $key ] ) ? esc_url_raw( trim( (string) $value[ $key ] ), array( 'https' ) ) : '';
 			$clean[ $key ] = '' === $url ? '' : trailingslashit( $url );
 		}
 

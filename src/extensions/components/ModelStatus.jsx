@@ -21,7 +21,10 @@ import {
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
-import { isModelSourceConfigured } from '../services/model-source';
+import {
+	isModelSourceConfigured,
+	subscribe as subscribeModelSource,
+} from '../services/model-source';
 import useConnectors from '../services/use-connectors';
 import modelLoader, {
 	ModelLoader,
@@ -218,7 +221,17 @@ const ModelStatus = ( {
 		'AI model not loaded. Click "Load Model" to start.'
 	);
 	const [ progress, setProgress ] = useState( 0 );
+	const [ sourceReady, setSourceReady ] = useState( isModelSourceConfigured );
 	const [ selectedModel, setSelectedModel ] = useState( getSavedModel() );
+
+	// Re-render when the owner saves a model source in Settings.
+	useEffect(
+		() =>
+			subscribeModelSource( () =>
+				setSourceReady( isModelSourceConfigured() )
+			),
+		[]
+	);
 	const [ isFromCache, setIsFromCache ] = useState( false );
 	const [ rawMessage, setRawMessage ] = useState( '' );
 	const [ loadedModelInfo, setLoadedModelInfo ] = useState( null );
@@ -561,16 +574,14 @@ const ModelStatus = ( {
 										<Button
 											variant="primary"
 											onClick={ handleLoadModel }
-											disabled={
-												! isModelSourceConfigured()
-											}
+											disabled={ ! sourceReady }
 										>
 											{ status === 'error'
 												? 'Retry'
 												: 'Load Model' }
 										</Button>
 									</HStack>
-									{ isModelSourceConfigured() ? (
+									{ sourceReady ? (
 										<Notice
 											status="info"
 											isDismissible={ false }
@@ -591,9 +602,12 @@ const ModelStatus = ( {
 										>
 											No model source is set. An
 											administrator can set where models
-											are downloaded from under Settings →
-											Model source. Until then, use the
-											Remote or Connector engine.
+											are downloaded from under{ ' ' }
+											<a href="#model-source">
+												Settings → Model source
+											</a>
+											. Until then, use the Remote or
+											Connector engine.
 										</Notice>
 									) }
 									<Notice

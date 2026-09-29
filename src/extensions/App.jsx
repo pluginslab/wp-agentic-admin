@@ -27,6 +27,23 @@ const App = () => {
 	);
 	const [ initProgress, setInitProgress ] = useState( 5 );
 
+	// "#model-source" links (e.g. from the Load Model notice) open Settings.
+	const tabFromHash = () =>
+		window.location.hash === '#model-source' ? 'settings' : 'chat';
+	const [ initialTab, setInitialTab ] = useState( tabFromHash );
+	const [ tabPanelKey, setTabPanelKey ] = useState( 0 );
+
+	useEffect( () => {
+		const onHashChange = () => {
+			if ( window.location.hash === '#model-source' ) {
+				setInitialTab( 'settings' );
+				setTabPanelKey( ( key ) => key + 1 );
+			}
+		};
+		window.addEventListener( 'hashchange', onHashChange );
+		return () => window.removeEventListener( 'hashchange', onHashChange );
+	}, [] );
+
 	const settings = window.agenticAdmin || {};
 	const {
 		i18n = {},
@@ -258,9 +275,10 @@ const App = () => {
 	return (
 		<div className="agentic-admin-app">
 			<TabPanel
+				key={ tabPanelKey }
 				className="agentic-admin-tabs"
 				tabs={ tabs }
-				initialTabName="chat"
+				initialTabName={ initialTab }
 			>
 				{ renderTab }
 			</TabPanel>

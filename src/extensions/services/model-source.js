@@ -7,10 +7,12 @@
  * build time (tools/strip-webllm-prebuilt-loader.js), and the WebLLM app
  * config is built here from the owner's settings.
  *
- * - weights_url: base URL of the model weight folders. Each model is read
- *   from `${ weights_url }${ modelId }/`.
+ * - weights_url: base URL of the model weight folders. WebLLM reads each
+ *   model from `${ weights_url }${ modelId }/resolve/main/`.
  * - library_url: base URL of the compiled model libraries (.wasm). Each
- *   library is read from `${ library_url }${ lib }`.
+ *   library is read from `${ library_url }${ modelVersion }/${ lib }`, where
+ *   modelVersion comes from the bundled WebLLM, so a WebLLM upgrade picks
+ *   the matching libraries without the owner changing anything.
  */
 
 /**
@@ -45,6 +47,18 @@ export const MODEL_RECORDS = [
 ];
 
 let current = null;
+const listeners = new Set();
+
+/**
+ * Subscribe to model source changes.
+ *
+ * @param {Function} listener Called after the source is saved.
+ * @return {Function} Unsubscribe function.
+ */
+export function subscribe( listener ) {
+	listeners.add( listener );
+	return () => listeners.delete( listener );
+}
 
 /**
  * Ensure a URL ends with a slash.
@@ -86,6 +100,7 @@ export function setModelSource( source ) {
 		weights_url: withSlash( source?.weights_url ),
 		library_url: withSlash( source?.library_url ),
 	};
+	listeners.forEach( ( listener ) => listener( current ) );
 }
 
 /**
@@ -101,16 +116,17 @@ export function isModelSourceConfigured( source = getModelSource() ) {
 /**
  * Build the WebLLM app config from the model source.
  *
- * @param {Object} [source] Source to use (defaults to the current one).
+ * @param {string} modelVersion WebLLM model library version (webllm.modelVersion).
+ * @param {Object} [source]     Source to use (defaults to the current one).
  * @return {Object} WebLLM AppConfig.
  */
-export function buildAppConfig( source = getModelSource() ) {
+export function buildAppConfig( modelVersion, source = getModelSource() ) {
 	return {
 		useIndexedDBCache: false,
 		model_list: MODEL_RECORDS.map( ( record ) => ( {
 			model: `${ source.weights_url }${ record.id }`,
 			model_id: record.id,
-			model_lib: `${ source.library_url }${ record.lib }`,
+			model_lib: `${ source.library_url }${ modelVersion }/${ record.lib }`,
 			vram_required_MB: record.vramRequiredMB,
 			low_resource_required: record.lowResourceRequired,
 			overrides: {

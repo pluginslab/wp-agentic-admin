@@ -6,7 +6,7 @@
  * /wp/v2/settings endpoint (requires manage_options).
  */
 
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Button,
@@ -21,6 +21,7 @@ import {
 	getModelSource,
 	setModelSource,
 	isModelSourceConfigured,
+	subscribe,
 } from '../services/model-source';
 
 const ModelSourceCard = () => {
@@ -32,6 +33,21 @@ const ModelSourceCard = () => {
 	const [ libraryUrl, setLibraryUrl ] = useState( saved.library_url );
 	const [ isSaving, setIsSaving ] = useState( false );
 	const [ notice, setNotice ] = useState( null );
+	const [ sourceReady, setSourceReady ] = useState( isModelSourceConfigured );
+
+	useEffect(
+		() => subscribe( () => setSourceReady( isModelSourceConfigured() ) ),
+		[]
+	);
+
+	// Scroll into view when opened from a #model-source link.
+	useEffect( () => {
+		if ( window.location.hash === '#model-source' ) {
+			document
+				.getElementById( 'agentic-admin-model-source' )
+				?.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+		}
+	}, [] );
 
 	const handleSave = async () => {
 		setIsSaving( true );
@@ -63,7 +79,7 @@ const ModelSourceCard = () => {
 	};
 
 	return (
-		<Card>
+		<Card id="agentic-admin-model-source">
 			<CardHeader>
 				<h3 style={ { margin: 0 } }>Model source</h3>
 			</CardHeader>
@@ -77,7 +93,7 @@ const ModelSourceCard = () => {
 						plugin&apos;s readme, under External services. You can
 						also host the same files yourself.
 					</p>
-					{ ! isModelSourceConfigured() && (
+					{ ! sourceReady && (
 						<Notice status="warning" isDismissible={ false }>
 							No model source is set, so the local engine is off.
 							The Remote and Connector engines still work.
@@ -86,7 +102,7 @@ const ModelSourceCard = () => {
 					<TextControl
 						__nextHasNoMarginBottom
 						label="Model weights URL"
-						help="Folder that contains one subfolder per model."
+						help="One folder per model, laid out as <model-id>/resolve/main/ (the Hugging Face layout)."
 						type="url"
 						value={ weightsUrl }
 						onChange={ setWeightsUrl }
@@ -95,7 +111,7 @@ const ModelSourceCard = () => {
 					<TextControl
 						__nextHasNoMarginBottom
 						label="Model library URL"
-						help="Folder that contains the compiled model libraries (.wasm)."
+						help="One folder per WebLLM version (for example v0_2_80) holding the compiled model libraries (.wasm). The plugin adds the version it needs."
 						type="url"
 						value={ libraryUrl }
 						onChange={ setLibraryUrl }

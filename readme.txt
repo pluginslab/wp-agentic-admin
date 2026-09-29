@@ -39,7 +39,7 @@ Agentic Admin transforms your WordPress admin panel into an intelligent command 
 == Screenshots ==
 
 1. The Agentic Admin chat tab in wp-admin, mid-conversation. The model has just answered a question about installed plugins by calling the `plugin-list` tool locally — full ReAct trace (user question, thought process, tool call, answer) visible.
-2. First-run model download in progress. The Qwen 3 1.7B weights (~1.2 GB) are fetched from the MLC-AI / HuggingFace CDN — once per browser, cancellable, cached for subsequent sessions.
+2. First-run model download in progress. The Qwen 3 1.7B weights (~1.2 GB) are fetched from the configured model source — once per browser, cancellable, cached for subsequent sessions.
 3. The Abilities browser, listing every tool the assistant can call against the WordPress Abilities API on this site.
 4. Settings panel. Set the model source, see detected GPU + VRAM, tune context-window size per model based on your hardware, toggle thinking mode, and switch between the local engine (WebLLM + WebGPU), a remote OpenAI-compatible endpoint, or the WordPress 7.0 Connector.
 5. Multi-step workflow execution. "Do a performance check" is recognized as a 2-step workflow — the assistant runs `site-health` and `error-log-read` in sequence, then summarizes the environment (WP version, PHP, memory, debug mode, error log status) in one answer.
@@ -57,9 +57,9 @@ The local engine runs a language model in the administrator's browser. The model
 To use the models published by the MLC-AI project, enter these addresses. No account or API key is needed:
 
 * Model weights URL: `https://huggingface.co/mlc-ai/`
-* Model library URL: `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/`
+* Model library URL: `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/`
 
-You can also host the same files yourself and enter your own addresses.
+You can also host the same files yourself and enter your own https addresses. Use the same layout: each model's weights in `<weights URL>/<model ID>/resolve/main/`, and the compiled model libraries in `<library URL>/<WebLLM version>/` (the plugin adds the version it needs, currently `v0_2_80`).
 Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 GitHub terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service — Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
@@ -98,6 +98,11 @@ The files under `build-extensions/` are generated from the sources in `src/` wit
 2. `npm run build`
 
 There is no build step for the PHP. The WebLLM engine is bundled into the plugin from its npm package. The AI model weights and their compiled model libraries are loaded at runtime from the provider documented under External services above; these are large provider-hosted model files (over 1 GB), not part of the plugin code.
+
+== Upgrade Notice ==
+
+= 0.11.0 =
+The local engine now downloads models only from a source you set. If you used the local engine before, open Settings → Model source and enter the addresses listed under External services. Models already in your browser cache are reused.
 
 == Changelog ==
 

@@ -355,7 +355,7 @@ class ModelLoader {
 			}
 			const isCached = await webllm.hasModelInCache(
 				id,
-				buildAppConfig()
+				buildAppConfig( webllm.modelVersion )
 			);
 			log.info( `Model ${ id } cached:`, isCached );
 			return isCached;
@@ -827,7 +827,7 @@ class ModelLoader {
 			this.engine = await webllm.CreateServiceWorkerMLCEngine(
 				this.modelId,
 				{
-					appConfig: buildAppConfig(),
+					appConfig: buildAppConfig( webllm.modelVersion ),
 					initProgressCallback,
 				},
 				undefined, // Let WebLLM use navigator.serviceWorker.controller
@@ -863,7 +863,7 @@ class ModelLoader {
 
 		// Create the regular MLCEngine (page-local)
 		this.engine = await webllm.CreateMLCEngine( this.modelId, {
-			appConfig: buildAppConfig(),
+			appConfig: buildAppConfig( webllm.modelVersion ),
 			initProgressCallback,
 		} );
 

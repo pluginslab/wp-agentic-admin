@@ -13,6 +13,7 @@ import {
 	getModelSource,
 	isModelSourceConfigured,
 	setModelSource,
+	subscribe,
 } from '../model-source';
 
 const stripWebllmPrebuilt = require( '../../../../tools/strip-webllm-prebuilt-loader' );
@@ -52,17 +53,30 @@ describe( 'model-source', () => {
 			weights_url: 'https://models.example/w/',
 			library_url: 'https://models.example/lib/',
 		} );
-		const config = buildAppConfig();
+		const config = buildAppConfig( 'v0_2_80' );
 
 		expect( config.model_list ).toHaveLength( MODEL_RECORDS.length );
 		for ( const record of config.model_list ) {
 			expect( record.model ).toBe(
 				`https://models.example/w/${ record.model_id }`
 			);
-			expect(
-				record.model_lib.startsWith( 'https://models.example/lib/' )
-			).toBe( true );
+			expect( record.model_lib ).toMatch(
+				/^https:\/\/models\.example\/lib\/v0_2_80\/[^/]+\.wasm$/
+			);
 		}
+	} );
+
+	it( 'notifies subscribers when the source is saved', () => {
+		const listener = jest.fn();
+		const unsubscribe = subscribe( listener );
+		setModelSource( {
+			weights_url: 'https://models.example/w',
+			library_url: 'https://models.example/lib',
+		} );
+		expect( listener ).toHaveBeenCalledTimes( 1 );
+		unsubscribe();
+		setModelSource( { weights_url: '', library_url: '' } );
+		expect( listener ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'covers every model the loader offers', () => {
