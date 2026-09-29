@@ -13,6 +13,7 @@ import * as webllm from '@mlc-ai/web-llm';
 import { applyFilters } from '@wordpress/hooks';
 import { ExternalEngine } from './external-engine';
 import ConnectorEngine from './connector-engine';
+import { buildAppConfig, isModelSourceConfigured } from './model-source';
 import { createLogger } from '../utils/logger';
 
 /**
@@ -349,7 +350,13 @@ class ModelLoader {
 	async isModelCached( modelId = null ) {
 		const id = modelId || this.modelId;
 		try {
-			const isCached = await webllm.hasModelInCache( id );
+			if ( ! isModelSourceConfigured() ) {
+				return false;
+			}
+			const isCached = await webllm.hasModelInCache(
+				id,
+				buildAppConfig( webllm.modelVersion )
+			);
 			log.info( `Model ${ id } cached:`, isCached );
 			return isCached;
 		} catch ( err ) {
@@ -506,6 +513,13 @@ class ModelLoader {
 		this.modelId = modelId || DEFAULT_MODEL;
 
 		try {
+			// The owner must set where models are downloaded from.
+			if ( ! isModelSourceConfigured() ) {
+				throw new Error(
+					'No model source is set. An administrator can set it under Settings → Model source.'
+				);
+			}
+
 			// Check WebGPU support first
 			this.reportStatus( 'checking', 'Checking WebGPU support...' );
 			this.reportProgress( 0, 'Checking WebGPU support...' );
@@ -813,6 +827,7 @@ class ModelLoader {
 			this.engine = await webllm.CreateServiceWorkerMLCEngine(
 				this.modelId,
 				{
+					appConfig: buildAppConfig( webllm.modelVersion ),
 					initProgressCallback,
 				},
 				undefined, // Let WebLLM use navigator.serviceWorker.controller
@@ -848,6 +863,7 @@ class ModelLoader {
 
 		// Create the regular MLCEngine (page-local)
 		this.engine = await webllm.CreateMLCEngine( this.modelId, {
+			appConfig: buildAppConfig( webllm.modelVersion ),
 			initProgressCallback,
 		} );
 

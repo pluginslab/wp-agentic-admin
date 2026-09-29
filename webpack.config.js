@@ -33,6 +33,22 @@ module.exports = {
 		// Re-add this entry to ship voice input again.
 	},
 
+	module: {
+		...defaultConfig.module,
+		rules: [
+			...defaultConfig.module.rules,
+			// Strip WebLLM's built-in model download addresses. The site owner
+			// configures the model source; see tools/strip-webllm-prebuilt-loader.js.
+			{
+				test: /[\\/]node_modules[\\/]@mlc-ai[\\/]web-llm[\\/]lib[\\/]index\.js$/,
+				use: path.resolve(
+					__dirname,
+					'tools/strip-webllm-prebuilt-loader.js'
+				),
+			},
+		],
+	},
+
 	output: {
 		...defaultConfig.output,
 		path: path.resolve( __dirname, 'build-extensions' ),

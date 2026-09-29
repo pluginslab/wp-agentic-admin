@@ -209,6 +209,8 @@ class Admin_Page {
 				'modelId'            => $settings->get_field( 'agentic_admin_model_id', 'Qwen2.5-7B-Instruct-q4f16_1-MLC' ),
 				'confirmDestructive' => (bool) $settings->get_field( 'agentic_admin_confirm_destructive', 1 ),
 				'maxLogLines'        => (int) $settings->get_field( 'agentic_admin_max_log_lines', 100 ),
+				'modelSource'        => Settings::get_model_source(),
+				'canManageOptions'   => current_user_can( 'manage_options' ),
 			),
 			'browserRequirements' => Utils::get_browser_requirements(),
 			'abilities'           => $abilities_js_config,

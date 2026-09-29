@@ -12,6 +12,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 // 1. Single Site Cleanup.
 delete_option( 'agentic_admin_settings' );
+delete_option( 'agentic_admin_model_source' );
 delete_option( 'agentic_admin_version' );
 delete_transient( 'agentic_admin_cache' );
 delete_transient( 'agentic_admin_post_types' );
@@ -24,6 +25,7 @@ if ( is_multisite() ) {
 		switch_to_blog( $agentic_admin_site->blog_id );
 
 		delete_option( 'agentic_admin_settings' );
+		delete_option( 'agentic_admin_model_source' );
 		delete_option( 'agentic_admin_version' );
 		delete_transient( 'agentic_admin_cache' );
 		delete_transient( 'agentic_admin_post_types' );

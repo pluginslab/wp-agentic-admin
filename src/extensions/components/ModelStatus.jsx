@@ -21,6 +21,10 @@ import {
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
+import {
+	isModelSourceConfigured,
+	subscribe as subscribeModelSource,
+} from '../services/model-source';
 import useConnectors from '../services/use-connectors';
 import modelLoader, {
 	ModelLoader,
@@ -217,7 +221,17 @@ const ModelStatus = ( {
 		'AI model not loaded. Click "Load Model" to start.'
 	);
 	const [ progress, setProgress ] = useState( 0 );
+	const [ sourceReady, setSourceReady ] = useState( isModelSourceConfigured );
 	const [ selectedModel, setSelectedModel ] = useState( getSavedModel() );
+
+	// Re-render when the owner saves a model source in Settings.
+	useEffect(
+		() =>
+			subscribeModelSource( () =>
+				setSourceReady( isModelSourceConfigured() )
+			),
+		[]
+	);
 	const [ isFromCache, setIsFromCache ] = useState( false );
 	const [ rawMessage, setRawMessage ] = useState( '' );
 	const [ loadedModelInfo, setLoadedModelInfo ] = useState( null );
@@ -560,24 +574,42 @@ const ModelStatus = ( {
 										<Button
 											variant="primary"
 											onClick={ handleLoadModel }
+											disabled={ ! sourceReady }
 										>
 											{ status === 'error'
 												? 'Retry'
 												: 'Load Model' }
 										</Button>
 									</HStack>
-									<Notice
-										status="info"
-										isDismissible={ false }
-									>
-										Load Model downloads the selected model
-										once from MLC-AI, hosted on Hugging Face
-										and GitHub (about 1.2 GB for the
-										default), and caches it in your browser.
-										The model then runs in your browser
-										using WebGPU. Your prompts and site data
-										are not sent to these hosts.
-									</Notice>
+									{ sourceReady ? (
+										<Notice
+											status="info"
+											isDismissible={ false }
+										>
+											Load Model downloads the selected
+											model once from the model source set
+											in Settings (about 1.2 GB for the
+											default), and caches it in your
+											browser. The model then runs in your
+											browser using WebGPU. Your prompts
+											and site data are not sent to the
+											model source.
+										</Notice>
+									) : (
+										<Notice
+											status="warning"
+											isDismissible={ false }
+										>
+											No model source is set. An
+											administrator can set where models
+											are downloaded from under{ ' ' }
+											<a href="#model-source">
+												Settings → Model source
+											</a>
+											. Until then, use the Remote or
+											Connector engine.
+										</Notice>
+									) }
 									<Notice
 										status="warning"
 										isDismissible={ false }
