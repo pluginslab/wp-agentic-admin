@@ -476,22 +476,54 @@ class Connectors {
 	/**
 	 * Per-user rate limit for chat completions.
 	 *
-	 * Caps at RATE_LIMIT_PER_MINUTE requests per user per rolling 60s
-	 * window via a transient counter. Returns a WP_Error 429 when the
-	 * cap is exceeded, null otherwise.
+	 * Caps at RATE_LIMIT_PER_MINUTE requests per user per clock minute.
+	 * The counter is a row in the options table, incremented with a single
+	 * INSERT ... ON DUPLICATE KEY UPDATE statement. The database applies it
+	 * atomically, so concurrent requests can't read the same count and slip
+	 * past the limit. Returns a WP_Error 429 when the cap is exceeded, null
+	 * otherwise.
 	 *
 	 * @return \WP_Error|null
 	 */
 	private static function check_rate_limit(): ?\WP_Error {
+		global $wpdb;
+
 		$user_id = \get_current_user_id();
 		if ( ! $user_id ) {
 			return null;
 		}
 
-		$key   = 'agentic_admin_conn_rl_' . $user_id;
-		$count = (int) \get_transient( $key );
+		$prefix = 'agentic_admin_conn_rl_' . $user_id . '_';
+		$key    = $prefix . (int) floor( time() / MINUTE_IN_SECONDS );
 
-		if ( $count >= self::RATE_LIMIT_PER_MINUTE ) {
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Atomic counter; a cached value would defeat it.
+		$wpdb->query(
+			$wpdb->prepare(
+				"INSERT INTO {$wpdb->options} (option_name, option_value, autoload)
+				VALUES (%s, '1', 'off')
+				ON DUPLICATE KEY UPDATE option_value = option_value + 1",
+				$key
+			)
+		);
+
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+				$key
+			)
+		);
+
+		// Drop this user's counters from earlier minutes.
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name <> %s",
+				$wpdb->esc_like( $prefix ) . '%',
+				$key
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+
+		if ( $count > self::RATE_LIMIT_PER_MINUTE ) {
 			return new \WP_Error(
 				'agentic_admin_rate_limited',
 				sprintf(
@@ -502,7 +534,6 @@ class Connectors {
 			);
 		}
 
-		\set_transient( $key, $count + 1, MINUTE_IN_SECONDS );
 		return null;
 	}
 }
