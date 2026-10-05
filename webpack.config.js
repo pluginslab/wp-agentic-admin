@@ -31,6 +31,15 @@ module.exports = {
 		// Whisper Web Worker — source preserved in src/extensions/services/
 		// and src/extensions/components/VoiceButton.jsx for v1.4 (per roadmap).
 		// Re-add this entry to ship voice input again.
+
+		// Indexing Web Worker - background embedding
+		'indexing-worker': {
+			import: path.resolve(
+				__dirname,
+				'src/extensions/services/indexing-worker.js'
+			),
+			filename: 'indexing-worker.js',
+		},
 	},
 
 	module: {
@@ -62,8 +71,9 @@ module.exports = {
 			...defaultConfig.optimization?.splitChunks,
 			cacheGroups: {
 				...defaultConfig.optimization?.splitChunks?.cacheGroups,
-				// Don't split the service worker
+				// Don't split the service worker or web workers
 				sw: false,
+				'indexing-worker': false,
 			},
 		},
 		runtimeChunk: false, // SW needs runtime included
