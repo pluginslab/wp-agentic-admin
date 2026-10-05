@@ -371,6 +371,26 @@ describe( 'WebMCPBridge', () => {
 			);
 		} );
 
+		it( 'should run JS-only tools through their own execute()', async () => {
+			const execute = jest.fn().mockResolvedValue( {
+				success: true,
+				results: [],
+			} );
+
+			const handler = bridge.createHandler( {
+				id: 'agentic-admin/code-search',
+				requiresConfirmation: false,
+				execute,
+			} );
+
+			const result = await handler( { query: 'cart total' } );
+			const parsed = JSON.parse( result.content[ 0 ].text );
+
+			expect( parsed.success ).toBe( true );
+			expect( execute ).toHaveBeenCalledWith( { query: 'cart total' } );
+			expect( abilitiesApi.executeAbilityById ).not.toHaveBeenCalled();
+		} );
+
 		it( 'should handle execution errors gracefully', async () => {
 			abilitiesApi.executeAbilityById.mockRejectedValue(
 				new Error( 'Network error' )

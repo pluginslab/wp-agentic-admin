@@ -18,8 +18,8 @@ const log = createLogger( 'WebMCPBridge' );
  * WebMCPBridge class
  *
  * Singleton that registers all abilities as WebMCP tools when the API
- * is available. Uses the same abilitiesApi.executeAbilityById() path
- * as the internal chat, ensuring consistent behavior.
+ * is available. Calls each tool's own execute(), the same path the
+ * internal chat uses, so JS-only abilities work too.
  */
 class WebMCPBridge {
 	constructor() {
@@ -146,10 +146,15 @@ class WebMCPBridge {
 					};
 				}
 
-				const result = await abilitiesApi.executeAbilityById(
-					tool.id,
-					params
-				);
+				// Prefer the tool's own execute(): JS-only abilities such as
+				// code-search run in the browser and have no REST endpoint.
+				const result =
+					typeof tool.execute === 'function'
+						? await tool.execute( params )
+						: await abilitiesApi.executeAbilityById(
+								tool.id,
+								params
+						  );
 				return {
 					content: [
 						{
