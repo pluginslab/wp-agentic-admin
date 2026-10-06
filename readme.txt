@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 0.11.0
+Stable tag: 2.0.0-beta.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,11 @@ You can also host the same files yourself and enter your own https addresses. Us
 Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 GitHub terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service — Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
+**Transformers.js library + embedding model (jsDelivr + Hugging Face)** — Only when you build the local knowledge base in Settings.
+This performs in-browser semantic embedding of your site's code and documentation so the assistant can answer from a local knowledge base; the computation runs entirely in your browser. The Transformers.js library is loaded from jsDelivr (`https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/`) and the embedding model (`Xenova/all-MiniLM-L6-v2`, ~23 MB, one-time) from Hugging Face. Both are static files cached in the browser after first use; no prompts or admin data are sent.
+jsDelivr terms: https://www.jsdelivr.com/terms — Privacy: https://www.jsdelivr.com/privacy-policy-jsdelivr-net
+Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
+
 **External LLM provider (user-configured)** — Only when you switch the engine from "Local" to "Remote" in settings.
 When enabled, chat messages, tool descriptions, and tool results are sent through this plugin's REST proxy (`/wp-json/agentic-admin/v1/llm-proxy/`) to the OpenAI-compatible endpoint URL you configure (e.g. Ollama, LM Studio, vLLM, OpenAI, Groq, Together). You choose the endpoint; the plugin does not preselect or default to any third-party provider. No data is sent until you save an endpoint and start a chat in Remote mode.
 
@@ -105,6 +110,13 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 The local engine now downloads models only from a source you set. If you used the local engine before, open Settings → Model source and enter the addresses listed under External services. Models already in your browser cache are reused.
 
 == Changelog ==
+
+= 2.0.0-beta.1 =
+* v2 line: the full-featured GitHub release. The WordPress.org build stays on 0.11.x; v2 restores features that were removed to pass the directory review, and is distributed only as a GitHub release.
+* Restored: in-browser knowledge base (RAG). Code, schema, API signatures and reference docs are chunked in PHP, embedded in the browser with Transformers.js (all-MiniLM-L6-v2), stored in IndexedDB and searched with an exhaustive cosine scan. Adds back codebase-index, code-search and the four *-extract abilities.
+* Restored: WebMCP bridge. Every ability is exposed on navigator.modelContext for external agents in browsers that support it; destructive tools require a second call with { "confirmed": true }.
+* Fixed: WebMCP calls now run through each tool's own execute(), so JS-only abilities such as code-search work over the bridge.
+* Kept from 0.11.x: all security and path fixes from the directory review (read-file refuses secret-bearing files, tokenizing wp-config-list, get_home_path() handling, connector registry check).
 
 = 0.11.0 =
 * Renamed: Plugin is now "Agentic Admin". Text domain "agentic-admin", function prefix agentic_admin_*. WordPress.org submission-ready.

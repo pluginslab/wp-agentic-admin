@@ -6,6 +6,8 @@
 
 A privacy-first AI assistant that runs entirely in your browser, helping you diagnose and fix WordPress issues through natural language commands.
 
+> **Two release lines.** `0.11.x` is the WordPress.org build. **v2** (`2.0.0-beta.x`, the `v2` branch) is the full-featured GitHub release: it adds back the in-browser knowledge base (RAG) and the WebMCP bridge that were removed to pass the directory review. Download v2 from the [GitHub releases](https://github.com/pluginslab/wp-agentic-admin/releases).
+
 ## What is Agentic Admin for WordPress?
 
 Agentic Admin for WordPress transforms your WordPress admin panel into an intelligent command center. Instead of navigating through multiple screens to diagnose issues, you simply describe your problem in plain English:
