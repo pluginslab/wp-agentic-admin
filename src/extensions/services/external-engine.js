@@ -152,6 +152,8 @@ class ExternalEngine {
 			api_key: this.apiKey,
 			model: this.modelId,
 		};
+		// extra_body is a WebLLM-only option; remote endpoints may reject it.
+		delete body.extra_body;
 
 		// o1/o3/gpt-5 models require specific parameter mapping and don't support many standard params
 		if ( isModernModel ) {

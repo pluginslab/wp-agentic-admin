@@ -262,6 +262,11 @@ class ReactAgent {
 					max_tokens: this.config.maxTokens,
 					stream: true,
 					stream_options: { include_usage: true },
+					// WebLLM pre-fills an empty <think> block, which turns
+					// thinking off for models that ignore /nothink (Qwen 3.5).
+					...( suppressThinkingUi && {
+						extra_body: { enable_thinking: false },
+					} ),
 				} );
 
 				let fullResponse = '';

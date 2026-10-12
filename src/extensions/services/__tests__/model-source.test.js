@@ -53,7 +53,7 @@ describe( 'model-source', () => {
 			weights_url: 'https://models.example/w/',
 			library_url: 'https://models.example/lib/',
 		} );
-		const config = buildAppConfig( 'v0_2_80' );
+		const config = buildAppConfig( 'v0_2_86/base' );
 
 		expect( config.model_list ).toHaveLength( MODEL_RECORDS.length );
 		for ( const record of config.model_list ) {
@@ -61,7 +61,7 @@ describe( 'model-source', () => {
 				`https://models.example/w/${ record.model_id }`
 			);
 			expect( record.model_lib ).toMatch(
-				/^https:\/\/models\.example\/lib\/v0_2_80\/[^/]+\.wasm$/
+				/^https:\/\/models\.example\/lib\/v0_2_86\/base\/[^/]+\.wasm$/
 			);
 		}
 	} );
@@ -85,6 +85,10 @@ describe( 'model-source', () => {
 			expect.arrayContaining( [
 				'Qwen3-1.7B-q4f16_1-MLC',
 				'Qwen3-1.7B-q4f32_1-MLC',
+				'Qwen3.5-2B-q4f16_1-MLC',
+				'Qwen3.5-2B-q4f32_1-MLC',
+				'Qwen3.5-4B-q4f16_1-MLC',
+				'Qwen3.5-4B-q4f32_1-MLC',
 				'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 				'Qwen2.5-7B-Instruct-q4f32_1-MLC',
 			] )

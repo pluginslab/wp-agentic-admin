@@ -84,6 +84,8 @@ const MODEL_CONFIG = {
  */
 const F16_TO_F32_MODEL_MAP = {
 	'Qwen3-1.7B-q4f16_1-MLC': 'Qwen3-1.7B-q4f32_1-MLC',
+	'Qwen3.5-2B-q4f16_1-MLC': 'Qwen3.5-2B-q4f32_1-MLC',
+	'Qwen3.5-4B-q4f16_1-MLC': 'Qwen3.5-4B-q4f32_1-MLC',
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
 };
 
@@ -93,6 +95,10 @@ const F16_TO_F32_MODEL_MAP = {
 const MODEL_CONTEXT_SIZES = {
 	'Qwen3-1.7B-q4f16_1-MLC': 8192,
 	'Qwen3-1.7B-q4f32_1-MLC': 8192,
+	'Qwen3.5-2B-q4f16_1-MLC': 8192,
+	'Qwen3.5-2B-q4f32_1-MLC': 8192,
+	'Qwen3.5-4B-q4f16_1-MLC': 8192,
+	'Qwen3.5-4B-q4f32_1-MLC': 8192,
 	'Qwen2.5-7B-Instruct-q4f16_1-MLC': 32768,
 	'Qwen2.5-7B-Instruct-q4f32_1-MLC': 32768,
 	// Default fallback
@@ -1322,8 +1328,8 @@ class ModelLoader {
 			{
 				id: 'Qwen3-1.7B-q4f16_1-MLC',
 				name: 'Qwen 3 1.7B (Q4 F16)',
-				size: '~1.2GB',
-				vram: '~1.5GB',
+				size: '~1.0GB',
+				vram: '~2.0GB',
 				description:
 					'Alibaba Qwen 3 1.7B. Fast inference, native tool calling support, lightweight. Requires shader-f16.',
 				recommended: true,
@@ -1337,8 +1343,8 @@ class ModelLoader {
 			{
 				id: 'Qwen3-1.7B-q4f32_1-MLC',
 				name: 'Qwen 3 1.7B (Q4 F32)',
-				size: '~1.8GB',
-				vram: '~2GB',
+				size: '~1.0GB',
+				vram: '~2.6GB',
 				description:
 					'Alibaba Qwen 3 1.7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
 				recommended: false,
@@ -1350,10 +1356,54 @@ class ModelLoader {
 				],
 			},
 			{
+				id: 'Qwen3.5-2B-q4f16_1-MLC',
+				name: 'Qwen 3.5 2B (Q4 F16) (experimental)',
+				size: '~1.1GB',
+				vram: '~2.2GB',
+				description:
+					'Alibaba Qwen 3.5 2B, the successor to Qwen 3 1.7B. New in WebLLM 0.2.86 and not yet benchmarked with this plugin. Requires shader-f16.',
+				recommended: false,
+				requiresF16: true,
+				capabilities: [ 'JSON output', 'fast inference' ],
+			},
+			{
+				id: 'Qwen3.5-2B-q4f32_1-MLC',
+				name: 'Qwen 3.5 2B (Q4 F32) (experimental)',
+				size: '~1.1GB',
+				vram: '~2.6GB',
+				description:
+					'Alibaba Qwen 3.5 2B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed). Not yet benchmarked with this plugin.',
+				recommended: false,
+				requiresF16: false,
+				capabilities: [ 'JSON output', 'fast inference' ],
+			},
+			{
+				id: 'Qwen3.5-4B-q4f16_1-MLC',
+				name: 'Qwen 3.5 4B (Q4 F16) (experimental)',
+				size: '~2.4GB',
+				vram: '~3.9GB',
+				description:
+					'Alibaba Qwen 3.5 4B, a middle tier between the 1.7B and 7B models. New in WebLLM 0.2.86 and not yet benchmarked with this plugin. Requires shader-f16.',
+				recommended: false,
+				requiresF16: true,
+				capabilities: [ 'JSON output', 'advanced reasoning' ],
+			},
+			{
+				id: 'Qwen3.5-4B-q4f32_1-MLC',
+				name: 'Qwen 3.5 4B (Q4 F32) (experimental)',
+				size: '~2.4GB',
+				vram: '~4.7GB',
+				description:
+					'Alibaba Qwen 3.5 4B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed). Not yet benchmarked with this plugin.',
+				recommended: false,
+				requiresF16: false,
+				capabilities: [ 'JSON output', 'advanced reasoning' ],
+			},
+			{
 				id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 				name: 'Qwen 2.5 7B (Q4 F16)',
-				size: '~4.5GB',
-				vram: '~5GB',
+				size: '~4.3GB',
+				vram: '~5.1GB',
 				description:
 					'Alibaba Qwen 2.5 7B. Strong JSON output, reliable function calling, excellent instruction following. Requires shader-f16.',
 				recommended: false,
@@ -1368,8 +1418,8 @@ class ModelLoader {
 			{
 				id: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
 				name: 'Qwen 2.5 7B (Q4 F32)',
-				size: '~6.5GB',
-				vram: '~7GB',
+				size: '~4.3GB',
+				vram: '~5.9GB',
 				description:
 					'Alibaba Qwen 2.5 7B with 32-bit activations. Works on all WebGPU GPUs (no shader-f16 needed).',
 				recommended: false,

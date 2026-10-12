@@ -312,13 +312,21 @@ const MessageItem = ( { message } ) => {
 		);
 	}
 
-	// Loading indicator (inline)
+	// Loading indicator (inline) — left-aligned in a Card, like an assistant message
 	if ( type === 'loading' ) {
 		return (
-			<HStack alignment="center" spacing={ 2 } role="status">
-				<Spinner />
-				<span>{ content }</span>
-			</HStack>
+			<Card size="small" role="status">
+				<CardBody>
+					<HStack
+						alignment="center"
+						justify="flex-start"
+						spacing={ 2 }
+					>
+						<Spinner />
+						<span>{ content }</span>
+					</HStack>
+				</CardBody>
+			</Card>
 		);
 	}
 

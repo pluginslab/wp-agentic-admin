@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 2.0.0-beta.1
+Stable tag: 2.0.0-beta.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -51,15 +51,15 @@ This plugin runs AI locally in your browser by default, and your prompts and cha
 
 Separately from AI inference, some abilities query public data sources to do their job: a security scan checks your plugin versions against CVE databases, a checksum verification compares your files against WordPress.org, and a web search sends your query to a search engine. Every external request the plugin makes is listed here:
 
-**Model source for the local engine (site-owner configured)** — Only when an administrator sets a model source and loads a model.
-The local engine runs a language model in the administrator's browser. The model is not part of the plugin: model files are over 1 GB. The plugin contains no model download address. An administrator enters where models are downloaded from under Settings → Model source, and until then the local engine is off. Nothing is downloaded until an administrator then selects a model and clicks Load Model. The browser fetches the files directly from the configured source (the WordPress server makes no requests for them), and no prompts, admin data, or telemetry are sent. Files are cached in the browser after the first download.
+**Model source for the local engine (Hugging Face + GitHub by default, site-owner configurable)** — Only when an administrator loads a model.
+The local engine runs a language model in the administrator's browser. The model is not part of the plugin: model files are over 1 GB. Where models are downloaded from is a setting, under Settings → Model source. Nothing is downloaded until an administrator selects a model and clicks Load Model. The browser fetches the files directly from the configured source (the WordPress server makes no requests for them), and no prompts, admin data, or telemetry are sent. Files are cached in the browser after the first download.
 
-To use the models published by the MLC-AI project, enter these addresses. No account or API key is needed:
+By default the setting points to the models published by the MLC-AI project. No account or API key is needed:
 
 * Model weights URL: `https://huggingface.co/mlc-ai/`
 * Model library URL: `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/`
 
-You can also host the same files yourself and enter your own https addresses. Use the same layout: each model's weights in `<weights URL>/<model ID>/resolve/main/`, and the compiled model libraries in `<library URL>/<WebLLM version>/` (the plugin adds the version it needs, currently `v0_2_80`).
+An administrator can change these addresses, or clear them to turn the local engine off. You can also host the same files yourself and enter your own https addresses. Use the same layout: each model's weights in `<weights URL>/<model ID>/resolve/main/`, and the compiled model libraries in `<library URL>/<WebLLM version>/` (the plugin adds the version it needs, currently `v0_2_86/base`).
 Hugging Face terms: https://huggingface.co/terms-of-service — Privacy: https://huggingface.co/privacy
 GitHub terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service — Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
 
@@ -110,6 +110,14 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 The local engine now downloads models only from a source you set. If you used the local engine before, open Settings → Model source and enter the addresses listed under External services. Models already in your browser cache are reused.
 
 == Changelog ==
+
+= 2.0.0-beta.2 =
+* Changed: the model source is pre-filled. Settings → Model source now defaults to the MLC-AI addresses (Hugging Face for weights, GitHub for the compiled model libraries), so the local engine works without a setup step. The default applies until an administrator saves their own addresses; clearing them still turns the local engine off. The WordPress.org build (0.11.x) keeps shipping with no default.
+* Updated: WebLLM upgraded from 0.2.82 to 0.2.86. Compiled model libraries now live in `<library URL>/v0_2_86/base/` with new file names; if you host the model files yourself, mirror that folder.
+* New (experimental): Qwen 3.5 2B and Qwen 3.5 4B in the model dropdown, each in F16 and F32 builds. They are new in WebLLM and not yet benchmarked with this plugin; Qwen 3 1.7B stays the default.
+* Fixed: turning thinking off now works with Qwen 3.5. The local engine also sends WebLLM's enable_thinking flag, because Qwen 3.5 ignores the /nothink prompt switch that Qwen 3 uses.
+* Changed: the wait indicator says "Working..." instead of "Thinking..." and is shown left-aligned in a card, like an assistant message. "Thinking…" is now only used for the model's actual reasoning stream.
+* Changed: the model dropdown shows both download size and VRAM, and the figures are corrected. F16 and F32 builds are the same download; they differ in VRAM.
 
 = 2.0.0-beta.1 =
 * v2 line: the full-featured GitHub release. The WordPress.org build stays on 0.11.x; v2 restores features that were removed to pass the directory review, and is distributed only as a GitHub release.

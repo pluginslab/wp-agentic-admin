@@ -559,7 +559,9 @@ const ModelStatus = ( {
 													value: model.id,
 													label: `${ model.name } (${
 														model.size
-													})${
+													} download, ${
+														model.vram
+													} VRAM)${
 														model.recommended
 															? ' - Recommended'
 															: ''

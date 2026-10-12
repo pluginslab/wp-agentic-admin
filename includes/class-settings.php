@@ -103,6 +103,10 @@ class Settings {
 							'Qwen2.5-7B-Instruct-q4f32_1-MLC' => 'Qwen 2.5 7B F32 (No shader-f16 needed)',
 							'Qwen3-1.7B-q4f16_1-MLC' => 'Qwen 3 1.7B F16 (Lightweight)',
 							'Qwen3-1.7B-q4f32_1-MLC' => 'Qwen 3 1.7B F32 (Lightweight, no shader-f16 needed)',
+							'Qwen3.5-2B-q4f16_1-MLC' => 'Qwen 3.5 2B F16 (Experimental)',
+							'Qwen3.5-2B-q4f32_1-MLC' => 'Qwen 3.5 2B F32 (Experimental, no shader-f16 needed)',
+							'Qwen3.5-4B-q4f16_1-MLC' => 'Qwen 3.5 4B F16 (Experimental)',
+							'Qwen3.5-4B-q4f32_1-MLC' => 'Qwen 3.5 4B F32 (Experimental, no shader-f16 needed)',
 						),
 						'default'     => 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
 						'description' => __( 'Select the AI model to use. Larger models are more capable but slower.', 'agentic-admin' ),
@@ -186,9 +190,10 @@ class Settings {
 	/**
 	 * Register the model source option.
 	 *
-	 * The local engine downloads model files only from the addresses the
-	 * site owner enters here. The plugin ships no default. Exposed through
-	 * the core /wp/v2/settings endpoint, which requires manage_options.
+	 * The local engine downloads model files only from the addresses saved
+	 * here. Until the site owner saves their own, the MLC-AI addresses from
+	 * default_model_source() apply. Exposed through the core /wp/v2/settings
+	 * endpoint, which requires manage_options.
 	 *
 	 * @return void
 	 */
@@ -199,10 +204,7 @@ class Settings {
 			array(
 				'type'              => 'object',
 				'description'       => __( 'Where the local AI engine downloads model files from.', 'agentic-admin' ),
-				'default'           => array(
-					'weights_url' => '',
-					'library_url' => '',
-				),
+				'default'           => self::default_model_source(),
 				'sanitize_callback' => array( __CLASS__, 'sanitize_model_source' ),
 				'show_in_rest'      => array(
 					'schema' => array(
@@ -215,6 +217,21 @@ class Settings {
 					),
 				),
 			)
+		);
+	}
+
+	/**
+	 * Default model source: the models published by the MLC-AI project.
+	 *
+	 * For v2 (GitHub build) only. The WordPress.org build (0.11.x) must ship no
+	 * download address, so this default must not be merged back into main.
+	 *
+	 * @return array{weights_url: string, library_url: string}
+	 */
+	public static function default_model_source(): array {
+		return array(
+			'weights_url' => 'https://huggingface.co/mlc-ai/',
+			'library_url' => 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/',
 		);
 	}
 
@@ -240,12 +257,13 @@ class Settings {
 	}
 
 	/**
-	 * Get the configured model source.
+	 * Get the model source: the saved one, or the default when the site
+	 * owner has never saved one. A source saved empty stays empty.
 	 *
 	 * @return array{weights_url: string, library_url: string}
 	 */
 	public static function get_model_source(): array {
-		return self::sanitize_model_source( get_option( 'agentic_admin_model_source', array() ) );
+		return self::sanitize_model_source( get_option( 'agentic_admin_model_source', self::default_model_source() ) );
 	}
 
 	/**

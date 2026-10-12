@@ -1,11 +1,12 @@
 /**
  * Model Source
  *
- * The local engine downloads model files only from the addresses the site
- * owner enters in Settings (option agentic_admin_model_source). The plugin
- * ships no default download address: WebLLM's built-in list is stripped at
- * build time (tools/strip-webllm-prebuilt-loader.js), and the WebLLM app
- * config is built here from the owner's settings.
+ * The local engine downloads model files only from the addresses saved in
+ * Settings (option agentic_admin_model_source). In v2 that option defaults
+ * to the MLC-AI addresses (see Settings::default_model_source() in PHP), and
+ * the site owner can change or clear them. WebLLM's built-in list is still
+ * stripped at build time (tools/strip-webllm-prebuilt-loader.js), and the
+ * WebLLM app config is built here from the option.
  *
  * - weights_url: base URL of the model weight folders. WebLLM reads each
  *   model from `${ weights_url }${ modelId }/resolve/main/`.
@@ -16,31 +17,60 @@
  */
 
 /**
- * Models the plugin supports, matching WebLLM 0.2.80's own records.
+ * Models the plugin supports, matching WebLLM 0.2.86's own records.
  * `lib` is the file name of the compiled model library for that model.
+ * `maxHistorySize` mirrors WebLLM's override for the Qwen 3.5 records.
  */
 export const MODEL_RECORDS = [
 	{
 		id: 'Qwen3-1.7B-q4f16_1-MLC',
-		lib: 'Qwen3-1.7B-q4f16_1-ctx4k_cs1k-webgpu.wasm',
+		lib: 'Qwen3-1.7B-q4f16_1_cs1k-webgpu.wasm',
 		vramRequiredMB: 2036.66,
 		lowResourceRequired: true,
 	},
 	{
 		id: 'Qwen3-1.7B-q4f32_1-MLC',
-		lib: 'Qwen3-1.7B-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+		lib: 'Qwen3-1.7B-q4f32_1_cs1k-webgpu.wasm',
 		vramRequiredMB: 2635.44,
 		lowResourceRequired: true,
 	},
 	{
+		id: 'Qwen3.5-2B-q4f16_1-MLC',
+		lib: 'Qwen3.5-2B-q4f16_1_cs1k-webgpu.wasm',
+		vramRequiredMB: 2245.44,
+		lowResourceRequired: false,
+		maxHistorySize: 1,
+	},
+	{
+		id: 'Qwen3.5-2B-q4f32_1-MLC',
+		lib: 'Qwen3.5-2B-q4f32_1_cs1k-webgpu.wasm',
+		vramRequiredMB: 2591.55,
+		lowResourceRequired: false,
+		maxHistorySize: 1,
+	},
+	{
+		id: 'Qwen3.5-4B-q4f16_1-MLC',
+		lib: 'Qwen3.5-4B-q4f16_1_cs1k-webgpu.wasm',
+		vramRequiredMB: 3867.82,
+		lowResourceRequired: false,
+		maxHistorySize: 1,
+	},
+	{
+		id: 'Qwen3.5-4B-q4f32_1-MLC',
+		lib: 'Qwen3.5-4B-q4f32_1_cs1k-webgpu.wasm',
+		vramRequiredMB: 4680.36,
+		lowResourceRequired: false,
+		maxHistorySize: 1,
+	},
+	{
 		id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',
-		lib: 'Qwen2-7B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm',
+		lib: 'Qwen2-7B-Instruct-q4f16_1_cs1k-webgpu.wasm',
 		vramRequiredMB: 5106.67,
 		lowResourceRequired: false,
 	},
 	{
 		id: 'Qwen2.5-7B-Instruct-q4f32_1-MLC',
-		lib: 'Qwen2-7B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+		lib: 'Qwen2-7B-Instruct-q4f32_1_cs1k-webgpu.wasm',
 		vramRequiredMB: 5900.09,
 		lowResourceRequired: false,
 	},
@@ -131,6 +161,9 @@ export function buildAppConfig( modelVersion, source = getModelSource() ) {
 			low_resource_required: record.lowResourceRequired,
 			overrides: {
 				context_window_size: 4096,
+				...( record.maxHistorySize && {
+					max_history_size: record.maxHistorySize,
+				} ),
 			},
 		} ) ),
 	};

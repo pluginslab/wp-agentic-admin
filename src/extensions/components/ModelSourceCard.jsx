@@ -87,11 +87,12 @@ const ModelSourceCard = () => {
 				<VStack spacing={ 3 }>
 					<p style={ { margin: 0 } }>
 						The local engine downloads the AI model from the
-						addresses below, and from nowhere else. The plugin has
-						no default: you choose the source. The addresses of the
-						models published by the MLC-AI project are listed in the
-						plugin&apos;s readme, under External services. You can
-						also host the same files yourself.
+						addresses below, and from nowhere else. They default to
+						the models published by the MLC-AI project (the
+						addresses are also listed in the plugin&apos;s readme,
+						under External services). You can change them, for
+						example to host the same files yourself, or clear them
+						to turn the local engine off.
 					</p>
 					{ ! sourceReady && (
 						<Notice status="warning" isDismissible={ false }>
@@ -111,7 +112,7 @@ const ModelSourceCard = () => {
 					<TextControl
 						__nextHasNoMarginBottom
 						label="Model library URL"
-						help="One folder per WebLLM version (for example v0_2_80) holding the compiled model libraries (.wasm). The plugin adds the version it needs."
+						help="One folder per WebLLM version (for example v0_2_86/base) holding the compiled model libraries (.wasm). The plugin adds the version it needs."
 						type="url"
 						value={ libraryUrl }
 						onChange={ setLibraryUrl }

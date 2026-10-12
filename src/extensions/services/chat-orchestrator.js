@@ -846,6 +846,9 @@ Explain what went wrong and suggest what the user might try next.`;
 				stream: true,
 				stream_options: { include_usage: true },
 				stop: [ 'User:', 'USER:', '\n\nUser' ],
+				...( suppressThinking && {
+					extra_body: { enable_thinking: false },
+				} ),
 			} );
 
 			for await ( const chunk of stream ) {

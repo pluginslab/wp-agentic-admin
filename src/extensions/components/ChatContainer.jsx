@@ -624,7 +624,7 @@ const ChatContainer = ( {
 			msgs.push( {
 				id: 'loading-indicator',
 				type: 'loading',
-				content: showRunningTool ? 'Running tool...' : 'Thinking...',
+				content: showRunningTool ? 'Running tool...' : 'Working...',
 				timestamp: new Date().toISOString(),
 			} );
 		}
@@ -750,7 +750,7 @@ const ChatContainer = ( {
 					! modelReady
 						? 'Load the AI model to start chatting...'
 						: isLoading || isStreaming
-						? 'Thinking...'
+						? 'Working...'
 						: 'Describe your issue or what you want to do…'
 				}
 				defaultBundle={ defaultBundle }
