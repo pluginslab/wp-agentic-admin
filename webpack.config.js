@@ -17,10 +17,15 @@ module.exports = {
 		// Main application bundle
 		index: path.resolve( __dirname, 'src/extensions/index.js' ),
 
-		// Gutenberg editor sidebar and admin-wide chat sidebar both disabled
-		// for v0.11 — UIs not finished, re-enable in v0.12 once polished.
-		// Sources preserved at src/extensions/editor.js and
-		// src/extensions/admin-sidebar.js.
+		// Admin-wide chat sidebar, opened from the admin bar icon on every
+		// wp-admin screen except the plugin's own page.
+		'admin-sidebar': path.resolve(
+			__dirname,
+			'src/extensions/admin-sidebar.js'
+		),
+
+		// Gutenberg editor sidebar is still disabled; source preserved at
+		// src/extensions/editor.js.
 
 		// Service Worker - needs to be a self-contained bundle
 		sw: {

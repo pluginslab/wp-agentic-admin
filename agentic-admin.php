@@ -78,6 +78,7 @@ if ( ! class_exists( 'AgenticAdmin' ) ) {
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-utils.php';
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-settings.php';
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-page.php';
+			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-admin-bar.php';
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-abilities.php';
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-llm-proxy.php';
 			require_once AGENTIC_ADMIN_PLUGIN_DIR . 'includes/class-connectors.php';
@@ -93,6 +94,10 @@ if ( ! class_exists( 'AgenticAdmin' ) ) {
 
 			if ( class_exists( '\\AgenticAdmin\\Admin_Page' ) ) {
 				\AgenticAdmin\Admin_Page::get_instance();
+			}
+
+			if ( class_exists( '\\AgenticAdmin\\Admin_Bar' ) ) {
+				\AgenticAdmin\Admin_Bar::get_instance();
 			}
 
 			if ( class_exists( '\\AgenticAdmin\\Abilities' ) ) {

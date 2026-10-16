@@ -11,6 +11,7 @@
  */
 
 import { createLogger } from '../utils/logger';
+import { getPageContextPrompt } from '../utils/page-context';
 import vectorStore from './vector-store';
 
 const log = createLogger( 'ReactAgent' );
@@ -1032,7 +1033,9 @@ User: "what is a transient?"
 			this.currentToolFilter && this.currentToolFilter.length > 0
 				? '\n\nIMPORTANT: The user has selected a specific tool bundle. You MUST use the available tools to answer. Do not use final_answer without calling a tool first.'
 				: ''
-		}${ this.config.disableThinking ? '\n\n/nothink' : '' }`;
+		}${ getPageContextPrompt() }${
+			this.config.disableThinking ? '\n\n/nothink' : ''
+		}`;
 	}
 }
 

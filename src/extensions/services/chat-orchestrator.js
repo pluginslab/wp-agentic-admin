@@ -21,6 +21,7 @@ import messageRouter from './message-router';
 import vectorStore from './vector-store';
 import { executeAbility } from './agentic-abilities-api';
 import { createLogger } from '../utils/logger';
+import { getPageContextPrompt } from '../utils/page-context';
 
 const log = createLogger( 'ChatOrchestrator' );
 
@@ -88,7 +89,7 @@ You: "A transient is temporary cached data in WordPress that's stored in the dat
 User: "How do I check my site's health?"
 You: "I have a 'Site Health' tool that can run comprehensive diagnostics on your WordPress site. It checks database health, file permissions, plugin compatibility, and more. Would you like me to run it? Just say 'check site health'."
 
-Be helpful and conversational.`;
+Be helpful and conversational.${ getPageContextPrompt() }`;
 }
 
 /**

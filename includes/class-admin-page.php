@@ -192,6 +192,15 @@ class Admin_Page {
 		$css_file      = AGENTIC_ADMIN_PLUGIN_DIR . 'build-extensions/index.css';
 		$css_version   = file_exists( $css_file ) ? (string) filemtime( $css_file ) : '';
 
+		// Current admin screen, so the agent knows where the chat was opened.
+		$screen       = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$page_context = array(
+			'pagenow'    => isset( $GLOBALS['pagenow'] ) ? sanitize_text_field( (string) $GLOBALS['pagenow'] ) : '',
+			'screenId'   => $screen ? $screen->id : '',
+			'screenBase' => $screen ? $screen->base : '',
+			'postType'   => $screen ? $screen->post_type : '',
+		);
+
 		return array(
 			'restUrl'             => esc_url_raw( rest_url( 'wp-abilities/v1' ) ),
 			'restRoot'            => esc_url_raw( rest_url() ),
@@ -205,6 +214,7 @@ class Admin_Page {
 			'cssVersion'          => $css_version,
 			'hasPrettyPermalinks' => self::has_pretty_permalinks(),
 			'permalinksUrl'       => esc_url( admin_url( 'options-permalink.php' ) ),
+			'pageContext'         => $page_context,
 			'settings'            => array(
 				'modelId'            => $settings->get_field( 'agentic_admin_model_id', 'Qwen2.5-7B-Instruct-q4f16_1-MLC' ),
 				'confirmDestructive' => (bool) $settings->get_field( 'agentic_admin_confirm_destructive', 1 ),
