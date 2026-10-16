@@ -4,7 +4,7 @@ Tags: ai, sre, site reliability, webllm, abilities api
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 2.0.0-beta.2
+Stable tag: 2.0.0-beta.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -110,6 +110,10 @@ There is no build step for the PHP. The WebLLM engine is bundled into the plugin
 The local engine now downloads models only from a source you set. If you used the local engine before, open Settings → Model source and enter the addresses listed under External services. Models already in your browser cache are reused.
 
 == Changelog ==
+
+= 2.0.0-beta.3 =
+* Restored: the admin chat sidebar. An icon in the admin bar (top right) opens the assistant as a side panel on every wp-admin screen except the Agentic Admin page. It shares the model already loaded in the browser.
+* New: page context. The assistant is told which admin screen the chat was opened from (for example the Plugins page, or which post type is being edited), so questions like "what's on this page?" have a starting point.
 
 = 2.0.0-beta.2 =
 * Changed: the model source is pre-filled. Settings → Model source now defaults to the MLC-AI addresses (Hugging Face for weights, GitHub for the compiled model libraries), so the local engine works without a setup step. The default applies until an administrator saves their own addresses; clearing them still turns the local engine off. The WordPress.org build (0.11.x) keeps shipping with no default.
