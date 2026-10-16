@@ -114,6 +114,8 @@ The local engine now downloads models only from a source you set. If you used th
 = 2.0.0-beta.3 =
 * Restored: the admin chat sidebar. An icon in the admin bar (top right) opens the assistant as a side panel on every wp-admin screen except the Agentic Admin page. It shares the model already loaded in the browser.
 * New: page context. The assistant is told which admin screen the chat was opened from (for example the Plugins page, or which post type is being edited), so questions like "what's on this page?" have a starting point.
+* Fixed: knowledge-base and general answers were cut off mid-sentence. They were capped at 512 tokens, which a reasoning block could use up; the cap is now 1,536.
+* Fixed: code blocks in answers now render as code (fenced ``` blocks keep their line breaks and indentation) instead of showing stray backticks.
 
 = 2.0.0-beta.2 =
 * Changed: the model source is pre-filled. Settings → Model source now defaults to the MLC-AI addresses (Hugging Face for weights, GitHub for the compiled model libraries), so the local engine works without a setup step. The default applies until an administrator saves their own addresses; clearing them still turns the local engine off. The WordPress.org build (0.11.x) keeps shipping with no default.

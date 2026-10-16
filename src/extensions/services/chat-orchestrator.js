@@ -109,7 +109,7 @@ class ChatOrchestrator {
 		this.customSystemPrompt = options.systemPrompt || null;
 		this.llmOptions = {
 			temperature: 0.2,
-			maxTokens: 512,
+			maxTokens: 1536, // room for a <think> block plus the answer
 			...options.llmOptions,
 		};
 		this.streamOptions = {

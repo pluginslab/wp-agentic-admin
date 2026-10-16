@@ -145,7 +145,17 @@ const parseContentBlocks = ( content ) => {
 	const lines = content.split( '\n' );
 	const elements = [];
 	let tableBuffer = [];
+	let codeBuffer = null; // Lines of an open ``` fence, or null.
 	let keyIndex = 0;
+
+	const flushCode = () => {
+		elements.push(
+			<pre key={ keyIndex++ }>
+				<code>{ codeBuffer.join( '\n' ) }</code>
+			</pre>
+		);
+		codeBuffer = null;
+	};
 
 	const flushTable = () => {
 		if ( tableBuffer.length >= 2 ) {
@@ -162,6 +172,24 @@ const parseContentBlocks = ( content ) => {
 
 	for ( const line of lines ) {
 		const trimmed = line.trim();
+
+		// Fenced code block: keep lines verbatim until the closing fence.
+		if ( trimmed.startsWith( '```' ) ) {
+			if ( codeBuffer ) {
+				flushCode();
+			} else {
+				if ( tableBuffer.length > 0 ) {
+					flushTable();
+				}
+				codeBuffer = [];
+			}
+			continue;
+		}
+		if ( codeBuffer ) {
+			codeBuffer.push( line );
+			continue;
+		}
+
 		if ( trimmed.startsWith( '|' ) && trimmed.endsWith( '|' ) ) {
 			tableBuffer.push( trimmed );
 		} else {
@@ -179,6 +207,10 @@ const parseContentBlocks = ( content ) => {
 
 	if ( tableBuffer.length > 0 ) {
 		flushTable();
+	}
+	// Unclosed fence (reply still streaming, or cut off): show it as code.
+	if ( codeBuffer ) {
+		flushCode();
 	}
 
 	return elements;
